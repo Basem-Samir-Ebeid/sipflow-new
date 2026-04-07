@@ -5,7 +5,7 @@ import { OrderWithDetails } from '@/lib/types'
 import useSWR from 'swr'
 import {
   LogOut, Clock, CheckCircle, Loader2, RefreshCw,
-  ClipboardList, MessageSquare, BarChart3, FileText, TrendingUp, ArrowRight, Coffee
+  ClipboardList, MessageSquare, BarChart3, FileText, TrendingUp, ArrowRight, Coffee, Flame, Timer
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -471,6 +471,48 @@ export default function BarPage() {
               </Button>
               <p className="text-sm text-muted-foreground">{todayDate}</p>
             </div>
+
+            {/* Hot Items - Most requested drinks right now */}
+            {pendingOrders.length > 0 && (() => {
+              const drinkCounts: Record<string, { name: string; count: number }> = {}
+              pendingOrders.forEach(o => {
+                const name = o.drink?.name || 'غير معروف'
+                if (!drinkCounts[name]) drinkCounts[name] = { name, count: 0 }
+                drinkCounts[name].count += o.quantity || 1
+              })
+              const topDrinks = Object.values(drinkCounts).sort((a, b) => b.count - a.count).slice(0, 3)
+              
+              return (
+                <div className="mb-4 rounded-2xl border border-amber-500/30 bg-gradient-to-br from-amber-500/5 to-orange-500/5 p-3">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Flame className="h-4 w-4 text-amber-500" />
+                    <span className="text-sm font-bold text-amber-400">الأكثر طلبًا الآن</span>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {topDrinks.map((drink, idx) => (
+                      <div 
+                        key={drink.name}
+                        className="flex items-center gap-2 rounded-xl px-3 py-1.5"
+                        style={{ 
+                          background: idx === 0 ? 'rgba(245,158,11,0.15)' : 'rgba(255,255,255,0.05)',
+                          border: idx === 0 ? '1px solid rgba(245,158,11,0.4)' : '1px solid rgba(255,255,255,0.1)'
+                        }}
+                      >
+                        <span className={`text-xs font-bold ${idx === 0 ? 'text-amber-400' : 'text-muted-foreground'}`}>
+                          {idx === 0 ? '1' : idx + 1}
+                        </span>
+                        <span className={`text-sm font-medium ${idx === 0 ? 'text-amber-300' : 'text-foreground'}`}>
+                          {drink.name}
+                        </span>
+                        <span className="text-xs font-bold text-sky-400 bg-sky-500/10 px-1.5 py-0.5 rounded-full">
+                          x{drink.count}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )
+            })()}
 
             {isLoading ? (
               <div className="text-center py-12">

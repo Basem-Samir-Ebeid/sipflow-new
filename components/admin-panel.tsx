@@ -1495,7 +1495,7 @@ const handleSaveSettings = async () => {
             <div className="flex items-center gap-3 text-right">
               <div>
                 <p className="font-bold text-amber-300 text-sm">الحجوزات المسبقة</p>
-                <p className="text-xs text-muted-foreground">عرض وإدارة حجوزات العملاء</p>
+                <p className="text-xs text-muted-foreground">عرض وإدارة حجوزات ال��ملاء</p>
               </div>
             </div>
             <CalendarDays className="h-6 w-6 text-amber-400 shrink-0" />
@@ -2808,6 +2808,23 @@ const handleSaveSettings = async () => {
             <p className="mb-4 text-sm text-muted-foreground">
               حدد أوقات فتح وإغلاق المكان لإظهارها للعملاء
             </p>
+            
+            {/* Dev admin: place selector */}
+            {isDevAdmin && (
+              <div className="mb-4">
+                <Label className="text-muted-foreground">اختر المكان</Label>
+                <select
+                  className="mt-1 w-full rounded-md border border-border bg-muted px-3 py-2 text-sm text-foreground"
+                  defaultValue=""
+                >
+                  <option value="">— اختر المكان —</option>
+                  {places.map(p => (
+                    <option key={p.id} value={p.id}>{p.name}</option>
+                  ))}
+                </select>
+              </div>
+            )}
+            
             <div className="space-y-3">
               {['السبت', 'الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة'].map((day, index) => (
                 <div key={day} className="flex items-center justify-between rounded-xl bg-muted p-3 gap-3">
@@ -2846,33 +2863,6 @@ const handleSaveSettings = async () => {
               <Clock className="ml-2 h-4 w-4" />
               حفظ ساعات العمل
             </Button>
-          </div>
-
-          {/* General Settings */}
-          <div className="rounded-2xl border border-border bg-card p-4">
-            <div className="mb-4 flex items-center gap-2">
-              <Settings2 className="h-5 w-5 text-primary" />
-              <h3 className="font-semibold text-foreground">إعدادات عامة</h3>
-            </div>
-            <div className="space-y-4">
-              {settingsSaved && (
-                <div className="rounded-lg bg-green-500/20 p-3 text-center text-green-600">
-                  تم حفظ الإعدادات بنجاح!
-                </div>
-              )}
-              <Button 
-                className="w-full bg-primary text-primary-foreground hover:bg-primary/90" 
-                onClick={handleSaveSettings}
-                disabled={isSavingSettings}
-              >
-                {isSavingSettings ? (
-                  <RefreshCw className="ml-2 h-4 w-4 animate-spin" />
-                ) : (
-                  <Settings2 className="ml-2 h-4 w-4" />
-                )}
-                {isSavingSettings ? 'جاري الحفظ...' : 'حفظ الإعدادات'}
-              </Button>
-            </div>
           </div>
 
           {/* QR Code Manager — for place admin */}
