@@ -120,15 +120,23 @@ export default function BarPage() {
     Object.values(
       orders.reduce((acc: Record<string, UserOrderGroup>, order) => {
         const isShared = order.user?.name?.startsWith('__زبون__') || order.user?.name?.startsWith('Guest-')
-        const rawTable = order.user?.table_number
-        const tableStr = rawTable != null && rawTable !== '' ? String(rawTable) : undefined
-        const groupKey = isShared && tableStr ? `table_${tableStr}` : (order.user_id || 'unknown')
+        const customerName = order.customer_name
+        const tableNumber = order.table_number || order.user?.table_number
+        const tableStr = tableNumber != null && tableNumber !== '' ? String(tableNumber) : undefined
+        
+        // Use customer_name if available, otherwise fall back to table number or user name
+        const groupKey = customerName 
+          ? `customer_${customerName}_${tableStr || 'notab'}`
+          : (isShared && tableStr ? `table_${tableStr}` : (order.user_id || 'unknown'))
+        
         if (!acc[groupKey]) {
           acc[groupKey] = {
             userId: order.user_id || 'unknown',
-            userName: tableStr
-              ? `طاولة ${tableStr}`
-              : (isShared ? 'زبون' : (order.user?.name || 'مستخدم')),
+            userName: customerName && tableStr
+              ? `${customerName} - طاولة ${tableStr}`
+              : (customerName ? customerName : (tableStr
+                ? `طاولة ${tableStr}`
+                : (isShared ? 'زبون' : (order.user?.name || 'مستخدم')))),
             tableNumber: tableStr,
             orders: [],
             totalPrice: 0,

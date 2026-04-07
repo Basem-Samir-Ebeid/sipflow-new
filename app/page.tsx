@@ -84,6 +84,7 @@ export default function HomePage() {
   const [cartNotes, setCartNotes] = useState<Record<string, string>>({})
   const [showTableModal, setShowTableModal] = useState(false)
   const [pendingTableNumber, setPendingTableNumber] = useState('')
+  const [pendingCustomerName, setPendingCustomerName] = useState('')
   const [tableModalError, setTableModalError] = useState('')
   const [showSurpriseModal, setShowSurpriseModal] = useState(false)
   const [surpriseDrink, setSurpiseDrink] = useState<Drink | null>(null)
@@ -735,6 +736,35 @@ export default function HomePage() {
       const cartItems = Object.entries(cart).filter(([, qty]) => qty > 0)
       if (cartItems.length === 0) return
       setPendingTableNumber('')
+      setPendingCustomerName('')
+      setTableModalError('')
+      setShowTableModal(true)
+      return
+    }
+    if (!session && !currentUser) {
+      toast.error('في مشكلة في الجلسة، حاول تحدّث الصفحة')
+      return
+    }
+
+    const cartItems = Object.entries(cart).filter(([, qty]) => qty > 0)
+    if (cartItems.length === 0) return
+
+    // If table number came from QR URL — skip modal entirely
+    if (tableNumber) {
+      handleConfirmTableAndSubmit(tableNumber)
+      return
+    }
+
+    // Show table number modal — always start empty
+    setPendingTableNumber('')
+    setPendingCustomerName('')
+    setGuestName('')
+    setTableModalError('')
+    setShowTableModal(true)
+  }
+      const cartItems = Object.entries(cart).filter(([, qty]) => qty > 0)
+      if (cartItems.length === 0) return
+      setPendingTableNumber('')
       setTableModalError('')
       setShowTableModal(true)
       return
@@ -762,8 +792,15 @@ export default function HomePage() {
 
   const handleConfirmTableAndSubmit = async (tableOverride?: string) => {
     const tableNum = String(tableOverride ?? pendingTableNumber ?? '').trim()
+    const customerName = pendingCustomerName.trim()
+    
     if (!tableNum) {
       setTableModalError('رقم الطربيزة مطلوب')
+      return
+    }
+    
+    if (!customerName) {
+      setTableModalError('اسم الزبون مطلوب')
       return
     }
 
@@ -869,7 +906,9 @@ export default function HomePage() {
             drink_id: drinkId,
             quantity,
             total_price: (drink?.price || 0) * quantity,
-            notes: orderNotes
+            notes: orderNotes,
+            customer_name: customerName,
+            table_number: tableNum
           })
         })
         if (!orderRes.ok) {
@@ -886,6 +925,8 @@ export default function HomePage() {
 
       setCart({})
       setCartNotes({})
+      setPendingCustomerName('')
+      setPendingTableNumber('')
       if (anyFailed) {
         toast.error('في مشكلة في بعض الطلبات، تواصل مع الكاشير')
       } else {
@@ -1638,7 +1679,7 @@ export default function HomePage() {
                 <div className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 mb-2 text-xs font-semibold"
                   style={{ background: 'rgba(212,160,23,0.12)', border: '1px solid rgba(212,160,23,0.3)', color: '#D4A017' }}>
                   <span className="h-1.5 w-1.5 rounded-full bg-amber-400 animate-pulse" />
-                  بوابة إدارة المكان
+                  ب��ابة إدارة المكان
                 </div>
                 <h1 className="text-xl font-bold text-white">SîpFlõw · أدمن</h1>
                 <p className="text-xs text-zinc-500 mt-1">إدارة المكان والطلبات والإعدادات</p>
@@ -2516,8 +2557,21 @@ export default function HomePage() {
                   🪑
                 </div>
               </div>
-              <h2 className="mb-1 text-xl font-bold text-foreground">رقم الطربيزة</h2>
-              <p className="mb-5 text-sm text-muted-foreground">أدخل رقم الطربيزة عشان الستاف يوصلك</p>
+              <h2 className="mb-1 text-xl font-bold text-foreground">تأكيد الطلب</h2>
+              <p className="mb-5 text-sm text-muted-foreground">أدخل اسمك ورقم الطربيزة</p>
+              
+              {/* Customer Name Input */}
+              <label className="block text-right text-sm font-semibold mb-2 text-muted-foreground">اسمك</label>
+              <Input
+                value={pendingCustomerName}
+                onChange={(e) => { setPendingCustomerName(e.target.value); setTableModalError('') }}
+                onKeyDown={(e) => e.key === 'Enter' && handleConfirmTableAndSubmit()}
+                placeholder="مثال: أحمد"
+                className="h-12 text-center text-lg font-bold border-2 border-amber-500/40 bg-background focus:ring-2 focus:ring-amber-500 rounded-xl mb-4"
+              />
+              
+              {/* Table Number Input */}
+              <label className="block text-right text-sm font-semibold mb-2 text-muted-foreground">رقم الطربيزة</label>
               <Input
                 value={pendingTableNumber}
                 onChange={(e) => { setPendingTableNumber(e.target.value); setTableModalError('') }}
@@ -2525,6 +2579,7 @@ export default function HomePage() {
                 placeholder="مثال: 5"
                 className="h-12 text-center text-lg font-bold border-2 border-amber-500/40 bg-background focus:ring-2 focus:ring-amber-500 rounded-xl mb-3"
               />
+              
               {tableModalError && (
                 <p className="text-sm text-red-400 mb-3">{tableModalError}</p>
               )}
