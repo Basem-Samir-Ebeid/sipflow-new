@@ -1,0 +1,19 @@
+[core]
+	repositoryformatversion = 0
+	filemode = false
+	bare = false
+	logallrefupdates = true
+[branch "main"]
+	vscode-merge-base = origin/main
+[lfs "http://gitsafe:5419"]
+	locksverify = false
+[branch "undefined"]
+	vscode-merge-base = origin/main
+[remote "origin"]
+	url = https://github.com/Basem-Samir-Ebeid/sipflow-new.git
+	fetch = +refs/heads/*:refs/remotes/origin/*
+[http]
+	postBuffer = 524288000
+	maxRequestBuffer = 100M
+	version = HTTP/1.1
+	chunkedTransferEncoding = false

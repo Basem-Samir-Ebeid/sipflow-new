@@ -1,0 +1,5 @@
+-- Drop all tables with cascade
+DROP TABLE IF EXISTS orders CASCADE;
+DROP TABLE IF EXISTS sessions CASCADE;
+DROP TABLE IF EXISTS users CASCADE;
+DROP TABLE IF EXISTS drinks CASCADE;
