@@ -28,90 +28,7 @@ import { Plus, Trash2, Pencil, Upload, RefreshCw, Users, Coffee, Key, BarChart3,
 import { Checkbox } from '@/components/ui/checkbox'
 import Image from 'next/image'
 
-// Component for assigning tables to order receivers
-function AssignOrderReceiverForm({ user, onAssign }: { user: User, onAssign: (tables: string[]) => void }) {
-  const [selectedTables, setSelectedTables] = useState<string[]>([])
-  const [customTable, setCustomTable] = useState('')
-  const tableOptions = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10']
 
-  const toggleTable = (table: string) => {
-    setSelectedTables(prev => 
-      prev.includes(table) 
-        ? prev.filter(t => t !== table)
-        : [...prev, table]
-    )
-  }
-
-  const addCustomTable = () => {
-    if (customTable.trim() && !selectedTables.includes(customTable.trim())) {
-      setSelectedTables(prev => [...prev, customTable.trim()])
-      setCustomTable('')
-    }
-  }
-
-  return (
-    <div className="space-y-4">
-      <div>
-        <Label className="text-muted-foreground">اختر الطربيزات</Label>
-        <div className="mt-2 grid grid-cols-5 gap-2">
-          {tableOptions.map((table) => (
-            <div
-              key={table}
-              onClick={() => toggleTable(table)}
-              className={`flex h-10 w-full cursor-pointer items-center justify-center rounded-lg border-2 text-sm font-medium transition-colors ${
-                selectedTables.includes(table)
-                  ? 'border-primary bg-primary text-primary-foreground'
-                  : 'border-border bg-muted text-muted-foreground hover:border-primary/50'
-              }`}
-            >
-              {table}
-            </div>
-          ))}
-        </div>
-      </div>
-      
-      <div className="flex gap-2">
-        <Input
-          value={customTable}
-          onChange={(e) => setCustomTable(e.target.value)}
-          placeholder="طربيزة أخرى..."
-          className="border-border bg-muted text-foreground"
-        />
-        <Button variant="outline" onClick={addCustomTable} disabled={!customTable.trim()}>
-          <Plus className="h-4 w-4" />
-        </Button>
-      </div>
-
-      {selectedTables.length > 0 && (
-        <div className="flex flex-wrap gap-2">
-          {selectedTables.map((table) => (
-            <span 
-              key={table} 
-              className="flex items-center gap-1 rounded-full bg-primary/20 px-3 py-1 text-sm text-primary"
-            >
-              طربيزة {table}
-              <button 
-                onClick={() => toggleTable(table)}
-                className="ml-1 text-primary/60 hover:text-primary"
-              >
-                ×
-              </button>
-            </span>
-          ))}
-        </div>
-      )}
-
-      <Button 
-        className="w-full bg-primary text-primary-foreground hover:bg-primary/90" 
-        onClick={() => onAssign(selectedTables)}
-        disabled={selectedTables.length === 0}
-      >
-        <UserPlus className="ml-2 h-4 w-4" />
-        تعيين كمنفذ طلبات
-      </Button>
-    </div>
-  )
-}
 
 interface AdminPanelProps {
   drinks: Drink[]
@@ -348,7 +265,6 @@ export function AdminPanel({
   const [isClearingNotifs, setIsClearingNotifs] = useState(false)
 
   // Settings state
-  const [maxOrderReceivers, setMaxOrderReceivers] = useState('')
   const [isSavingSettings, setIsSavingSettings] = useState(false)
   const [settingsSaved, setSettingsSaved] = useState(false)
 
@@ -938,22 +854,11 @@ export function AdminPanel({
     }
   }
 
-  const handleSaveSettings = async () => {
-    if (!maxOrderReceivers.trim()) return
-    
-    setIsSavingSettings(true)
-    try {
-      const res = await fetch('/api/settings', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          key: 'max_order_receivers', 
-          value: maxOrderReceivers.trim()
-        })
-      })
-      
-      if (res.ok) {
-        setSettingsSaved(true)
+const handleSaveSettings = async () => {
+  setIsSavingSettings(true)
+  try {
+  // Placeholder for future settings
+  setSettingsSaved(true)
         setTimeout(() => setSettingsSaved(false), 3000)
         setActiveAdminTab('stats')
       }
@@ -2894,93 +2799,53 @@ export function AdminPanel({
         </TabsContent>
 
         <TabsContent value="settings" className="space-y-4">
-          {/* Order Receivers Management */}
+          {/* Working Hours */}
           <div className="rounded-2xl border border-border bg-card p-4">
             <div className="mb-4 flex items-center gap-2">
-              <Users className="h-5 w-5 text-primary" />
-              <h3 className="font-semibold text-foreground">منفذي الطلبات</h3>
+              <Clock className="h-5 w-5 text-primary" />
+              <h3 className="font-semibold text-foreground">ساعات العمل</h3>
             </div>
             <p className="mb-4 text-sm text-muted-foreground">
-              اختر المستخدمين الذين سيتلقون الطلبات وحدد الطربيزات المسؤولين عنها
+              حدد أوقات فتح وإغلاق المكان لإظهارها للعملاء
             </p>
             <div className="space-y-3">
-              {users.filter(u => u.role === 'order_receiver').length > 0 ? (
-                users.filter(u => u.role === 'order_receiver').map((user) => (
-                  <div key={user.id} className="flex items-center justify-between rounded-xl bg-muted p-3">
-                    <div>
-                      <p className="font-medium text-foreground">{user.name}</p>
-                      <p className="text-xs text-primary">
-                        الطربيزات: {user.assigned_tables?.join(', ') || 'غير محدد'}
-                      </p>
-                    </div>
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      className="border-destructive text-destructive hover:bg-destructive hover:text-destructive-foreground"
-                      onClick={async () => {
-                        await fetch(`/api/users/${user.id}`, {
-                          method: 'PUT',
-                          headers: { 'Content-Type': 'application/json' },
-                          body: JSON.stringify({ role: 'customer', assigned_tables: null })
-                        })
-                        onDrinkUpdated()
-                      }}
-                    >
-                      إزالة
-                    </Button>
+              {['السبت', 'الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة'].map((day, index) => (
+                <div key={day} className="flex items-center justify-between rounded-xl bg-muted p-3 gap-3">
+                  <div className="flex items-center gap-3 flex-1">
+                    <Checkbox 
+                      id={`day-${index}`}
+                      defaultChecked={index !== 4}
+                      className="border-primary data-[state=checked]:bg-primary"
+                    />
+                    <Label htmlFor={`day-${index}`} className="font-medium text-foreground min-w-[70px]">
+                      {day}
+                    </Label>
                   </div>
-                ))
-              ) : (
-                <p className="text-center text-muted-foreground">لا يوجد منفذين للطلبات حالياً</p>
-              )}
-            </div>
-            
-            {/* Add Order Receiver */}
-            <div className="mt-4 border-t border-border pt-4">
-              <h4 className="mb-3 font-medium text-foreground">إضافة منفذ جديد</h4>
-              <div className="space-y-3">
-                {users.filter(u => u.role !== 'order_receiver' && u.role !== 'admin').map((user) => (
-                  <div key={user.id} className="flex items-center justify-between rounded-xl bg-muted/50 p-3">
-                    <div>
-                      <p className="font-medium text-foreground">{user.name}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {user.table_number ? `طربيزة ${user.table_number}` : 'بدون طربيزة'}
-                      </p>
-                    </div>
-                    <Dialog>
-                      <DialogTrigger asChild>
-                        <Button variant="outline" size="sm" className="border-primary text-primary hover:bg-primary hover:text-primary-foreground">
-                          <Plus className="ml-1 h-3 w-3" />
-                          تعيين
-                        </Button>
-                      </DialogTrigger>
-                      <DialogContent className="border-border bg-card">
-                        <DialogHeader>
-                          <DialogTitle className="text-foreground">تعيين {user.name} كمنفذ طلبات</DialogTitle>
-                        </DialogHeader>
-                        <AssignOrderReceiverForm 
-                          user={user} 
-                          onAssign={async (tables) => {
-                            await fetch(`/api/users/${user.id}`, {
-                              method: 'PUT',
-                              headers: { 'Content-Type': 'application/json' },
-                              body: JSON.stringify({ 
-                                role: 'order_receiver', 
-                                assigned_tables: tables 
-                              })
-                            })
-                            onDrinkUpdated()
-                          }} 
-                        />
-                      </DialogContent>
-                    </Dialog>
+                  <div className="flex items-center gap-2">
+                    <Input
+                      type="time"
+                      defaultValue="10:00"
+                      className="w-[110px] border-border bg-background text-foreground text-center"
+                    />
+                    <span className="text-muted-foreground">—</span>
+                    <Input
+                      type="time"
+                      defaultValue="23:00"
+                      className="w-[110px] border-border bg-background text-foreground text-center"
+                    />
                   </div>
-                ))}
-                {users.filter(u => u.role !== 'order_receiver' && u.role !== 'admin').length === 0 && (
-                  <p className="text-center text-muted-foreground">لا يوجد مستخدمين متاحين</p>
-                )}
-              </div>
+                </div>
+              ))}
             </div>
+            <Button 
+              className="mt-4 w-full bg-primary text-primary-foreground hover:bg-primary/90"
+              onClick={() => {
+                // Save working hours logic
+              }}
+            >
+              <Clock className="ml-2 h-4 w-4" />
+              حفظ ساعات العمل
+            </Button>
           </div>
 
           {/* General Settings */}
@@ -2990,16 +2855,6 @@ export function AdminPanel({
               <h3 className="font-semibold text-foreground">إعدادات عامة</h3>
             </div>
             <div className="space-y-4">
-              <div>
-                <Label className="text-muted-foreground">الحد الأقصى لمنفذي الطلبات</Label>
-                <Input
-                  type="number"
-                  value={maxOrderReceivers}
-                  onChange={(e) => setMaxOrderReceivers(e.target.value)}
-                  placeholder="مثال: 5"
-                  className="mt-1 border-border bg-muted text-foreground"
-                />
-              </div>
               {settingsSaved && (
                 <div className="rounded-lg bg-green-500/20 p-3 text-center text-green-600">
                   تم حفظ الإعدادات بنجاح!
