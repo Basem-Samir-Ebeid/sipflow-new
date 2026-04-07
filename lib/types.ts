@@ -91,6 +91,8 @@ export interface Order {
   notes: string | null
   status: string
   total_price: number
+  customer_name?: string | null
+  table_number?: string | null
   created_at: string
   updated_at: string
 }

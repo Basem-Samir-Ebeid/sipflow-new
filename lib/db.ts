@@ -324,10 +324,16 @@ export const db = {
     `
   },
 
-  async createOrder(data: { user_id: string; session_id: string; drink_id: string; quantity: number; sugar_level?: string; notes?: string; total_price?: number }) {
+  async createOrder(data: { user_id: string; session_id: string; drink_id: string; quantity: number; sugar_level?: string; notes?: string; total_price?: number; customer_name?: string; table_number?: string }) {
+    // Ensure customer_name column exists
+    try {
+      await sql`ALTER TABLE orders ADD COLUMN IF NOT EXISTS customer_name TEXT`
+      await sql`ALTER TABLE orders ADD COLUMN IF NOT EXISTS table_number TEXT`
+    } catch {}
+    
     const result = await sql`
-      INSERT INTO orders (user_id, session_id, drink_id, quantity, sugar_level, notes, total_price)
-      VALUES (${data.user_id}, ${data.session_id}, ${data.drink_id}, ${data.quantity}, ${data.sugar_level || 'normal'}, ${data.notes || null}, ${data.total_price || 0})
+      INSERT INTO orders (user_id, session_id, drink_id, quantity, sugar_level, notes, total_price, customer_name, table_number)
+      VALUES (${data.user_id}, ${data.session_id}, ${data.drink_id}, ${data.quantity}, ${data.sugar_level || 'normal'}, ${data.notes || null}, ${data.total_price || 0}, ${data.customer_name || null}, ${data.table_number || null})
       RETURNING *
     `
     return result[0]
@@ -382,7 +388,7 @@ export const db = {
     }
   },
 
-  // ─── Staff Users ───────────────────────────────────────
+  // ─── Staff Users ─────────────────────────────────────��─
   async getStaffUsers() {
     try {
       await sql`ALTER TABLE staff_users ADD COLUMN IF NOT EXISTS role TEXT DEFAULT 'cashier'`
