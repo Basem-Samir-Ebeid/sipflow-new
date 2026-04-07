@@ -762,33 +762,6 @@ export default function HomePage() {
     setTableModalError('')
     setShowTableModal(true)
   }
-      const cartItems = Object.entries(cart).filter(([, qty]) => qty > 0)
-      if (cartItems.length === 0) return
-      setPendingTableNumber('')
-      setTableModalError('')
-      setShowTableModal(true)
-      return
-    }
-    if (!session && !currentUser) {
-      toast.error('في مشكلة في الجلسة، حاول تحدّث الصفحة')
-      return
-    }
-
-    const cartItems = Object.entries(cart).filter(([, qty]) => qty > 0)
-    if (cartItems.length === 0) return
-
-    // If table number came from QR URL — skip modal entirely
-    if (tableNumber) {
-      handleConfirmTableAndSubmit(tableNumber)
-      return
-    }
-
-    // Show table number modal — always start empty
-    setPendingTableNumber('')
-    setGuestName('')
-    setTableModalError('')
-    setShowTableModal(true)
-  }
 
   const handleConfirmTableAndSubmit = async (tableOverride?: string) => {
     const tableNum = String(tableOverride ?? pendingTableNumber ?? '').trim()
@@ -2258,7 +2231,7 @@ export default function HomePage() {
                 { label: 'الأماكن', value: 'UNLOCKED', color: '#34d399' },
                 { label: 'الإحصائيات', value: 'FULL ACCESS', color: '#34d399' },
                 { label: 'المستخدمين', value: 'FULL ACCESS', color: '#34d399' },
-                { label: 'صلاحية النظام', value: 'SUPERADMIN', color: '#fbbf24' },
+                { label: 'صلاح��ة النظام', value: 'SUPERADMIN', color: '#fbbf24' },
               ].map((item, i) => (
                 <div key={i} className="flex items-center justify-between px-3 py-1.5 rounded" style={{ background: 'rgba(212,160,23,0.04)', border: '1px solid rgba(212,160,23,0.15)' }}>
                   <span style={{ color: item.color, fontSize: '10px', letterSpacing: '0.05em' }}>{item.value}</span>
