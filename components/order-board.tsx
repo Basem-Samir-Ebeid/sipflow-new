@@ -12,25 +12,45 @@ interface OrderBoardProps {
   isAdmin?: boolean
 }
 
-const formatDisplayName = (name: string | null | undefined, tableNumber: string | null | undefined): string => {
-  if (!name) return '—'
-  if (name.startsWith('Guest-') && tableNumber) return `طاولة ${tableNumber}`
-  return name
+const formatDisplayName = (
+  customerName: string | null | undefined, 
+  tableNumber: string | null | undefined,
+  userName?: string | null | undefined
+): string => {
+  // Show customer_name from order if available
+  if (customerName && customerName.trim()) {
+    return tableNumber ? `${customerName} - طاولة ${tableNumber}` : customerName
+  }
+  // Fallback to table number only
+  if (tableNumber) return `طاولة ${tableNumber}`
+  // Hide UUID-like names (shared users)
+  if (userName?.startsWith('__زبون__')) return '—'
+  if (userName?.startsWith('Guest-')) return '—'
+  // Return user name if available
+  return userName || '—'
 }
 
 export function OrderBoard({ orders, drinks, currentUser, onDeleteOrder, isAdmin = false }: OrderBoardProps) {
-  // Group orders by user
-  const ordersByUser = orders.reduce((acc, order) => {
-    const userId = order.user_id
-    if (!acc[userId]) {
-      acc[userId] = {
+  // Group orders by customer_name + table_number (from order), fallback to user_id
+  const ordersByCustomer = orders.reduce((acc, order) => {
+    // Use customer_name + table_number from order if available, otherwise fallback to user_id
+    const customerKey = (order.customer_name && order.table_number) 
+      ? `${order.customer_name}_${order.table_number}`
+      : order.table_number 
+        ? `table_${order.table_number}`
+        : order.user_id
+    
+    if (!acc[customerKey]) {
+      acc[customerKey] = {
         user: order.user,
+        customerName: order.customer_name,
+        tableNumber: order.table_number,
         orders: []
       }
     }
-    acc[userId].orders.push(order)
+    acc[customerKey].orders.push(order)
     return acc
-  }, {} as Record<string, { user: User; orders: OrderWithDetails[] }>)
+  }, {} as Record<string, { user: User; customerName?: string | null; tableNumber?: string | null; orders: OrderWithDetails[] }>)
 
   const calculateTotal = (userOrders: OrderWithDetails[]) => {
     return userOrders.reduce((total, order) => {
@@ -60,7 +80,7 @@ export function OrderBoard({ orders, drinks, currentUser, onDeleteOrder, isAdmin
     return userOrders.reduce((count, order) => count + order.quantity, 0)
   }
 
-  if (Object.keys(ordersByUser).length === 0) {
+  if (Object.keys(ordersByCustomer).length === 0) {
     return (
       <div className="rounded-2xl border-2 border-dashed border-border bg-card p-8 text-center">
         <div className="mb-4 flex justify-center">
@@ -76,13 +96,15 @@ export function OrderBoard({ orders, drinks, currentUser, onDeleteOrder, isAdmin
 
   return (
     <div className="space-y-4">
-      {Object.entries(ordersByUser).map(([userId, { user, orders: userOrders }]) => {
-        const total = calculateTotal(userOrders)
-        const totalItems = countTotalItems(userOrders)
-        const isVip = userOrders.some(o => o.notes?.includes('مطور'))
+      {Object.entries(ordersByCustomer).map(([customerKey, { user, customerName, tableNumber, orders: customerOrders }]) => {
+        const total = calculateTotal(customerOrders)
+        const totalItems = countTotalItems(customerOrders)
+        const isVip = customerOrders.some(o => o.notes?.includes('مطور'))
+        const displayName = formatDisplayName(customerName, tableNumber, user?.name)
+        
         return (
           <div 
-            key={userId} 
+            key={customerKey} 
             className={`relative rounded-2xl p-4 shadow-sm${isVip ? ' mt-3' : ''}`}
             style={isVip ? {
               border: '2px solid #f59e0b',
@@ -97,7 +119,7 @@ export function OrderBoard({ orders, drinks, currentUser, onDeleteOrder, isAdmin
             {isVip && (
               <div className="absolute -top-3.5 left-4 z-20 flex items-center gap-1 rounded-full px-3 py-1 text-xs font-bold shadow-xl"
                 style={{ background: 'linear-gradient(135deg, #f59e0b, #b45309)', color: '#fff', letterSpacing: '0.05em' }}>
-                👑 VIP مطور
+                VIP مطور
               </div>
             )}
             {/* User Header with Summary */}
@@ -115,13 +137,13 @@ export function OrderBoard({ orders, drinks, currentUser, onDeleteOrder, isAdmin
                 </span>
               </div>
               <h3 className="text-lg font-bold" style={{ color: isVip ? '#f59e0b' : 'var(--foreground)' }}>
-                {formatDisplayName(user?.name, user?.table_number)}
+                {displayName}
               </h3>
             </div>
             
             {/* Orders List with Date/Time */}
             <div className="space-y-2">
-              {userOrders.map((order) => {
+              {customerOrders.map((order) => {
                 const drinkPrice = order.drink?.price || 0
                 const orderTotal = drinkPrice * order.quantity
                 return (
@@ -130,7 +152,7 @@ export function OrderBoard({ orders, drinks, currentUser, onDeleteOrder, isAdmin
                     className="group rounded-xl bg-muted px-4 py-3"
                   >
                     <div className="flex items-center justify-between">
-                      {(isAdmin || currentUser?.id === userId) && (
+                      {(isAdmin || currentUser?.id === order.user_id) && (
                         <Button
                           variant="ghost"
                           size="icon"
@@ -169,7 +191,7 @@ export function OrderBoard({ orders, drinks, currentUser, onDeleteOrder, isAdmin
                 {total > 0 ? `${total.toFixed(0)} ج.م` : '-'}
               </span>
               <span className="text-sm text-muted-foreground">
-                إجمالي {formatDisplayName(user?.name, user?.table_number)}
+                إجمالي {displayName}
               </span>
             </div>
           </div>
