@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { User, Place, OrderWithDetails } from '@/lib/types'
-import { LogOut, RefreshCw, Printer, CheckCircle2, Banknote, X, Clock, AlertCircle, FileText, ChevronRight, Eye, CalendarDays, CalendarCheck, CalendarX, Users, Phone, Loader2 } from 'lucide-react'
+import { LogOut, RefreshCw, Printer, CheckCircle2, Banknote, X, Clock, AlertCircle, FileText, ChevronRight, Eye, CalendarDays, CalendarCheck, CalendarX, Users, Phone, Loader2, Activity, TrendingUp, Utensils } from 'lucide-react'
 import { toast, Toaster } from 'sonner'
 
 interface Reservation {
@@ -472,6 +472,38 @@ export function CashierDashboard({ currentUser, currentPlace, onLogout }: Cashie
             </div>
           </div>
 
+          {/* Quick Activity Summary */}
+          {orders.length > 0 && (
+            <div className="rounded-2xl border border-zinc-700/50 bg-gradient-to-br from-zinc-800/50 to-zinc-900/50 p-4">
+              <div className="flex items-center gap-2 mb-3">
+                <Activity className="h-4 w-4 text-amber-400" />
+                <span className="text-sm font-bold text-white">نشاط اليوم</span>
+              </div>
+              <div className="grid grid-cols-4 gap-3">
+                <div className="text-center p-2 rounded-xl bg-amber-500/10 border border-amber-500/20">
+                  <Utensils className="h-4 w-4 mx-auto mb-1 text-amber-400" />
+                  <p className="text-lg font-black text-amber-400">{[...tableMap.keys()].filter(t => t !== 'x' && (tableMap.get(t)?.length || 0) > 0 && !paidTables.has(t)).length}</p>
+                  <p className="text-[9px] text-amber-400/70">طاولة نشطة</p>
+                </div>
+                <div className="text-center p-2 rounded-xl bg-sky-500/10 border border-sky-500/20">
+                  <Clock className="h-4 w-4 mx-auto mb-1 text-sky-400" />
+                  <p className="text-lg font-black text-sky-400">{orders.filter(o => o.status === 'pending').length}</p>
+                  <p className="text-[9px] text-sky-400/70">طلب معلق</p>
+                </div>
+                <div className="text-center p-2 rounded-xl bg-green-500/10 border border-green-500/20">
+                  <CheckCircle2 className="h-4 w-4 mx-auto mb-1 text-green-400" />
+                  <p className="text-lg font-black text-green-400">{paidTables.size}</p>
+                  <p className="text-[9px] text-green-400/70">تم التسوية</p>
+                </div>
+                <div className="text-center p-2 rounded-xl bg-purple-500/10 border border-purple-500/20">
+                  <TrendingUp className="h-4 w-4 mx-auto mb-1 text-purple-400" />
+                  <p className="text-lg font-black text-purple-400">{(settledRevenue + activeRevenue).toFixed(0)}</p>
+                  <p className="text-[9px] text-purple-400/70">ج.م اليوم</p>
+                </div>
+              </div>
+            </div>
+          )}
+
           <div className="flex flex-wrap items-center gap-4 text-xs text-zinc-500">
             <span className="h-1.5 w-1.5 rounded-full bg-green-500 animate-pulse inline-block" /> تحديث كل 15 ث
             <span className="flex items-center gap-1"><span className="inline-block w-3 h-3 rounded bg-amber-500/30 border border-amber-500" /> نشطة</span>
@@ -840,7 +872,7 @@ export function CashierDashboard({ currentUser, currentPlace, onLogout }: Cashie
                           <input
                             type="text"
                             inputMode="numeric"
-                            placeholder="رقم الطاولة"
+                            placeholder="رقم الط��ولة"
                             value={tableInputs[r.id] ?? ''}
                             onChange={e => setTableInputs(prev => ({ ...prev, [r.id]: e.target.value }))}
                             className="flex-1 rounded-xl border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm text-white placeholder:text-zinc-600 focus:border-amber-500 focus:outline-none"
