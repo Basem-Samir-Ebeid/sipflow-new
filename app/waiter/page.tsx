@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { LogOut, RefreshCw, Loader2, ArrowRight, Coffee, CheckCircle2, Clock, AlertCircle, CalendarCheck, Users, Phone, X } from 'lucide-react'
+import { LogOut, RefreshCw, Loader2, ArrowRight, Coffee, CheckCircle2, Clock, AlertCircle, CalendarCheck, Users, Phone, X, TrendingUp, Award, Zap } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { toast, Toaster } from 'sonner'
@@ -427,6 +427,49 @@ export default function WaiterPage() {
             </div>
           )}
         </div>
+
+        {/* Daily Performance Summary */}
+        {deliveredGroups.length > 0 && (
+          <div className="rounded-2xl border border-border bg-gradient-to-br from-card to-muted/30 p-4">
+            <div className="flex items-center gap-2 mb-3">
+              <TrendingUp className="h-4 w-4 text-primary" />
+              <h3 className="font-bold text-foreground text-sm">ملخص أدائك اليوم</h3>
+            </div>
+            <div className="grid grid-cols-3 gap-3">
+              <div className="text-center p-3 rounded-xl bg-green-500/10 border border-green-500/20">
+                <div className="flex items-center justify-center gap-1 mb-1">
+                  <CheckCircle2 className="h-4 w-4 text-green-400" />
+                </div>
+                <p className="text-2xl font-black text-green-400">{deliveredGroups.length}</p>
+                <p className="text-[10px] text-green-400/70">طاولة تم تسليمها</p>
+              </div>
+              <div className="text-center p-3 rounded-xl bg-amber-500/10 border border-amber-500/20">
+                <div className="flex items-center justify-center gap-1 mb-1">
+                  <Coffee className="h-4 w-4 text-amber-400" />
+                </div>
+                <p className="text-2xl font-black text-amber-400">
+                  {deliveredGroups.reduce((sum, g) => sum + g.items.length, 0)}
+                </p>
+                <p className="text-[10px] text-amber-400/70">طلب تم تسليمه</p>
+              </div>
+              <div className="text-center p-3 rounded-xl bg-primary/10 border border-primary/20">
+                <div className="flex items-center justify-center gap-1 mb-1">
+                  <Zap className="h-4 w-4 text-primary" />
+                </div>
+                <p className="text-2xl font-black text-primary">
+                  {pendingGroups.length + readyGroups.length}
+                </p>
+                <p className="text-[10px] text-primary/70">في الانتظار</p>
+              </div>
+            </div>
+            {deliveredGroups.length >= 5 && (
+              <div className="mt-3 flex items-center justify-center gap-2 p-2 rounded-xl bg-amber-500/10 border border-amber-500/30">
+                <Award className="h-4 w-4 text-amber-400" />
+                <span className="text-xs font-bold text-amber-400">ممتاز! أداء رائع اليوم</span>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Empty state */}
         {tableGroups.length === 0 && !isLoading && (
