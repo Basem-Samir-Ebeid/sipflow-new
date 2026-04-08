@@ -229,6 +229,14 @@ export default function HomePage() {
       }
     } catch {}
 
+    // Restore archive unlocked state
+    try {
+      const savedArchiveUnlocked = localStorage.getItem('qa3da_archive_unlocked')
+      if (savedArchiveUnlocked === 'true') {
+        setArchiveUnlocked(true)
+      }
+    } catch {}
+
     // Show update banner if this is a new version (stays until user explicitly closes)
     const savedVersion = localStorage.getItem('qa3da_app_version')
     if (savedVersion && savedVersion !== APP_VERSION) {
@@ -1138,6 +1146,8 @@ export default function HomePage() {
       const data = await res.json()
       if (data.value === archivePasswordInput) {
         setArchiveUnlocked(true)
+        // Save the unlocked state to localStorage
+        localStorage.setItem('qa3da_archive_unlocked', 'true')
         setShowArchivePasswordModal(false)
         setArchivePasswordInput('')
         setShowArchiveView(true)
@@ -3106,18 +3116,34 @@ export default function HomePage() {
             {!isDevAdmin && showArchiveView && archiveUnlocked && (
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <button
-                    onClick={() => {
-                      setShowArchiveView(false)
-                      setSelectedArchivedSessionId(null)
-                      setArchivedOrders([])
-                    }}
-                    className="flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium transition-colors hover:bg-muted"
-                    style={{ color: '#D4A017' }}
-                  >
-                    <ChevronRight className="h-4 w-4" />
-                    العودة للوحة
-                  </button>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => {
+                        setShowArchiveView(false)
+                        setSelectedArchivedSessionId(null)
+                        setArchivedOrders([])
+                      }}
+                      className="flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium transition-colors hover:bg-muted"
+                      style={{ color: '#D4A017' }}
+                    >
+                      <ChevronRight className="h-4 w-4" />
+                      العودة للوحة
+                    </button>
+                    <button
+                      onClick={() => {
+                        setArchiveUnlocked(false)
+                        localStorage.removeItem('qa3da_archive_unlocked')
+                        setShowArchiveView(false)
+                        setSelectedArchivedSessionId(null)
+                        setArchivedOrders([])
+                      }}
+                      className="flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium transition-colors hover:bg-muted"
+                      style={{ color: '#ef4444' }}
+                      title="قفل الأرشيف"
+                    >
+                      <Lock className="h-4 w-4" />
+                    </button>
+                  </div>
                   <h2 className="text-lg font-bold text-foreground flex items-center gap-2">
                     <Archive className="h-5 w-5" style={{ color: '#D4A017' }} />
                     أرشيف SîpFlõw
