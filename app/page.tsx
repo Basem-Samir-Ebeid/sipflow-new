@@ -1793,7 +1793,7 @@ export default function HomePage() {
                   {isVerifyingPlaceAdmin ? <Loader2 className="h-4 w-4 animate-spin" /> : <Settings className="h-4 w-4" />}
                   {isVerifyingPlaceAdmin ? 'جاري التحقق...' : 'دخول لوحة الإدارة'}
                 </button>
-                <button onClick={() => { setShowPlaceAdminLanding(false); setPlaceAdminConfirmName(''); setPlaceAdminConfirmPwd(''); setPlaceAdminConfirmError('') }}
+                <button onClick={() => { setShowPlaceAdminLanding(false); setPlaceAdminConfirmName(''); setPlaceAdminConfirmError('') }}
                   className="w-full h-9 rounded-xl text-sm text-zinc-500 hover:text-zinc-300 transition-colors">
                   إلغاء
                 </button>
@@ -2148,7 +2148,7 @@ export default function HomePage() {
                   {isVerifyingPlaceAdmin ? <Loader2 className="h-4 w-4 animate-spin" /> : <Settings className="h-4 w-4" />}
                   {isVerifyingPlaceAdmin ? 'جاري التحقق...' : 'دخول لوحة الإدارة'}
                 </button>
-                <button onClick={() => { setShowPlaceAdminConfirm(false); setPlaceAdminConfirmName(''); setPlaceAdminConfirmPwd(''); setPlaceAdminConfirmError('') }}
+                <button onClick={() => { setShowPlaceAdminConfirm(false); setPlaceAdminConfirmName(''); setPlaceAdminConfirmError('') }}
                   className="w-full h-9 rounded-xl text-sm text-zinc-500 hover:text-zinc-300 transition-colors">
                   إلغاء
                 </button>
@@ -3689,7 +3689,7 @@ export default function HomePage() {
                 {isVerifyingPlaceAdmin ? <Loader2 className="h-4 w-4 animate-spin" /> : <Settings className="h-4 w-4" />}
                 {isVerifyingPlaceAdmin ? 'جاري التحقق...' : 'دخول لوحة الإدارة'}
               </button>
-              <button onClick={() => { setShowPlaceAdminConfirm(false); setPlaceAdminConfirmName(''); setPlaceAdminConfirmPwd(''); setPlaceAdminConfirmError('') }}
+              <button onClick={() => { setShowPlaceAdminConfirm(false); setPlaceAdminConfirmName(''); setPlaceAdminConfirmError('') }}
                 className="w-full h-9 rounded-xl text-sm text-zinc-500 hover:text-zinc-300 transition-colors">
                 إلغاء
               </button>
