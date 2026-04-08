@@ -80,6 +80,16 @@ export function AdminPanel({
   const [devDrinkPlaceId, setDevDrinkPlaceId] = useState<string>('')
   const [isUploading, setIsUploading] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
+
+  const [hours, setHours] = useState({
+  "السبت": { from: "10:00", to: "23:00" },
+  "الأحد": { from: "10:00", to: "23:00" },
+  "الإثنين": { from: "10:00", to: "23:00" },
+  "الثلاثاء": { from: "10:00", to: "23:00" },
+  "الأربعاء": { from: "10:00", to: "23:00" },
+  "الخميس": { from: "10:00", to: "23:00" },
+  "الجمعة": { from: "10:00", to: "23:00" },
+});
   
   // User password state
   const [settingPasswordForUser, setSettingPasswordForUser] = useState<User | null>(null)
@@ -2839,16 +2849,34 @@ const handleSaveSettings = async () => {
                   </div>
                   <div className="flex items-center gap-2">
                     <Input
-                      type="time"
-                      defaultValue="10:00"
-                      className="w-[110px] border-border bg-background text-foreground text-center"
-                    />
+  type="time"
+  value={hours[day].from}
+  onChange={(e) =>
+    setHours({
+      ...hours,
+      [day]: {
+        ...hours[day],
+        from: e.target.value,
+      },
+    })
+  }
+  className="w-[110px] border-border bg-background text-foreground"
+/>
                     <span className="text-muted-foreground">—</span>
                     <Input
-                      type="time"
-                      defaultValue="23:00"
-                      className="w-[110px] border-border bg-background text-foreground text-center"
-                    />
+  type="time"
+  value={hours[day].to}
+  onChange={(e) =>
+    setHours({
+      ...hours,
+      [day]: {
+        ...hours[day],
+        to: e.target.value,
+      },
+    })
+  }
+  className="w-[110px] border-border bg-background text-foreground"
+/>
                   </div>
                 </div>
               ))}
@@ -2856,10 +2884,10 @@ const handleSaveSettings = async () => {
             <Button
   style={{ position: "relative", zIndex: 9999, pointerEvents: "auto" }}
   className="mt-4 w-full bg-primary text-primary-foreground hover:bg-primary/90"
-  onClick={() => {
-    alert("تم الحفظ ✅");
-    localStorage.setItem("working_hours", "saved");
-  }}
+onClick={() => {
+  localStorage.setItem("working_hours", JSON.stringify(hours));
+  alert("تم حفظ ساعات العمل ✅");
+}}
 >
   <Clock className="ml-2 h-4 w-4" />
   حفظ ساعات العمل
