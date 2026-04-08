@@ -2853,16 +2853,17 @@ const handleSaveSettings = async () => {
                 </div>
               ))}
             </div>
-            <Button 
-              className="mt-4 w-full bg-primary text-primary-foreground hover:bg-primary/90"
-              onClick={() => {
-  localStorage.setItem("working_hours", "saved");
-  alert("تم حفظ ساعات العمل ✅");
-}}
-            >
-              <Clock className="ml-2 h-4 w-4" />
-              حفظ ساعات العمل
-            </Button>
+            <Button
+  style={{ position: "relative", zIndex: 9999, pointerEvents: "auto" }}
+  className="mt-4 w-full bg-primary text-primary-foreground hover:bg-primary/90"
+  onClick={() => {
+    alert("تم الحفظ ✅");
+    localStorage.setItem("working_hours", "saved");
+  }}
+>
+  <Clock className="ml-2 h-4 w-4" />
+  حفظ ساعات العمل
+</Button>
           </div>
 
           {/* QR Code Manager — for place admin */}
