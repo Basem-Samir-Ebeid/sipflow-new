@@ -3131,6 +3131,8 @@ export default function HomePage() {
                     </button>
                     <button
                       onClick={() => {
+                        setArchiveUnlocked(false)
+                        localStorage.removeItem('qa3da_archive_unlocked')
                         setShowArchiveView(false)
                         setSelectedArchivedSessionId(null)
                         setArchivedOrders([])
