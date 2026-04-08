@@ -130,13 +130,23 @@ export default function BarPage() {
           : (isShared && tableStr ? `table_${tableStr}` : (order.user_id || 'unknown'))
         
         if (!acc[groupKey]) {
+          // Build the display name - prioritize customer_name + table_number from order input
+          let displayName = ''
+          if (customerName && tableStr) {
+            displayName = `${customerName} - طاولة ${tableStr}`
+          } else if (customerName) {
+            displayName = customerName
+          } else if (tableStr) {
+            displayName = `طاولة ${tableStr}`
+          } else if (isShared) {
+            displayName = 'زبون'
+          } else {
+            displayName = order.user?.name || 'مستخدم'
+          }
+
           acc[groupKey] = {
             userId: order.user_id || 'unknown',
-            userName: customerName && tableStr
-              ? `${customerName} - طاولة ${tableStr}`
-              : (customerName ? customerName : (tableStr
-                ? `طاولة ${tableStr}`
-                : (isShared ? 'زبون' : (order.user?.name || 'مستخدم')))),
+            userName: displayName,
             tableNumber: tableStr,
             orders: [],
             totalPrice: 0,
