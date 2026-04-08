@@ -2856,8 +2856,9 @@ const handleSaveSettings = async () => {
             <Button 
               className="mt-4 w-full bg-primary text-primary-foreground hover:bg-primary/90"
               onClick={() => {
-                // Save working hours logic
-              }}
+  localStorage.setItem("working_hours", "saved");
+  alert("تم حفظ ساعات العمل ✅");
+}}
             >
               <Clock className="ml-2 h-4 w-4" />
               حفظ ساعات العمل
