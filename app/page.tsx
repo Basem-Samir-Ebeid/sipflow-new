@@ -312,6 +312,13 @@ export default function HomePage() {
     }
   }, [messages, currentUser, floatingMessage, mutateMessages])
 
+  // Keep archive unlocked state in sync with localStorage
+  useEffect(() => {
+    if (archiveUnlocked) {
+      localStorage.setItem('qa3da_archive_unlocked', 'true')
+    }
+  }, [archiveUnlocked])
+
   const dismissFloatingMessage = () => {
     setFloatingMessage(null)
   }
@@ -1542,7 +1549,7 @@ export default function HomePage() {
                 </div>
                 <div className="text-right">
                   <p className="text-sm font-bold leading-tight" style={{ color: '#e8c76a' }}>
-                    {isLoadingPlaces ? 'جاري التحميل...' : 'اختار مكانك'}
+                    {isLoadingPlaces ? '��اري التحميل...' : 'اختار مكانك'}
                   </p>
                   {!isLoadingPlaces && (
                     <p className="text-[11px] leading-tight mt-0.5" style={{ color: 'rgba(212,160,23,0.5)' }}>لتقديم طلبك</p>
@@ -1793,7 +1800,7 @@ export default function HomePage() {
                   {isVerifyingPlaceAdmin ? <Loader2 className="h-4 w-4 animate-spin" /> : <Settings className="h-4 w-4" />}
                   {isVerifyingPlaceAdmin ? 'جاري التحقق...' : 'دخول لوحة الإدارة'}
                 </button>
-                <button onClick={() => { setShowPlaceAdminLanding(false); setPlaceAdminConfirmName(''); setPlaceAdminConfirmPwd(''); setPlaceAdminConfirmError('') }}
+                <button onClick={() => { setShowPlaceAdminLanding(false); setPlaceAdminConfirmName(''); setPlaceAdminConfirmError('') }}
                   className="w-full h-9 rounded-xl text-sm text-zinc-500 hover:text-zinc-300 transition-colors">
                   إلغاء
                 </button>
@@ -2148,7 +2155,7 @@ export default function HomePage() {
                   {isVerifyingPlaceAdmin ? <Loader2 className="h-4 w-4 animate-spin" /> : <Settings className="h-4 w-4" />}
                   {isVerifyingPlaceAdmin ? 'جاري التحقق...' : 'دخول لوحة الإدارة'}
                 </button>
-                <button onClick={() => { setShowPlaceAdminConfirm(false); setPlaceAdminConfirmName(''); setPlaceAdminConfirmPwd(''); setPlaceAdminConfirmError('') }}
+                <button onClick={() => { setShowPlaceAdminConfirm(false); setPlaceAdminConfirmName(''); setPlaceAdminConfirmError('') }}
                   className="w-full h-9 rounded-xl text-sm text-zinc-500 hover:text-zinc-300 transition-colors">
                   إلغاء
                 </button>
@@ -2854,7 +2861,7 @@ export default function HomePage() {
             {/* Dev admin: place selector for menu */}
             {isDevAdmin && (
               <div className="rounded-2xl border border-border bg-card p-4 space-y-3">
-                <label className="text-sm text-muted-foreground block">اختر المكان لعرض منيوه</label>
+                <label className="text-sm text-muted-foreground block">اختر المكان لعرض منيو��</label>
                 <select
                   value={menuDevPlaceId}
                   onChange={e => setMenuDevPlaceId(e.target.value)}
@@ -3182,6 +3189,8 @@ export default function HomePage() {
                   if (archiveUnlocked) {
                     setShowArchiveView(true)
                   } else {
+                    setArchivePasswordInput('')
+                    setArchivePasswordError('')
                     setShowArchivePasswordModal(true)
                   }
                 }}
@@ -3689,7 +3698,7 @@ export default function HomePage() {
                 {isVerifyingPlaceAdmin ? <Loader2 className="h-4 w-4 animate-spin" /> : <Settings className="h-4 w-4" />}
                 {isVerifyingPlaceAdmin ? 'جاري التحقق...' : 'دخول لوحة الإدارة'}
               </button>
-              <button onClick={() => { setShowPlaceAdminConfirm(false); setPlaceAdminConfirmName(''); setPlaceAdminConfirmPwd(''); setPlaceAdminConfirmError('') }}
+              <button onClick={() => { setShowPlaceAdminConfirm(false); setPlaceAdminConfirmName(''); setPlaceAdminConfirmError('') }}
                 className="w-full h-9 rounded-xl text-sm text-zinc-500 hover:text-zinc-300 transition-colors">
                 إلغاء
               </button>
