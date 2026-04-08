@@ -856,19 +856,18 @@ export function AdminPanel({
 
 const handleSaveSettings = async () => {
   setIsSavingSettings(true)
-  try {
-  // Placeholder for future settings
-  setSettingsSaved(true)
-        setTimeout(() => setSettingsSaved(false), 3000)
-        setActiveAdminTab('stats')
-      }
-    } catch (err) {
-      console.error('Error saving settings:', err)
-    } finally {
-      setIsSavingSettings(false)
-    }
-  }
 
+  try {
+    // Placeholder for future settings
+    setSettingsSaved(true)
+    setTimeout(() => setSettingsSaved(false), 3000)
+    setActiveAdminTab('stats');
+  } catch (err) {
+    console.error('Error saving settings:', err)
+  } finally {
+    setIsSavingSettings(false)
+  }
+}
   if (!isInline) {
     return null
   }
