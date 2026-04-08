@@ -90,7 +90,12 @@ export function AdminPanel({
   "الخميس": { from: "10:00", to: "23:00" },
   "الجمعة": { from: "10:00", to: "23:00" },
 });
-  
+  useEffect(() => {
+  const saved = localStorage.getItem("working_hours");
+  if (saved) {
+    setHours(JSON.parse(saved));
+  }
+}, []);
   // User password state
   const [settingPasswordForUser, setSettingPasswordForUser] = useState<User | null>(null)
   const [newUserPassword, setNewUserPassword] = useState('')
