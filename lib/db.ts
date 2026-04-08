@@ -298,6 +298,13 @@ export const db = {
     }
   },
 
+  async deleteSession(sessionId: string) {
+    // Delete all orders for this session first
+    await sql`DELETE FROM orders WHERE session_id = ${sessionId}`
+    // Then delete the session
+    await sql`DELETE FROM sessions WHERE id = ${sessionId}`
+  },
+
   // ─── Orders ────────────────────────────────────────────
   async getOrdersBySession(sessionId: string) {
     return await sql`
