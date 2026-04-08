@@ -42,8 +42,8 @@ export async function POST(request: Request) {
     if (action === 'reset') {
       const today = new Date().toISOString().split('T')[0]
 
-      // Archive ALL active sessions for this place before creating new one
-      await db.endAllActiveSessions(place_id || null)
+      // Only end TODAY's active session — historical sessions and their orders are preserved
+      await db.endTodaySession(today, place_id || null)
 
       // Create a fresh session for today
       const session = await db.createSession(today, place_id || null)
