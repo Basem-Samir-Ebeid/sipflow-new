@@ -283,6 +283,14 @@ export function AdminPanel({
   const [isSavingSettings, setIsSavingSettings] = useState(false)
   const [settingsSaved, setSettingsSaved] = useState(false)
 
+  // Archive password state (dev admin only)
+  const [archivePassword, setArchivePassword] = useState('')
+  const [archivePasswordConfirm, setArchivePasswordConfirm] = useState('')
+  const [isSavingArchivePassword, setIsSavingArchivePassword] = useState(false)
+  const [archivePasswordError, setArchivePasswordError] = useState('')
+  const [archivePasswordSuccess, setArchivePasswordSuccess] = useState('')
+  const [showArchivePassword, setShowArchivePassword] = useState(false)
+
   // Staff users state
   interface StaffUser {
     id: string
@@ -2813,6 +2821,93 @@ const handleSaveSettings = async () => {
         </TabsContent>
 
         <TabsContent value="settings" className="space-y-4">
+          {/* Archive Password Setting — dev admin only */}
+          {isDevAdmin && (
+            <div className="rounded-2xl border border-amber-500/20 bg-amber-500/5 p-4 space-y-3">
+              <h3 className="font-bold text-foreground flex items-center gap-2">
+                <Key className="h-4 w-4 text-amber-400" /> كلمة سر الأرشيف
+              </h3>
+              <p className="text-xs text-muted-foreground">
+                حدد كلمة سر للوصول للـ SîpFlõw القديمة المؤرشفة. المستخدمين العاديين سيحتاجون هذه الكلمة لرؤية الأرشيف.
+              </p>
+              <div className="space-y-3">
+                <div className="relative">
+                  <Label className="text-xs text-muted-foreground">كلمة السر الجديدة</Label>
+                  <div className="relative mt-1">
+                    <Input
+                      type={showArchivePassword ? 'text' : 'password'}
+                      value={archivePassword}
+                      onChange={e => { setArchivePassword(e.target.value); setArchivePasswordError(''); setArchivePasswordSuccess('') }}
+                      placeholder="أدخل كلمة سر الأرشيف"
+                      className="border-border bg-muted text-foreground pr-10"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowArchivePassword(!showArchivePassword)}
+                      className="absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                    >
+                      {showArchivePassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
+                  </div>
+                </div>
+                <div>
+                  <Label className="text-xs text-muted-foreground">تأكيد كلمة السر</Label>
+                  <Input
+                    type={showArchivePassword ? 'text' : 'password'}
+                    value={archivePasswordConfirm}
+                    onChange={e => { setArchivePasswordConfirm(e.target.value); setArchivePasswordError(''); setArchivePasswordSuccess('') }}
+                    placeholder="أعد كتابة كلمة السر"
+                    className="mt-1 border-border bg-muted text-foreground"
+                  />
+                </div>
+                {archivePasswordError && (
+                  <p className="text-sm text-destructive">{archivePasswordError}</p>
+                )}
+                {archivePasswordSuccess && (
+                  <p className="text-sm text-green-500">{archivePasswordSuccess}</p>
+                )}
+                <Button
+                  className="w-full"
+                  style={{ background: 'linear-gradient(135deg, #D4A017, #f97316)', color: '#0f0800' }}
+                  disabled={isSavingArchivePassword}
+                  onClick={async () => {
+                    if (!archivePassword.trim()) {
+                      setArchivePasswordError('أدخل كلمة السر')
+                      return
+                    }
+                    if (archivePassword !== archivePasswordConfirm) {
+                      setArchivePasswordError('كلمة السر غير متطابقة')
+                      return
+                    }
+                    if (archivePassword.length < 4) {
+                      setArchivePasswordError('كلمة السر يجب أن تكون 4 أحرف على الأقل')
+                      return
+                    }
+                    setIsSavingArchivePassword(true)
+                    try {
+                      const res = await fetch('/api/settings', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ key: 'archive_password', value: archivePassword })
+                      })
+                      if (!res.ok) throw new Error('Failed to save')
+                      setArchivePasswordSuccess('تم حفظ كلمة سر الأرشيف بنجاح')
+                      setArchivePassword('')
+                      setArchivePasswordConfirm('')
+                    } catch {
+                      setArchivePasswordError('حدث خطأ أثناء الحفظ')
+                    } finally {
+                      setIsSavingArchivePassword(false)
+                    }
+                  }}
+                >
+                  <Key className="ml-2 h-4 w-4" />
+                  {isSavingArchivePassword ? 'جاري الحفظ...' : 'حفظ كلمة السر'}
+                </Button>
+              </div>
+            </div>
+          )}
+
           {/* Working Hours */}
           <div className="rounded-2xl border border-border bg-card p-4">
             <div className="mb-4 flex items-center gap-2">
@@ -4202,7 +4297,7 @@ onClick={() => {
                   <div className="rounded-2xl border border-border bg-card p-5 space-y-4">
                     <h3 className="font-bold text-foreground flex items-center gap-2">
                       <Award className="h-4 w-4" style={{ color: gold }} />
-                      أكتر المشاريب مبيعاً
+                      أكتر المشار��ب مبيعاً
                     </h3>
                     <div className="space-y-3">
                       {analyticsData.topDrinks.map((d, i) => (
