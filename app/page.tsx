@@ -1234,7 +1234,7 @@ export default function HomePage() {
     finally { setIsLoadingPlaces(false) }
   }
 
-  // ─── Auto-login shared user for a place ───────────────────
+  // ─── Auto-login shared user for a place ──────────────��────
   const autoLoginSharedUser = async (place: Place) => {
     const sharedName = `__زبون__${place.id}`
     try {
@@ -2977,7 +2977,7 @@ export default function HomePage() {
               <div className="sticky bottom-4 rounded-xl border border-border bg-card p-4 shadow-lg">
                 <div className="mb-3 flex items-center justify-between">
                   <span className="font-semibold text-foreground">
-                    {cartCount} صن�� في السلة
+                    {cartCount} صنف في السلة
                   </span>
                   {cartTotal > 0 && (
                     <span className="font-bold text-primary">{cartTotal.toFixed(2)} ج.م</span>
@@ -3350,7 +3350,7 @@ export default function HomePage() {
                       className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
                     >
                       <ChevronRight className="h-4 w-4" />
-                      العودة لقائمة الأرشيف
+                      العودة لق��ئمة الأرشيف
                     </button>
 
                     {isLoadingArchivedOrders ? (

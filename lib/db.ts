@@ -307,6 +307,12 @@ export const db = {
 
   // ─── Orders ────────────────────────────────────────────
   async getOrdersBySession(sessionId: string) {
+    // Ensure customer_name and table_number columns exist
+    try {
+      await sql`ALTER TABLE orders ADD COLUMN IF NOT EXISTS customer_name TEXT`
+      await sql`ALTER TABLE orders ADD COLUMN IF NOT EXISTS table_number TEXT`
+    } catch {}
+    
     return await sql`
       SELECT 
         o.*,
