@@ -1408,7 +1408,7 @@ export default function HomePage() {
   // Prevent hydration mismatch - don't render until client-side mount
   if (!mounted) {
     return (
-      <main className="min-h-screen bg-black flex items-center justify-center" dir="rtl" onClick={handleGlobalClick}>
+      <main className="min-h-screen bg-black flex items-center justify-center" dir="rtl" onClick={handleGlobalClick} suppressHydrationWarning>
         <div className="flex flex-col items-center gap-3">
           <div className="w-8 h-8 border-2 border-amber-500/40 border-t-amber-500 rounded-full animate-spin" />
         </div>
@@ -1419,7 +1419,7 @@ export default function HomePage() {
   // Place Selection Screen
   if (!currentPlace && !isAdmin) {
     return (
-      <main className="relative min-h-screen bg-black overflow-hidden flex flex-col items-center justify-center p-6" dir="rtl" onClick={handleGlobalClick}>
+      <main className="relative min-h-screen bg-black overflow-hidden flex flex-col items-center justify-center p-6" dir="rtl" onClick={handleGlobalClick} suppressHydrationWarning>
         <div className="relative overflow-hidden py-[5px] w-full absolute top-0" style={{ background: 'linear-gradient(90deg, #1a0a00, #3d1f00, #6b3a00, #D4A017, #6b3a00, #3d1f00, #1a0a00)' }}>
           <div className="flex items-center justify-center gap-2">
             <span className="text-[10px] tracking-widest uppercase text-amber-200/60">✦</span>
@@ -2109,7 +2109,7 @@ export default function HomePage() {
 
   // Main App
   return (
-    <main className="relative min-h-screen bg-zinc-900 overflow-hidden" onClick={handleGlobalClick}>
+    <main className="relative min-h-screen bg-zinc-900 overflow-hidden" onClick={handleGlobalClick} suppressHydrationWarning>
       {/* Background decorative shapes */}
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute -top-20 -right-20 h-72 w-72 rounded-full bg-primary/20 blur-3xl" />
