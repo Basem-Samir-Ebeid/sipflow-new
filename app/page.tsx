@@ -123,6 +123,8 @@ export default function HomePage() {
   const [archivedOrders, setArchivedOrders] = useState<OrderWithDetails[]>([])
   const [isLoadingArchivedOrders, setIsLoadingArchivedOrders] = useState(false)
   const [showArchiveView, setShowArchiveView] = useState(false)
+  // Track today's archived sessions for the archive button indicator
+  const [todaysArchivedCount, setTodaysArchivedCount] = useState(0)
 
   const placeParam = currentPlace ? `?place_id=${currentPlace.id}` : ''
 
@@ -1139,11 +1141,17 @@ export default function HomePage() {
         setShowArchivePasswordModal(false)
         setArchivePasswordInput('')
         setShowArchiveView(true)
-        // Fetch archived sessions
+        // Fetch archived sessions — show today's archived sessions first
         const placeId = currentPlace?.id
+        const today = new Date().toISOString().split('T')[0]
         const sessRes = await fetch(`/api/sessions/archived${placeId ? `?place_id=${placeId}` : ''}`)
         const sessData = await sessRes.json()
-        setArchivedSessions(Array.isArray(sessData) ? sessData : [])
+        // Filter to show today's archived sessions first, then older ones
+        const allSessions = Array.isArray(sessData) ? sessData : []
+        const todayArchived = allSessions.filter(s => s.date === today)
+        const olderArchived = allSessions.filter(s => s.date !== today)
+        const sortedSessions = [...todayArchived, ...olderArchived]
+        setArchivedSessions(sortedSessions)
       } else {
         setArchivePasswordError('كلمة السر غير صحيحة')
       }
@@ -1268,9 +1276,14 @@ export default function HomePage() {
         if (!Array.isArray(sessions) || sessions.length === 0) {
           setDateSessions([]); setSelectedDateSessionId(null); setDateOrders([]); return
         }
-        setDateSessions(sessions)
+        // Filter to show only active sessions for today; for past dates show all
+        const isToday = dateStr === todayStr
+        const activeSessions = isToday ? sessions.filter(s => s.is_active) : sessions
+        setDateSessions(activeSessions)
+        
         // Default: active session first, else the most recent
-        const defaultSess = sessions.find(s => s.is_active) ?? sessions[sessions.length - 1]
+        const defaultSess = activeSessions.find(s => s.is_active) ?? activeSessions[activeSessions.length - 1]
+        if (!defaultSess) { setSelectedDateSessionId(null); setDateOrders([]); return }
         setSelectedDateSessionId(defaultSess.id)
 
         // For today's active session, live orders come from SWR — no need to fetch here
@@ -1285,6 +1298,22 @@ export default function HomePage() {
       .finally(() => setIsLoadingDateOrders(false))
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [effectiveDate.toDateString(), currentPlace?.id, session?.id])
+
+  // Fetch today's archived sessions count to show on archive button
+  useEffect(() => {
+    const today = new Date().toISOString().split('T')[0]
+    const pid = currentPlace?.id ? `?place_id=${currentPlace.id}` : ''
+    
+    fetch(`/api/sessions?date=${today}&all=true${pid}`)
+      .then(r => r.json())
+      .then((sessions: Session[]) => {
+        if (Array.isArray(sessions)) {
+          const archivedCount = sessions.filter(s => !s.is_active).length
+          setTodaysArchivedCount(archivedCount)
+        }
+      })
+      .catch(() => setTodaysArchivedCount(0))
+  }, [currentPlace?.id, session?.id])
 
   // Re-fetch dev admin board orders when selected date changes
   useEffect(() => {
@@ -2844,7 +2873,7 @@ export default function HomePage() {
               <div className="sticky bottom-4 rounded-xl border border-border bg-card p-4 shadow-lg">
                 <div className="mb-3 flex items-center justify-between">
                   <span className="font-semibold text-foreground">
-                    {cartCount} صنف في السلة
+                    {cartCount} صن�� في السلة
                   </span>
                   {cartTotal > 0 && (
                     <span className="font-bold text-primary">{cartTotal.toFixed(2)} ج.م</span>
@@ -3064,6 +3093,11 @@ export default function HomePage() {
               >
                 <Archive className="h-4 w-4" />
                 {archiveUnlocked ? 'عرض الأرشيف' : 'الأرشيف'}
+                {todaysArchivedCount > 0 && (
+                  <span className="ml-1.5 inline-flex items-center justify-center h-5 w-5 rounded-full text-xs font-bold" style={{ background: 'rgba(212,160,23,0.3)', color: '#D4A017' }}>
+                    {todaysArchivedCount}
+                  </span>
+                )}
                 {!archiveUnlocked && <Lock className="h-3 w-3 opacity-60" />}
               </button>
             )}
