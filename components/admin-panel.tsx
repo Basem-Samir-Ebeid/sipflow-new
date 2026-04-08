@@ -1,4 +1,4 @@
-'use client'
+'use client';
 
 import { useState, useRef, useEffect } from 'react'
 import { Drink, User, OrderWithDetails, Place, Reservation } from '@/lib/types'
