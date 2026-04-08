@@ -3,9 +3,6 @@ const nextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
   allowedDevOrigins: ['*.replit.dev', '*.janeway.replit.dev', '*.repl.co'],
   images: {
     unoptimized: true,
