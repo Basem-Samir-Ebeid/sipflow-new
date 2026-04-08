@@ -9,7 +9,7 @@ import { AdminPanel } from '@/components/admin-panel'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Coffee, Grid3x2 as Grid3X3, Settings, ChevronLeft, ChevronRight, DollarSign, Users, Calendar, Bell, X, Printer, CircleCheck as CheckCircle2, LogOut, Eye, EyeOff, Loader2, Sparkles, ShieldCheck, ClipboardList, MapPin, Archive, Lock, Clock } from 'lucide-react'
+import { Coffee, Grid3x2 as Grid3X3, Settings, ChevronLeft, ChevronRight, DollarSign, Users, Calendar, Bell, X, Printer, CircleCheck as CheckCircle2, LogOut, Eye, EyeOff, Loader2, Sparkles, ShieldCheck, ClipboardList, MapPin, Archive, Lock, Clock, Trash2 } from 'lucide-react'
 import { toast, Toaster } from 'sonner'
 import { ReceiptModal } from '@/components/receipt-modal'
 import { CashierDashboard } from '@/components/cashier-dashboard'
@@ -125,6 +125,10 @@ export default function HomePage() {
   const [showArchiveView, setShowArchiveView] = useState(false)
   // Track today's archived sessions for the archive button indicator
   const [todaysArchivedCount, setTodaysArchivedCount] = useState(0)
+  // Archive session deletion state
+  const [showDeleteSessionConfirm, setShowDeleteSessionConfirm] = useState(false)
+  const [sessionToDelete, setSessionToDelete] = useState<Session | null>(null)
+  const [isDeletingSession, setIsDeletingSession] = useState(false)
 
   const placeParam = currentPlace ? `?place_id=${currentPlace.id}` : ''
 
@@ -569,7 +573,7 @@ export default function HomePage() {
     if (!pwd.trim()) return 'الباسورد مطلوب'
 
     // Minimum 5 characters
-    if (pwd.trim().length < 5) return 'الباسورد لازم يكون 5 أحرف أو أكتر'
+    if (pwd.trim().length < 5) return 'الباسورد لازم يكون 5 أحرف ��و أكتر'
 
     // Can't be same as username
     if (pwd.toLowerCase() === name.toLowerCase().trim()) return 'الباسورد ما ينفعش يكون نفس اسمك'
@@ -1169,6 +1173,28 @@ export default function HomePage() {
       setArchivePasswordError('حدث خطأ. حاول مرة أخرى')
     } finally {
       setIsVerifyingArchivePassword(false)
+    }
+  }
+
+  const handleDeleteSession = async () => {
+    if (!sessionToDelete) return
+    setIsDeletingSession(true)
+    try {
+      const res = await fetch(`/api/sessions/${sessionToDelete.id}`, { method: 'DELETE' })
+      if (res.ok) {
+        // Remove from archived sessions list
+        setArchivedSessions(archivedSessions.filter(s => s.id !== sessionToDelete.id))
+        setShowDeleteSessionConfirm(false)
+        setSessionToDelete(null)
+        toast.success('تم حذف الجلسة بنجاح')
+      } else {
+        toast.error('فشل حذف الجلسة')
+      }
+    } catch (err) {
+      console.error('[v0] Error deleting session:', err)
+      toast.error('حدث خطأ أثناء الحذف')
+    } finally {
+      setIsDeletingSession(false)
     }
   }
 
@@ -2504,6 +2530,67 @@ export default function HomePage() {
         </div>
       )}
 
+      {/* Delete Session Confirmation Modal */}
+      {showDeleteSessionConfirm && sessionToDelete && (
+        <div className="fixed inset-0 z-[998] flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(6px)' }} dir="rtl">
+          <div className="w-full max-w-sm rounded-3xl overflow-hidden animate-in zoom-in-95 duration-200" style={{ background: 'linear-gradient(160deg, #1a0d00, #2a1600)', border: '1px solid rgba(212,160,23,0.3)' }}>
+            {/* Header */}
+            <div className="px-6 pt-6 pb-4 text-center border-b" style={{ borderColor: 'rgba(212,160,23,0.15)' }}>
+              <div className="mx-auto mb-3 flex h-16 w-16 items-center justify-center rounded-2xl" style={{ background: 'rgba(239,68,68,0.15)' }}>
+                <Trash2 className="h-8 w-8" style={{ color: '#ef4444' }} />
+              </div>
+              <h3 className="text-xl font-bold" style={{ color: '#fbbf24' }}>حذف الجلسة</h3>
+              <p className="text-sm mt-2" style={{ color: 'rgba(212,160,23,0.6)' }}>
+                هل أنت متأكد من حذف هذه الـ SîpFlõw؟ سيتم حذف جميع الطلبات أيضاً
+              </p>
+            </div>
+
+            {/* Session Info */}
+            <div className="px-6 pt-4 pb-2">
+              <div className="rounded-xl p-3" style={{ background: 'rgba(212,160,23,0.08)' }}>
+                <p className="text-sm font-semibold" style={{ color: '#fbbf24' }}>
+                  SîpFlõw من {new Date(sessionToDelete.created_at).toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' })}
+                </p>
+                <p className="text-xs mt-1" style={{ color: 'rgba(212,160,23,0.6)' }}>
+                  {new Date(sessionToDelete.date).toLocaleDateString('ar-EG', { weekday: 'long', day: 'numeric', month: 'long' })}
+                </p>
+              </div>
+            </div>
+
+            {/* Actions */}
+            <div className="p-6 space-y-3">
+              <div className="flex gap-3">
+                <button
+                  onClick={() => {
+                    setShowDeleteSessionConfirm(false)
+                    setSessionToDelete(null)
+                  }}
+                  className="flex-1 rounded-2xl py-3 text-sm font-semibold transition-all"
+                  style={{ background: 'rgba(212,160,23,0.08)', color: 'rgba(212,160,23,0.7)', border: '1px solid rgba(212,160,23,0.15)' }}
+                >
+                  إلغاء
+                </button>
+                <button
+                  onClick={handleDeleteSession}
+                  disabled={isDeletingSession}
+                  className="flex-1 rounded-2xl py-3 text-sm font-bold transition-all hover:opacity-90 active:scale-95 disabled:opacity-60 flex items-center justify-center gap-2"
+                  style={{ background: 'rgba(239,68,68,0.9)', color: '#fff', boxShadow: '0 4px 12px rgba(239,68,68,0.3)' }}
+                >
+                  {isDeletingSession ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <>
+                      <Trash2 className="h-4 w-4" />
+                      حذف
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="relative z-10 mx-auto max-w-2xl p-4">
         {/* Surprise Me Modal */}
         {showSurpriseModal && (
@@ -3190,41 +3277,53 @@ export default function HomePage() {
                         const date = new Date(sess.date)
                         const time = new Date(sess.created_at).toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' })
                         return (
-                          <button
-                            key={sess.id}
-                            onClick={async () => {
-                              setSelectedArchivedSessionId(sess.id)
-                              setIsLoadingArchivedOrders(true)
-                              try {
-                                const res = await fetch(`/api/orders?session_id=${sess.id}`)
-                                const data = await res.json()
-                                setArchivedOrders(Array.isArray(data) ? data : [])
-                              } catch {
-                                setArchivedOrders([])
-                              } finally {
-                                setIsLoadingArchivedOrders(false)
-                              }
-                            }}
-                            className="flex items-center justify-between rounded-xl border border-border bg-card p-4 hover:bg-muted transition-colors"
-                          >
-                            <div className="flex items-center gap-3">
-                              <div className="flex h-10 w-10 items-center justify-center rounded-xl" style={{ background: 'rgba(212,160,23,0.15)' }}>
-                                <Coffee className="h-5 w-5" style={{ color: '#D4A017' }} />
+                          <div key={sess.id} className="flex items-center gap-2">
+                            <button
+                              onClick={async () => {
+                                setSelectedArchivedSessionId(sess.id)
+                                setIsLoadingArchivedOrders(true)
+                                try {
+                                  const res = await fetch(`/api/orders?session_id=${sess.id}`)
+                                  const data = await res.json()
+                                  setArchivedOrders(Array.isArray(data) ? data : [])
+                                } catch {
+                                  setArchivedOrders([])
+                                } finally {
+                                  setIsLoadingArchivedOrders(false)
+                                }
+                              }}
+                              className="flex-1 flex items-center justify-between rounded-xl border border-border bg-card p-4 hover:bg-muted transition-colors"
+                            >
+                              <div className="flex items-center gap-3">
+                                <div className="flex h-10 w-10 items-center justify-center rounded-xl" style={{ background: 'rgba(212,160,23,0.15)' }}>
+                                  <Coffee className="h-5 w-5" style={{ color: '#D4A017' }} />
+                                </div>
+                                <div className="text-right">
+                                  <p className="font-semibold text-foreground">SîpFlõw {idx + 1}</p>
+                                  <p className="text-xs text-muted-foreground">
+                                    {date.toLocaleDateString('ar-EG', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
+                                  </p>
+                                </div>
                               </div>
-                              <div className="text-right">
-                                <p className="font-semibold text-foreground">SîpFlõw {idx + 1}</p>
-                                <p className="text-xs text-muted-foreground">
-                                  {date.toLocaleDateString('ar-EG', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
-                                </p>
+                              <div className="text-left">
+                                <p className="text-xs text-muted-foreground">{time}</p>
+                                <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${sess.is_active ? 'bg-green-500/15 text-green-400' : 'bg-gray-500/15 text-gray-400'}`}>
+                                  {sess.is_active ? 'نشطة' : 'منتهية'}
+                                </span>
                               </div>
-                            </div>
-                            <div className="text-left">
-                              <p className="text-xs text-muted-foreground">{time}</p>
-                              <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${sess.is_active ? 'bg-green-500/15 text-green-400' : 'bg-gray-500/15 text-gray-400'}`}>
-                                {sess.is_active ? 'نشطة' : 'منتهية'}
-                              </span>
-                            </div>
-                          </button>
+                            </button>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                setSessionToDelete(sess)
+                                setShowDeleteSessionConfirm(true)
+                              }}
+                              className="flex h-10 w-10 items-center justify-center rounded-xl border border-border bg-card hover:bg-muted transition-colors text-red-500 hover:text-red-600"
+                              title="حذف هذه الجلسة"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </button>
+                          </div>
                         )
                       })}
                     </div>
