@@ -9,7 +9,7 @@ import { AdminPanel } from '@/components/admin-panel'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Coffee, Grid3x2 as Grid3X3, Settings, ChevronLeft, ChevronRight, DollarSign, Users, Calendar, Bell, X, Printer, CircleCheck as CheckCircle2, LogOut, Eye, Loader2, Sparkles, ShieldCheck, ClipboardList, MapPin } from 'lucide-react'
+import { Coffee, Grid3x2 as Grid3X3, Settings, ChevronLeft, ChevronRight, DollarSign, Users, Calendar, Bell, X, Printer, CircleCheck as CheckCircle2, LogOut, Eye, EyeOff, Loader2, Sparkles, ShieldCheck, ClipboardList, MapPin, Archive, Lock, Clock } from 'lucide-react'
 import { toast, Toaster } from 'sonner'
 import { ReceiptModal } from '@/components/receipt-modal'
 import { CashierDashboard } from '@/components/cashier-dashboard'
@@ -111,6 +111,18 @@ export default function HomePage() {
   const [selectedDateSessionId, setSelectedDateSessionId] = useState<string | null>(null)
   // Dev admin menu tab state
   const [menuDevPlaceId, setMenuDevPlaceId] = useState('')
+
+  // Archive state
+  const [showArchivePasswordModal, setShowArchivePasswordModal] = useState(false)
+  const [archivePasswordInput, setArchivePasswordInput] = useState('')
+  const [archivePasswordError, setArchivePasswordError] = useState('')
+  const [isVerifyingArchivePassword, setIsVerifyingArchivePassword] = useState(false)
+  const [archiveUnlocked, setArchiveUnlocked] = useState(false)
+  const [archivedSessions, setArchivedSessions] = useState<Session[]>([])
+  const [selectedArchivedSessionId, setSelectedArchivedSessionId] = useState<string | null>(null)
+  const [archivedOrders, setArchivedOrders] = useState<OrderWithDetails[]>([])
+  const [isLoadingArchivedOrders, setIsLoadingArchivedOrders] = useState(false)
+  const [showArchiveView, setShowArchiveView] = useState(false)
 
   const placeParam = currentPlace ? `?place_id=${currentPlace.id}` : ''
 
@@ -1110,6 +1122,36 @@ export default function HomePage() {
       }
     } catch { /* silent */ }
     finally { setIsCreatingNewSession(false) }
+  }
+
+  const handleVerifyArchivePassword = async () => {
+    if (!archivePasswordInput.trim()) {
+      setArchivePasswordError('أدخل كلمة السر')
+      return
+    }
+    setIsVerifyingArchivePassword(true)
+    setArchivePasswordError('')
+    try {
+      const res = await fetch('/api/settings?key=archive_password')
+      const data = await res.json()
+      if (data.value === archivePasswordInput) {
+        setArchiveUnlocked(true)
+        setShowArchivePasswordModal(false)
+        setArchivePasswordInput('')
+        setShowArchiveView(true)
+        // Fetch archived sessions
+        const placeId = currentPlace?.id
+        const sessRes = await fetch(`/api/sessions/archived${placeId ? `?place_id=${placeId}` : ''}`)
+        const sessData = await sessRes.json()
+        setArchivedSessions(Array.isArray(sessData) ? sessData : [])
+      } else {
+        setArchivePasswordError('كلمة السر غير صحيحة')
+      }
+    } catch {
+      setArchivePasswordError('حدث خطأ. حاول مرة أخرى')
+    } finally {
+      setIsVerifyingArchivePassword(false)
+    }
   }
 
   const handlePlaceSelect = async () => {
@@ -2351,6 +2393,78 @@ export default function HomePage() {
         </div>
       )}
 
+      {/* Archive Password Modal */}
+      {showArchivePasswordModal && (
+        <div className="fixed inset-0 z-[998] flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(6px)' }} dir="rtl">
+          <div className="w-full max-w-sm rounded-3xl overflow-hidden animate-in zoom-in-95 duration-200" style={{ background: 'linear-gradient(160deg, #1a0d00, #2a1600)', border: '1px solid rgba(212,160,23,0.3)' }}>
+            {/* Header */}
+            <div className="px-6 pt-6 pb-4 text-center border-b" style={{ borderColor: 'rgba(212,160,23,0.15)' }}>
+              <div className="mx-auto mb-3 flex h-16 w-16 items-center justify-center rounded-2xl" style={{ background: 'rgba(212,160,23,0.15)' }}>
+                <Archive className="h-8 w-8" style={{ color: '#D4A017' }} />
+              </div>
+              <h3 className="text-xl font-bold" style={{ color: '#fbbf24' }}>أرشيف SîpFlõw</h3>
+              <p className="text-sm mt-2" style={{ color: 'rgba(212,160,23,0.6)' }}>
+                أدخل كلمة السر للوصول للـ SîpFlõw القديمة
+              </p>
+            </div>
+
+            {/* Password Input */}
+            <div className="p-6 space-y-4">
+              <div className="relative">
+                <Input
+                  type="password"
+                  value={archivePasswordInput}
+                  onChange={e => { setArchivePasswordInput(e.target.value); setArchivePasswordError('') }}
+                  onKeyDown={e => {
+                    if (e.key === 'Enter') {
+                      handleVerifyArchivePassword()
+                    }
+                  }}
+                  placeholder="كلمة سر الأرشيف"
+                  className="h-12 text-center text-lg border-2 rounded-xl"
+                  style={{ borderColor: archivePasswordError ? 'rgba(239,68,68,0.5)' : 'rgba(212,160,23,0.3)', background: 'rgba(0,0,0,0.3)', color: '#fff' }}
+                  autoFocus
+                />
+              </div>
+              
+              {archivePasswordError && (
+                <p className="text-sm text-center" style={{ color: '#f87171' }}>{archivePasswordError}</p>
+              )}
+
+              {/* Actions */}
+              <div className="flex gap-3">
+                <button
+                  onClick={() => {
+                    setShowArchivePasswordModal(false)
+                    setArchivePasswordInput('')
+                    setArchivePasswordError('')
+                  }}
+                  className="flex-1 rounded-2xl py-3 text-sm font-semibold transition-all"
+                  style={{ background: 'rgba(212,160,23,0.08)', color: 'rgba(212,160,23,0.7)', border: '1px solid rgba(212,160,23,0.15)' }}
+                >
+                  إلغاء
+                </button>
+                <button
+                  onClick={handleVerifyArchivePassword}
+                  disabled={isVerifyingArchivePassword || !archivePasswordInput.trim()}
+                  className="flex-1 rounded-2xl py-3 text-sm font-bold transition-all hover:opacity-90 active:scale-95 disabled:opacity-60 flex items-center justify-center gap-2"
+                  style={{ background: 'linear-gradient(135deg, #D4A017, #f97316)', color: '#0f0800', boxShadow: '0 4px 12px rgba(212,160,23,0.3)' }}
+                >
+                  {isVerifyingArchivePassword ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <>
+                      <Lock className="h-4 w-4" />
+                      فتح الأرشيف
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="relative z-10 mx-auto max-w-2xl p-4">
         {/* Surprise Me Modal */}
         {showSurpriseModal && (
@@ -2934,6 +3048,243 @@ export default function HomePage() {
                 </div>
               )
             })()}
+
+            {/* Archive Button — shows for non-dev-admin users when there are archived sessions */}
+            {!isDevAdmin && !showArchiveView && (
+              <button
+                onClick={() => {
+                  if (archiveUnlocked) {
+                    setShowArchiveView(true)
+                  } else {
+                    setShowArchivePasswordModal(true)
+                  }
+                }}
+                className="flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition-all hover:opacity-90 active:scale-95"
+                style={{ background: 'rgba(212,160,23,0.1)', border: '1px solid rgba(212,160,23,0.3)', color: '#D4A017' }}
+              >
+                <Archive className="h-4 w-4" />
+                {archiveUnlocked ? 'عرض الأرشيف' : 'الأرشيف'}
+                {!archiveUnlocked && <Lock className="h-3 w-3 opacity-60" />}
+              </button>
+            )}
+
+            {/* Archive View */}
+            {!isDevAdmin && showArchiveView && archiveUnlocked && (
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <button
+                    onClick={() => {
+                      setShowArchiveView(false)
+                      setSelectedArchivedSessionId(null)
+                      setArchivedOrders([])
+                    }}
+                    className="flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium transition-colors hover:bg-muted"
+                    style={{ color: '#D4A017' }}
+                  >
+                    <ChevronRight className="h-4 w-4" />
+                    العودة للوحة
+                  </button>
+                  <h2 className="text-lg font-bold text-foreground flex items-center gap-2">
+                    <Archive className="h-5 w-5" style={{ color: '#D4A017' }} />
+                    أرشيف SîpFlõw
+                  </h2>
+                </div>
+
+                {/* Fetch archived sessions on first view */}
+                {archivedSessions.length === 0 && !isLoadingArchivedOrders && (
+                  <div className="text-center py-8">
+                    <button
+                      onClick={async () => {
+                        setIsLoadingArchivedOrders(true)
+                        try {
+                          const res = await fetch(`/api/sessions/archived${placeParam}`)
+                          const data = await res.json()
+                          setArchivedSessions(Array.isArray(data) ? data : [])
+                        } catch {
+                          setArchivedSessions([])
+                        } finally {
+                          setIsLoadingArchivedOrders(false)
+                        }
+                      }}
+                      className="flex items-center gap-2 mx-auto rounded-xl px-4 py-2 text-sm font-medium transition-all"
+                      style={{ background: 'linear-gradient(135deg, #D4A017, #f97316)', color: '#0f0800' }}
+                    >
+                      <Archive className="h-4 w-4" />
+                      تحميل SîpFlõw المؤرشفة
+                    </button>
+                  </div>
+                )}
+
+                {isLoadingArchivedOrders && !selectedArchivedSessionId && (
+                  <div className="rounded-2xl border border-border bg-card p-10 text-center">
+                    <Loader2 className="h-8 w-8 mx-auto animate-spin mb-3" style={{ color: '#D4A017' }} />
+                    <p className="text-muted-foreground text-sm">جاري تحميل الأرشيف...</p>
+                  </div>
+                )}
+
+                {archivedSessions.length > 0 && !selectedArchivedSessionId && (
+                  <div className="space-y-2">
+                    <p className="text-sm text-muted-foreground">اختر SîpFlõw لعرض طلباتها:</p>
+                    <div className="grid gap-2">
+                      {archivedSessions.map((sess, idx) => {
+                        const date = new Date(sess.date)
+                        const time = new Date(sess.created_at).toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' })
+                        return (
+                          <button
+                            key={sess.id}
+                            onClick={async () => {
+                              setSelectedArchivedSessionId(sess.id)
+                              setIsLoadingArchivedOrders(true)
+                              try {
+                                const res = await fetch(`/api/orders?session_id=${sess.id}`)
+                                const data = await res.json()
+                                setArchivedOrders(Array.isArray(data) ? data : [])
+                              } catch {
+                                setArchivedOrders([])
+                              } finally {
+                                setIsLoadingArchivedOrders(false)
+                              }
+                            }}
+                            className="flex items-center justify-between rounded-xl border border-border bg-card p-4 hover:bg-muted transition-colors"
+                          >
+                            <div className="flex items-center gap-3">
+                              <div className="flex h-10 w-10 items-center justify-center rounded-xl" style={{ background: 'rgba(212,160,23,0.15)' }}>
+                                <Coffee className="h-5 w-5" style={{ color: '#D4A017' }} />
+                              </div>
+                              <div className="text-right">
+                                <p className="font-semibold text-foreground">SîpFlõw {idx + 1}</p>
+                                <p className="text-xs text-muted-foreground">
+                                  {date.toLocaleDateString('ar-EG', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
+                                </p>
+                              </div>
+                            </div>
+                            <div className="text-left">
+                              <p className="text-xs text-muted-foreground">{time}</p>
+                              <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${sess.is_active ? 'bg-green-500/15 text-green-400' : 'bg-gray-500/15 text-gray-400'}`}>
+                                {sess.is_active ? 'نشطة' : 'منتهية'}
+                              </span>
+                            </div>
+                          </button>
+                        )
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {/* Archived session orders view */}
+                {selectedArchivedSessionId && (
+                  <div className="space-y-4">
+                    <button
+                      onClick={() => {
+                        setSelectedArchivedSessionId(null)
+                        setArchivedOrders([])
+                      }}
+                      className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      <ChevronRight className="h-4 w-4" />
+                      العودة لقائمة الأرشيف
+                    </button>
+
+                    {isLoadingArchivedOrders ? (
+                      <div className="rounded-2xl border border-border bg-card p-10 text-center">
+                        <Loader2 className="h-8 w-8 mx-auto animate-spin mb-3" style={{ color: '#D4A017' }} />
+                        <p className="text-muted-foreground text-sm">جاري تحميل الطلبات...</p>
+                      </div>
+                    ) : archivedOrders.length === 0 ? (
+                      <div className="rounded-2xl border border-border bg-card p-8 text-center">
+                        <p className="text-muted-foreground">لا توجد طلبات في هذه الـ SîpFlõw</p>
+                      </div>
+                    ) : (
+                      <>
+                        {/* Stats */}
+                        <div className="grid grid-cols-2 gap-3">
+                          <div className="rounded-xl border border-border bg-card p-4">
+                            <div className="flex items-center justify-between">
+                              <div className="text-right">
+                                <p className="text-sm text-muted-foreground">الأشخاص</p>
+                                <p className="text-2xl font-bold text-foreground">{[...new Set(archivedOrders.map(o => o.user_id))].length}</p>
+                              </div>
+                              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-muted">
+                                <Users className="h-6 w-6 text-primary" />
+                              </div>
+                            </div>
+                          </div>
+                          <div className="rounded-xl border border-border bg-card p-4">
+                            <div className="flex items-center justify-between">
+                              <div className="text-right">
+                                <p className="text-sm text-muted-foreground">الإجمالي</p>
+                                <p className="text-2xl font-bold text-foreground">
+                                  {archivedOrders.reduce((t, o) => t + (o.drink?.price || 0) * o.quantity, 0).toFixed(0)}
+                                </p>
+                              </div>
+                              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-muted">
+                                <DollarSign className="h-6 w-6 text-primary" />
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Orders list */}
+                        <div className="space-y-3">
+                          {(() => {
+                            const grouped = archivedOrders.reduce((acc, o) => {
+                              const key = o.user?.name || o.customer_name || 'زائر'
+                              if (!acc[key]) acc[key] = { orders: [], tableNum: o.user?.table_number || o.table_number }
+                              acc[key].orders.push(o)
+                              return acc
+                            }, {} as Record<string, { orders: OrderWithDetails[]; tableNum?: string | null }>)
+
+                            return Object.entries(grouped).map(([name, { orders: userOrders, tableNum }]) => {
+                              const total = userOrders.reduce((s, o) => s + (o.drink?.price || 0) * o.quantity, 0)
+                              return (
+                                <div key={name} className="rounded-2xl border border-border bg-card overflow-hidden">
+                                  <div className="flex items-center justify-between px-4 py-3 border-b border-border">
+                                    <div className="flex items-center gap-2">
+                                      <span className="font-bold text-foreground">{name}</span>
+                                      {tableNum && <span className="text-xs text-muted-foreground">- طاولة {tableNum}</span>}
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                      <span className="text-xs text-muted-foreground">{userOrders.length} صنف</span>
+                                      <span className="font-bold text-primary">{total} ج.م</span>
+                                    </div>
+                                  </div>
+                                  <div className="divide-y divide-border">
+                                    {userOrders.map(o => (
+                                      <div key={o.id} className="px-4 py-3">
+                                        <div className="flex items-center justify-between">
+                                          <div className="flex items-center gap-2">
+                                            <span className="text-sm font-medium text-foreground">{o.drink?.name || '—'}</span>
+                                            <span className="text-xs text-muted-foreground bg-muted px-1.5 py-0.5 rounded">x{o.quantity}</span>
+                                          </div>
+                                          <span className="text-sm font-semibold" style={{ color: '#D4A017' }}>{(o.drink?.price || 0) * o.quantity} ج.م</span>
+                                        </div>
+                                        {o.notes && (
+                                          <p className="text-xs text-muted-foreground mt-1">📝 {o.notes}</p>
+                                        )}
+                                        <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
+                                          <Clock className="h-3 w-3" />
+                                          {new Date(o.created_at).toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' })} - {new Date(o.created_at).toLocaleDateString('ar-EG', { day: 'numeric', month: 'long' })}
+                                        </p>
+                                      </div>
+                                    ))}
+                                  </div>
+                                  <div className="px-4 py-3 border-t border-border bg-muted/50">
+                                    <div className="flex items-center justify-between">
+                                      <span className="text-sm font-medium text-muted-foreground">إجمالي {name} {tableNum ? `- طاولة ${tableNum}` : ''}</span>
+                                      <span className="text-lg font-black" style={{ color: '#D4A017' }}>{total} ج.م</span>
+                                    </div>
+                                  </div>
+                                </div>
+                              )
+                            })
+                          })()}
+                        </div>
+                      </>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* Dev admin: place selector */}
             {isDevAdmin && (
