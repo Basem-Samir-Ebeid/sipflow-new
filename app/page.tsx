@@ -924,6 +924,7 @@ export default function HomePage() {
         const orderNotes = isDevAdmin
           ? [cartNotes[drinkId]?.trim(), `طاولة ${tableNum}`, 'مطور'].filter(Boolean).join(' | ')
           : cartNotes[drinkId]?.trim() || null
+        console.log('[v0] Submitting order with:', { customerName, tableNum, drinkId })
         const orderRes = await fetch('/api/orders', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
