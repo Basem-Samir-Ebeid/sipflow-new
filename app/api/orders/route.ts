@@ -11,10 +11,11 @@ export async function GET(request: Request) {
     }
     
     const orders = await db.getOrdersBySession(sessionId)
-    return NextResponse.json(orders)
+    const ordersList = Array.isArray(orders) ? orders : []
+    return NextResponse.json(ordersList)
   } catch (error) {
     console.error('Error fetching orders:', error)
-    return NextResponse.json({ error: 'Failed to fetch orders' }, { status: 500 })
+    return NextResponse.json([], { status: 200 })
   }
 }
 

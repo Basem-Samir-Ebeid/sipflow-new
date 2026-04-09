@@ -369,7 +369,16 @@ export default function HomePage() {
     if (!session?.id) return
     try {
       const res = await fetch(`/api/orders?session_id=${session.id}`)
-      const data = await res.json()
+      if (!res.ok) {
+        console.error(`[v0] Failed to fetch orders: ${res.status}`)
+        return
+      }
+      const text = await res.text()
+      if (!text) {
+        setOrders([])
+        return
+      }
+      const data = JSON.parse(text)
       
       const newOrders = Array.isArray(data) ? data : []
     
@@ -924,7 +933,6 @@ export default function HomePage() {
         const orderNotes = isDevAdmin
           ? [cartNotes[drinkId]?.trim(), `طاولة ${tableNum}`, 'مطور'].filter(Boolean).join(' | ')
           : cartNotes[drinkId]?.trim() || null
-        console.log('[v0] Submitting order with:', { customerName, tableNum, drinkId })
         const orderRes = await fetch('/api/orders', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -1188,7 +1196,16 @@ export default function HomePage() {
         const placeId = currentPlace?.id
         const today = new Date().toISOString().split('T')[0]
         const sessRes = await fetch(`/api/sessions/archived${placeId ? `?place_id=${placeId}` : ''}`)
-        const sessData = await sessRes.json()
+        if (!sessRes.ok) {
+          setArchivePasswordError('فشل جلب الجلسات المؤرشفة')
+          return
+        }
+        const sessText = await sessRes.text()
+        if (!sessText) {
+          setArchivedSessions([])
+          return
+        }
+        const sessData = JSON.parse(sessText)
         // Filter to show today's archived sessions first, then older ones
         const allSessions = Array.isArray(sessData) ? sessData : []
         const todayArchived = allSessions.filter(s => s.date === today)
@@ -3280,9 +3297,19 @@ export default function HomePage() {
                         setIsLoadingArchivedOrders(true)
                         try {
                           const res = await fetch(`/api/sessions/archived${placeParam}`)
-                          const data = await res.json()
+                          if (!res.ok) {
+                            setArchivedSessions([])
+                            return
+                          }
+                          const text = await res.text()
+                          if (!text) {
+                            setArchivedSessions([])
+                            return
+                          }
+                          const data = JSON.parse(text)
                           setArchivedSessions(Array.isArray(data) ? data : [])
-                        } catch {
+                        } catch (err) {
+                          console.error('[v0] Error loading archived sessions:', err)
                           setArchivedSessions([])
                         } finally {
                           setIsLoadingArchivedOrders(false)
@@ -3506,7 +3533,7 @@ export default function HomePage() {
                   }}
                   className="w-full rounded-md border border-border bg-muted px-3 py-2 text-sm text-foreground"
                 >
-                  <option value="">— اختر المكان —</option>
+                  <option value="">— اختر المك��ن —</option>
                   {boardDevPlaces.map(p => (
                     <option key={p.id} value={p.id}>{p.name}</option>
                   ))}
