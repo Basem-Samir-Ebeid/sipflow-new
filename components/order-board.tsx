@@ -101,6 +101,7 @@ export function OrderBoard({ orders, drinks, currentUser, onDeleteOrder, isAdmin
         const totalItems = countTotalItems(customerOrders)
         const isVip = customerOrders.some(o => o.notes?.includes('مطور'))
         const displayName = formatDisplayName(customerName, tableNumber, user?.name)
+        console.log('[v0] OrderBoard rendering:', { customerName, tableNumber, displayName, userId: user?.id })
         
         return (
           <div 

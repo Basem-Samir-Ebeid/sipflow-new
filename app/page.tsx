@@ -126,9 +126,30 @@ export default function HomePage() {
   // Track today's archived sessions for the archive button indicator
   const [todaysArchivedCount, setTodaysArchivedCount] = useState(0)
   // Archive session deletion state
-  const [showDeleteSessionConfirm, setShowDeleteSessionConfirm] = useState(false)
   const [sessionToDelete, setSessionToDelete] = useState<Session | null>(null)
+  const [showDeleteSessionConfirm, setShowDeleteSessionConfirm] = useState(false)
   const [isDeletingSession, setIsDeletingSession] = useState(false)
+  // Cache for session customer info
+  const [sessionCustomerCache, setSessionCustomerCache] = useState<Record<string, { customerName: string | null; tableNumber: string | null }>>({})
+  const cacheSessionCustomerInfo = async (sessionId: string) => {
+    if (sessionCustomerCache[sessionId]) return sessionCustomerCache[sessionId]
+    try {
+      const res = await fetch(`/api/orders?session_id=${sessionId}`)
+      const data = await res.json()
+      const orders = Array.isArray(data) ? data : []
+      if (orders.length > 0) {
+        const info = {
+          customerName: orders[0].customer_name || orders[0].user?.name || null,
+          tableNumber: orders[0].table_number || orders[0].user?.table_number || null
+        }
+        setSessionCustomerCache(prev => ({ ...prev, [sessionId]: info }))
+        return info
+      }
+    } catch (err) {
+      console.error('Error fetching session orders:', err)
+    }
+    return { customerName: null, tableNumber: null }
+  }
 
   const placeParam = currentPlace ? `?place_id=${currentPlace.id}` : ''
 
@@ -903,6 +924,7 @@ export default function HomePage() {
         const orderNotes = isDevAdmin
           ? [cartNotes[drinkId]?.trim(), `طاولة ${tableNum}`, 'مطور'].filter(Boolean).join(' | ')
           : cartNotes[drinkId]?.trim() || null
+        console.log('[v0] Submitting order with:', { customerName, tableNum, drinkId })
         const orderRes = await fetch('/api/orders', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -1173,6 +1195,10 @@ export default function HomePage() {
         const olderArchived = allSessions.filter(s => s.date !== today)
         const sortedSessions = [...todayArchived, ...olderArchived]
         setArchivedSessions(sortedSessions)
+        // Cache customer info for each session
+        sortedSessions.forEach(sess => {
+          cacheSessionCustomerInfo(sess.id).catch(err => console.error('Error caching session info:', err))
+        })
       } else {
         setArchivePasswordError('كلمة السر غير صحيحة')
       }
@@ -1234,7 +1260,7 @@ export default function HomePage() {
     finally { setIsLoadingPlaces(false) }
   }
 
-  // ─── Auto-login shared user for a place ──────────────��────
+  // ─── Auto-login shared user for a place ──────────────���────
   const autoLoginSharedUser = async (place: Place) => {
     const sharedName = `__زبون__${place.id}`
     try {
@@ -1523,7 +1549,7 @@ export default function HomePage() {
           {/* Logo */}
           <div className="flex flex-col items-center space-y-3">
             <div className="relative w-32 h-32 rounded-full overflow-hidden bg-black shadow-lg">
-              <Image src="/images/qa3da-logo.jpg" alt="SîpFlõw" fill sizes="128px" style={{ objectFit: 'cover', objectPosition: 'center' }} />
+              <Image src="/images/qa3da-logo.jpg" alt="SîpFlõw" fill sizes="128px" loading="eager" style={{ objectFit: 'cover', objectPosition: 'center' }} />
             </div>
             <p className="text-4xl font-bold" style={{ color: '#C17A3A', fontFamily: 'Georgia, serif' }}>SîpFlõw</p>
             <p className="text-sm text-gray-400 tracking-widest">Order Management System</p>
@@ -3280,15 +3306,29 @@ export default function HomePage() {
 
                 {archivedSessions.length > 0 && !selectedArchivedSessionId && (
                   <div className="space-y-2">
-                    <p className="text-sm text-muted-foreground">اختر SîpFlõw لعرض طلباتها:</p>
+                    <p className="text-sm text-muted-foreground">اختر جلسة لعرض طلباتها:</p>
                     <div className="grid gap-2">
                       {archivedSessions.map((sess, idx) => {
                         const date = new Date(sess.date)
                         const time = new Date(sess.created_at).toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' })
+                        const cached = sessionCustomerCache[sess.id]
+                        const customerName = cached?.customerName
+                        const tableNumber = cached?.tableNumber
+                        const displayName = customerName && tableNumber 
+                          ? `${customerName} - طاولة ${tableNumber}`
+                          : customerName 
+                          ? customerName
+                          : tableNumber
+                          ? `طاولة ${tableNumber}`
+                          : `SîpFlõw ${idx + 1}`
                         return (
                           <div key={sess.id} className="flex items-center gap-2">
                             <button
                               onClick={async () => {
+                                // Pre-cache customer info if not already cached
+                                if (!sessionCustomerCache[sess.id]) {
+                                  await cacheSessionCustomerInfo(sess.id)
+                                }
                                 setSelectedArchivedSessionId(sess.id)
                                 setIsLoadingArchivedOrders(true)
                                 try {
@@ -3308,7 +3348,7 @@ export default function HomePage() {
                                   <Coffee className="h-5 w-5" style={{ color: '#D4A017' }} />
                                 </div>
                                 <div className="text-right">
-                                  <p className="font-semibold text-foreground">SîpFlõw {idx + 1}</p>
+                                  <p className="font-semibold text-foreground">{displayName}</p>
                                   <p className="text-xs text-muted-foreground">
                                     {date.toLocaleDateString('ar-EG', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
                                   </p>

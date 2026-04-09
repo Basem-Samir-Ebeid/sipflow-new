@@ -11,7 +11,9 @@ function getPool() {
     if (!dbUrl) {
       throw new Error('DATABASE_URL environment variable is not set.')
     }
-    global._pgPool = new Pool({ connectionString: dbUrl })
+    // Add sslmode=verify-full to the connection string if not already present
+    const urlWithSsl = dbUrl.includes('sslmode=') ? dbUrl : `${dbUrl}${dbUrl.includes('?') ? '&' : '?'}sslmode=verify-full`
+    global._pgPool = new Pool({ connectionString: urlWithSsl })
   }
   return global._pgPool
 }
