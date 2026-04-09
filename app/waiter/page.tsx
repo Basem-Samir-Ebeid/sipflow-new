@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { LogOut, RefreshCw, Loader2, ArrowRight, Coffee, CheckCircle2, Clock, AlertCircle, CalendarCheck, Users, Phone, X, TrendingUp, Award, Zap } from 'lucide-react'
+import { LogOut, RefreshCw, Loader2, ArrowRight, Coffee, CheckCircle2, Clock, AlertCircle, CalendarCheck, Users, Phone, X, TrendingUp, Award, Zap, BarChart3 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { toast, Toaster } from 'sonner'
@@ -89,7 +89,8 @@ export default function WaiterPage() {
   const [lastRefresh, setLastRefresh] = useState<Date | null>(null)
   const [deliveredIds, setDeliveredIds] = useState<Set<string>>(new Set())
   const [onWayIds, setOnWayIds] = useState<Set<string>>(new Set())
-  const previousGroupCount = useRef(0)
+  const [showReport, setShowReport] = useState(false)
+
   const [reservationNotifs, setReservationNotifs] = useState<ReservationNotif[]>([])
   const [dismissedReservIds, setDismissedReservIds] = useState<Set<string>>(new Set())
   const seenReservationIds = useRef<Set<string>>(new Set())
@@ -388,6 +389,11 @@ export default function WaiterPage() {
                 آخر تحديث {formatTime(lastRefresh.toISOString())}
               </span>
             )}
+            <button onClick={() => setShowReport(!showReport)} 
+              className="flex h-7 w-7 items-center justify-center rounded-full border border-border text-muted-foreground hover:text-blue-400 hover:border-blue-400/40 transition-colors"
+              title="عرض التقرير">
+              <BarChart3 className="h-3.5 w-3.5" />
+            </button>
             <button onClick={fetchOrders} disabled={isLoading}
               className="flex h-7 w-7 items-center justify-center rounded-full border border-border text-muted-foreground hover:text-amber-500 hover:border-amber-500/40 transition-colors">
               <RefreshCw className={`h-3.5 w-3.5 ${isLoading ? 'animate-spin' : ''}`} />
@@ -401,6 +407,71 @@ export default function WaiterPage() {
       </div>
 
       <div className="max-w-2xl mx-auto px-4 py-4 space-y-4 pb-20">
+
+        {/* Report Modal */}
+        {showReport && (
+          <div className="fixed inset-0 bg-black/50 z-50 flex items-end">
+            <div className="w-full max-w-2xl bg-background rounded-t-3xl border-t border-border p-4 space-y-3 max-h-[80vh] overflow-y-auto">
+              <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <BarChart3 className="h-5 w-5 text-blue-400" />
+                <h2 className="font-bold text-foreground text-lg">تقرير الطلبات المسلمة</h2>
+              </div>
+                <button onClick={() => setShowReport(false)} className="text-muted-foreground hover:text-foreground">
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+
+              {/* Report summary */}
+              <div className="grid grid-cols-2 gap-2 mb-4">
+                <div className="p-3 rounded-xl bg-green-500/10 border border-green-500/20 text-center">
+                  <p className="text-xl font-black text-green-400">{deliveredGroups.length}</p>
+                  <p className="text-xs text-green-400/70">طاولة مسلمة</p>
+                </div>
+                <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-center">
+                  <p className="text-xl font-black text-amber-400">
+                    {deliveredGroups.reduce((sum, g) => sum + g.items.length, 0)}
+                  </p>
+                  <p className="text-xs text-amber-400/70">طلب مسلم</p>
+                </div>
+              </div>
+
+              {/* Delivered orders list */}
+              {deliveredGroups.length > 0 ? (
+                <div className="space-y-2">
+                  {deliveredGroups.map(group => (
+                    <div key={group.userId} className="border border-border rounded-xl p-3 bg-card/50">
+                      <div className="flex items-center justify-between mb-2">
+                        <div>
+                          <p className="font-bold text-foreground">{group.tableNumber}</p>
+                          <p className="text-xs text-muted-foreground">{group.items.length} طلب</p>
+                        </div>
+                        <CheckCircle2 className="h-5 w-5 text-green-400" />
+                      </div>
+                      <div className="space-y-1">
+                        {group.items.map(item => (
+                          <div key={item.id} className="flex items-center justify-between text-xs">
+                            <span className="text-muted-foreground">
+                              {item.drinkName} × {item.quantity}
+                            </span>
+                            <span className="text-muted-foreground">
+                              {formatTime(item.completed_at || item.created_at)}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8 text-muted-foreground">
+                  <BarChart3 className="h-12 w-12 mx-auto mb-3 opacity-20" />
+                  <p className="text-sm">لم تسلم أي طلبات بعد</p>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* Confirmed reservation notifications */}
         {reservationNotifs.filter(r => !dismissedReservIds.has(r.id)).map(r => {
@@ -466,7 +537,7 @@ export default function WaiterPage() {
           <div className="rounded-2xl border border-border bg-gradient-to-br from-card to-muted/30 p-4">
             <div className="flex items-center gap-2 mb-3">
               <TrendingUp className="h-4 w-4 text-primary" />
-              <h3 className="font-bold text-foreground text-sm">ملخص أدائك اليوم</h3>
+              <h3 className="font-bold text-foreground text-sm">ملخص أدائ�� اليوم</h3>
             </div>
             <div className="grid grid-cols-3 gap-3">
               <div className="text-center p-3 rounded-xl bg-green-500/10 border border-green-500/20">
