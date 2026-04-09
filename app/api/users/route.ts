@@ -17,13 +17,11 @@ export async function POST(request: Request) {
   try {
     const body = await request.json()
     const placeId = body.place_id || null
-    // Use upsert: if (name, place_id) already exists, return the existing user
-    const { getSql } = await import('@/lib/db')
-    const sql = getSql()
-    const existing = placeId && body.name
-      ? (await sql`SELECT * FROM users WHERE name = ${body.name} AND place_id = ${placeId} LIMIT 1`)[0]
-      : null
+    
+    // Check if user already exists
+    const existing = await db.getUserByName(body.name, placeId)
     if (existing) return NextResponse.json(existing)
+    
     const user = await db.createUser({ ...body, place_id: placeId })
     return NextResponse.json(user)
   } catch (error) {
