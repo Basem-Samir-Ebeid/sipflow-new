@@ -205,15 +205,28 @@ export default function StaffPage() {
     Object.values(
       orders.reduce((acc: Record<string, UserOrderGroup>, order) => {
         const isShared = order.user?.name?.startsWith('__زبون__') || order.user?.name?.startsWith('Guest-')
-        const rawTable = order.user?.table_number
-        const tableStr = rawTable != null && rawTable !== '' ? String(rawTable) : undefined
-        const groupKey = isShared && tableStr ? `table_${tableStr}` : (order.user_id || 'unknown')
+        const customerName = order.customer_name
+        const tableNumber = order.table_number || order.user?.table_number
+        const tableStr = tableNumber != null && tableNumber !== '' ? String(tableNumber) : undefined
+        const groupKey = customerName 
+          ? `customer_${customerName}_${tableStr || 'notab'}`
+          : (isShared && tableStr ? `table_${tableStr}` : (order.user_id || 'unknown'))
         if (!acc[groupKey]) {
+          let displayName = ''
+          if (customerName && tableStr) {
+            displayName = `${customerName} - طاولة ${tableStr}`
+          } else if (customerName) {
+            displayName = customerName
+          } else if (tableStr) {
+            displayName = `طاولة ${tableStr}`
+          } else if (isShared) {
+            displayName = 'زبون'
+          } else {
+            displayName = order.user?.name || 'مستخدم'
+          }
           acc[groupKey] = {
             userId: order.user_id || 'unknown',
-            userName: tableStr
-              ? `طاولة ${tableStr}`
-              : (isShared ? 'زبون' : (order.user?.name || 'مستخدم')),
+            userName: displayName,
             tableNumber: tableStr,
             orders: [],
             totalPrice: 0,
@@ -415,8 +428,15 @@ export default function StaffPage() {
           <span className="text-sm font-medium">{formatTime(group.earliestTime)}</span>
         </div>
         <div className="text-right">
-          <p className="font-bold" style={{ color: isVip ? '#f59e0b' : 'var(--foreground)' }}>{group.userName}</p>
-          {group.tableNumber && <p className="text-xs text-muted-foreground">طربيزة {group.tableNumber}</p>}
+          <p className="font-bold" style={{ color: isVip ? '#f59e0b' : 'var(--foreground)' }}>
+            {group.orders[0]?.customer_name && group.tableNumber
+              ? `${group.orders[0].customer_name} - طاولة ${group.tableNumber}`
+              : group.orders[0]?.customer_name
+                ? group.orders[0].customer_name
+                : group.tableNumber
+                  ? `طاولة ${group.tableNumber}`
+                  : group.userName}
+          </p>
         </div>
       </div>
       <div className="px-4 py-3 space-y-2">
