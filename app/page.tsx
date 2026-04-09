@@ -892,15 +892,22 @@ export default function HomePage() {
           localStorage.setItem('qa3da_user', JSON.stringify(resolvedUser))
         }
 
-        // Save table number to user
+        // Save table number and update customer name for shared users to user
+        const updatedName = resolvedUser?.name?.startsWith('__زبون__') 
+          ? `${customerName} - طاولة ${tableNum}`
+          : resolvedUser?.name
+        
         await fetch(`/api/users/${resolvedUser!.id}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ table_number: tableNum })
+          body: JSON.stringify({ 
+            table_number: tableNum,
+            name: updatedName
+          })
         })
 
         // Update local user state
-        const newUser = { ...resolvedUser!, table_number: tableNum }
+        const newUser = { ...resolvedUser!, table_number: tableNum, name: updatedName }
         setCurrentUser(newUser)
         localStorage.setItem('qa3da_user', JSON.stringify(newUser))
         resolvedUser = newUser
