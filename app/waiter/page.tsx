@@ -47,7 +47,9 @@ interface TableGroup {
 }
 
 const statusLabel = (s: string) => {
-  if (s === 'ready' || s === 'completed') return { text: 'جاهز', color: 'bg-green-500/15 text-green-400 border-green-500/30' }
+  if (s === 'completed') return { text: 'تم التسليم', color: 'bg-green-500/15 text-green-400 border-green-500/30' }
+  if (s === 'on_the_way') return { text: 'في الطريق', color: 'bg-blue-500/15 text-blue-400 border-blue-500/30' }
+  if (s === 'ready') return { text: 'تم التحضير', color: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30' }
   if (s === 'preparing') return { text: 'يتحضر', color: 'bg-amber-500/15 text-amber-400 border-amber-500/30' }
   return { text: 'انتظار', color: 'bg-zinc-800 text-zinc-500 border-zinc-700' }
 }
@@ -169,7 +171,7 @@ export default function WaiterPage() {
       const result: TableGroup[] = Object.values(grouped)
         .map(g => ({
           ...g,
-          allReady:     g.items.every(i => i.status === 'ready'),
+          allReady:     g.items.every(i => i.status === 'ready' || i.status === 'on_the_way'),
           anyPreparing: g.items.some(i => i.status === 'preparing'),
         }))
         .sort((a, b) => {
@@ -305,9 +307,17 @@ export default function WaiterPage() {
 
   const handleMarkOnWay = async (group: TableGroup) => {
     try {
+      await Promise.all(
+        group.items
+          .filter(i => i.status === 'ready')
+          .map(i => fetch(`/api/orders/${i.id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ status: 'on_the_way' }),
+          }))
+      )
       setOnWayIds(prev => new Set([...prev, group.userId]))
       toast.success(`${group.tableNumber} في الطريق إلى الطاولة 🚶`)
-      // Send notification to customer
       try {
         await fetch('/api/messages', {
           method: 'POST',
@@ -319,6 +329,7 @@ export default function WaiterPage() {
           })
         })
       } catch { }
+      fetchOrders()
     } catch { toast.error('حصل خطأ، حاول تاني') }
   }
 

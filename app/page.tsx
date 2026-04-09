@@ -446,16 +446,20 @@ export default function HomePage() {
           if (prev && prev !== o.status) {
             if (o.status === 'preparing') {
               toast.info(`☕ جاري تحضير: ${o.drinkName}`)
-            } else if (o.status === 'ready' || o.status === 'completed') {
-              toast.success(`✅ طلبك جاهز: ${o.drinkName}`, { description: 'يمكنك استلام طلبك الآن', duration: 8000 })
+            } else if (o.status === 'ready') {
+              toast.success(`✅ تم التحضير: ${o.drinkName}`, { description: 'طلبك جاهز وبيجيلك دلوقتي!', duration: 8000 })
               try { new Audio('/sounds/ready.mp3').play().catch(() => {}) } catch { /* silent */ }
+            } else if (o.status === 'on_the_way') {
+              toast.success(`🚶 طلبك في الطريق اليك: ${o.drinkName}`, { description: 'الويتر بياخد طلبك للطاولة', duration: 8000 })
+            } else if (o.status === 'completed') {
+              toast.success(`🎉 تم التسليم: ${o.drinkName}`, { description: 'استمتع بطلبك!', duration: 6000 })
             }
           }
         })
         setPrevTrackedStatuses(newStatuses)
 
-        // Auto-hide if all orders are done
-        const allDone = data.length > 0 && data.every((o: { status: string }) => o.status === 'completed' || o.status === 'ready')
+        // Auto-hide if all orders are delivered
+        const allDone = data.length > 0 && data.every((o: { status: string }) => o.status === 'completed')
         if (allDone) {
           setTimeout(() => setTrackerMinimized(true), 8000)
         }
@@ -2715,10 +2719,12 @@ export default function HomePage() {
 
         {/* ── Order Status Tracker Widget ── */}
         {showTracker && trackedOrders.length > 0 && !isDevAdmin && (() => {
-          const total     = trackedOrders.length
-          const doneCount = trackedOrders.filter(o => o.status === 'ready' || o.status === 'completed').length
-          const prepCount = trackedOrders.filter(o => o.status === 'preparing').length
-          const allDone   = doneCount === total
+          const total         = trackedOrders.length
+          const deliveredCount = trackedOrders.filter(o => o.status === 'completed').length
+          const onWayCount    = trackedOrders.filter(o => o.status === 'on_the_way').length
+          const doneCount     = deliveredCount + onWayCount
+          const prepCount     = trackedOrders.filter(o => o.status === 'preparing').length
+          const allDone       = deliveredCount === total
 
           return (
             <>
@@ -2744,8 +2750,8 @@ export default function HomePage() {
                     <div className="flex items-center justify-between px-4 py-2.5 border-b" style={{ borderColor: 'rgba(212,160,23,0.15)', background: allDone ? 'rgba(34,197,94,0.08)' : 'rgba(212,160,23,0.08)' }}>
                       <div className="flex items-center gap-2">
                         <span className={`h-2 w-2 rounded-full ${allDone ? 'bg-green-400' : 'bg-amber-400 animate-pulse'}`} />
-                        <span className="text-sm font-bold" style={{ color: allDone ? '#4ade80' : '#D4A017' }}>
-                          {allDone ? 'طلبك جاهز! ✓' : 'تتبع طلبك'}
+                        <span className="text-sm font-bold" style={{ color: allDone ? '#4ade80' : onWayCount > 0 ? '#60a5fa' : '#D4A017' }}>
+                          {allDone ? 'تم التسليم ✓' : onWayCount > 0 ? 'طلبك في الطريق اليك 🚶' : 'تتبع طلبك'}
                         </span>
                       </div>
                       <button onClick={() => setTrackerMinimized(true)} className="flex h-6 w-6 items-center justify-center rounded-full text-muted-foreground hover:text-foreground hover:bg-muted/40 transition-colors" title="تصغير">
@@ -2756,38 +2762,44 @@ export default function HomePage() {
                     {/* Orders list with per-order stage bar */}
                     <div className="divide-y max-h-64 overflow-y-auto" style={{ borderColor: 'rgba(212,160,23,0.08)' }}>
                       {trackedOrders.map(o => {
-                        const isReady     = o.status === 'ready' || o.status === 'completed'
-                        const isPreparing = o.status === 'preparing'
+                        const isDelivered  = o.status === 'completed'
+                        const isOnTheWay   = o.status === 'on_the_way'
+                        const isReady      = o.status === 'ready'
+                        const isPreparing  = o.status === 'preparing'
+                        const badgeText    = isDelivered ? 'تم التسليم ✓' : isOnTheWay ? 'في الطريق اليك 🚶' : isReady ? 'تم التحضير ✓' : isPreparing ? 'يتحضر ☕' : 'انتظار ⏳'
+                        const badgeClass   = isDelivered ? 'bg-green-500/15 text-green-400' : isOnTheWay ? 'bg-blue-500/15 text-blue-400' : isReady ? 'bg-emerald-500/15 text-emerald-400' : isPreparing ? 'bg-amber-500/15 text-amber-400' : 'bg-zinc-800 text-zinc-500'
                         return (
                           <div key={o.id} className="px-4 py-3 space-y-2">
                             {/* Drink name + qty */}
                             <div className="flex items-center justify-between">
-                              <span className="text-sm font-semibold text-foreground truncate max-w-[60%]">
+                              <span className="text-sm font-semibold text-foreground truncate max-w-[55%]">
                                 {o.drinkName}
                                 {o.quantity > 1 && <span className="text-muted-foreground text-xs mr-1 font-normal">× {o.quantity}</span>}
                               </span>
-                              <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${isReady ? 'bg-green-500/15 text-green-400' : isPreparing ? 'bg-amber-500/15 text-amber-400' : 'bg-zinc-800 text-zinc-500'}`}>
-                                {isReady ? 'جاهز ✓' : isPreparing ? 'يتحضر' : 'انتظار'}
+                              <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${badgeClass}`}>
+                                {badgeText}
                               </span>
                             </div>
-                            {/* 3-stage progress bar */}
+                            {/* 4-stage progress bar */}
                             <div className="flex items-center gap-1" dir="rtl">
-                              {/* Stage 1: pending */}
-                              <div className={`h-1.5 flex-1 rounded-full transition-all duration-700 ${true ? (isPreparing || isReady ? 'bg-amber-500' : 'bg-amber-500/30') : 'bg-zinc-800'}`} />
-                              {/* Dot between 1-2 */}
-                              <div className={`h-2 w-2 rounded-full shrink-0 transition-all duration-700 ${isPreparing || isReady ? 'bg-amber-400' : 'bg-zinc-700'}`} />
-                              {/* Stage 2: preparing */}
-                              <div className={`h-1.5 flex-1 rounded-full transition-all duration-700 ${isReady ? 'bg-green-500' : isPreparing ? 'bg-amber-400/60 animate-pulse' : 'bg-zinc-800'}`} />
-                              {/* Dot between 2-3 */}
-                              <div className={`h-2 w-2 rounded-full shrink-0 transition-all duration-700 ${isReady ? 'bg-green-400' : 'bg-zinc-700'}`} />
-                              {/* Stage 3: ready */}
-                              <div className={`h-1.5 flex-1 rounded-full transition-all duration-700 ${isReady ? 'bg-green-500 shadow-sm shadow-green-500/50' : 'bg-zinc-800'}`} />
+                              {/* Stage 1: preparing */}
+                              <div className={`h-1.5 flex-1 rounded-full transition-all duration-700 ${isPreparing || isReady || isOnTheWay || isDelivered ? 'bg-amber-500' : 'bg-amber-500/25'}`} />
+                              <div className={`h-2 w-2 rounded-full shrink-0 transition-all duration-700 ${isReady || isOnTheWay || isDelivered ? 'bg-emerald-400' : isPreparing ? 'bg-amber-400' : 'bg-zinc-700'}`} />
+                              {/* Stage 2: ready (bar done) */}
+                              <div className={`h-1.5 flex-1 rounded-full transition-all duration-700 ${isReady ? 'bg-emerald-400/60 animate-pulse' : isOnTheWay || isDelivered ? 'bg-emerald-500' : 'bg-zinc-800'}`} />
+                              <div className={`h-2 w-2 rounded-full shrink-0 transition-all duration-700 ${isOnTheWay || isDelivered ? 'bg-blue-400' : 'bg-zinc-700'}`} />
+                              {/* Stage 3: on the way */}
+                              <div className={`h-1.5 flex-1 rounded-full transition-all duration-700 ${isOnTheWay ? 'bg-blue-400/60 animate-pulse' : isDelivered ? 'bg-blue-500' : 'bg-zinc-800'}`} />
+                              <div className={`h-2 w-2 rounded-full shrink-0 transition-all duration-700 ${isDelivered ? 'bg-green-400' : 'bg-zinc-700'}`} />
+                              {/* Stage 4: delivered */}
+                              <div className={`h-1.5 flex-1 rounded-full transition-all duration-700 ${isDelivered ? 'bg-green-500 shadow-sm shadow-green-500/50' : 'bg-zinc-800'}`} />
                             </div>
                             {/* Stage labels */}
                             <div className="flex items-center justify-between text-[9px] text-zinc-600 px-0.5" dir="rtl">
-                              <span className={isPreparing || isReady ? 'text-amber-500' : ''}>في الانتظار</span>
-                              <span className={isPreparing ? 'text-amber-400' : isReady ? 'text-green-400/60' : ''}>جاري التحضير</span>
-                              <span className={isReady ? 'text-green-400' : ''}>جاهز ✓</span>
+                              <span className={isPreparing ? 'text-amber-400' : isReady || isOnTheWay || isDelivered ? 'text-amber-500' : ''}>يتحضر</span>
+                              <span className={isReady ? 'text-emerald-400' : isOnTheWay || isDelivered ? 'text-emerald-500/70' : ''}>تم التحضير</span>
+                              <span className={isOnTheWay ? 'text-blue-400' : isDelivered ? 'text-blue-400/70' : ''}>في الطريق</span>
+                              <span className={isDelivered ? 'text-green-400' : ''}>تم التسليم</span>
                             </div>
                           </div>
                         )
@@ -2798,7 +2810,8 @@ export default function HomePage() {
                     <div className="px-4 py-2.5 border-t flex items-center justify-between" style={{ borderColor: 'rgba(212,160,23,0.12)', background: 'rgba(0,0,0,0.3)' }}>
                       <div className="flex gap-2 text-[11px]">
                         {prepCount > 0 && <span className="text-amber-400">☕ {prepCount} يتحضر</span>}
-                        {doneCount > 0 && <span className="text-green-400">✅ {doneCount} جاهز</span>}
+                        {onWayCount > 0 && <span className="text-blue-400">🚶 {onWayCount} في الطريق</span>}
+                        {deliveredCount > 0 && <span className="text-green-400">✅ {deliveredCount} تسليم</span>}
                         {total - prepCount - doneCount > 0 && <span className="text-zinc-500">⏳ {total - prepCount - doneCount} انتظار</span>}
                       </div>
                       <span className="text-[11px] font-bold" style={{ color: allDone ? '#4ade80' : '#D4A017' }}>
