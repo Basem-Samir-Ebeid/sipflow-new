@@ -7,9 +7,9 @@ declare global {
 
 function getPool() {
   if (!global._pgPool) {
-    const dbUrl = process.env.DATABASE_URL
+    const dbUrl = process.env.DATABASE_URL || process.env.POSTGRES_URL
     if (!dbUrl) {
-      throw new Error('DATABASE_URL environment variable is not set.')
+      throw new Error('DATABASE_URL or POSTGRES_URL environment variable is not set.')
     }
     // Add sslmode=verify-full to the connection string if not already present
     const urlWithSsl = dbUrl.includes('sslmode=') ? dbUrl : `${dbUrl}${dbUrl.includes('?') ? '&' : '?'}sslmode=verify-full`
