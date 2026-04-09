@@ -348,8 +348,15 @@ export default function BarPage() {
           <span className="text-sm font-medium">{formatTime(group.earliestTime)}</span>
         </div>
         <div className="text-right">
-          <p className="font-bold" style={{ color: isVip ? '#f59e0b' : 'var(--foreground)' }}>{group.userName}</p>
-          {group.tableNumber && <p className="text-xs text-muted-foreground">طربيزة {group.tableNumber}</p>}
+          <p className="font-bold" style={{ color: isVip ? '#f59e0b' : 'var(--foreground)' }}>
+            {group.orders[0]?.customer_name && group.tableNumber
+              ? `${group.orders[0].customer_name} - طاولة ${group.tableNumber}`
+              : group.orders[0]?.customer_name
+                ? group.orders[0].customer_name
+                : group.tableNumber
+                  ? `طاولة ${group.tableNumber}`
+                  : group.userName}
+          </p>
         </div>
       </div>
       <div className="px-4 py-3 space-y-2">
