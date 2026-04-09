@@ -3271,6 +3271,8 @@ export default function HomePage() {
                   <div className="flex items-center gap-2">
                     <button
                       onClick={() => {
+                        setArchiveUnlocked(false)
+                        localStorage.removeItem('qa3da_archive_unlocked')
                         setShowArchiveView(false)
                         setSelectedArchivedSessionId(null)
                         setArchivedOrders([])
@@ -3280,20 +3282,6 @@ export default function HomePage() {
                     >
                       <ChevronRight className="h-4 w-4" />
                       العودة للوحة
-                    </button>
-                    <button
-                      onClick={() => {
-                        setArchiveUnlocked(false)
-                        localStorage.removeItem('qa3da_archive_unlocked')
-                        setShowArchiveView(false)
-                        setSelectedArchivedSessionId(null)
-                        setArchivedOrders([])
-                      }}
-                      className="flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium transition-colors hover:bg-muted"
-                      style={{ color: '#ef4444' }}
-                      title="قفل الأرشيف"
-                    >
-                      <Lock className="h-4 w-4" />
                     </button>
                   </div>
                   <h2 className="text-lg font-bold text-foreground flex items-center gap-2">
