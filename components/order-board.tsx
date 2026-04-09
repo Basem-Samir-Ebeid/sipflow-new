@@ -17,13 +17,13 @@ const formatDisplayName = (
   tableNumber: string | null | undefined,
   userName?: string | null | undefined
 ): string => {
-  // Show customer_name from order if available
+  // Show customer_name from order if available (highest priority)
   if (customerName && customerName.trim()) {
     return tableNumber ? `${customerName} - طاولة ${tableNumber}` : customerName
   }
   // Fallback to table number only
   if (tableNumber) return `طاولة ${tableNumber}`
-  // Hide UUID-like names (shared users)
+  // Hide UUID-like names (shared users) - only if no customer_name or table_number
   if (userName?.startsWith('__زبون__')) return '—'
   if (userName?.startsWith('Guest-')) return '—'
   // Return user name if available
@@ -101,6 +101,7 @@ export function OrderBoard({ orders, drinks, currentUser, onDeleteOrder, isAdmin
         const totalItems = countTotalItems(customerOrders)
         const isVip = customerOrders.some(o => o.notes?.includes('مطور'))
         const displayName = formatDisplayName(customerName, tableNumber, user?.name)
+        console.log('[v0] Display:', { customerName, tableNumber, displayName, userName: user?.name })
         
         return (
           <div 
