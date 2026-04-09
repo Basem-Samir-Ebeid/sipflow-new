@@ -94,6 +94,7 @@ export default function WaiterPage() {
   const [reservationNotifs, setReservationNotifs] = useState<ReservationNotif[]>([])
   const [dismissedReservIds, setDismissedReservIds] = useState<Set<string>>(new Set())
   const seenReservationIds = useRef<Set<string>>(new Set())
+  const previousGroupCount = useRef<number>(0)
 
   const playSound = () => {
     try {
