@@ -411,65 +411,163 @@ export default function WaiterPage() {
 
         {/* Report Modal */}
         {showReport && (
-          <div className="fixed inset-0 bg-black/50 z-50 flex items-end">
-            <div className="w-full max-w-2xl bg-background rounded-t-3xl border-t border-border p-4 space-y-3 max-h-[80vh] overflow-y-auto">
-              <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-2">
-                <BarChart3 className="h-5 w-5 text-blue-400" />
-                <h2 className="font-bold text-foreground text-lg">تقرير الطلبات المسلمة</h2>
-              </div>
-                <button onClick={() => setShowReport(false)} className="text-muted-foreground hover:text-foreground">
+          <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={() => setShowReport(false)}>
+            <div className="w-full max-w-lg bg-background rounded-2xl border border-border p-5 space-y-4 max-h-[85vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <BarChart3 className="h-5 w-5 text-blue-400" />
+                  <h2 className="font-bold text-foreground text-lg">تقرير الطلبات</h2>
+                </div>
+                <button onClick={() => setShowReport(false)} className="text-muted-foreground hover:text-foreground p-1 rounded-lg hover:bg-muted transition-colors">
                   <X className="h-5 w-5" />
                 </button>
               </div>
 
               {/* Report summary */}
-              <div className="grid grid-cols-2 gap-2 mb-4">
+              <div className="grid grid-cols-3 gap-2">
                 <div className="p-3 rounded-xl bg-green-500/10 border border-green-500/20 text-center">
-                  <p className="text-xl font-black text-green-400">{deliveredGroups.length}</p>
-                  <p className="text-xs text-green-400/70">طاولة مسلمة</p>
+                  <CheckCircle2 className="h-4 w-4 text-green-400 mx-auto mb-1" />
+                  <p className="text-xl font-black text-green-400">{readyGroups.length}</p>
+                  <p className="text-[10px] text-green-400/70">طاولة جاهزة</p>
                 </div>
                 <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-center">
-                  <p className="text-xl font-black text-amber-400">
-                    {deliveredGroups.reduce((sum, g) => sum + g.items.length, 0)}
-                  </p>
-                  <p className="text-xs text-amber-400/70">طلب مسلم</p>
+                  <Clock className="h-4 w-4 text-amber-400 mx-auto mb-1" />
+                  <p className="text-xl font-black text-amber-400">{pendingGroups.length}</p>
+                  <p className="text-[10px] text-amber-400/70">طاولة في الانتظار</p>
+                </div>
+                <div className="p-3 rounded-xl bg-blue-500/10 border border-blue-500/20 text-center">
+                  <Coffee className="h-4 w-4 text-blue-400 mx-auto mb-1" />
+                  <p className="text-xl font-black text-blue-400">{deliveredGroups.length}</p>
+                  <p className="text-[10px] text-blue-400/70">تم تسليمها</p>
                 </div>
               </div>
 
-              {/* Delivered orders list */}
-              {deliveredGroups.length > 0 ? (
-                <div className="space-y-2">
-                  {deliveredGroups.map(group => (
-                    <div key={group.userId} className="border border-border rounded-xl p-3 bg-card/50">
-                      <div className="flex items-center justify-between mb-2">
-                        <div>
-                          <p className="font-bold text-foreground">{group.tableNumber}</p>
-                          <p className="text-xs text-muted-foreground">{group.items.length} طلب</p>
-                        </div>
-                        <CheckCircle2 className="h-5 w-5 text-green-400" />
-                      </div>
-                      <div className="space-y-1">
-                        {group.items.map(item => (
-                          <div key={item.id} className="flex items-center justify-between text-xs">
-                            <span className="text-muted-foreground">
-                              {item.drinkName} × {item.quantity}
-                            </span>
-                            <span className="text-muted-foreground">
-                              {formatTime(item.completed_at || item.created_at)}
-                            </span>
+              {/* Ready orders - الطلبات الواصلة من البار */}
+              <div>
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
+                  <h3 className="font-bold text-green-400 text-sm">الطلبات الواصلة (جاهزة للتسليم)</h3>
+                </div>
+                {readyGroups.length > 0 ? (
+                  <div className="space-y-2">
+                    {readyGroups.map(group => (
+                      <div key={group.userId} className="border border-green-500/30 rounded-xl p-3 bg-green-500/5">
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="flex items-center gap-2">
+                            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-green-500/20 text-green-400 font-bold text-sm">
+                              {group.tableNumber}
+                            </div>
+                            <div>
+                              <p className="font-bold text-foreground text-sm">طاولة {group.tableNumber}</p>
+                              <p className="text-[10px] text-muted-foreground">{group.items.length} طلب · {formatTime(group.earliestTime)}</p>
+                            </div>
                           </div>
-                        ))}
+                          <CheckCircle2 className="h-5 w-5 text-green-400" />
+                        </div>
+                        <div className="space-y-1 pr-2">
+                          {group.items.map(item => (
+                            <div key={item.id} className="flex items-center justify-between text-xs">
+                              <span className="text-foreground">
+                                {item.drinkName} {item.quantity > 1 && `× ${item.quantity}`}
+                              </span>
+                              <span className="text-green-400 font-medium">جاهز</span>
+                            </div>
+                          ))}
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-4 text-muted-foreground border border-dashed border-border rounded-xl">
+                    <p className="text-xs">لا توجد طلبات جاهزة حالياً</p>
+                  </div>
+                )}
+              </div>
+
+              {/* Pending orders - الطلبات قيد التحضير */}
+              <div>
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="h-2 w-2 rounded-full bg-amber-500" />
+                  <h3 className="font-bold text-amber-400 text-sm">الطلبات قيد التحضير</h3>
                 </div>
-              ) : (
-                <div className="text-center py-8 text-muted-foreground">
-                  <BarChart3 className="h-12 w-12 mx-auto mb-3 opacity-20" />
-                  <p className="text-sm">لم تسلم أي طلبات بعد</p>
+                {pendingGroups.length > 0 ? (
+                  <div className="space-y-2">
+                    {pendingGroups.map(group => (
+                      <div key={group.userId} className="border border-amber-500/30 rounded-xl p-3 bg-amber-500/5">
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="flex items-center gap-2">
+                            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-500/20 text-amber-400 font-bold text-sm">
+                              {group.tableNumber}
+                            </div>
+                            <div>
+                              <p className="font-bold text-foreground text-sm">طاولة {group.tableNumber}</p>
+                              <p className="text-[10px] text-muted-foreground">{group.items.length} طلب · {formatTime(group.earliestTime)}</p>
+                            </div>
+                          </div>
+                          <Clock className="h-5 w-5 text-amber-400" />
+                        </div>
+                        <div className="space-y-1 pr-2">
+                          {group.items.map(item => {
+                            const { text, color } = statusLabel(item.status)
+                            return (
+                              <div key={item.id} className="flex items-center justify-between text-xs">
+                                <span className="text-foreground">
+                                  {item.drinkName} {item.quantity > 1 && `× ${item.quantity}`}
+                                </span>
+                                <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${color}`}>{text}</span>
+                              </div>
+                            )
+                          })}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-4 text-muted-foreground border border-dashed border-border rounded-xl">
+                    <p className="text-xs">لا توجد طلبات قيد التحضير</p>
+                  </div>
+                )}
+              </div>
+
+              {/* Delivered orders - الطلبات المسلمة */}
+              <div>
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="h-2 w-2 rounded-full bg-blue-500" />
+                  <h3 className="font-bold text-blue-400 text-sm">الطلبات المسلمة</h3>
                 </div>
-              )}
+                {deliveredGroups.length > 0 ? (
+                  <div className="space-y-2">
+                    {deliveredGroups.map(group => (
+                      <div key={group.userId} className="border border-border rounded-xl p-3 bg-card/50">
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="flex items-center gap-2">
+                            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-muted text-muted-foreground font-bold text-sm">
+                              {group.tableNumber}
+                            </div>
+                            <div>
+                              <p className="font-bold text-foreground text-sm">طاولة {group.tableNumber}</p>
+                              <p className="text-[10px] text-muted-foreground">{group.items.length} طلب</p>
+                            </div>
+                          </div>
+                          <span className="text-xs text-green-500 font-medium">✓ تم التسليم</span>
+                        </div>
+                        <div className="space-y-1 pr-2">
+                          {group.items.map(item => (
+                            <div key={item.id} className="flex items-center justify-between text-xs text-muted-foreground">
+                              <span>{item.drinkName} {item.quantity > 1 && `× ${item.quantity}`}</span>
+                              <span>{formatTime(item.createdAt)}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-4 text-muted-foreground border border-dashed border-border rounded-xl">
+                    <p className="text-xs">لم تسلم أي طلبات بعد</p>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         )}
