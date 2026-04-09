@@ -1548,7 +1548,7 @@ export default function HomePage() {
           {/* Logo */}
           <div className="flex flex-col items-center space-y-3">
             <div className="relative w-32 h-32 rounded-full overflow-hidden bg-black shadow-lg">
-              <Image src="/images/qa3da-logo.jpg" alt="SîpFlõw" fill sizes="128px" style={{ objectFit: 'cover', objectPosition: 'center' }} />
+              <Image src="/images/qa3da-logo.jpg" alt="SîpFlõw" fill sizes="128px" loading="eager" style={{ objectFit: 'cover', objectPosition: 'center' }} />
             </div>
             <p className="text-4xl font-bold" style={{ color: '#C17A3A', fontFamily: 'Georgia, serif' }}>SîpFlõw</p>
             <p className="text-sm text-gray-400 tracking-widest">Order Management System</p>
