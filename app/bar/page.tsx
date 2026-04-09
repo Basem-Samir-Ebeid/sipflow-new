@@ -401,12 +401,6 @@ export default function BarPage() {
             <span className="font-semibold">تم</span>
           </div>
         )}
-        {group.totalPrice > 0 && (
-          <div className="text-right shrink-0">
-            <p className="text-xs text-muted-foreground">الإجمالي</p>
-            <p className="text-lg font-bold text-sky-400">{group.totalPrice.toFixed(0)} ج.م</p>
-          </div>
-        )}
       </div>
     </div>
     )
