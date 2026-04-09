@@ -199,6 +199,10 @@ export function AdminPanel({
   const [statsPlaceId, setStatsPlaceId] = useState<string>('')
   const [inventoryDevPlaceId, setInventoryDevPlaceId] = useState<string>('')
   const [statsOrders, setStatsOrders] = useState<typeof orders>([])
+  // Count tab state (dev admin)
+  const [countPlaceId, setCountPlaceId] = useState<string>('')
+  const [countOrders, setCountOrders] = useState<typeof orders>([])
+  const [isFetchingCount, setIsFetchingCount] = useState(false)
   const [isFetchingStats, setIsFetchingStats] = useState(false)
   const [cashierPlaceId, setCashierPlaceId] = useState<string>('')
   const [cashierOrders, setCashierOrders] = useState<typeof orders>([])
@@ -516,6 +520,20 @@ export function AdminPanel({
       setStatsOrders(Array.isArray(data) ? data : [])
     } catch { setStatsOrders([]) }
     finally { setIsFetchingStats(false) }
+  }
+
+  const fetchCountForPlace = async (pid: string) => {
+    if (!pid) { setCountOrders([]); return }
+    setIsFetchingCount(true)
+    try {
+      const sessRes = await fetch(`/api/sessions?readonly=true&place_id=${pid}`)
+      const sess = await sessRes.json()
+      if (!sess?.id) { setCountOrders([]); return }
+      const ordRes = await fetch(`/api/orders?session_id=${sess.id}`)
+      const data = await ordRes.json()
+      setCountOrders(Array.isArray(data) ? data : [])
+    } catch { setCountOrders([]) }
+    finally { setIsFetchingCount(false) }
   }
 
   const fetchCashierOrders = async (pid: string) => {
@@ -1199,6 +1217,7 @@ const handleSaveSettings = async () => {
             fetchAnalytics({ placeId })
           }
         }
+        if (v === 'count' && isDevAdmin) fetchPlaces().then(list => { if (list.length > 0) setCountPlaceId(prev => { const chosen = prev || list[0].id; fetchCountForPlace(chosen); return chosen }) })
       }} className="w-full">
         <TabsList className={`mb-4 grid w-full bg-muted ${isDevAdmin ? 'grid-cols-13' : 'grid-cols-11'}`}>
           <TabsTrigger value="stats" className="gap-2 data-[state=active]:bg-card">
@@ -1247,6 +1266,10 @@ const handleSaveSettings = async () => {
           <TabsTrigger value="analytics" className="gap-2 data-[state=active]:bg-card">
             <TrendingUp className="h-4 w-4" />
             <span className="hidden sm:inline">التقارير</span>
+          </TabsTrigger>
+          <TabsTrigger value="count" className="gap-2 data-[state=active]:bg-card">
+            <CheckCircle2 className="h-4 w-4" />
+            <span className="hidden sm:inline">حصر المسلّم</span>
           </TabsTrigger>
           {isDevAdmin && (
             <>
@@ -2429,7 +2452,7 @@ const handleSaveSettings = async () => {
           <div className="rounded-2xl border border-border bg-card p-4">
             <div className="mb-4 flex items-center gap-2">
               <Send className="h-5 w-5 text-primary" />
-              <h3 className="font-semibold text-foreground">إرسال رسالة للمستخدمين</h3>
+              <h3 className="font-semibold text-foreground">إرسال رسالة للمست��دمين</h3>
             </div>
             <div className="space-y-4">
               {/* Dev admin: multi-place selector for message */}
@@ -3167,6 +3190,128 @@ onClick={() => {
               </AlertDialogContent>
             </AlertDialog>
           </div>
+        </TabsContent>
+
+        {/* ─── Count (Delivered Items) Tab ─── */}
+        <TabsContent value="count" className="space-y-4">
+          {/* Dev admin: place selector for count */}
+          {isDevAdmin && (
+            <div className="rounded-2xl border border-border bg-card p-4">
+              <Label className="text-muted-foreground">اختر المكان لعرض حصر الأصناف المسلّمة</Label>
+              <select
+                value={countPlaceId}
+                onChange={e => { setCountPlaceId(e.target.value); fetchCountForPlace(e.target.value) }}
+                className="mt-2 w-full rounded-md border border-border bg-muted px-3 py-2 text-sm text-foreground"
+              >
+                <option value="">— اختر مكان —</option>
+                {places.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+              </select>
+            </div>
+          )}
+          {isDevAdmin && !countPlaceId && (
+            <p className="text-center text-muted-foreground py-8">اختر مكاناً لعرض الحصر</p>
+          )}
+          {isDevAdmin && countPlaceId && isFetchingCount && (
+            <p className="text-center text-muted-foreground py-8">جاري تحميل الحصر...</p>
+          )}
+          
+          {(!isDevAdmin || (countPlaceId && !isFetchingCount)) && (() => {
+            // Get orders to use (dev admin uses countOrders, place admin uses orders prop)
+            const ordersToUse = isDevAdmin ? countOrders : orders
+            // Get completed/ready orders
+            const completedOrders = ordersToUse.filter(o => o.status === 'ready' || o.status === 'completed')
+            
+            // Count delivered items by drink name
+            const deliveredDrinks: Record<string, { drinkName: string; count: number }> = {}
+            completedOrders.forEach(order => {
+              const name = order.drink?.name || 'غير معروف'
+              if (!deliveredDrinks[name]) deliveredDrinks[name] = { drinkName: name, count: 0 }
+              deliveredDrinks[name].count += order.quantity || 1
+            })
+            const deliveredList = Object.values(deliveredDrinks).sort((a, b) => b.count - a.count)
+            const totalDelivered = deliveredList.reduce((sum, d) => sum + d.count, 0)
+            const todayDate = new Date().toLocaleDateString('ar-EG', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
+
+            const handlePrintCount = () => {
+              const lines = [
+                `حصر الأصناف المسلّمة - ${todayDate}`,
+                '─'.repeat(40),
+                '',
+                'الصنف                  | الكمية المسلّمة',
+                '─'.repeat(40),
+                ...deliveredList.map(d => `${d.drinkName.padEnd(22)} | ${String(d.count).padStart(4)}`),
+                '',
+                '─'.repeat(40),
+                `إجمالي الأصناف المسلّمة: ${totalDelivered}`,
+              ].join('\n')
+              const win = window.open('', '_blank')
+              if (win) {
+                win.document.write(`<pre dir="rtl" style="font-family:monospace;font-size:14px;padding:20px">${lines}</pre>`)
+                win.document.close()
+                win.print()
+              }
+            }
+
+            return (
+              <>
+                <div className="flex items-center justify-between mb-4">
+                  <Button onClick={handlePrintCount} className="gap-2 bg-amber-600 hover:bg-amber-700 text-white" size="sm">
+                    <Download className="h-4 w-4" />
+                    طباعة الحصر
+                  </Button>
+                  <p className="text-sm text-muted-foreground font-medium">{todayDate}</p>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3 mb-6">
+                  <div className="bg-card border border-amber-500/30 rounded-2xl p-4 text-center">
+                    <p className="text-2xl font-black text-amber-500">{totalDelivered}</p>
+                    <p className="text-xs text-muted-foreground mt-1">إجمالي الأصناف المسلّمة</p>
+                  </div>
+                  <div className="bg-card border border-border rounded-2xl p-4 text-center">
+                    <p className="text-2xl font-black text-primary">{deliveredList.length}</p>
+                    <p className="text-xs text-muted-foreground mt-1">أنواع مختلفة</p>
+                  </div>
+                </div>
+
+                {deliveredList.length === 0 ? (
+                  <div className="text-center py-16">
+                    <CheckCircle2 className="h-14 w-14 mx-auto text-muted-foreground/40 mb-4" />
+                    <p className="text-lg font-bold text-foreground mb-1">لا توجد أصناف مسلّمة بعد</p>
+                    <p className="text-muted-foreground text-sm">الحصر هيظهر هنا بعد تسليم أول طلب</p>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    <h3 className="font-bold text-foreground text-right mb-3 flex items-center justify-end gap-2">
+                      <CheckCircle2 className="h-4 w-4" />
+                      حصر الأصناف المسلّمة
+                    </h3>
+                    {deliveredList.map((item, idx) => {
+                      const maxCount = deliveredList[0].count
+                      const pct = Math.round((item.count / maxCount) * 100)
+                      return (
+                        <div key={item.drinkName} className="bg-card border border-border rounded-xl p-3">
+                          <div className="flex items-center justify-between mb-2">
+                            <div className="flex items-center gap-2 text-left">
+                              <span className="bg-amber-500/10 text-amber-500 text-xs font-bold rounded-full px-2 py-0.5">× {item.count}</span>
+                            </div>
+                            <div className="flex items-center gap-2 text-right">
+                              <span className="font-semibold text-foreground">{item.drinkName}</span>
+                              <span className="flex h-6 w-6 items-center justify-center rounded-full bg-muted text-xs font-bold text-muted-foreground">
+                                {idx + 1}
+                              </span>
+                            </div>
+                          </div>
+                          <div className="h-1.5 bg-muted rounded-full overflow-hidden">
+                            <div className="h-full rounded-full transition-all" style={{ width: `${pct}%`, background: 'linear-gradient(90deg, #f59e0b, #d97706)' }} />
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+                )}
+              </>
+            )
+          })()}
         </TabsContent>
 
         {/* ─── Places Tab (Dev Admin only) ─── */}
