@@ -3464,20 +3464,27 @@ export default function HomePage() {
                         <div className="space-y-3">
                           {(() => {
                             const grouped = archivedOrders.reduce((acc, o) => {
-                              const key = o.user?.name || o.customer_name || 'زائر'
-                              if (!acc[key]) acc[key] = { orders: [], tableNum: o.user?.table_number || o.table_number }
+                              const custName = o.customer_name?.trim()
+                              const tableNum = o.table_number || o.user?.table_number
+                              const key = custName
+                                ? (tableNum ? `${custName}_${tableNum}` : custName)
+                                : (tableNum ? `table_${tableNum}` : o.user_id || 'زائر')
+                              if (!acc[key]) {
+                                const displayName = custName || (tableNum ? `طاولة ${tableNum}` : 'زبون')
+                                acc[key] = { orders: [], tableNum: tableNum || null, displayName }
+                              }
                               acc[key].orders.push(o)
                               return acc
-                            }, {} as Record<string, { orders: OrderWithDetails[]; tableNum?: string | null }>)
+                            }, {} as Record<string, { orders: OrderWithDetails[]; tableNum?: string | null; displayName: string }>)
 
-                            return Object.entries(grouped).map(([name, { orders: userOrders, tableNum }]) => {
+                            return Object.entries(grouped).map(([key, { orders: userOrders, tableNum, displayName }]) => {
                               const total = userOrders.reduce((s, o) => s + (o.drink?.price || 0) * o.quantity, 0)
                               return (
-                                <div key={name} className="rounded-2xl border border-border bg-card overflow-hidden">
+                                <div key={key} className="rounded-2xl border border-border bg-card overflow-hidden">
                                   <div className="flex items-center justify-between px-4 py-3 border-b border-border">
                                     <div className="flex items-center gap-2">
-                                      <span className="font-bold text-foreground">{name}</span>
-                                      {tableNum && <span className="text-xs text-muted-foreground">- طاولة {tableNum}</span>}
+                                      <span className="font-bold text-foreground">{displayName}</span>
+                                      {tableNum && !displayName.startsWith('طاولة') && <span className="text-xs text-muted-foreground">- طاولة {tableNum}</span>}
                                     </div>
                                     <div className="flex items-center gap-2">
                                       <span className="text-xs text-muted-foreground">{userOrders.length} صنف</span>
@@ -3506,7 +3513,7 @@ export default function HomePage() {
                                   </div>
                                   <div className="px-4 py-3 border-t border-border bg-muted/50">
                                     <div className="flex items-center justify-between">
-                                      <span className="text-sm font-medium text-muted-foreground">إجمالي {name} {tableNum ? `- طاولة ${tableNum}` : ''}</span>
+                                      <span className="text-sm font-medium text-muted-foreground">إجمالي {displayName}{tableNum && !displayName.startsWith('طاولة') ? ` - طاولة ${tableNum}` : ''}</span>
                                       <span className="text-lg font-black" style={{ color: '#D4A017' }}>{total} ج.م</span>
                                     </div>
                                   </div>
