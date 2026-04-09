@@ -924,7 +924,6 @@ export default function HomePage() {
         const orderNotes = isDevAdmin
           ? [cartNotes[drinkId]?.trim(), `طاولة ${tableNum}`, 'مطور'].filter(Boolean).join(' | ')
           : cartNotes[drinkId]?.trim() || null
-        console.log('[v0] Submitting order with:', { customerName, tableNum, drinkId })
         const orderRes = await fetch('/api/orders', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -3506,7 +3505,7 @@ export default function HomePage() {
                   }}
                   className="w-full rounded-md border border-border bg-muted px-3 py-2 text-sm text-foreground"
                 >
-                  <option value="">— اختر المكان —</option>
+                  <option value="">— اختر المك��ن —</option>
                   {boardDevPlaces.map(p => (
                     <option key={p.id} value={p.id}>{p.name}</option>
                   ))}
