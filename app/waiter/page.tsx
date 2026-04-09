@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { LogOut, RefreshCw, Loader2, ArrowRight, Coffee, CheckCircle2, Clock, AlertCircle, CalendarCheck, Users, Phone, X, TrendingUp, Award, Zap, BarChart3 } from 'lucide-react'
+import { LogOut, RefreshCw, Loader2, ArrowRight, Coffee, CheckCircle2, Clock, AlertCircle, CalendarCheck, Users, Phone, X, TrendingUp, Award, Zap, BarChart3, History } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { toast, Toaster } from 'sonner'
@@ -90,6 +90,9 @@ export default function WaiterPage() {
   const [deliveredIds, setDeliveredIds] = useState<Set<string>>(new Set())
   const [onWayIds, setOnWayIds] = useState<Set<string>>(new Set())
   const [showReport, setShowReport] = useState(false)
+  const [showDeliveryHistory, setShowDeliveryHistory] = useState(false)
+  const [deliveryHistory, setDeliveryHistory] = useState<TableGroup[]>([])
+  const [isLoadingHistory, setIsLoadingHistory] = useState(false)
 
   const [reservationNotifs, setReservationNotifs] = useState<ReservationNotif[]>([])
   const [dismissedReservIds, setDismissedReservIds] = useState<Set<string>>(new Set())
@@ -186,6 +189,64 @@ export default function WaiterPage() {
     } catch { toast.error('خطأ في تحديث الطلبات') }
     finally { setIsLoading(false) }
   }, [staffUser, deliveredIds])
+
+  const fetchDeliveryHistory = useCallback(async () => {
+    if (!staffUser) return
+    setIsLoadingHistory(true)
+    try {
+      const placeParam = staffUser.place_id ? `&place_id=${staffUser.place_id}` : ''
+      const sessRes = await fetch(`/api/sessions?readonly=true${placeParam}`)
+      const sess = await sessRes.json()
+      if (!sess?.id) { setDeliveryHistory([]); setIsLoadingHistory(false); return }
+
+      const res = await fetch(`/api/orders?session_id=${sess.id}`)
+      const orders = await res.json()
+      if (!Array.isArray(orders)) { setIsLoadingHistory(false); return }
+
+      // Only show completed/delivered orders
+      const completed = orders.filter((o: { status: string }) => o.status === 'completed')
+
+      // Group by table
+      const grouped: Record<string, TableGroup> = {}
+      for (const o of completed) {
+        const uid = o.user_id || 'unknown'
+        const rawTableNum = o.user?.table_number
+        const tableNum = rawTableNum != null && rawTableNum !== '' ? String(rawTableNum) : null
+        if (!tableNum) continue
+
+        const groupKey = `table_${tableNum}`
+        if (!grouped[groupKey]) {
+          grouped[groupKey] = {
+            tableNumber: tableNum,
+            userName: `طاولة ${tableNum}`,
+            userId: uid,
+            items: [],
+            earliestTime: o.created_at,
+            allReady: true,
+            anyPreparing: false,
+          }
+        }
+        grouped[groupKey].items.push({
+          id: o.id,
+          drinkName: o.drink?.name || 'مشروب',
+          quantity: o.quantity || 1,
+          notes: o.notes,
+          status: o.status || 'completed',
+          totalPrice: Number(o.total_price || 0),
+          createdAt: o.created_at,
+        })
+        if (new Date(o.created_at) < new Date(grouped[groupKey].earliestTime)) {
+          grouped[groupKey].earliestTime = o.created_at
+        }
+      }
+
+      const result: TableGroup[] = Object.values(grouped)
+        .sort((a, b) => new Date(b.earliestTime).getTime() - new Date(a.earliestTime).getTime())
+
+      setDeliveryHistory(result)
+    } catch { toast.error('خطأ في جلب سجل التسليمات') }
+    finally { setIsLoadingHistory(false) }
+  }, [staffUser])
 
   const fetchReservationNotifs = useCallback(async () => {
     if (!staffUser?.place_id) return
@@ -390,11 +451,16 @@ export default function WaiterPage() {
                 آخر تحديث {formatTime(lastRefresh.toISOString())}
               </span>
             )}
-            <button onClick={() => setShowReport(!showReport)} 
-              className="flex h-7 w-7 items-center justify-center rounded-full border border-border text-muted-foreground hover:text-blue-400 hover:border-blue-400/40 transition-colors"
-              title="عرض التقرير">
-              <BarChart3 className="h-3.5 w-3.5" />
-            </button>
+<button onClick={() => { setShowDeliveryHistory(true); fetchDeliveryHistory() }} 
+                              className="flex h-7 w-7 items-center justify-center rounded-full border border-border text-muted-foreground hover:text-green-400 hover:border-green-400/40 transition-colors"
+                              title="سجل التسليمات">
+                              <History className="h-3.5 w-3.5" />
+                            </button>
+                            <button onClick={() => setShowReport(!showReport)} 
+                              className="flex h-7 w-7 items-center justify-center rounded-full border border-border text-muted-foreground hover:text-blue-400 hover:border-blue-400/40 transition-colors"
+                              title="عرض التقرير">
+                              <BarChart3 className="h-3.5 w-3.5" />
+                            </button>
             <button onClick={fetchOrders} disabled={isLoading}
               className="flex h-7 w-7 items-center justify-center rounded-full border border-border text-muted-foreground hover:text-amber-500 hover:border-amber-500/40 transition-colors">
               <RefreshCw className={`h-3.5 w-3.5 ${isLoading ? 'animate-spin' : ''}`} />
@@ -408,6 +474,117 @@ export default function WaiterPage() {
       </div>
 
       <div className="max-w-2xl mx-auto px-4 py-4 space-y-4 pb-20">
+
+        {/* Delivery History Modal */}
+        {showDeliveryHistory && (
+          <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4" onClick={() => setShowDeliveryHistory(false)}>
+            <div className="w-full max-w-lg bg-background rounded-2xl border border-green-500/30 p-5 space-y-4 max-h-[85vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <History className="h-5 w-5 text-green-400" />
+                  <h2 className="font-bold text-foreground text-lg">سجل التسليمات</h2>
+                </div>
+                <button onClick={() => setShowDeliveryHistory(false)} className="text-muted-foreground hover:text-foreground p-1 rounded-lg hover:bg-muted transition-colors">
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+
+              {/* Summary */}
+              <div className="grid grid-cols-2 gap-3">
+                <div className="p-3 rounded-xl bg-green-500/10 border border-green-500/20 text-center">
+                  <CheckCircle2 className="h-4 w-4 text-green-400 mx-auto mb-1" />
+                  <p className="text-2xl font-black text-green-400">{deliveryHistory.length}</p>
+                  <p className="text-[10px] text-green-400/70">طاولة تم تسليمها</p>
+                </div>
+                <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-center">
+                  <Coffee className="h-4 w-4 text-amber-400 mx-auto mb-1" />
+                  <p className="text-2xl font-black text-amber-400">
+                    {deliveryHistory.reduce((sum, g) => sum + g.items.length, 0)}
+                  </p>
+                  <p className="text-[10px] text-amber-400/70">إجمالي الطلبات</p>
+                </div>
+              </div>
+
+              {/* Loading state */}
+              {isLoadingHistory && (
+                <div className="flex items-center justify-center py-8">
+                  <Loader2 className="h-6 w-6 animate-spin text-green-400" />
+                </div>
+              )}
+
+              {/* Empty state */}
+              {!isLoadingHistory && deliveryHistory.length === 0 && (
+                <div className="text-center py-8 text-muted-foreground border border-dashed border-border rounded-xl">
+                  <CheckCircle2 className="h-8 w-8 mx-auto mb-2 opacity-30" />
+                  <p className="text-sm">لا توجد تسليمات مسجلة اليوم</p>
+                </div>
+              )}
+
+              {/* Delivery history list */}
+              {!isLoadingHistory && deliveryHistory.length > 0 && (
+                <div className="space-y-3">
+                  {deliveryHistory.map(group => {
+                    const totalPrice = group.items.reduce((sum, item) => sum + item.totalPrice, 0)
+                    return (
+                      <div key={group.tableNumber + group.earliestTime} className="border border-green-500/20 rounded-xl p-4 bg-green-500/5">
+                        <div className="flex items-center justify-between mb-3">
+                          <div className="flex items-center gap-3">
+                            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-green-500/20 text-green-400 font-black text-lg">
+                              {group.tableNumber}
+                            </div>
+                            <div>
+                              <p className="font-bold text-foreground">طاولة {group.tableNumber}</p>
+                              <p className="text-[11px] text-muted-foreground">
+                                {group.items.length} {group.items.length === 1 ? 'طلب' : 'طلبات'} · {formatTime(group.earliestTime)}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="text-left">
+                            <span className="text-xs px-2 py-1 rounded-full bg-green-500/20 text-green-400 font-medium">✓ تم التسليم</span>
+                          </div>
+                        </div>
+                        
+                        {/* Order items */}
+                        <div className="space-y-2 border-t border-border/50 pt-3">
+                          {group.items.map(item => (
+                            <div key={item.id} className="flex items-center justify-between text-sm">
+                              <div className="flex items-center gap-2">
+                                <Coffee className="h-3.5 w-3.5 text-amber-500/60" />
+                                <span className="text-foreground">
+                                  {item.drinkName}
+                                  {item.quantity > 1 && <span className="text-muted-foreground text-xs mr-1">× {item.quantity}</span>}
+                                </span>
+                              </div>
+                              <span className="text-muted-foreground text-xs">{formatTime(item.createdAt)}</span>
+                            </div>
+                          ))}
+                        </div>
+
+                        {/* Total */}
+                        {totalPrice > 0 && (
+                          <div className="flex items-center justify-between mt-3 pt-3 border-t border-border/50">
+                            <span className="text-xs text-muted-foreground">الإجمالي</span>
+                            <span className="font-bold text-green-400">{totalPrice.toFixed(2)} ج.م</span>
+                          </div>
+                        )}
+                      </div>
+                    )
+                  })}
+                </div>
+              )}
+
+              {/* Refresh button */}
+              <button 
+                onClick={fetchDeliveryHistory}
+                disabled={isLoadingHistory}
+                className="w-full py-2.5 rounded-xl border border-green-500/30 text-green-400 text-sm font-medium hover:bg-green-500/10 transition-colors flex items-center justify-center gap-2"
+              >
+                <RefreshCw className={`h-4 w-4 ${isLoadingHistory ? 'animate-spin' : ''}`} />
+                تحديث السجل
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Report Modal */}
         {showReport && (
@@ -484,7 +661,7 @@ export default function WaiterPage() {
                 )}
               </div>
 
-              {/* Pending orders - الطلبات قيد التحضير */}
+              {/* Pending orders - الطلبات قيد التحضي�� */}
               <div>
                 <div className="flex items-center gap-2 mb-2">
                   <div className="h-2 w-2 rounded-full bg-amber-500" />
