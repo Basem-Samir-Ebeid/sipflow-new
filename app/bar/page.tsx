@@ -377,9 +377,6 @@ export default function BarPage() {
                 </div>
               )}
             </div>
-            {Number(order.total_price) > 0 && (
-              <span className="shrink-0 text-sm font-medium text-sky-400">{order.total_price} ج.م</span>
-            )}
           </div>
         ))}
       </div>
@@ -600,10 +597,6 @@ export default function BarPage() {
                 <p className="text-2xl font-black text-green-600">{completedOrders.length}</p>
                 <p className="text-xs text-muted-foreground mt-1">تم تجهيزه</p>
               </div>
-              <div className="bg-card border border-border rounded-2xl p-4 text-center">
-                <p className="text-2xl font-black text-amber-500">{todayRevenue.toFixed(0)}</p>
-                <p className="text-xs text-muted-foreground mt-1">ج.م إيراد</p>
-              </div>
             </div>
 
             {drinkReport.length === 0 ? (
@@ -625,9 +618,6 @@ export default function BarPage() {
                     <div key={item.drinkName} className="bg-card border border-border rounded-xl p-3">
                       <div className="flex items-center justify-between mb-2">
                         <div className="flex items-center gap-2 text-left">
-                          {item.totalRevenue > 0 && (
-                            <span className="text-sm font-bold text-sky-400">{item.totalRevenue.toFixed(0)} ج.م</span>
-                          )}
                           <span className="bg-sky-500/10 text-sky-400 text-xs font-bold rounded-full px-2 py-0.5">× {item.count}</span>
                         </div>
                         <div className="flex items-center gap-2 text-right">

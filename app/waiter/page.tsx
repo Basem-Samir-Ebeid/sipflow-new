@@ -88,6 +88,7 @@ export default function WaiterPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [lastRefresh, setLastRefresh] = useState<Date | null>(null)
   const [deliveredIds, setDeliveredIds] = useState<Set<string>>(new Set())
+  const [onWayIds, setOnWayIds] = useState<Set<string>>(new Set())
   const previousGroupCount = useRef(0)
   const [reservationNotifs, setReservationNotifs] = useState<ReservationNotif[]>([])
   const [dismissedReservIds, setDismissedReservIds] = useState<Set<string>>(new Set())
@@ -239,6 +240,25 @@ export default function WaiterPage() {
     finally { setIsLoggingIn(false) }
   }
 
+  const handleMarkOnWay = async (group: TableGroup) => {
+    try {
+      setOnWayIds(prev => new Set([...prev, group.userId]))
+      toast.success(`${group.tableNumber} في الطريق إلى الطاولة 🚶`)
+      // Send notification to customer
+      try {
+        await fetch('/api/messages', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            user_id: group.userId,
+            message: `الويتر بياخد الطلبات للطاولة ${group.tableNumber}`,
+            type: 'on_way'
+          })
+        })
+      } catch { }
+    } catch { toast.error('حصل خطأ، حاول تاني') }
+  }
+
   const handleMarkDelivered = async (group: TableGroup) => {
     try {
       await Promise.all(
@@ -252,6 +272,19 @@ export default function WaiterPage() {
       )
       setDeliveredIds(prev => new Set([...prev, group.userId]))
       toast.success(`تم تسليم طاولة ${group.tableNumber} ✓`)
+      
+      // Send notifications to cashier and admin
+      try {
+        await fetch('/api/messages', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            message: `تم تسليم طاولة ${group.tableNumber} للكاستمر`,
+            type: 'order_delivered'
+          })
+        })
+      } catch { }
+      
       fetchOrders()
     } catch { toast.error('حصل خطأ، حاول تاني') }
   }
@@ -484,9 +517,9 @@ export default function WaiterPage() {
         {readyGroups.length > 0 && (
           <div className="space-y-2">
             <p className="text-xs font-bold text-green-400 uppercase tracking-wider px-1">جاهزة للتسليم</p>
-            {readyGroups.map(group => (
-              <TableCard key={group.userId} group={group} onDeliver={() => handleMarkDelivered(group)} formatTime={formatTime} highlight="green" />
-            ))}
+        {readyGroups.map(group => (
+          <TableCard key={group.userId} group={group} onDeliver={() => handleMarkDelivered(group)} onWay={() => handleMarkOnWay(group)} formatTime={formatTime} highlight="green" />
+        ))}
           </div>
         )}
 
@@ -494,9 +527,9 @@ export default function WaiterPage() {
         {pendingGroups.length > 0 && (
           <div className="space-y-2">
             {readyGroups.length > 0 && <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider px-1">قيد التحضير</p>}
-            {pendingGroups.map(group => (
-              <TableCard key={group.userId} group={group} onDeliver={() => handleMarkDelivered(group)} formatTime={formatTime} highlight={group.anyPreparing ? 'amber' : 'none'} />
-            ))}
+        {pendingGroups.map(group => (
+          <TableCard key={group.userId} group={group} onDeliver={() => handleMarkDelivered(group)} onWay={() => handleMarkOnWay(group)} formatTime={formatTime} highlight={group.anyPreparing ? 'amber' : 'none'} />
+        ))}
           </div>
         )}
 
@@ -524,13 +557,15 @@ export default function WaiterPage() {
   )
 }
 
-function TableCard({ group, onDeliver, formatTime, highlight }: {
+function TableCard({ group, onDeliver, onWay, formatTime, highlight }: {
   group: TableGroup
   onDeliver: () => void
+  onWay: () => void
   formatTime: (d: string) => string
   highlight: 'green' | 'amber' | 'none'
 }) {
   const [isDelivering, setIsDelivering] = useState(false)
+  const [isOnWay, setIsOnWay] = useState(false)
 
   const borderColor = highlight === 'green'
     ? 'rgba(34,197,94,0.5)'
@@ -548,6 +583,12 @@ function TableCard({ group, onDeliver, formatTime, highlight }: {
     setIsDelivering(true)
     await onDeliver()
     setIsDelivering(false)
+  }
+
+  const handleOnWay = async () => {
+    setIsOnWay(true)
+    await onWay()
+    setIsOnWay(false)
   }
 
   return (
@@ -595,21 +636,40 @@ function TableCard({ group, onDeliver, formatTime, highlight }: {
         })}
       </div>
 
-      {/* Deliver button — show when all ready OR for waiting orders */}
-      {!group.items.every(i => i.status === 'completed') && (
-        <Button
-          onClick={handleClick}
-          disabled={isDelivering}
-          className={`w-full font-bold ${group.allReady ? 'bg-green-600 hover:bg-green-700 text-white shadow-lg shadow-green-500/20' : 'bg-muted text-muted-foreground hover:bg-muted/80'}`}
-          size="sm"
-        >
-          {isDelivering
-            ? <Loader2 className="h-4 w-4 animate-spin ml-2" />
-            : <CheckCircle2 className="h-4 w-4 ml-2" />
-          }
-          {group.allReady ? 'تم التسليم ✓' : 'سلّم الطلب'}
-        </Button>
-      )}
+      {/* Buttons container */}
+      <div className="space-y-2">
+        {/* On the way button - show when all ready and not yet on way */}
+        {group.allReady && !group.items.every(i => i.status === 'completed') && (
+          <Button
+            onClick={handleOnWay}
+            disabled={isOnWay}
+            className="w-full font-bold bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-500/20"
+            size="sm"
+          >
+            {isOnWay
+              ? <Loader2 className="h-4 w-4 animate-spin ml-2" />
+              : <ArrowRight className="h-4 w-4 ml-2" />
+            }
+            في الطريق للطاولة
+          </Button>
+        )}
+        
+        {/* Deliver button — show when all ready OR for waiting orders */}
+        {!group.items.every(i => i.status === 'completed') && (
+          <Button
+            onClick={handleClick}
+            disabled={isDelivering}
+            className={`w-full font-bold ${group.allReady ? 'bg-green-600 hover:bg-green-700 text-white shadow-lg shadow-green-500/20' : 'bg-muted text-muted-foreground hover:bg-muted/80'}`}
+            size="sm"
+          >
+            {isDelivering
+              ? <Loader2 className="h-4 w-4 animate-spin ml-2" />
+              : <CheckCircle2 className="h-4 w-4 ml-2" />
+            }
+            {group.allReady ? 'تم تسليم الأوردر ✓' : 'سلّم الطلب'}
+          </Button>
+        )}
+      </div>
       {group.items.every(i => i.status === 'completed') && (
         <p className="text-center text-xs text-green-600 font-medium py-1">✓ تم تسليم هذا الطلب</p>
       )}
