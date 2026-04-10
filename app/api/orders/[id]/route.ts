@@ -16,8 +16,12 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params
-    const { status } = await request.json()
-    const order = await db.updateOrderStatus(id, status)
+    const body = await request.json()
+    if (body.rating !== undefined) {
+      const order = await db.updateOrderRating(id, body.rating, body.rating_comment)
+      return NextResponse.json(order)
+    }
+    const order = await db.updateOrderStatus(id, body.status)
     return NextResponse.json(order)
   } catch (error) {
     console.error('Error patching order:', error)

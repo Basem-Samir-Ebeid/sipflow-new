@@ -474,9 +474,22 @@ export default function StaffPage() {
             تم التنفيذ
           </Button>
         ) : (
-          <div className="flex items-center gap-2 text-green-600">
-            <CheckCircle className="h-5 w-5" />
-            <span className="font-semibold">منفّذ</span>
+          <div className="flex flex-col gap-1">
+            <div className="flex items-center gap-2 text-green-600">
+              <CheckCircle className="h-5 w-5" />
+              <span className="font-semibold">منفّذ</span>
+            </div>
+            {(() => {
+              const rating = group.orders.find(o => o.rating)?.rating
+              if (!rating) return null
+              return (
+                <div className="flex gap-0.5" dir="ltr">
+                  {[1,2,3,4,5].map(s => (
+                    <span key={s} className="text-sm" style={{ color: s <= rating ? '#f59e0b' : '#3f3f46' }}>★</span>
+                  ))}
+                </div>
+              )
+            })()}
           </div>
         )}
         {group.totalPrice > 0 && (
@@ -660,7 +673,7 @@ export default function StaffPage() {
               <p className="text-sm text-muted-foreground font-medium">{todayDate}</p>
             </div>
 
-            <div className="grid grid-cols-3 gap-3 mb-6">
+            <div className="grid grid-cols-3 gap-3 mb-4">
               <div className="bg-card border border-border rounded-2xl p-4 text-center">
                 <p className="text-2xl font-black text-primary">{allOrders.length}</p>
                 <p className="text-xs text-muted-foreground mt-1">إجمالي الطلبات</p>
@@ -674,6 +687,44 @@ export default function StaffPage() {
                 <p className="text-xs text-muted-foreground mt-1">ج.م إيراد</p>
               </div>
             </div>
+
+            {/* Ratings Summary */}
+            {(() => {
+              const ratedOrders = allOrders.filter(o => o.rating)
+              if (ratedOrders.length === 0) return null
+              const avg = ratedOrders.reduce((s, o) => s + (o.rating || 0), 0) / ratedOrders.length
+              const dist = [5,4,3,2,1].map(s => ({ star: s, count: ratedOrders.filter(o => o.rating === s).length }))
+              return (
+                <div className="bg-card border border-border rounded-2xl p-4 mb-4">
+                  <h3 className="font-bold text-foreground text-right mb-3 flex items-center justify-end gap-2">
+                    <span>⭐</span> تقييمات اليوم
+                  </h3>
+                  <div className="flex items-center gap-4 mb-3">
+                    <div className="text-center">
+                      <p className="text-3xl font-black text-amber-400">{avg.toFixed(1)}</p>
+                      <div className="flex gap-0.5 justify-center mt-1" dir="ltr">
+                        {[1,2,3,4,5].map(s => (
+                          <span key={s} className="text-sm" style={{ color: s <= Math.round(avg) ? '#f59e0b' : '#3f3f46' }}>★</span>
+                        ))}
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-1">{ratedOrders.length} تقييم</p>
+                    </div>
+                    <div className="flex-1 space-y-1">
+                      {dist.map(({ star, count }) => (
+                        <div key={star} className="flex items-center gap-2">
+                          <span className="text-xs text-muted-foreground w-3 text-left">{star}</span>
+                          <span className="text-xs text-amber-400">★</span>
+                          <div className="flex-1 h-1.5 bg-muted rounded-full overflow-hidden">
+                            <div className="h-full bg-amber-400 rounded-full transition-all" style={{ width: ratedOrders.length ? `${(count / ratedOrders.length) * 100}%` : '0%' }} />
+                          </div>
+                          <span className="text-xs text-muted-foreground w-4 text-right">{count}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )
+            })()}
 
             {drinkReport.length === 0 ? (
               <div className="text-center py-16">

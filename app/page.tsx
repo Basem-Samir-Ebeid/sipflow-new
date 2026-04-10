@@ -85,7 +85,14 @@ export default function HomePage() {
   const [showTableModal, setShowTableModal] = useState(false)
   const [pendingTableNumber, setPendingTableNumber] = useState('')
   const [pendingCustomerName, setPendingCustomerName] = useState('')
+  const [pendingCustomerPhone, setPendingCustomerPhone] = useState('')
   const [tableModalError, setTableModalError] = useState('')
+
+  // Rating state
+  const [ratingValue, setRatingValue] = useState(0)
+  const [ratingHover, setRatingHover] = useState(0)
+  const [ratingSubmitted, setRatingSubmitted] = useState(false)
+  const [isSubmittingRating, setIsSubmittingRating] = useState(false)
   const [showSurpriseModal, setShowSurpriseModal] = useState(false)
   const [surpriseDrink, setSurpiseDrink] = useState<Drink | null>(null)
   const [isSurprising, setIsSurprising] = useState(false)
@@ -948,7 +955,8 @@ export default function HomePage() {
             total_price: (drink?.price || 0) * quantity,
             notes: orderNotes,
             customer_name: customerName,
-            table_number: tableNum
+            table_number: tableNum,
+            customer_phone: pendingCustomerPhone.trim() || null
           })
         })
         if (!orderRes.ok) {
@@ -967,6 +975,9 @@ export default function HomePage() {
       setCartNotes({})
       setPendingCustomerName('')
       setPendingTableNumber('')
+      setPendingCustomerPhone('')
+      setRatingValue(0)
+      setRatingSubmitted(false)
       if (anyFailed) {
         toast.error('في مشكلة في بعض الطلبات، تواصل مع الكاشير')
       } else {
@@ -2818,6 +2829,50 @@ export default function HomePage() {
                         {doneCount}/{total}
                       </span>
                     </div>
+
+                    {/* Rating section — shown when all orders delivered */}
+                    {allDone && (
+                      <div className="px-4 py-3 border-t" style={{ borderColor: 'rgba(212,160,23,0.12)', background: 'rgba(255,255,255,0.02)' }}>
+                        {ratingSubmitted ? (
+                          <p className="text-center text-sm text-green-400 font-semibold">شكراً على تقييمك! 🎉</p>
+                        ) : (
+                          <div className="space-y-2">
+                            <p className="text-center text-xs text-zinc-400">كيف كانت تجربتك؟</p>
+                            <div className="flex justify-center gap-1" dir="ltr">
+                              {[1,2,3,4,5].map(star => (
+                                <button
+                                  key={star}
+                                  onMouseEnter={() => setRatingHover(star)}
+                                  onMouseLeave={() => setRatingHover(0)}
+                                  onClick={async () => {
+                                    setRatingValue(star)
+                                    setIsSubmittingRating(true)
+                                    try {
+                                      await Promise.all(
+                                        trackedOrders.map(o =>
+                                          fetch(`/api/orders/${o.id}`, {
+                                            method: 'PATCH',
+                                            headers: { 'Content-Type': 'application/json' },
+                                            body: JSON.stringify({ rating: star })
+                                          })
+                                        )
+                                      )
+                                      setRatingSubmitted(true)
+                                    } catch { /* silent */ }
+                                    finally { setIsSubmittingRating(false) }
+                                  }}
+                                  disabled={isSubmittingRating}
+                                  className="text-2xl transition-transform hover:scale-125 disabled:opacity-50"
+                                  style={{ color: star <= (ratingHover || ratingValue) ? '#f59e0b' : '#3f3f46' }}
+                                >
+                                  ★
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
                 </div>
               )}
@@ -2853,7 +2908,21 @@ export default function HomePage() {
                 onChange={(e) => { setPendingTableNumber(e.target.value); setTableModalError('') }}
                 onKeyDown={(e) => e.key === 'Enter' && handleConfirmTableAndSubmit()}
                 placeholder="مثال: 5"
-                className="h-12 text-center text-lg font-bold border-2 border-amber-500/40 bg-background focus:ring-2 focus:ring-amber-500 rounded-xl mb-3"
+                className="h-12 text-center text-lg font-bold border-2 border-amber-500/40 bg-background focus:ring-2 focus:ring-amber-500 rounded-xl mb-4"
+              />
+
+              {/* Phone Input (optional) */}
+              <label className="block text-right text-sm font-semibold mb-2 text-muted-foreground">
+                رقم واتساب <span className="text-xs text-zinc-600 font-normal">(اختياري — لإشعارك لما طلبك يتجهز)</span>
+              </label>
+              <Input
+                type="tel"
+                value={pendingCustomerPhone}
+                onChange={(e) => setPendingCustomerPhone(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleConfirmTableAndSubmit()}
+                placeholder="مثال: 01012345678"
+                dir="ltr"
+                className="h-12 text-center text-lg font-bold border-2 border-green-500/30 bg-background focus:ring-2 focus:ring-green-500 rounded-xl mb-3"
               />
               
               {tableModalError && (

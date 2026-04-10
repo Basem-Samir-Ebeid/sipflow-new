@@ -3,6 +3,11 @@
 ## Overview
 A Next.js multi-tenant café/social space drink ordering and management system. Each café location (Place) has isolated data. Customers browse a categorized menu (Hot/Cold/Shisha), place orders with notes, and get assigned a table. Staff manage orders via a dashboard. Admins manage drinks, users, inventory, send broadcast messages, and view revenue analytics. A developer admin manages all places (create/toggle/delete).
 
+## Recent Features (v1.9)
+- **Order Rating System:** Customers see 1-5 star rating widget in the order tracker after all orders are delivered. Ratings stored in DB and displayed in cashier report tab with avg + distribution chart.
+- **WhatsApp Notifications:** Customer enters optional phone number when ordering. When bar marks order ready, a popup appears with a WhatsApp button linking to `wa.me/<phone>?text=...` to notify the customer.
+- **DB additions:** `orders.rating` (smallint), `orders.rating_comment` (text), `orders.customer_phone` (text)
+
 ## Architecture
 - **Framework:** Next.js 16.2.0 (App Router, Turbopack)
 - **Language:** TypeScript

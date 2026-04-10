@@ -343,16 +343,10 @@ export const db = {
     `
   },
 
-  async createOrder(data: { user_id: string; session_id: string; drink_id: string; quantity: number; sugar_level?: string; notes?: string; total_price?: number; customer_name?: string; table_number?: string }) {
-    // Ensure customer_name column exists
-    try {
-      await sql`ALTER TABLE orders ADD COLUMN IF NOT EXISTS customer_name TEXT`
-      await sql`ALTER TABLE orders ADD COLUMN IF NOT EXISTS table_number TEXT`
-    } catch {}
-    
+  async createOrder(data: { user_id: string; session_id: string; drink_id: string; quantity: number; sugar_level?: string; notes?: string; total_price?: number; customer_name?: string; table_number?: string; customer_phone?: string }) {
     const result = await sql`
-      INSERT INTO orders (user_id, session_id, drink_id, quantity, sugar_level, notes, total_price, customer_name, table_number)
-      VALUES (${data.user_id}, ${data.session_id}, ${data.drink_id}, ${data.quantity}, ${data.sugar_level || 'normal'}, ${data.notes || null}, ${data.total_price || 0}, ${data.customer_name || null}, ${data.table_number || null})
+      INSERT INTO orders (user_id, session_id, drink_id, quantity, sugar_level, notes, total_price, customer_name, table_number, customer_phone)
+      VALUES (${data.user_id}, ${data.session_id}, ${data.drink_id}, ${data.quantity}, ${data.sugar_level || 'normal'}, ${data.notes || null}, ${data.total_price || 0}, ${data.customer_name || null}, ${data.table_number || null}, ${data.customer_phone || null})
       RETURNING *
     `
     return result[0]
@@ -361,6 +355,14 @@ export const db = {
   async updateOrderStatus(id: string, status: string) {
     const result = await sql`
       UPDATE orders SET status = ${status}, updated_at = NOW() WHERE id = ${id}
+      RETURNING *
+    `
+    return result[0]
+  },
+
+  async updateOrderRating(id: string, rating: number, comment?: string) {
+    const result = await sql`
+      UPDATE orders SET rating = ${rating}, rating_comment = ${comment || null}, updated_at = NOW() WHERE id = ${id}
       RETURNING *
     `
     return result[0]

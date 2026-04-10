@@ -93,6 +93,9 @@ export interface Order {
   total_price: number
   customer_name?: string | null
   table_number?: string | null
+  customer_phone?: string | null
+  rating?: number | null
+  rating_comment?: string | null
   created_at: string
   updated_at: string
 }
