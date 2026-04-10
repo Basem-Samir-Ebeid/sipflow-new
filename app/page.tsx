@@ -120,6 +120,7 @@ export default function HomePage() {
 
   // Archive state
   const [showArchivePasswordModal, setShowArchivePasswordModal] = useState(false)
+  const [showDrinkCountsModal, setShowDrinkCountsModal] = useState(false)
   const [archivePasswordInput, setArchivePasswordInput] = useState('')
   const [archivePasswordError, setArchivePasswordError] = useState('')
   const [isVerifyingArchivePassword, setIsVerifyingArchivePassword] = useState(false)
@@ -3351,6 +3352,22 @@ export default function HomePage() {
               )
             })()}
 
+            {/* Drink Counts Button — shows total ordered items per drink */}
+            {!isDevAdmin && !showArchiveView && orders.length > 0 && (
+              <button
+                onClick={() => setShowDrinkCountsModal(true)}
+                className="flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition-all hover:opacity-90 active:scale-95"
+                style={{ background: 'rgba(56,189,248,0.1)', border: '1px solid rgba(56,189,248,0.3)', color: '#38bdf8' }}
+              >
+                <Coffee className="h-4 w-4" />
+                أعداد المشاريب
+                <span className="inline-flex items-center justify-center h-5 min-w-5 rounded-full px-1 text-xs font-bold"
+                  style={{ background: 'rgba(56,189,248,0.2)', color: '#38bdf8' }}>
+                  {orders.reduce((s, o) => s + (o.quantity || 1), 0)}
+                </span>
+              </button>
+            )}
+
             {/* Archive Button — shows for non-dev-admin users when there are archived sessions */}
             {!isDevAdmin && !showArchiveView && (
               <button
@@ -3803,6 +3820,83 @@ export default function HomePage() {
           />
         )}
       </div>
+
+      {/* ── Drink Counts Modal ── */}
+      {showDrinkCountsModal && (() => {
+        // Group all orders by drink name and sum quantities
+        const counts: Record<string, { name: string; qty: number; category: string }> = {}
+        ;(orders as OrderWithDetails[]).forEach(o => {
+          const name = o.drink?.name || 'غير معروف'
+          const cat  = o.drink?.category || ''
+          if (!counts[name]) counts[name] = { name, qty: 0, category: cat }
+          counts[name].qty += (o.quantity || 1)
+        })
+        const sorted = Object.values(counts).sort((a, b) => b.qty - a.qty)
+        const totalQty = sorted.reduce((s, d) => s + d.qty, 0)
+        const catIcon = (c: string) => c === 'hot' ? '☕' : c === 'cold' ? '🧊' : c === 'shisha' ? '💨' : '🍹'
+
+        return (
+          <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/70 backdrop-blur-sm p-4" dir="rtl"
+            onClick={() => setShowDrinkCountsModal(false)}>
+            <div className="w-full max-w-md rounded-3xl overflow-hidden shadow-2xl"
+              style={{ background: '#0c0c1a', border: '1px solid rgba(56,189,248,0.25)', maxHeight: '85vh' }}
+              onClick={e => e.stopPropagation()}>
+
+              {/* Header */}
+              <div className="flex items-center justify-between px-5 py-4"
+                style={{ background: 'linear-gradient(135deg, rgba(56,189,248,0.08), rgba(14,165,233,0.05))', borderBottom: '1px solid rgba(56,189,248,0.15)' }}>
+                <div className="flex items-center gap-2.5">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-xl"
+                    style={{ background: 'rgba(56,189,248,0.15)', border: '1px solid rgba(56,189,248,0.3)' }}>
+                    <Coffee className="h-4.5 w-4.5 text-sky-400" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-bold text-white">أعداد المشاريب</p>
+                    <p className="text-[10px] text-zinc-500">{sorted.length} صنف · {totalQty} وحدة</p>
+                  </div>
+                </div>
+                <button onClick={() => setShowDrinkCountsModal(false)}
+                  className="flex h-8 w-8 items-center justify-center rounded-full text-zinc-400 hover:text-white transition-colors"
+                  style={{ background: 'rgba(255,255,255,0.05)' }}>
+                  ✕
+                </button>
+              </div>
+
+              {/* List */}
+              <div className="overflow-y-auto p-4 space-y-2" style={{ maxHeight: 'calc(85vh - 80px)' }}>
+                {sorted.length === 0 ? (
+                  <p className="text-center text-zinc-500 py-8">لا توجد طلبات بعد</p>
+                ) : sorted.map((d, i) => {
+                  const pct = Math.round((d.qty / totalQty) * 100)
+                  return (
+                    <div key={d.name} className="rounded-xl px-4 py-3"
+                      style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
+                      <div className="flex items-center justify-between mb-1.5">
+                        <div className="flex items-center gap-2">
+                          <span className="text-base">{catIcon(d.category)}</span>
+                          <span className="text-sm font-semibold text-white">{d.name}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-[10px] text-zinc-500">{pct}%</span>
+                          <span className="inline-flex items-center justify-center h-6 min-w-6 rounded-full px-2 text-xs font-black"
+                            style={{ background: 'rgba(56,189,248,0.15)', color: '#38bdf8', border: '1px solid rgba(56,189,248,0.25)' }}>
+                            {d.qty}
+                          </span>
+                        </div>
+                      </div>
+                      {/* Progress bar */}
+                      <div className="h-1 rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.06)' }}>
+                        <div className="h-full rounded-full transition-all"
+                          style={{ width: `${pct}%`, background: 'linear-gradient(90deg, #0ea5e9, #38bdf8)' }} />
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          </div>
+        )
+      })()}
 
       {/* Receipt Modal */}
       {showReceipt && (
