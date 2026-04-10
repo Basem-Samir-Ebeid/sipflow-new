@@ -3368,6 +3368,29 @@ export default function HomePage() {
               </button>
             )}
 
+            {/* Archive Button — Dev Admin (no password required) */}
+            {isDevAdmin && !showArchiveView && (
+              <button
+                onClick={() => {
+                  setArchiveUnlocked(true)
+                  setShowArchiveView(true)
+                  setSelectedArchivedSessionId(null)
+                  setArchivedOrders([])
+                  setArchivedSessions([])
+                }}
+                className="flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition-all hover:opacity-90 active:scale-95"
+                style={{ background: 'rgba(212,160,23,0.1)', border: '1px solid rgba(212,160,23,0.3)', color: '#D4A017' }}
+              >
+                <Archive className="h-4 w-4" />
+                الأرشيف
+                {todaysArchivedCount > 0 && (
+                  <span className="ml-1.5 inline-flex items-center justify-center h-5 w-5 rounded-full text-xs font-bold" style={{ background: 'rgba(212,160,23,0.3)', color: '#D4A017' }}>
+                    {todaysArchivedCount}
+                  </span>
+                )}
+              </button>
+            )}
+
             {/* Archive Button — shows for non-dev-admin users when there are archived sessions */}
             {!isDevAdmin && !showArchiveView && (
               <button
@@ -3395,7 +3418,7 @@ export default function HomePage() {
             )}
 
             {/* Archive View */}
-            {!isDevAdmin && showArchiveView && archiveUnlocked && (
+            {showArchiveView && archiveUnlocked && (
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
