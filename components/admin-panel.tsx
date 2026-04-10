@@ -83,7 +83,8 @@ export function AdminPanel({
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const DAYS = ['السبت', 'الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة']
-  const [hours, setHours] = useState<Record<string, { from: string; to: string }>>({
+
+  const defaultHours: Record<string, { from: string; to: string }> = {
     "السبت":    { from: "10:00", to: "23:00" },
     "الأحد":    { from: "10:00", to: "23:00" },
     "الإثنين":  { from: "10:00", to: "23:00" },
@@ -91,11 +92,21 @@ export function AdminPanel({
     "الأربعاء": { from: "10:00", to: "23:00" },
     "الخميس":   { from: "10:00", to: "23:00" },
     "الجمعة":   { from: "10:00", to: "23:00" },
-  })
-  const [enabledDays, setEnabledDays] = useState<Record<string, boolean>>({
+  }
+  const defaultEnabled: Record<string, boolean> = {
     "السبت": true, "الأحد": true, "الإثنين": true, "الثلاثاء": true,
     "الأربعاء": false, "الخميس": true, "الجمعة": true,
-  })
+  }
+
+  const [hours, setHours] = useState<Record<string, { from: string; to: string }>>(defaultHours)
+  const [enabledDays, setEnabledDays] = useState<Record<string, boolean>>(defaultEnabled)
+
+  // Refs always hold the latest values — prevents stale-closure bug in async save handler
+  const hoursRef = useRef(hours)
+  const enabledDaysRef = useRef(enabledDays)
+  hoursRef.current = hours
+  enabledDaysRef.current = enabledDays
+
   const [workingHoursPlaceId, setWorkingHoursPlaceId] = useState('')
   const [isSavingHours, setIsSavingHours] = useState(false)
   const [isLoadingHours, setIsLoadingHours] = useState(false)
@@ -112,10 +123,12 @@ export function AdminPanel({
         const newEnabled: Record<string, boolean> = {}
         for (const day of DAYS) {
           newHours[day] = { from: parsed[day]?.from || "10:00", to: parsed[day]?.to || "23:00" }
-          newEnabled[day] = parsed[day]?.enabled ?? true
+          newEnabled[day] = typeof parsed[day]?.enabled === 'boolean' ? parsed[day].enabled : true
         }
         setHours(newHours)
         setEnabledDays(newEnabled)
+        hoursRef.current = newHours
+        enabledDaysRef.current = newEnabled
       }
     } catch { /* silent */ }
     finally { setIsLoadingHours(false) }
@@ -126,9 +139,12 @@ export function AdminPanel({
     if (!targetId) { toast.error('اختر المكان أولاً'); return }
     setIsSavingHours(true)
     try {
+      // Read from refs to guarantee we get the absolute latest values
+      const latestHours = hoursRef.current
+      const latestEnabled = enabledDaysRef.current
       const payload: Record<string, { from: string; to: string; enabled: boolean }> = {}
       for (const day of DAYS) {
-        payload[day] = { ...hours[day], enabled: enabledDays[day] }
+        payload[day] = { ...latestHours[day], enabled: latestEnabled[day] }
       }
       const res = await fetch('/api/settings', {
         method: 'POST',
@@ -3023,10 +3039,15 @@ const handleSaveSettings = async () => {
                     <div className="flex items-center gap-3 flex-1">
                       <Checkbox
                         id={`day-${day}`}
-                        checked={enabledDays[day]}
-                        onCheckedChange={(val) =>
-                          setEnabledDays(prev => ({ ...prev, [day]: !!val }))
-                        }
+                        checked={enabledDays[day] === true}
+                        onCheckedChange={(val) => {
+                          const next = val === true
+                          setEnabledDays(prev => {
+                            const updated = { ...prev, [day]: next }
+                            enabledDaysRef.current = updated
+                            return updated
+                          })
+                        }}
                         className="border-primary data-[state=checked]:bg-primary"
                       />
                       <Label htmlFor={`day-${day}`} className="font-medium text-foreground min-w-[70px] cursor-pointer">
@@ -3038,7 +3059,14 @@ const handleSaveSettings = async () => {
                         type="time"
                         value={hours[day]?.from || '10:00'}
                         disabled={!enabledDays[day]}
-                        onChange={(e) => setHours(prev => ({ ...prev, [day]: { ...prev[day], from: e.target.value } }))}
+                        onChange={(e) => {
+                          const val = e.target.value
+                          setHours(prev => {
+                            const updated = { ...prev, [day]: { ...prev[day], from: val } }
+                            hoursRef.current = updated
+                            return updated
+                          })
+                        }}
                         className="w-[100px] rounded-lg border border-border bg-background px-2 py-1.5 text-sm text-foreground disabled:opacity-40"
                       />
                       <span className="text-muted-foreground text-xs">—</span>
@@ -3046,7 +3074,14 @@ const handleSaveSettings = async () => {
                         type="time"
                         value={hours[day]?.to || '23:00'}
                         disabled={!enabledDays[day]}
-                        onChange={(e) => setHours(prev => ({ ...prev, [day]: { ...prev[day], to: e.target.value } }))}
+                        onChange={(e) => {
+                          const val = e.target.value
+                          setHours(prev => {
+                            const updated = { ...prev, [day]: { ...prev[day], to: val } }
+                            hoursRef.current = updated
+                            return updated
+                          })
+                        }}
                         className="w-[100px] rounded-lg border border-border bg-background px-2 py-1.5 text-sm text-foreground disabled:opacity-40"
                       />
                     </div>
@@ -3056,6 +3091,7 @@ const handleSaveSettings = async () => {
             )}
 
             <Button
+              type="button"
               className="mt-4 w-full bg-primary text-primary-foreground hover:bg-primary/90"
               onClick={handleSaveWorkingHours}
               disabled={isSavingHours || isLoadingHours || (isDevAdmin && !workingHoursPlaceId)}
