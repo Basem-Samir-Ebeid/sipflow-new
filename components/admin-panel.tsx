@@ -1359,7 +1359,7 @@ const handleSaveSettings = async () => {
       }} className="w-full">
         {/* ── Dev Admin: horizontal scroll tab bar ── */}
         {isDevAdmin ? (
-          <TabsList className="mb-3 flex w-full overflow-x-auto gap-1 rounded-xl bg-muted p-1.5 h-auto [&>*]:shrink-0" style={{ scrollbarWidth: 'none' }}>
+          <TabsList className="mb-3 flex w-full overflow-x-auto gap-1 rounded-xl bg-muted p-1.5 h-auto [&>*]:shrink-0 [&>*]:whitespace-nowrap" style={{ scrollbarWidth: 'none' }}>
             {/* Group 1: Analytics */}
             <TabsTrigger value="stats"
               className="flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-medium data-[state=active]:bg-violet-600 data-[state=active]:text-white data-[state=active]:shadow-md">
