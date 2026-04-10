@@ -2717,11 +2717,11 @@ const handleSaveSettings = async () => {
                   </select>
                 </div>
               )}
-              {staffAdded && <div className="rounded-lg bg-emerald-500/15 border border-emerald-500/25 p-2.5 text-center text-xs text-emerald-500 font-medium">✓ تم إضافة الكاشير بنجاح</div>}
+              {staffAdded && <div className="rounded-lg bg-emerald-500/15 border border-emerald-500/25 p-2.5 text-center text-xs text-emerald-500 font-medium">✓ تم إضافة البار مان بنجاح</div>}
               <Button onClick={handleAddStaffUser} disabled={isAddingStaff || !newStaffUsername.trim() || !newStaffPassword.trim() || !newStaffName.trim() || (isDevAdmin && !newStaffPlaceId)}
                 className="w-full h-9 text-sm gap-2 bg-emerald-600 hover:bg-emerald-700 text-white">
                 {isAddingStaff ? <RefreshCw className="h-3.5 w-3.5 animate-spin" /> : <Plus className="h-3.5 w-3.5" />}
-                {isAddingStaff ? 'جاري الإضافة...' : 'إضافة كاشير'}
+                {isAddingStaff ? 'جاري الإضافة...' : 'إضافة بار مان'}
               </Button>
             </div>
           </div>
