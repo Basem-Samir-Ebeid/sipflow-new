@@ -3090,11 +3090,14 @@ const handleSaveSettings = async () => {
               </div>
             )}
 
+            {isDevAdmin && !workingHoursPlaceId && (
+              <p className="mt-3 text-center text-xs text-amber-400">⚠️ اختر المكان من القائمة أعلاه أولاً</p>
+            )}
             <Button
               type="button"
-              className="mt-4 w-full bg-primary text-primary-foreground hover:bg-primary/90"
+              className="mt-2 w-full bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
               onClick={handleSaveWorkingHours}
-              disabled={isSavingHours || isLoadingHours || (isDevAdmin && !workingHoursPlaceId)}
+              disabled={isSavingHours || isLoadingHours}
             >
               {isSavingHours
                 ? <><div className="ml-2 h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" /> جاري الحفظ...</>
