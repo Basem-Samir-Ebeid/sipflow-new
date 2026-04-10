@@ -123,3 +123,19 @@
     @apply bg-background text-foreground;
   }
 }
+
+@keyframes spin-slow {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+.animate-spin-slow {
+  animation: spin-slow 14s linear infinite;
+}
+
+@keyframes gold-glow-pulse {
+  0%, 100% { filter: drop-shadow(0 0 5px rgba(212,160,23,0.55)) drop-shadow(0 0 12px rgba(212,160,23,0.3)); }
+  50%       { filter: drop-shadow(0 0 10px rgba(255,220,80,0.85)) drop-shadow(0 0 22px rgba(212,160,23,0.6)); }
+}
+.animate-gold-glow {
+  animation: gold-glow-pulse 3s ease-in-out infinite;
+}

@@ -1578,8 +1578,33 @@ export default function HomePage() {
 
           {/* Logo */}
           <div className="flex flex-col items-center space-y-3">
-            <div className="relative w-32 h-32 rounded-full overflow-hidden bg-black shadow-lg">
-              <Image src="/images/qa3da-logo.jpg" alt="SîpFlõw" fill sizes="128px" loading="eager" style={{ objectFit: 'cover', objectPosition: 'center' }} />
+            {/* Logo with rotating golden zigzag frame */}
+            <div className="relative flex items-center justify-center" style={{ width: 164, height: 164 }}>
+              {/* Circular logo */}
+              <div className="absolute rounded-full overflow-hidden bg-black shadow-lg" style={{ width: 128, height: 128, zIndex: 1 }}>
+                <Image src="/images/qa3da-logo.jpg" alt="SîpFlõw" fill sizes="128px" loading="eager" style={{ objectFit: 'cover', objectPosition: 'center' }} />
+              </div>
+              {/* Rotating golden zigzag SVG frame */}
+              <svg
+                viewBox="0 0 160 160"
+                className="absolute inset-0 animate-spin-slow animate-gold-glow"
+                style={{ width: 164, height: 164, zIndex: 2 }}
+              >
+                <defs>
+                  <linearGradient id="goldZigGrad2" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%"   stopColor="#FFF3A3" />
+                    <stop offset="25%"  stopColor="#D4A017" />
+                    <stop offset="55%"  stopColor="#F5D060" />
+                    <stop offset="80%"  stopColor="#A07010" />
+                    <stop offset="100%" stopColor="#F0C040" />
+                  </linearGradient>
+                </defs>
+                <path
+                  fillRule="evenodd"
+                  fill="url(#goldZigGrad2)"
+                  d="M80,2 L92.7,16.25 L109.85,7.94 L116.11,25.95 L135.15,24.85 L134.05,43.89 L152.06,50.15 L143.75,67.32 L158,80 L143.75,92.68 L152.06,109.85 L134.05,116.11 L135.15,135.15 L116.11,134.05 L109.85,152.06 L92.68,143.75 L80,158 L67.32,143.75 L50.15,152.06 L43.89,134.05 L24.85,135.15 L25.95,116.11 L7.94,109.85 L16.25,92.68 L2,80 L16.25,67.32 L7.94,50.15 L25.95,43.89 L24.85,24.85 L43.89,25.95 L50.15,7.94 L67.32,16.25 Z M80,18 A62,62 0 1 0 80,142 A62,62 0 1 0 80,18 Z"
+                />
+              </svg>
             </div>
             <p className="text-4xl font-bold" style={{ color: '#C17A3A', fontFamily: 'Georgia, serif' }}>SîpFlõw</p>
             <p className="text-sm text-gray-400 tracking-widest">Order Management System</p>
@@ -1947,14 +1972,43 @@ export default function HomePage() {
           <div className="w-full max-w-md space-y-6">
             {/* Logo and Branding */}
             <div className="flex flex-col items-center space-y-3">
-              <div className="relative w-32 h-32 rounded-full overflow-hidden bg-black shadow-lg">
-                <Image
-                  src="/images/qa3da-logo.jpg"
-                  alt="SîpFlõw"
-                  fill
-                  sizes="128px"
-                  style={{ objectFit: 'cover', objectPosition: 'center' }}
-                />
+              {/* Logo with rotating golden zigzag frame */}
+              <div className="relative flex items-center justify-center" style={{ width: 164, height: 164 }}>
+                {/* Circular logo – sits behind the SVG frame */}
+                <div className="absolute rounded-full overflow-hidden bg-black shadow-lg" style={{ width: 128, height: 128, zIndex: 1 }}>
+                  <Image
+                    src="/images/qa3da-logo.jpg"
+                    alt="SîpFlõw"
+                    fill
+                    sizes="128px"
+                    style={{ objectFit: 'cover', objectPosition: 'center' }}
+                  />
+                </div>
+                {/* Rotating golden zigzag SVG frame – center is transparent via evenodd cutout */}
+                <svg
+                  viewBox="0 0 160 160"
+                  className="absolute inset-0 animate-spin-slow animate-gold-glow"
+                  style={{ width: 164, height: 164, zIndex: 2 }}
+                >
+                  <defs>
+                    <linearGradient id="goldZigGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%"   stopColor="#FFF3A3" />
+                      <stop offset="25%"  stopColor="#D4A017" />
+                      <stop offset="55%"  stopColor="#F5D060" />
+                      <stop offset="80%"  stopColor="#A07010" />
+                      <stop offset="100%" stopColor="#F0C040" />
+                    </linearGradient>
+                  </defs>
+                  {/*
+                    Gear polygon (16 teeth, outer r=78, inner r=65, center 80,80)
+                    Combined with inner circle path – fillRule evenodd cuts the center transparent
+                  */}
+                  <path
+                    fillRule="evenodd"
+                    fill="url(#goldZigGrad)"
+                    d="M80,2 L92.7,16.25 L109.85,7.94 L116.11,25.95 L135.15,24.85 L134.05,43.89 L152.06,50.15 L143.75,67.32 L158,80 L143.75,92.68 L152.06,109.85 L134.05,116.11 L135.15,135.15 L116.11,134.05 L109.85,152.06 L92.68,143.75 L80,158 L67.32,143.75 L50.15,152.06 L43.89,134.05 L24.85,135.15 L25.95,116.11 L7.94,109.85 L16.25,92.68 L2,80 L16.25,67.32 L7.94,50.15 L25.95,43.89 L24.85,24.85 L43.89,25.95 L50.15,7.94 L67.32,16.25 Z M80,18 A62,62 0 1 0 80,142 A62,62 0 1 0 80,18 Z"
+                  />
+                </svg>
               </div>
               <div className="text-center space-y-1">
                 <p className="text-4xl font-bold" style={{ color: '#C17A3A', fontFamily: 'Georgia, serif', textShadow: '0 0 24px rgba(193,122,58,0.4)', letterSpacing: '0.05em' }}>
