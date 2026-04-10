@@ -80,6 +80,7 @@ export function AdminPanel({
   const [newDrinkInitialStock, setNewDrinkInitialStock] = useState('100')
   const [devDrinkPlaceId, setDevDrinkPlaceId] = useState<string>('')
   const [isUploading, setIsUploading] = useState(false)
+  const [allDrinksStats, setAllDrinksStats] = useState<{ total: number; byCategory: Record<string, number> } | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const DAYS = ['السبت', 'الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة']
@@ -1045,6 +1046,21 @@ const handleSaveSettings = async () => {
     return []
   }
 
+  // ── Fetch all drinks stats (global, all places) for dev admin ──
+  const fetchAllDrinksStats = async () => {
+    try {
+      const res = await fetch('/api/drinks')
+      if (!res.ok) return
+      const allDrinks: Drink[] = await res.json()
+      const byCategory: Record<string, number> = {}
+      allDrinks.forEach(d => {
+        const cat = d.category || 'other'
+        byCategory[cat] = (byCategory[cat] || 0) + 1
+      })
+      setAllDrinksStats({ total: allDrinks.length, byCategory })
+    } catch {}
+  }
+
   // Auto-fetch places on mount for dev admin; auto-select first place in all selector tabs
   useEffect(() => {
     if (isDevAdmin) {
@@ -1058,6 +1074,7 @@ const handleSaveSettings = async () => {
           setMsgDevPlaceIds(prev => prev.length > 0 ? prev : list.map((p: Place) => p.id))
         }
       })
+      fetchAllDrinksStats()
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
@@ -1487,6 +1504,78 @@ const handleSaveSettings = async () => {
         )}
 
         <TabsContent value="stats" className="space-y-4">
+
+          {/* ── Dev Admin: Global drinks count card ── */}
+          {isDevAdmin && (
+            <div className="relative overflow-hidden rounded-2xl p-4" style={{
+              background: 'linear-gradient(135deg, #0a0a1a 0%, #0f0f2e 60%, #1a1040 100%)',
+              border: '1px solid rgba(147,51,234,0.3)'
+            }}>
+              <div className="pointer-events-none absolute -top-6 -left-6 h-28 w-28 rounded-full opacity-20"
+                style={{ background: 'radial-gradient(circle, #7c3aed, transparent)', filter: 'blur(16px)' }} />
+              <div className="relative">
+                <div className="mb-3 flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-lg"
+                      style={{ background: 'rgba(147,51,234,0.15)', border: '1px solid rgba(147,51,234,0.3)' }}>
+                      <Coffee className="h-4 w-4 text-violet-400" />
+                    </div>
+                    <div>
+                      <p className="text-xs font-semibold text-violet-300">إجمالي الأصناف — كل الأماكن</p>
+                      <p className="text-[10px] text-zinc-500">من قاعدة البيانات الكاملة</p>
+                    </div>
+                  </div>
+                  <button onClick={fetchAllDrinksStats}
+                    className="rounded-lg p-1.5 text-zinc-500 transition-colors hover:text-violet-400"
+                    style={{ background: 'rgba(147,51,234,0.08)', border: '1px solid rgba(147,51,234,0.15)' }}
+                    title="تحديث">
+                    <RefreshCw className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+
+                {allDrinksStats === null ? (
+                  <p className="text-center text-sm text-zinc-500 py-2">جاري التحميل...</p>
+                ) : (
+                  <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+                    {/* Total */}
+                    <div className="col-span-2 sm:col-span-1 rounded-xl px-3 py-2.5 text-center"
+                      style={{ background: 'rgba(147,51,234,0.15)', border: '1px solid rgba(147,51,234,0.3)' }}>
+                      <p className="text-2xl font-black text-white">{allDrinksStats.total}</p>
+                      <p className="text-[10px] text-violet-300 mt-0.5">الإجمالي</p>
+                    </div>
+                    {/* Hot */}
+                    <div className="rounded-xl px-3 py-2.5 text-center"
+                      style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)' }}>
+                      <p className="text-xl font-bold text-white">{allDrinksStats.byCategory['hot'] ?? 0}</p>
+                      <p className="text-[10px] text-red-400 mt-0.5">☕ ساخن</p>
+                    </div>
+                    {/* Cold */}
+                    <div className="rounded-xl px-3 py-2.5 text-center"
+                      style={{ background: 'rgba(56,189,248,0.08)', border: '1px solid rgba(56,189,248,0.2)' }}>
+                      <p className="text-xl font-bold text-white">{allDrinksStats.byCategory['cold'] ?? 0}</p>
+                      <p className="text-[10px] text-sky-400 mt-0.5">🧊 بارد</p>
+                    </div>
+                    {/* Shisha */}
+                    <div className="rounded-xl px-3 py-2.5 text-center"
+                      style={{ background: 'rgba(16,185,129,0.08)', border: '1px solid rgba(16,185,129,0.2)' }}>
+                      <p className="text-xl font-bold text-white">{allDrinksStats.byCategory['shisha'] ?? 0}</p>
+                      <p className="text-[10px] text-emerald-400 mt-0.5">💨 شيشة</p>
+                    </div>
+                    {/* Other categories dynamically */}
+                    {Object.entries(allDrinksStats.byCategory)
+                      .filter(([cat]) => !['hot', 'cold', 'shisha'].includes(cat))
+                      .map(([cat, count]) => (
+                        <div key={cat} className="rounded-xl px-3 py-2.5 text-center"
+                          style={{ background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.2)' }}>
+                          <p className="text-xl font-bold text-white">{count}</p>
+                          <p className="text-[10px] text-amber-400 mt-0.5">📦 {cat}</p>
+                        </div>
+                      ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
 
           {/* Dev admin: place selector for stats */}
           {isDevAdmin && (
