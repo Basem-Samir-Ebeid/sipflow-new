@@ -2519,7 +2519,7 @@ const handleSaveSettings = async () => {
           <div className="rounded-2xl border border-border bg-card p-4">
             <div className="mb-4 flex items-center gap-2">
               <Send className="h-5 w-5 text-primary" />
-              <h3 className="font-semibold text-foreground">إرسال رسالة للمست��دمين</h3>
+              <h3 className="font-semibold text-foreground">إرسال رسالة للمستخدمين</h3>
             </div>
             <div className="space-y-4">
               {/* Dev admin: multi-place selector for message */}
