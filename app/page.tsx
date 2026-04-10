@@ -1822,7 +1822,7 @@ export default function HomePage() {
                 <div className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 mb-2 text-xs font-semibold"
                   style={{ background: 'rgba(212,160,23,0.12)', border: '1px solid rgba(212,160,23,0.3)', color: '#D4A017' }}>
                   <span className="h-1.5 w-1.5 rounded-full bg-amber-400 animate-pulse" />
-                  ب��ابة إدارة المكان
+                  بوابة إدارة المكان
                 </div>
                 <h1 className="text-xl font-bold text-white">SîpFlõw · أدمن</h1>
                 <p className="text-xs text-zinc-500 mt-1">إدارة المكان والطلبات والإعدادات</p>
