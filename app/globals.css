@@ -139,3 +139,26 @@
 .animate-gold-glow {
   animation: gold-glow-pulse 3s ease-in-out infinite;
 }
+
+/* ── Zigzag stroke ring ── */
+@keyframes spin-reverse-slow {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(-360deg); }
+}
+@keyframes zigzag-dash-flow {
+  from { stroke-dashoffset: 0; }
+  to   { stroke-dashoffset: -18; }
+}
+@keyframes zigzag-glow-pulse {
+  0%, 100% { filter: drop-shadow(0 0 4px rgba(212,160,23,0.7))  drop-shadow(0 0 10px rgba(212,160,23,0.35)); }
+  50%       { filter: drop-shadow(0 0 8px rgba(255,230,80,0.95)) drop-shadow(0 0 18px rgba(212,160,23,0.65)); }
+}
+.animate-zigzag-ring {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: spin-reverse-slow 22s linear infinite, zigzag-glow-pulse 2.5s ease-in-out infinite;
+}
+.animate-zigzag-dash {
+  stroke-dasharray: 14 4;
+  animation: zigzag-dash-flow 0.55s linear infinite;
+}

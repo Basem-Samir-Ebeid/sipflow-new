@@ -1580,6 +1580,32 @@ export default function HomePage() {
           <div className="flex flex-col items-center space-y-3">
             {/* Logo with rotating golden zigzag frame */}
             <div className="relative flex items-center justify-center" style={{ width: 164, height: 164 }}>
+
+              {/* ── Outer animated zigzag stroke ring (counter-rotates) ── */}
+              <svg
+                viewBox="0 0 180 180"
+                className="animate-zigzag-ring"
+                style={{ position: 'absolute', top: -8, left: -8, width: 180, height: 180, zIndex: 0 }}
+              >
+                <defs>
+                  <linearGradient id="zigStrokeGoldA" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%"   stopColor="#FFF3A3" />
+                    <stop offset="35%"  stopColor="#D4A017" />
+                    <stop offset="65%"  stopColor="#F5D060" />
+                    <stop offset="100%" stopColor="#A07010" />
+                  </linearGradient>
+                </defs>
+                <polygon
+                  fill="none"
+                  stroke="url(#zigStrokeGoldA)"
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="animate-zigzag-dash"
+                  points="90,2 110.7,12.73 134,13.79 146.57,33.43 166.21,46 167.27,69.3 178,90 167.27,110.7 166.21,134 146.57,146.57 134,166.21 110.7,167.27 90,178 69.3,167.27 46,166.21 33.43,146.57 13.79,134 12.73,110.7 2,90 12.73,69.3 13.79,46 33.43,33.43 46,13.79 69.3,12.73"
+                />
+              </svg>
+
               {/* Circular logo */}
               <div className="absolute rounded-full overflow-hidden bg-black shadow-lg" style={{ width: 128, height: 128, zIndex: 1 }}>
                 <Image src="/images/qa3da-logo.jpg" alt="SîpFlõw" fill sizes="128px" loading="eager" style={{ objectFit: 'cover', objectPosition: 'center' }} />
@@ -1974,6 +2000,32 @@ export default function HomePage() {
             <div className="flex flex-col items-center space-y-3">
               {/* Logo with rotating golden zigzag frame */}
               <div className="relative flex items-center justify-center" style={{ width: 164, height: 164 }}>
+
+                {/* ── Outer animated zigzag stroke ring (counter-rotates) ── */}
+                <svg
+                  viewBox="0 0 180 180"
+                  className="animate-zigzag-ring"
+                  style={{ position: 'absolute', top: -8, left: -8, width: 180, height: 180, zIndex: 0 }}
+                >
+                  <defs>
+                    <linearGradient id="zigStrokeGoldB" x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%"   stopColor="#FFF3A3" />
+                      <stop offset="35%"  stopColor="#D4A017" />
+                      <stop offset="65%"  stopColor="#F5D060" />
+                      <stop offset="100%" stopColor="#A07010" />
+                    </linearGradient>
+                  </defs>
+                  <polygon
+                    fill="none"
+                    stroke="url(#zigStrokeGoldB)"
+                    strokeWidth="2.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    className="animate-zigzag-dash"
+                    points="90,2 110.7,12.73 134,13.79 146.57,33.43 166.21,46 167.27,69.3 178,90 167.27,110.7 166.21,134 146.57,146.57 134,166.21 110.7,167.27 90,178 69.3,167.27 46,166.21 33.43,146.57 13.79,134 12.73,110.7 2,90 12.73,69.3 13.79,46 33.43,33.43 46,13.79 69.3,12.73"
+                  />
+                </svg>
+
                 {/* Circular logo – sits behind the SVG frame */}
                 <div className="absolute rounded-full overflow-hidden bg-black shadow-lg" style={{ width: 128, height: 128, zIndex: 1 }}>
                   <Image
@@ -1999,10 +2051,6 @@ export default function HomePage() {
                       <stop offset="100%" stopColor="#F0C040" />
                     </linearGradient>
                   </defs>
-                  {/*
-                    Gear polygon (16 teeth, outer r=78, inner r=65, center 80,80)
-                    Combined with inner circle path – fillRule evenodd cuts the center transparent
-                  */}
                   <path
                     fillRule="evenodd"
                     fill="url(#goldZigGrad)"
