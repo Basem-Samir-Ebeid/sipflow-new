@@ -213,6 +213,10 @@ export function AdminPanel({
 
   // Inventory state
   const [inventoryMap, setInventoryMap] = useState<Record<string, number>>({})
+  const [lowStockThreshold, setLowStockThreshold] = useState(10)
+
+  // Table map state
+  const [placeTableCount, setPlaceTableCount] = useState(0)
 
   // Fetch inventory for all drinks
   const fetchInventory = async () => {
@@ -242,6 +246,20 @@ export function AdminPanel({
       setInventoryMap(prev => ({ ...prev, [drinkId]: quantity }))
     } catch (err) {
       console.error('Error updating inventory:', err)
+    }
+  }
+
+  // Fetch table count for table map
+  const fetchPlaceTableCount = async () => {
+    if (!placeId) return
+    try {
+      const res = await fetch(`/api/places/${placeId}`)
+      if (res.ok) {
+        const data = await res.json()
+        setPlaceTableCount(data.table_count || 0)
+      }
+    } catch (err) {
+      console.error('Error fetching place details:', err)
     }
   }
 
@@ -1360,6 +1378,7 @@ const handleSaveSettings = async () => {
         if (v === 'staff' && isDevAdmin) fetchPlaces()
         if (v === 'danger' && isDevAdmin) fetchPlaces().then(list => { if (list.length > 0) setResetPlaceId(prev => prev || list[0].id) })
         if (v === 'clients' && isDevAdmin) fetchClients()
+        if (v === 'tables' && !isDevAdmin) { fetchPlaceTableCount(); fetchInventory() }
         if (v === 'settings' && !isDevAdmin && placeId) { fetchPlaces().then(list => { const p = list.find((pl: Place) => pl.id === placeId); if (p) { setReservationsEnabledMap(prev => ({ ...prev, [placeId]: !!p.reservations_enabled })); setOrderTrackingMap(prev => ({ ...prev, [placeId]: p.order_tracking_enabled !== false })) } }) }
         if (v === 'settings' && isDevAdmin) { fetchPlaces().then(list => { const m: Record<string, boolean> = {}; list.forEach((p: Place) => { m[p.id] = p.order_tracking_enabled !== false }); setOrderTrackingMap(m) }) }
         if (v === 'cashier') { if (isDevAdmin) { fetchPlaces().then(list => { if (list.length > 0) setCashierPlaceId(prev => { const chosen = prev || list[0].id; fetchCashierOrders(chosen); return chosen }) }); fetchCashierUsers() } else if (placeId) { setCashierPlaceId(placeId); setCashierUserPlaceId(placeId); setTableNewPlaceId(placeId); setTablesPlaceId(placeId); setFeeSettingsPlaceId(placeId); fetchCashierOrders(placeId); fetchCashierUsers(placeId); fetchTableUsers(placeId); fetchPlaces().then(list => { const p = list.find((pl: Place) => pl.id === placeId); if (p) { setFeeServiceCharge(p.service_charge != null ? String(p.service_charge) : '0'); setFeeTaxRate(p.tax_rate != null ? String(p.tax_rate) : '0') } }) } }
@@ -1455,18 +1474,34 @@ const handleSaveSettings = async () => {
           </TabsList>
         ) : (
           /* ── Place Admin: compact grid tabs ── */
-          <TabsList className="mb-4 grid w-full grid-cols-11 bg-muted">
+          <TabsList className="mb-4 grid w-full grid-cols-12 bg-muted">
             <TabsTrigger value="stats" className="gap-1 data-[state=active]:bg-card">
               <BarChart3 className="h-4 w-4" />
               <span className="hidden sm:inline text-xs">الإحصائيات</span>
+            </TabsTrigger>
+            <TabsTrigger value="tables" className="relative gap-1 data-[state=active]:bg-card">
+              <TableProperties className="h-4 w-4" />
+              <span className="hidden sm:inline text-xs">الطاولات</span>
+              {(() => {
+                const occupied = new Set(orders.filter(o => o.table_number && o.status !== 'completed').map(o => o.table_number)).size
+                return occupied > 0 ? (
+                  <span className="absolute -right-0.5 -top-0.5 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-emerald-500 text-[8px] font-bold text-black">{occupied}</span>
+                ) : null
+              })()}
             </TabsTrigger>
             <TabsTrigger value="drinks" className="gap-1 data-[state=active]:bg-card">
               <Coffee className="h-4 w-4" />
               <span className="hidden sm:inline text-xs">الأصناف</span>
             </TabsTrigger>
-            <TabsTrigger value="inventory" className="gap-1 data-[state=active]:bg-card">
+            <TabsTrigger value="inventory" className="relative gap-1 data-[state=active]:bg-card">
               <Package className="h-4 w-4" />
               <span className="hidden sm:inline text-xs">المخزون</span>
+              {(() => {
+                const lowCount = drinks.filter(d => (inventoryMap[d.id] ?? 0) < lowStockThreshold && (inventoryMap[d.id] ?? 0) >= 0).length
+                return lowCount > 0 ? (
+                  <span className="absolute -right-0.5 -top-0.5 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-amber-500 text-[8px] font-bold text-black">{lowCount}</span>
+                ) : null
+              })()}
             </TabsTrigger>
             <TabsTrigger value="users" className="gap-1 data-[state=active]:bg-card">
               <Users className="h-4 w-4" />
@@ -1839,6 +1874,129 @@ const handleSaveSettings = async () => {
           })()}
         </TabsContent>
 
+        {/* ─── Table Map Tab ─── */}
+        <TabsContent value="tables" className="space-y-4">
+          {isDevAdmin ? (
+            <p className="text-center text-muted-foreground py-8">خريطة الطاولات متاحة لمدير المكان فقط</p>
+          ) : (() => {
+            // Group active orders by table number
+            const activeOrders = orders.filter(o => o.status !== 'completed')
+            const tableOrdersMap: Record<string, OrderWithDetails[]> = {}
+            activeOrders.forEach(o => {
+              const t = o.table_number || 'بلا طاولة'
+              if (!tableOrdersMap[t]) tableOrdersMap[t] = []
+              tableOrdersMap[t].push(o)
+            })
+            // Build table list (from 1..placeTableCount, plus any occupied beyond that)
+            const knownTables = new Set<string>()
+            for (let i = 1; i <= placeTableCount; i++) knownTables.add(String(i))
+            Object.keys(tableOrdersMap).forEach(t => { if (t !== 'بلا طاولة') knownTables.add(t) })
+            const sortedTables = Array.from(knownTables).sort((a, b) => Number(a) - Number(b))
+            const occupiedCount = sortedTables.filter(t => tableOrdersMap[t] && tableOrdersMap[t].length > 0).length
+            const freeCount = sortedTables.length - occupiedCount
+
+            return (
+              <div className="space-y-4">
+                {/* Summary bar */}
+                <div className="flex gap-3">
+                  <div className="flex-1 rounded-xl p-3 text-center" style={{ background: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.25)' }}>
+                    <p className="text-2xl font-black text-emerald-400">{freeCount}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">فاضية</p>
+                  </div>
+                  <div className="flex-1 rounded-xl p-3 text-center" style={{ background: 'rgba(251,191,36,0.1)', border: '1px solid rgba(251,191,36,0.25)' }}>
+                    <p className="text-2xl font-black text-amber-400">{occupiedCount}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">مشغولة</p>
+                  </div>
+                  <div className="flex-1 rounded-xl p-3 text-center" style={{ background: 'rgba(99,102,241,0.1)', border: '1px solid rgba(99,102,241,0.25)' }}>
+                    <p className="text-2xl font-black text-indigo-400">{sortedTables.length}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">إجمالي</p>
+                  </div>
+                </div>
+
+                {placeTableCount === 0 && sortedTables.length === 0 && (
+                  <div className="rounded-xl p-6 text-center" style={{ border: '1px dashed rgba(255,255,255,0.1)' }}>
+                    <TableProperties className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
+                    <p className="text-sm text-muted-foreground">لم يتم تحديد عدد الطاولات بعد</p>
+                    <p className="text-xs text-muted-foreground mt-1">اضبط عدد الطاولات من إعدادات المكان</p>
+                  </div>
+                )}
+
+                {/* Table grid */}
+                <div className="grid grid-cols-3 gap-3">
+                  {sortedTables.map(tableNum => {
+                    const tableOrders = tableOrdersMap[tableNum] || []
+                    const isOccupied = tableOrders.length > 0
+                    const totalBill = tableOrders.reduce((s, o) => s + ((o.drink?.price || 0) * (o.quantity || 1)), 0)
+                    const pendingCount = tableOrders.filter(o => o.status === 'pending').length
+                    const readyCount = tableOrders.filter(o => o.status === 'ready').length
+                    const uniqueUsers = [...new Set(tableOrders.map(o => o.customer_name || o.user?.name || '').filter(Boolean))]
+
+                    return (
+                      <div key={tableNum} className="rounded-2xl p-3 transition-all"
+                        style={{
+                          background: isOccupied
+                            ? readyCount > 0 ? 'rgba(34,197,94,0.08)' : 'rgba(251,191,36,0.07)'
+                            : 'rgba(255,255,255,0.02)',
+                          border: isOccupied
+                            ? readyCount > 0 ? '1px solid rgba(34,197,94,0.35)' : '1px solid rgba(251,191,36,0.3)'
+                            : '1px solid rgba(255,255,255,0.07)'
+                        }}>
+                        {/* Table number */}
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-lg font-black" style={{ color: isOccupied ? (readyCount > 0 ? '#4ade80' : '#fbbf24') : '#6b7280' }}>
+                            {tableNum}
+                          </span>
+                          <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full ${isOccupied ? (readyCount > 0 ? 'bg-emerald-500/20 text-emerald-400' : 'bg-amber-500/20 text-amber-400') : 'bg-zinc-700/50 text-zinc-500'}`}>
+                            {isOccupied ? (readyCount > 0 ? 'جاهز' : 'مشغول') : 'فاضي'}
+                          </span>
+                        </div>
+
+                        {isOccupied && (
+                          <div className="space-y-1">
+                            {uniqueUsers.length > 0 && (
+                              <p className="text-[10px] text-zinc-400 truncate">{uniqueUsers[0]}</p>
+                            )}
+                            <div className="flex items-center justify-between">
+                              <span className="text-[10px] text-zinc-500">{tableOrders.length} طلب</span>
+                              {totalBill > 0 && <span className="text-[10px] font-bold text-primary">{totalBill} ج</span>}
+                            </div>
+                            {pendingCount > 0 && (
+                              <div className="flex items-center gap-1">
+                                <Hourglass className="h-2.5 w-2.5 text-amber-400" />
+                                <span className="text-[9px] text-amber-400">{pendingCount} ينتظر</span>
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    )
+                  })}
+                </div>
+
+                {/* Orders with no table */}
+                {tableOrdersMap['بلا طاولة'] && tableOrdersMap['بلا طاولة'].length > 0 && (
+                  <div className="rounded-xl p-3" style={{ background: 'rgba(99,102,241,0.06)', border: '1px solid rgba(99,102,241,0.2)' }}>
+                    <p className="text-xs font-semibold text-indigo-400 mb-2">طلبات بدون طاولة محددة</p>
+                    <div className="space-y-1">
+                      {tableOrdersMap['بلا طاولة'].map(o => (
+                        <div key={o.id} className="flex items-center justify-between text-[11px]">
+                          <span className="text-zinc-300">{o.drink?.name}</span>
+                          <span className="text-zinc-500">{o.customer_name || '—'}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                <button onClick={() => { fetchPlaceTableCount(); }} className="w-full flex items-center justify-center gap-2 rounded-xl py-2.5 text-xs text-muted-foreground transition-colors hover:text-foreground" style={{ border: '1px dashed rgba(255,255,255,0.1)' }}>
+                  <RefreshCw className="h-3.5 w-3.5" />
+                  تحديث خريطة الطاولات
+                </button>
+              </div>
+            )
+          })()}
+        </TabsContent>
+
         <TabsContent value="drinks" className="space-y-6">
           {/* Add new drink */}
           <div className="rounded-2xl border border-border bg-card p-4">
@@ -2140,13 +2298,34 @@ const handleSaveSettings = async () => {
 
         {/* Inventory Tab */}
         <TabsContent value="inventory" className="space-y-4">
-          {/* refresh button */}
-          <div className="flex justify-end">
-            <Button variant="outline" size="sm" className="border-border" onClick={fetchInventory}>
+          {/* Threshold + refresh row */}
+          <div className="flex items-center gap-3">
+            <div className="flex flex-1 items-center gap-2 rounded-xl px-3 py-2" style={{ background: 'rgba(251,191,36,0.06)', border: '1px solid rgba(251,191,36,0.2)' }}>
+              <Package className="h-4 w-4 text-amber-400 shrink-0" />
+              <span className="text-xs text-muted-foreground whitespace-nowrap">حد الإنذار</span>
+              <input
+                type="number" min="0" value={lowStockThreshold}
+                onChange={e => setLowStockThreshold(Math.max(0, parseInt(e.target.value) || 0))}
+                className="w-16 rounded-lg border border-amber-500/30 bg-transparent px-2 py-1 text-center text-sm font-bold text-amber-400 focus:outline-none"
+              />
+              <span className="text-xs text-muted-foreground">وحدة</span>
+            </div>
+            <Button variant="outline" size="sm" className="border-border shrink-0" onClick={fetchInventory}>
               <RefreshCw className="ml-2 h-4 w-4" />
               تحديث
             </Button>
           </div>
+          {/* Low-stock alert banner */}
+          {(() => {
+            const lowItems = drinks.filter(d => (inventoryMap[d.id] ?? 0) < lowStockThreshold)
+            if (lowItems.length === 0) return null
+            return (
+              <div className="rounded-xl px-4 py-3" style={{ background: 'rgba(251,191,36,0.08)', border: '1px solid rgba(251,191,36,0.3)' }}>
+                <p className="text-xs font-bold text-amber-400 mb-1">⚠️ {lowItems.length} {lowItems.length === 1 ? 'صنف' : 'أصناف'} وصلت لحد الإنذار</p>
+                <p className="text-[10px] text-zinc-500">{lowItems.map(d => d.name).join(' · ')}</p>
+              </div>
+            )
+          })()}
 
           {isDevAdmin ? (
             /* Dev admin: place selector then filtered inventory */
@@ -2231,8 +2410,14 @@ const handleSaveSettings = async () => {
             <div className="space-y-3">
               {drinks.map((drink) => {
                 const qty = inventoryMap[drink.id] ?? 0
+                const isLow = qty < lowStockThreshold && qty > 0
+                const isOut = qty === 0
                 return (
-                <div key={drink.id} className="flex items-center justify-between rounded-xl bg-muted p-4">
+                <div key={drink.id} className="flex items-center justify-between rounded-xl p-4 transition-all"
+                  style={{
+                    background: isOut ? 'rgba(239,68,68,0.06)' : isLow ? 'rgba(251,191,36,0.06)' : 'hsl(var(--muted))',
+                    border: isOut ? '1px solid rgba(239,68,68,0.25)' : isLow ? '1px solid rgba(251,191,36,0.2)' : 'transparent'
+                  }}>
                   <div className="flex items-center gap-3">
                     <div className="relative h-12 w-12 overflow-hidden rounded-full bg-card">
                       {drink.image_url ? (
@@ -2247,7 +2432,8 @@ const handleSaveSettings = async () => {
                       <p className="font-medium text-foreground">{drink.name}</p>
                       <div className="flex items-center gap-2">
                         {drink.price > 0 && <p className="text-xs text-primary">{drink.price} ج.م</p>}
-                        {qty === 0 && <span className="text-[10px] font-bold text-destructive bg-destructive/10 px-1.5 py-0.5 rounded-full">Out of Stock</span>}
+                        {isOut && <span className="text-[10px] font-bold text-destructive bg-destructive/10 px-1.5 py-0.5 rounded-full">نفد</span>}
+                        {isLow && <span className="text-[10px] font-bold text-amber-500 bg-amber-500/10 px-1.5 py-0.5 rounded-full">⚠️ منخفض</span>}
                       </div>
                     </div>
                   </div>
@@ -2258,7 +2444,7 @@ const handleSaveSettings = async () => {
                     </Button>
                     <Input type="number" value={qty}
                       onChange={e => updateInventory(drink.id, parseInt(e.target.value) || 0)}
-                      className={`h-10 w-20 border-border bg-card text-center text-lg font-bold ${qty === 0 ? 'text-destructive' : 'text-foreground'}`} min="0" />
+                      className={`h-10 w-20 border-border bg-card text-center text-lg font-bold ${isOut ? 'text-destructive' : isLow ? 'text-amber-500' : 'text-foreground'}`} min="0" />
                     <Button variant="outline" size="icon" className="h-10 w-10 border-border"
                       onClick={() => updateInventory(drink.id, qty + 1)}>
                       <Plus className="h-5 w-5" />
@@ -3441,6 +3627,97 @@ const handleSaveSettings = async () => {
         </TabsContent>
 
         <TabsContent value="danger" className="space-y-4">
+
+          {/* ── Shift Summary Card ── */}
+          {!isDevAdmin && (() => {
+            const totalOrders = orders.length
+            const totalRevenue = orders.reduce((s, o) => s + ((o.drink?.price || 0) * (o.quantity || 1)), 0)
+            const completedOrders = orders.filter(o => o.status === 'completed' || o.status === 'ready').length
+            const pendingOrders = orders.filter(o => o.status === 'pending').length
+            const preparingOrders = orders.filter(o => o.status === 'preparing').length
+
+            // Top drinks
+            const drinkCounts: Record<string, { name: string; count: number }> = {}
+            orders.forEach(o => {
+              const n = o.drink?.name || '—'
+              if (!drinkCounts[n]) drinkCounts[n] = { name: n, count: 0 }
+              drinkCounts[n].count += (o.quantity || 1)
+            })
+            const topDrinks = Object.values(drinkCounts).sort((a, b) => b.count - a.count).slice(0, 3)
+
+            // Category breakdown
+            const catCounts: Record<string, number> = {}
+            orders.forEach(o => { const c = o.drink?.category || 'other'; catCounts[c] = (catCounts[c] || 0) + (o.quantity || 1) })
+
+            if (totalOrders === 0) return (
+              <div className="rounded-2xl p-4 text-center" style={{ border: '1px dashed rgba(255,255,255,0.1)' }}>
+                <p className="text-sm text-muted-foreground">لا توجد طلبات في هذه الجلسة</p>
+              </div>
+            )
+
+            return (
+              <div className="rounded-2xl p-4 space-y-4" style={{ background: 'rgba(99,102,241,0.04)', border: '1px solid rgba(99,102,241,0.2)' }}>
+                <div className="flex items-center gap-2">
+                  <BarChart3 className="h-4 w-4 text-indigo-400" />
+                  <h3 className="text-sm font-bold text-foreground">ملخص الوردية الحالية</h3>
+                </div>
+
+                {/* Key stats */}
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="rounded-xl p-3" style={{ background: 'rgba(255,255,255,0.03)' }}>
+                    <p className="text-xl font-black text-foreground">{totalOrders}</p>
+                    <p className="text-[10px] text-muted-foreground">إجمالي الطلبات</p>
+                  </div>
+                  <div className="rounded-xl p-3" style={{ background: 'rgba(212,160,23,0.06)' }}>
+                    <p className="text-xl font-black text-yellow-400">{totalRevenue.toFixed(0)} ج</p>
+                    <p className="text-[10px] text-muted-foreground">الإيراد المتوقع</p>
+                  </div>
+                  <div className="rounded-xl p-3" style={{ background: 'rgba(34,197,94,0.06)' }}>
+                    <p className="text-xl font-black text-emerald-400">{completedOrders}</p>
+                    <p className="text-[10px] text-muted-foreground">منجزة / جاهزة</p>
+                  </div>
+                  <div className="rounded-xl p-3" style={{ background: 'rgba(251,191,36,0.06)' }}>
+                    <p className="text-xl font-black text-amber-400">{pendingOrders + preparingOrders}</p>
+                    <p className="text-[10px] text-muted-foreground">معلقة / تحضير</p>
+                  </div>
+                </div>
+
+                {/* Top drinks */}
+                {topDrinks.length > 0 && (
+                  <div>
+                    <p className="text-[10px] text-muted-foreground mb-2">الأكثر طلباً</p>
+                    <div className="space-y-1.5">
+                      {topDrinks.map((d, i) => (
+                        <div key={d.name} className="flex items-center justify-between text-xs">
+                          <div className="flex items-center gap-2">
+                            <span className="text-muted-foreground">{i + 1}.</span>
+                            <span className="text-foreground">{d.name}</span>
+                          </div>
+                          <span className="font-bold text-primary">{d.count} وحدة</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Category breakdown */}
+                {Object.keys(catCounts).length > 0 && (
+                  <div className="flex gap-2">
+                    {Object.entries(catCounts).map(([cat, count]) => {
+                      const label = cat === 'hot' ? '☕' : cat === 'cold' ? '🧊' : cat === 'shisha' ? '💨' : '🍹'
+                      return (
+                        <div key={cat} className="flex-1 rounded-lg py-1.5 text-center" style={{ background: 'rgba(255,255,255,0.03)' }}>
+                          <p className="text-sm">{label}</p>
+                          <p className="text-xs font-bold text-foreground">{count}</p>
+                        </div>
+                      )
+                    })}
+                  </div>
+                )}
+              </div>
+            )
+          })()}
+
           <div className="rounded-2xl border border-destructive/50 bg-destructive/10 p-4">
             <h3 className="mb-4 font-semibold text-destructive">بدء SîpFlõw جديدة</h3>
             <p className="mb-4 text-sm text-muted-foreground">
