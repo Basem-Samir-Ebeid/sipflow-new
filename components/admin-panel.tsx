@@ -1248,12 +1248,83 @@ const handleSaveSettings = async () => {
 
   return (
     <div className="space-y-4">
-      <div className="text-center">
-        <h1 className="text-2xl font-bold text-foreground">لوحة الإدارة</h1>
-        <p className="text-muted-foreground">
-          {currentPlace ? `📍 ${currentPlace.name}` : isDevAdmin ? '🔧 المطور — كل الأماكن' : 'إدارة الأصناف والمستخدمين'}
-        </p>
-      </div>
+
+      {/* ── Dev Admin Premium Header ── */}
+      {isDevAdmin ? (
+        <div className="relative rounded-2xl overflow-hidden" style={{
+          background: 'linear-gradient(135deg, #09000f 0%, #130020 55%, #1c003a 100%)',
+          border: '1px solid rgba(147,51,234,0.35)',
+          boxShadow: '0 0 60px rgba(147,51,234,0.08), inset 0 1px 0 rgba(255,255,255,0.04)'
+        }}>
+          {/* Glow orb */}
+          <div className="pointer-events-none absolute -top-10 -right-10 h-52 w-52 rounded-full opacity-25"
+            style={{ background: 'radial-gradient(circle, #7c3aed, transparent 70%)', filter: 'blur(20px)' }} />
+          <div className="pointer-events-none absolute -bottom-10 -left-10 h-40 w-40 rounded-full opacity-15"
+            style={{ background: 'radial-gradient(circle, #4f46e5, transparent 70%)', filter: 'blur(20px)' }} />
+
+          <div className="relative p-5 space-y-4">
+            {/* Top row */}
+            <div className="flex items-start justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl text-2xl"
+                  style={{ background: 'rgba(147,51,234,0.15)', border: '1px solid rgba(147,51,234,0.35)' }}>
+                  ⚡
+                </div>
+                <div>
+                  <h1 className="text-lg font-bold tracking-wide text-white">Dev Control Center</h1>
+                  <p className="mt-0.5 text-[11px]" style={{ color: '#a78bfa' }}>SîpFlõw · الوصول الكامل للنظام</p>
+                </div>
+              </div>
+              <div className="flex shrink-0 flex-col items-end gap-1.5">
+                <span className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-bold tracking-widest"
+                  style={{ background: 'rgba(147,51,234,0.2)', border: '1px solid rgba(147,51,234,0.5)', color: '#c4b5fd' }}>
+                  <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-violet-400" />
+                  MASTER
+                </span>
+                <span className="text-[10px] text-zinc-600">v2.0</span>
+              </div>
+            </div>
+
+            {/* Stats row */}
+            <div className="grid grid-cols-3 gap-2">
+              {[
+                { label: 'الأماكن',     value: places.length,     color: '#c4b5fd', bg: 'rgba(147,51,234,0.12)', border: 'rgba(147,51,234,0.25)' },
+                { label: 'الموظفون',   value: staffUsers.length,  color: '#6ee7b7', bg: 'rgba(16,185,129,0.08)',  border: 'rgba(16,185,129,0.2)'  },
+                { label: 'العملاء',    value: clients.length,     color: '#fcd34d', bg: 'rgba(245,158,11,0.08)',  border: 'rgba(245,158,11,0.2)'  },
+              ].map(s => (
+                <div key={s.label} className="rounded-xl px-2 py-2.5 text-center"
+                  style={{ background: s.bg, border: `1px solid ${s.border}` }}>
+                  <p className="text-base font-bold text-white">{s.value}</p>
+                  <p className="mt-0.5 text-[10px]" style={{ color: s.color }}>{s.label}</p>
+                </div>
+              ))}
+            </div>
+
+            {/* System status bar */}
+            <div className="flex items-center justify-between rounded-xl px-3 py-2"
+              style={{ background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.05)' }}>
+              <div className="flex items-center gap-2">
+                <span className="h-2 w-2 animate-pulse rounded-full bg-emerald-400" />
+                <span className="text-[11px] font-medium text-emerald-400">النظام يعمل</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <span className="text-[10px] text-zinc-500">PostgreSQL ✓</span>
+                <span className="text-[10px] text-zinc-500">API ✓</span>
+                <span className="text-[10px] text-zinc-500">Auth ✓</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      ) : (
+        /* ── Place Admin simple header ── */
+        <div className="rounded-2xl p-4 text-center" style={{ background: 'rgba(212,160,23,0.05)', border: '1px solid rgba(212,160,23,0.15)' }}>
+          <h1 className="text-xl font-bold text-foreground">لوحة الإدارة</h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            {currentPlace ? `📍 ${currentPlace.name}` : 'إدارة الأصناف والمستخدمين'}
+          </p>
+        </div>
+      )}
 
       <Tabs value={activeAdminTab} onValueChange={(v) => {
         setActiveAdminTab(v)
@@ -1286,71 +1357,134 @@ const handleSaveSettings = async () => {
         }
         if (v === 'count' && isDevAdmin) fetchPlaces().then(list => { if (list.length > 0) setCountPlaceId(prev => { const chosen = prev || list[0].id; fetchCountForPlace(chosen); return chosen }) })
       }} className="w-full">
-        <TabsList className={`mb-4 grid w-full bg-muted ${isDevAdmin ? 'grid-cols-13' : 'grid-cols-11'}`}>
-          <TabsTrigger value="stats" className="gap-2 data-[state=active]:bg-card">
-            <BarChart3 className="h-4 w-4" />
-            <span className="hidden sm:inline">الإحصائيات</span>
-          </TabsTrigger>
-          <TabsTrigger value="drinks" className="gap-2 data-[state=active]:bg-card">
-            <Coffee className="h-4 w-4" />
-            <span className="hidden sm:inline">الأصناف</span>
-          </TabsTrigger>
-          <TabsTrigger value="inventory" className="gap-2 data-[state=active]:bg-card">
-            <Package className="h-4 w-4" />
-            <span className="hidden sm:inline">المخزون</span>
-          </TabsTrigger>
-          <TabsTrigger value="users" className="gap-2 data-[state=active]:bg-card">
-            <Users className="h-4 w-4" />
-            <span className="hidden sm:inline">المستخدمين</span>
-          </TabsTrigger>
-          <TabsTrigger value="staff" className="gap-2 data-[state=active]:bg-card">
-            <UserCog className="h-4 w-4" />
-            <span className="hidden sm:inline">Staff</span>
-          </TabsTrigger>
-          <TabsTrigger value="messages" className="relative gap-2 data-[state=active]:bg-card">
-            <MessageSquare className="h-4 w-4" />
-            {isDevAdmin && devNotifsUnread > 0 && (
-              <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-amber-500 text-[9px] font-bold text-black">{devNotifsUnread > 9 ? '9+' : devNotifsUnread}</span>
-            )}
-            <span className="hidden sm:inline">الرسائل</span>
-          </TabsTrigger>
-          <TabsTrigger value="settings" className="gap-2 data-[state=active]:bg-card">
-            <Settings2 className="h-4 w-4" />
-            <span className="hidden sm:inline">الإعدادات</span>
-          </TabsTrigger>
-          <TabsTrigger value="danger" className="gap-2 data-[state=active]:bg-card">
-            <Trash2 className="h-4 w-4" />
-            <span className="hidden sm:inline">الخطرة</span>
-          </TabsTrigger>
-          <TabsTrigger value="reservations" className="gap-2 data-[state=active]:bg-card">
-            <CalendarDays className="h-4 w-4" />
-            <span className="hidden sm:inline">الحجوزات</span>
-          </TabsTrigger>
-          <TabsTrigger value="cashier" className="gap-2 data-[state=active]:bg-card">
-            <Banknote className="h-4 w-4" />
-            <span className="hidden sm:inline">الكاشير</span>
-          </TabsTrigger>
-          <TabsTrigger value="analytics" className="gap-2 data-[state=active]:bg-card">
-            <TrendingUp className="h-4 w-4" />
-            <span className="hidden sm:inline">التقارير</span>
-          </TabsTrigger>
-          <TabsTrigger value="count" className="gap-2 data-[state=active]:bg-card">
-            <CheckCircle2 className="h-4 w-4" />
-            <span className="hidden sm:inline">حصر المسلّم</span>
-          </TabsTrigger>
-          {isDevAdmin && (
-            <>
-              <TabsTrigger value="places" className="gap-2 data-[state=active]:bg-card">
-                <Link2 className="h-4 w-4" />
-                <span className="hidden sm:inline">الأماكن</span>
-              </TabsTrigger>
-              <TabsTrigger value="clients" className="gap-2 data-[state=active]:bg-card">
-                <UserPlus className="h-4 w-4" />
-                <span className="hidden sm:inline">العملاء</span>
-              </TabsTrigger>
-            </>
-          )}
-        </TabsList>
+        {/* ── Dev Admin: horizontal scroll tab bar ── */}
+        {isDevAdmin ? (
+          <TabsList className="mb-3 flex w-full overflow-x-auto gap-1 rounded-xl bg-muted p-1.5 h-auto [&>*]:shrink-0" style={{ scrollbarWidth: 'none' }}>
+            {/* Group 1: Analytics */}
+            <TabsTrigger value="stats"
+              className="flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-medium data-[state=active]:bg-violet-600 data-[state=active]:text-white data-[state=active]:shadow-md">
+              <BarChart3 className="h-3.5 w-3.5" /><span>الإحصائيات</span>
+            </TabsTrigger>
+            <TabsTrigger value="analytics"
+              className="flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-medium data-[state=active]:bg-violet-600 data-[state=active]:text-white data-[state=active]:shadow-md">
+              <TrendingUp className="h-3.5 w-3.5" /><span>التقارير</span>
+            </TabsTrigger>
+            <TabsTrigger value="count"
+              className="flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-medium data-[state=active]:bg-violet-600 data-[state=active]:text-white data-[state=active]:shadow-md">
+              <CheckCircle2 className="h-3.5 w-3.5" /><span>حصر المسلّم</span>
+            </TabsTrigger>
+
+            {/* Separator */}
+            <div className="mx-1 w-px self-stretch bg-border/50 shrink-0" />
+
+            {/* Group 2: Content */}
+            <TabsTrigger value="drinks"
+              className="flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-medium data-[state=active]:bg-amber-600 data-[state=active]:text-white data-[state=active]:shadow-md">
+              <Coffee className="h-3.5 w-3.5" /><span>الأصناف</span>
+            </TabsTrigger>
+            <TabsTrigger value="inventory"
+              className="flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-medium data-[state=active]:bg-amber-600 data-[state=active]:text-white data-[state=active]:shadow-md">
+              <Package className="h-3.5 w-3.5" /><span>المخزون</span>
+            </TabsTrigger>
+            <TabsTrigger value="cashier"
+              className="flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-medium data-[state=active]:bg-amber-600 data-[state=active]:text-white data-[state=active]:shadow-md">
+              <Banknote className="h-3.5 w-3.5" /><span>الكاشير</span>
+            </TabsTrigger>
+            <TabsTrigger value="reservations"
+              className="flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-medium data-[state=active]:bg-amber-600 data-[state=active]:text-white data-[state=active]:shadow-md">
+              <CalendarDays className="h-3.5 w-3.5" /><span>الحجوزات</span>
+            </TabsTrigger>
+
+            {/* Separator */}
+            <div className="mx-1 w-px self-stretch bg-border/50 shrink-0" />
+
+            {/* Group 3: Users */}
+            <TabsTrigger value="users"
+              className="flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-medium data-[state=active]:bg-emerald-700 data-[state=active]:text-white data-[state=active]:shadow-md">
+              <Users className="h-3.5 w-3.5" /><span>المستخدمين</span>
+            </TabsTrigger>
+            <TabsTrigger value="staff"
+              className="flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-medium data-[state=active]:bg-emerald-700 data-[state=active]:text-white data-[state=active]:shadow-md">
+              <UserCog className="h-3.5 w-3.5" /><span>Staff</span>
+            </TabsTrigger>
+            <TabsTrigger value="places"
+              className="flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-medium data-[state=active]:bg-emerald-700 data-[state=active]:text-white data-[state=active]:shadow-md">
+              <Link2 className="h-3.5 w-3.5" /><span>الأماكن</span>
+            </TabsTrigger>
+            <TabsTrigger value="clients"
+              className="flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-medium data-[state=active]:bg-emerald-700 data-[state=active]:text-white data-[state=active]:shadow-md">
+              <UserPlus className="h-3.5 w-3.5" /><span>العملاء</span>
+            </TabsTrigger>
+
+            {/* Separator */}
+            <div className="mx-1 w-px self-stretch bg-border/50 shrink-0" />
+
+            {/* Group 4: System */}
+            <TabsTrigger value="messages" className="relative flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-medium data-[state=active]:bg-sky-700 data-[state=active]:text-white data-[state=active]:shadow-md">
+              <MessageSquare className="h-3.5 w-3.5" />
+              <span>الرسائل</span>
+              {devNotifsUnread > 0 && (
+                <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-amber-500 text-[9px] font-bold text-black">{devNotifsUnread > 9 ? '9+' : devNotifsUnread}</span>
+              )}
+            </TabsTrigger>
+            <TabsTrigger value="settings"
+              className="flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-medium data-[state=active]:bg-sky-700 data-[state=active]:text-white data-[state=active]:shadow-md">
+              <Settings2 className="h-3.5 w-3.5" /><span>الإعدادات</span>
+            </TabsTrigger>
+            <TabsTrigger value="danger"
+              className="flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-medium data-[state=active]:bg-rose-700 data-[state=active]:text-white data-[state=active]:shadow-md">
+              <Trash2 className="h-3.5 w-3.5" /><span>الخطرة</span>
+            </TabsTrigger>
+          </TabsList>
+        ) : (
+          /* ── Place Admin: compact grid tabs ── */
+          <TabsList className="mb-4 grid w-full grid-cols-11 bg-muted">
+            <TabsTrigger value="stats" className="gap-1 data-[state=active]:bg-card">
+              <BarChart3 className="h-4 w-4" />
+              <span className="hidden sm:inline text-xs">الإحصائيات</span>
+            </TabsTrigger>
+            <TabsTrigger value="drinks" className="gap-1 data-[state=active]:bg-card">
+              <Coffee className="h-4 w-4" />
+              <span className="hidden sm:inline text-xs">الأصناف</span>
+            </TabsTrigger>
+            <TabsTrigger value="inventory" className="gap-1 data-[state=active]:bg-card">
+              <Package className="h-4 w-4" />
+              <span className="hidden sm:inline text-xs">المخزون</span>
+            </TabsTrigger>
+            <TabsTrigger value="users" className="gap-1 data-[state=active]:bg-card">
+              <Users className="h-4 w-4" />
+              <span className="hidden sm:inline text-xs">المستخدمين</span>
+            </TabsTrigger>
+            <TabsTrigger value="staff" className="gap-1 data-[state=active]:bg-card">
+              <UserCog className="h-4 w-4" />
+              <span className="hidden sm:inline text-xs">Staff</span>
+            </TabsTrigger>
+            <TabsTrigger value="messages" className="relative gap-1 data-[state=active]:bg-card">
+              <MessageSquare className="h-4 w-4" />
+              <span className="hidden sm:inline text-xs">الرسائل</span>
+            </TabsTrigger>
+            <TabsTrigger value="settings" className="gap-1 data-[state=active]:bg-card">
+              <Settings2 className="h-4 w-4" />
+              <span className="hidden sm:inline text-xs">الإعدادات</span>
+            </TabsTrigger>
+            <TabsTrigger value="danger" className="gap-1 data-[state=active]:bg-card">
+              <Trash2 className="h-4 w-4" />
+              <span className="hidden sm:inline text-xs">الخطرة</span>
+            </TabsTrigger>
+            <TabsTrigger value="reservations" className="gap-1 data-[state=active]:bg-card">
+              <CalendarDays className="h-4 w-4" />
+              <span className="hidden sm:inline text-xs">الحجوزات</span>
+            </TabsTrigger>
+            <TabsTrigger value="cashier" className="gap-1 data-[state=active]:bg-card">
+              <Banknote className="h-4 w-4" />
+              <span className="hidden sm:inline text-xs">الكاشير</span>
+            </TabsTrigger>
+            <TabsTrigger value="analytics" className="gap-1 data-[state=active]:bg-card">
+              <TrendingUp className="h-4 w-4" />
+              <span className="hidden sm:inline text-xs">التقارير</span>
+            </TabsTrigger>
+          </TabsList>
+        )}
 
         <TabsContent value="stats" className="space-y-4">
 
