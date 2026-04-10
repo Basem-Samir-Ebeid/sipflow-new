@@ -59,7 +59,6 @@ export default function BarPage() {
   const [completingUserId, setCompletingUserId] = useState<string | null>(null)
   const [staffTab, setStaffTab] = useState<StaffTab>('pending')
   const previousOrderCount = useRef<number>(0)
-  const [whatsappGroup, setWhatsappGroup] = useState<{ name: string; phone: string } | null>(null)
 
   const playOrderSound = () => {
     try {
@@ -230,9 +229,6 @@ export default function BarPage() {
         )
       )
       toast.success(`تم تجهيز طلب ${group.userName}! — في انتظار الويتر 🛎️`)
-      if (group.customerPhone) {
-        setWhatsappGroup({ name: group.userName, phone: group.customerPhone })
-      }
       mutateOrders()
     } catch { toast.error('حدث خطأ، حاول مرة أخرى') }
     finally { setCompletingUserId(null) }
@@ -414,38 +410,6 @@ export default function BarPage() {
 
   return (
     <div className="min-h-screen bg-background">
-
-      {/* WhatsApp Notification Popup */}
-      {whatsappGroup && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4" dir="rtl">
-          <div className="w-full max-w-xs rounded-2xl border border-green-500/30 bg-card p-6 shadow-2xl text-center space-y-4">
-            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-green-500/15 text-4xl mx-auto">📱</div>
-            <div>
-              <h2 className="text-lg font-bold text-foreground">إرسال إشعار واتساب</h2>
-              <p className="text-sm text-muted-foreground mt-1">طلب <span className="text-green-400 font-semibold">{whatsappGroup.name}</span> جاهز!</p>
-            </div>
-            <div className="flex flex-col gap-2">
-              <a
-                href={`https://wa.me/${whatsappGroup.phone.replace(/\D/g, '')}?text=${encodeURIComponent(`✅ طلبك جاهز! يمكنك استلامه الآن 🎉\n— فريق ${staffUser?.name || 'المكان'}`)}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={() => setWhatsappGroup(null)}
-                className="w-full h-11 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-all active:scale-95"
-                style={{ background: 'linear-gradient(135deg, #25d366, #128c7e)', color: '#fff', boxShadow: '0 2px 14px rgba(37,211,102,0.3)' }}
-              >
-                <span>📲</span>
-                إرسال عبر واتساب
-              </a>
-              <button
-                onClick={() => setWhatsappGroup(null)}
-                className="w-full h-10 rounded-xl text-sm text-muted-foreground hover:text-foreground border border-border transition-colors"
-              >
-                تخطي
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       <header className="sticky top-0 z-50 bg-card border-b border-border">
         <DevBar />

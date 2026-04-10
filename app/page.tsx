@@ -85,7 +85,6 @@ export default function HomePage() {
   const [showTableModal, setShowTableModal] = useState(false)
   const [pendingTableNumber, setPendingTableNumber] = useState('')
   const [pendingCustomerName, setPendingCustomerName] = useState('')
-  const [pendingCustomerPhone, setPendingCustomerPhone] = useState('')
   const [tableModalError, setTableModalError] = useState('')
 
   // Rating state
@@ -956,7 +955,7 @@ export default function HomePage() {
             notes: orderNotes,
             customer_name: customerName,
             table_number: tableNum,
-            customer_phone: pendingCustomerPhone.trim() || null
+            customer_phone: null
           })
         })
         if (!orderRes.ok) {
@@ -975,7 +974,6 @@ export default function HomePage() {
       setCartNotes({})
       setPendingCustomerName('')
       setPendingTableNumber('')
-      setPendingCustomerPhone('')
       setRatingValue(0)
       setRatingSubmitted(false)
       if (anyFailed) {
@@ -2911,20 +2909,6 @@ export default function HomePage() {
                 className="h-12 text-center text-lg font-bold border-2 border-amber-500/40 bg-background focus:ring-2 focus:ring-amber-500 rounded-xl mb-4"
               />
 
-              {/* Phone Input (optional) */}
-              <label className="block text-right text-sm font-semibold mb-2 text-muted-foreground">
-                رقم واتساب <span className="text-xs text-zinc-600 font-normal">(اختياري — لإشعارك لما طلبك يتجهز)</span>
-              </label>
-              <Input
-                type="tel"
-                value={pendingCustomerPhone}
-                onChange={(e) => setPendingCustomerPhone(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleConfirmTableAndSubmit()}
-                placeholder="مثال: 01012345678"
-                dir="ltr"
-                className="h-12 text-center text-lg font-bold border-2 border-green-500/30 bg-background focus:ring-2 focus:ring-green-500 rounded-xl mb-3"
-              />
-              
               {tableModalError && (
                 <p className="text-sm text-red-400 mb-3">{tableModalError}</p>
               )}
