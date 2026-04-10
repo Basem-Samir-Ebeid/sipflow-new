@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react'
+import { toast } from 'sonner'
 import { Drink, User, OrderWithDetails, Place, Reservation } from '@/lib/types'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -81,21 +82,71 @@ export function AdminPanel({
   const [isUploading, setIsUploading] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  const [hours, setHours] = useState({
-  "السبت": { from: "10:00", to: "23:00" },
-  "الأحد": { from: "10:00", to: "23:00" },
-  "الإثنين": { from: "10:00", to: "23:00" },
-  "الثلاثاء": { from: "10:00", to: "23:00" },
-  "الأربعاء": { from: "10:00", to: "23:00" },
-  "الخميس": { from: "10:00", to: "23:00" },
-  "الجمعة": { from: "10:00", to: "23:00" },
-});
-  useEffect(() => {
-  const saved = localStorage.getItem("working_hours");
-  if (saved) {
-    setHours(JSON.parse(saved));
+  const DAYS = ['السبت', 'الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة']
+  const [hours, setHours] = useState<Record<string, { from: string; to: string }>>({
+    "السبت":    { from: "10:00", to: "23:00" },
+    "الأحد":    { from: "10:00", to: "23:00" },
+    "الإثنين":  { from: "10:00", to: "23:00" },
+    "الثلاثاء": { from: "10:00", to: "23:00" },
+    "الأربعاء": { from: "10:00", to: "23:00" },
+    "الخميس":   { from: "10:00", to: "23:00" },
+    "الجمعة":   { from: "10:00", to: "23:00" },
+  })
+  const [enabledDays, setEnabledDays] = useState<Record<string, boolean>>({
+    "السبت": true, "الأحد": true, "الإثنين": true, "الثلاثاء": true,
+    "الأربعاء": false, "الخميس": true, "الجمعة": true,
+  })
+  const [workingHoursPlaceId, setWorkingHoursPlaceId] = useState('')
+  const [isSavingHours, setIsSavingHours] = useState(false)
+  const [isLoadingHours, setIsLoadingHours] = useState(false)
+
+  const loadWorkingHours = async (pid: string) => {
+    if (!pid) return
+    setIsLoadingHours(true)
+    try {
+      const res = await fetch(`/api/settings?key=working_hours_${pid}`)
+      const data = await res.json()
+      if (data.value) {
+        const parsed = JSON.parse(data.value)
+        const newHours: Record<string, { from: string; to: string }> = {}
+        const newEnabled: Record<string, boolean> = {}
+        for (const day of DAYS) {
+          newHours[day] = { from: parsed[day]?.from || "10:00", to: parsed[day]?.to || "23:00" }
+          newEnabled[day] = parsed[day]?.enabled ?? true
+        }
+        setHours(newHours)
+        setEnabledDays(newEnabled)
+      }
+    } catch { /* silent */ }
+    finally { setIsLoadingHours(false) }
   }
-}, []);
+
+  const handleSaveWorkingHours = async () => {
+    const targetId = isDevAdmin ? workingHoursPlaceId : placeId
+    if (!targetId) { toast.error('اختر المكان أولاً'); return }
+    setIsSavingHours(true)
+    try {
+      const payload: Record<string, { from: string; to: string; enabled: boolean }> = {}
+      for (const day of DAYS) {
+        payload[day] = { ...hours[day], enabled: enabledDays[day] }
+      }
+      const res = await fetch('/api/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ key: `working_hours_${targetId}`, value: JSON.stringify(payload) })
+      })
+      if (res.ok) {
+        toast.success('تم حفظ ساعات العمل ✅')
+      } else {
+        toast.error('حدث خطأ أثناء الحفظ')
+      }
+    } catch { toast.error('تعذر الاتصال بالخادم') }
+    finally { setIsSavingHours(false) }
+  }
+
+  useEffect(() => {
+    if (!isDevAdmin && placeId) loadWorkingHours(placeId)
+  }, [placeId]);
   // User password state
   const [settingPasswordForUser, setSettingPasswordForUser] = useState<User | null>(null)
   const [newUserPassword, setNewUserPassword] = useState('')
@@ -2940,14 +2991,18 @@ const handleSaveSettings = async () => {
             <p className="mb-4 text-sm text-muted-foreground">
               حدد أوقات فتح وإغلاق المكان لإظهارها للعملاء
             </p>
-            
+
             {/* Dev admin: place selector */}
             {isDevAdmin && (
               <div className="mb-4">
-                <Label className="text-muted-foreground">اختر المكان</Label>
+                <Label className="text-muted-foreground mb-1 block">اختر المكان</Label>
                 <select
-                  className="mt-1 w-full rounded-md border border-border bg-muted px-3 py-2 text-sm text-foreground"
-                  defaultValue=""
+                  className="w-full rounded-md border border-border bg-muted px-3 py-2 text-sm text-foreground"
+                  value={workingHoursPlaceId}
+                  onChange={e => {
+                    setWorkingHoursPlaceId(e.target.value)
+                    loadWorkingHours(e.target.value)
+                  }}
                 >
                   <option value="">— اختر المكان —</option>
                   {places.map(p => (
@@ -2956,65 +3011,60 @@ const handleSaveSettings = async () => {
                 </select>
               </div>
             )}
-            
-            <div className="space-y-3">
-              {['السبت', 'الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة'].map((day, index) => (
-                <div key={day} className="flex items-center justify-between rounded-xl bg-muted p-3 gap-3">
-                  <div className="flex items-center gap-3 flex-1">
-                    <Checkbox 
-                      id={`day-${index}`}
-                      defaultChecked={index !== 4}
-                      className="border-primary data-[state=checked]:bg-primary"
-                    />
-                    <Label htmlFor={`day-${index}`} className="font-medium text-foreground min-w-[70px]">
-                      {day}
-                    </Label>
+
+            {isLoadingHours ? (
+              <div className="flex justify-center py-6">
+                <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary/30 border-t-primary" />
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {DAYS.map((day) => (
+                  <div key={day} className={`flex items-center justify-between rounded-xl p-3 gap-3 transition-opacity ${enabledDays[day] ? 'bg-muted' : 'bg-muted/40 opacity-60'}`}>
+                    <div className="flex items-center gap-3 flex-1">
+                      <Checkbox
+                        id={`day-${day}`}
+                        checked={enabledDays[day]}
+                        onCheckedChange={(val) =>
+                          setEnabledDays(prev => ({ ...prev, [day]: !!val }))
+                        }
+                        className="border-primary data-[state=checked]:bg-primary"
+                      />
+                      <Label htmlFor={`day-${day}`} className="font-medium text-foreground min-w-[70px] cursor-pointer">
+                        {day}
+                      </Label>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="time"
+                        value={hours[day]?.from || '10:00'}
+                        disabled={!enabledDays[day]}
+                        onChange={(e) => setHours(prev => ({ ...prev, [day]: { ...prev[day], from: e.target.value } }))}
+                        className="w-[100px] rounded-lg border border-border bg-background px-2 py-1.5 text-sm text-foreground disabled:opacity-40"
+                      />
+                      <span className="text-muted-foreground text-xs">—</span>
+                      <input
+                        type="time"
+                        value={hours[day]?.to || '23:00'}
+                        disabled={!enabledDays[day]}
+                        onChange={(e) => setHours(prev => ({ ...prev, [day]: { ...prev[day], to: e.target.value } }))}
+                        className="w-[100px] rounded-lg border border-border bg-background px-2 py-1.5 text-sm text-foreground disabled:opacity-40"
+                      />
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <Input
-  type="time"
-  value={hours[day].from}
-  onChange={(e) =>
-    setHours({
-      ...hours,
-      [day]: {
-        ...hours[day],
-        from: e.target.value,
-      },
-    })
-  }
-  className="w-[110px] border-border bg-background text-foreground"
-/>
-                    <span className="text-muted-foreground">—</span>
-                    <Input
-  type="time"
-  value={hours[day].to}
-  onChange={(e) =>
-    setHours({
-      ...hours,
-      [day]: {
-        ...hours[day],
-        to: e.target.value,
-      },
-    })
-  }
-  className="w-[110px] border-border bg-background text-foreground"
-/>
-                  </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
+
             <Button
-  style={{ position: "relative", zIndex: 9999, pointerEvents: "auto" }}
-  className="mt-4 w-full bg-primary text-primary-foreground hover:bg-primary/90"
-onClick={() => {
-  localStorage.setItem("working_hours", JSON.stringify(hours));
-  alert("تم حفظ ساعات العمل ✅");
-}}
->
-  <Clock className="ml-2 h-4 w-4" />
-  حفظ ساعات العمل
-</Button>
+              className="mt-4 w-full bg-primary text-primary-foreground hover:bg-primary/90"
+              onClick={handleSaveWorkingHours}
+              disabled={isSavingHours || isLoadingHours || (isDevAdmin && !workingHoursPlaceId)}
+            >
+              {isSavingHours
+                ? <><div className="ml-2 h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" /> جاري الحفظ...</>
+                : <><Clock className="ml-2 h-4 w-4" /> حفظ ساعات العمل</>
+              }
+            </Button>
           </div>
 
           {/* QR Code Manager — for place admin */}
