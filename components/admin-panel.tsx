@@ -473,6 +473,18 @@ export function AdminPanel({
   const [devNotifs, setDevNotifs] = useState<DevNotif[]>([])
   const [devNotifsUnread, setDevNotifsUnread] = useState(0)
   const [isClearingNotifs, setIsClearingNotifs] = useState(false)
+  const [currentTime, setCurrentTime] = useState('')
+  const [currentDate, setCurrentDate] = useState('')
+  useEffect(() => {
+    const tick = () => {
+      const now = new Date()
+      setCurrentTime(now.toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false }))
+      setCurrentDate(now.toLocaleDateString('ar-EG', { weekday: 'short', month: 'short', day: 'numeric' }))
+    }
+    tick()
+    const id = setInterval(tick, 1000)
+    return () => clearInterval(id)
+  }, [])
 
   // Settings state
   const [isSavingSettings, setIsSavingSettings] = useState(false)
@@ -1420,65 +1432,109 @@ const handleSaveSettings = async () => {
       {/* ── Dev Admin Premium Header ── */}
       {isDevAdmin ? (
         <div className="relative rounded-2xl overflow-hidden" style={{
-          background: 'linear-gradient(135deg, #09000f 0%, #130020 55%, #1c003a 100%)',
-          border: '1px solid rgba(147,51,234,0.35)',
-          boxShadow: '0 0 60px rgba(147,51,234,0.08), inset 0 1px 0 rgba(255,255,255,0.04)'
+          background: 'linear-gradient(135deg, #06000e 0%, #0e001a 40%, #180030 75%, #1c003a 100%)',
+          boxShadow: '0 0 0 1px rgba(147,51,234,0.3), 0 0 40px rgba(147,51,234,0.07), inset 0 1px 0 rgba(255,255,255,0.05)'
         }}>
-          {/* Glow orb */}
-          <div className="pointer-events-none absolute -top-10 -right-10 h-52 w-52 rounded-full opacity-25"
-            style={{ background: 'radial-gradient(circle, #7c3aed, transparent 70%)', filter: 'blur(20px)' }} />
-          <div className="pointer-events-none absolute -bottom-10 -left-10 h-40 w-40 rounded-full opacity-15"
+          {/* Animated top-border sweep */}
+          <div className="pointer-events-none absolute inset-x-0 top-0 h-px"
+            style={{ background: 'linear-gradient(90deg, transparent 0%, rgba(147,51,234,0.8) 30%, rgba(99,102,241,1) 50%, rgba(147,51,234,0.8) 70%, transparent 100%)' }} />
+
+          {/* Glow orbs */}
+          <div className="pointer-events-none absolute -top-12 -right-12 h-56 w-56 rounded-full opacity-20"
+            style={{ background: 'radial-gradient(circle, #7c3aed, transparent 70%)', filter: 'blur(24px)' }} />
+          <div className="pointer-events-none absolute -bottom-8 -left-8 h-44 w-44 rounded-full opacity-12"
             style={{ background: 'radial-gradient(circle, #4f46e5, transparent 70%)', filter: 'blur(20px)' }} />
+          {/* Grid pattern overlay */}
+          <div className="pointer-events-none absolute inset-0 opacity-[0.03]"
+            style={{ backgroundImage: 'linear-gradient(rgba(255,255,255,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.5) 1px, transparent 1px)', backgroundSize: '24px 24px' }} />
 
           <div className="relative p-5 space-y-4">
             {/* Top row */}
             <div className="flex items-start justify-between gap-3">
               <div className="flex items-center gap-3">
-                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl text-2xl"
-                  style={{ background: 'rgba(147,51,234,0.15)', border: '1px solid rgba(147,51,234,0.35)' }}>
+                <div className="relative flex h-12 w-12 shrink-0 items-center justify-center rounded-xl text-2xl"
+                  style={{ background: 'linear-gradient(135deg, rgba(147,51,234,0.25), rgba(99,102,241,0.15))', border: '1px solid rgba(147,51,234,0.4)', boxShadow: '0 0 16px rgba(147,51,234,0.2)' }}>
                   ⚡
+                  <span className="absolute -bottom-1 -right-1 h-3 w-3 rounded-full border-2 border-background bg-emerald-400 animate-pulse" />
                 </div>
                 <div>
-                  <h1 className="text-lg font-bold tracking-wide text-white">Dev Control Center</h1>
+                  <h1 className="text-lg font-bold tracking-wide text-white" style={{ textShadow: '0 0 20px rgba(147,51,234,0.5)' }}>Dev Control Center</h1>
                   <p className="mt-0.5 text-[11px]" style={{ color: '#a78bfa' }}>SîpFlõw · الوصول الكامل للنظام</p>
                 </div>
               </div>
+              {/* Live clock */}
               <div className="flex shrink-0 flex-col items-end gap-1.5">
                 <span className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-bold tracking-widest"
                   style={{ background: 'rgba(147,51,234,0.2)', border: '1px solid rgba(147,51,234,0.5)', color: '#c4b5fd' }}>
                   <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-violet-400" />
                   MASTER
                 </span>
-                <span className="text-[10px] text-zinc-600">v2.0</span>
+                <div className="text-right">
+                  <p className="font-mono text-sm font-bold tabular-nums" style={{ color: '#e2d9f3', letterSpacing: '0.05em', textShadow: '0 0 10px rgba(167,139,250,0.4)' }}>{currentTime}</p>
+                  <p className="text-[10px]" style={{ color: '#6b5e8a' }}>{currentDate}</p>
+                </div>
               </div>
             </div>
 
-            {/* Stats row */}
-            <div className="grid grid-cols-3 gap-2">
+            {/* Stats row — 4 cards */}
+            <div className="grid grid-cols-4 gap-2">
               {[
-                { label: 'الأماكن',     value: places.length,     color: '#c4b5fd', bg: 'rgba(147,51,234,0.12)', border: 'rgba(147,51,234,0.25)' },
-                { label: 'الموظفون',   value: staffUsers.length,  color: '#6ee7b7', bg: 'rgba(16,185,129,0.08)',  border: 'rgba(16,185,129,0.2)'  },
-                { label: 'العملاء',    value: clients.length,     color: '#fcd34d', bg: 'rgba(245,158,11,0.08)',  border: 'rgba(245,158,11,0.2)'  },
+                { label: 'الأماكن',   value: places.length,                           icon: '🏠', color: '#c4b5fd', bg: 'rgba(147,51,234,0.12)', border: 'rgba(147,51,234,0.28)' },
+                { label: 'الموظفون', value: staffUsers.length,                        icon: '👥', color: '#6ee7b7', bg: 'rgba(16,185,129,0.08)',  border: 'rgba(16,185,129,0.22)' },
+                { label: 'العملاء',  value: clients.length,                           icon: '⭐', color: '#fcd34d', bg: 'rgba(245,158,11,0.08)',  border: 'rgba(245,158,11,0.22)' },
+                { label: 'الأصناف',  value: allDrinksStats?.total ?? '—',             icon: '☕', color: '#f9a8d4', bg: 'rgba(236,72,153,0.08)',  border: 'rgba(236,72,153,0.22)' },
               ].map(s => (
-                <div key={s.label} className="rounded-xl px-2 py-2.5 text-center"
+                <div key={s.label} className="rounded-xl px-1.5 py-2.5 text-center transition-transform hover:scale-105"
                   style={{ background: s.bg, border: `1px solid ${s.border}` }}>
-                  <p className="text-base font-bold text-white">{s.value}</p>
+                  <p className="text-base">{s.icon}</p>
+                  <p className="text-sm font-bold text-white tabular-nums">{s.value}</p>
                   <p className="mt-0.5 text-[10px]" style={{ color: s.color }}>{s.label}</p>
                 </div>
               ))}
             </div>
 
+            {/* Quick Actions strip */}
+            <div className="flex items-center gap-1.5 overflow-x-auto pb-0.5" style={{ scrollbarWidth: 'none' }}>
+              <span className="shrink-0 text-[10px] font-semibold uppercase tracking-widest" style={{ color: '#6b5e8a' }}>وصول سريع:</span>
+              {[
+                { label: '📊 إحصائيات', tab: 'stats' },
+                { label: '🏠 الأماكن',  tab: 'places' },
+                { label: '📣 رسائل',    tab: 'messages' },
+                { label: '⚙️ إعدادات',  tab: 'settings' },
+                { label: '☕ أصناف',    tab: 'drinks' },
+                { label: '🗑️ الخطرة',  tab: 'danger' },
+              ].map(q => (
+                <button key={q.tab}
+                  onClick={() => setActiveAdminTab(q.tab)}
+                  className="shrink-0 rounded-lg px-2.5 py-1 text-[11px] font-medium transition-all hover:scale-105"
+                  style={{
+                    background: activeAdminTab === q.tab ? 'rgba(147,51,234,0.35)' : 'rgba(255,255,255,0.05)',
+                    border: `1px solid ${activeAdminTab === q.tab ? 'rgba(147,51,234,0.6)' : 'rgba(255,255,255,0.08)'}`,
+                    color: activeAdminTab === q.tab ? '#e2d9f3' : '#7c6e99',
+                    boxShadow: activeAdminTab === q.tab ? '0 0 8px rgba(147,51,234,0.3)' : 'none'
+                  }}>
+                  {q.label}
+                </button>
+              ))}
+            </div>
+
             {/* System status bar */}
             <div className="flex items-center justify-between rounded-xl px-3 py-2"
-              style={{ background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.05)' }}>
+              style={{ background: 'rgba(0,0,0,0.35)', border: '1px solid rgba(255,255,255,0.05)' }}>
               <div className="flex items-center gap-2">
-                <span className="h-2 w-2 animate-pulse rounded-full bg-emerald-400" />
+                <span className="relative flex h-2 w-2">
+                  <span className="absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75 animate-ping" />
+                  <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
+                </span>
                 <span className="text-[11px] font-medium text-emerald-400">النظام يعمل</span>
               </div>
-              <div className="flex items-center gap-3">
-                <span className="text-[10px] text-zinc-500">PostgreSQL ✓</span>
-                <span className="text-[10px] text-zinc-500">API ✓</span>
-                <span className="text-[10px] text-zinc-500">Auth ✓</span>
+              <div className="flex items-center gap-2">
+                {['PostgreSQL', 'API', 'Auth'].map(s => (
+                  <span key={s} className="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[10px]"
+                    style={{ background: 'rgba(16,185,129,0.08)', border: '1px solid rgba(16,185,129,0.2)', color: '#6ee7b7' }}>
+                    <span className="h-1 w-1 rounded-full bg-emerald-400" />{s}
+                  </span>
+                ))}
               </div>
             </div>
           </div>
@@ -1529,25 +1585,26 @@ const handleSaveSettings = async () => {
       }} className="w-full">
         {/* ── Dev Admin: horizontal scroll tab bar ── */}
         {isDevAdmin ? (
-          <TabsList className="mb-3 flex w-full overflow-x-auto gap-1 rounded-xl bg-muted p-1.5 h-auto [&>*]:shrink-0 [&>*]:whitespace-nowrap" style={{ scrollbarWidth: 'none' }}>
-            {/* Group 1: Analytics */}
+          <TabsList className="mb-3 flex w-full overflow-x-auto gap-0.5 rounded-xl p-1.5 h-auto [&>*]:shrink-0 [&>*]:whitespace-nowrap" style={{ scrollbarWidth: 'none', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}>
+            {/* ── Group 1: Analytics (violet) ── */}
+            <span className="shrink-0 self-center px-1 text-[9px] font-bold uppercase tracking-widest" style={{ color: '#7c3aed' }}>تحليلات</span>
             <TabsTrigger value="stats"
-              className="flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-medium data-[state=active]:bg-violet-600 data-[state=active]:text-white data-[state=active]:shadow-md">
+              className="flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-medium data-[state=active]:bg-violet-600 data-[state=active]:text-white data-[state=active]:shadow-lg">
               <BarChart3 className="h-3.5 w-3.5" /><span>الإحصائيات</span>
             </TabsTrigger>
             <TabsTrigger value="analytics"
-              className="flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-medium data-[state=active]:bg-violet-600 data-[state=active]:text-white data-[state=active]:shadow-md">
+              className="flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-medium data-[state=active]:bg-violet-600 data-[state=active]:text-white data-[state=active]:shadow-lg">
               <TrendingUp className="h-3.5 w-3.5" /><span>التقارير</span>
             </TabsTrigger>
             <TabsTrigger value="count"
-              className="flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-medium data-[state=active]:bg-violet-600 data-[state=active]:text-white data-[state=active]:shadow-md">
+              className="flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-medium data-[state=active]:bg-violet-600 data-[state=active]:text-white data-[state=active]:shadow-lg">
               <CheckCircle2 className="h-3.5 w-3.5" /><span>حصر المسلّم</span>
             </TabsTrigger>
+            {/* styled separators will be applied via group class — simple divider */}
+            <div className="mx-1.5 h-6 w-px self-center rounded-full" style={{ background: 'rgba(255,255,255,0.08)' }} />
 
-            {/* Separator */}
-            <div className="mx-1 w-px self-stretch bg-border/50 shrink-0" />
-
-            {/* Group 2: Content */}
+            {/* ── Group 2: Content (amber) ── */}
+            <span className="shrink-0 self-center px-1 text-[9px] font-bold uppercase tracking-widest" style={{ color: '#d97706' }}>المحتوى</span>
             <TabsTrigger value="drinks"
               className="flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-medium data-[state=active]:bg-amber-600 data-[state=active]:text-white data-[state=active]:shadow-md">
               <Coffee className="h-3.5 w-3.5" /><span>الأصناف</span>
@@ -1564,11 +1621,10 @@ const handleSaveSettings = async () => {
               className="flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-medium data-[state=active]:bg-amber-600 data-[state=active]:text-white data-[state=active]:shadow-md">
               <CalendarDays className="h-3.5 w-3.5" /><span>الحجوزات</span>
             </TabsTrigger>
+            <div className="mx-1.5 h-6 w-px self-center rounded-full" style={{ background: 'rgba(255,255,255,0.08)' }} />
 
-            {/* Separator */}
-            <div className="mx-1 w-px self-stretch bg-border/50 shrink-0" />
-
-            {/* Group 3: Users */}
+            {/* ── Group 3: People (emerald) ── */}
+            <span className="shrink-0 self-center px-1 text-[9px] font-bold uppercase tracking-widest" style={{ color: '#059669' }}>الأشخاص</span>
             <TabsTrigger value="users"
               className="flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-medium data-[state=active]:bg-emerald-700 data-[state=active]:text-white data-[state=active]:shadow-md">
               <Users className="h-3.5 w-3.5" /><span>المستخدمين</span>
@@ -1585,16 +1641,15 @@ const handleSaveSettings = async () => {
               className="flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-medium data-[state=active]:bg-emerald-700 data-[state=active]:text-white data-[state=active]:shadow-md">
               <UserPlus className="h-3.5 w-3.5" /><span>العملاء</span>
             </TabsTrigger>
+            <div className="mx-1.5 h-6 w-px self-center rounded-full" style={{ background: 'rgba(255,255,255,0.08)' }} />
 
-            {/* Separator */}
-            <div className="mx-1 w-px self-stretch bg-border/50 shrink-0" />
-
-            {/* Group 4: System */}
+            {/* ── Group 4: System (sky + rose) ── */}
+            <span className="shrink-0 self-center px-1 text-[9px] font-bold uppercase tracking-widest" style={{ color: '#0284c7' }}>النظام</span>
             <TabsTrigger value="messages" className="relative flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-medium data-[state=active]:bg-sky-700 data-[state=active]:text-white data-[state=active]:shadow-md">
               <MessageSquare className="h-3.5 w-3.5" />
               <span>الرسائل</span>
               {devNotifsUnread > 0 && (
-                <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-amber-500 text-[9px] font-bold text-black">{devNotifsUnread > 9 ? '9+' : devNotifsUnread}</span>
+                <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-amber-500 text-[9px] font-bold text-black animate-bounce">{devNotifsUnread > 9 ? '9+' : devNotifsUnread}</span>
               )}
             </TabsTrigger>
             <TabsTrigger value="settings"
