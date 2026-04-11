@@ -1611,45 +1611,46 @@ export default function HomePage() {
   // Place Selection Screen
   if (!currentPlace && !isAdmin) {
     return (
-      <main className="relative min-h-screen bg-black overflow-hidden flex flex-col items-center justify-center p-6" dir="rtl" onClick={handleGlobalClick} suppressHydrationWarning>
-        <div className="relative overflow-hidden py-[5px] w-full absolute top-0" style={{ background: 'linear-gradient(90deg, #1a0a00, #3d1f00, #6b3a00, #D4A017, #6b3a00, #3d1f00, #1a0a00)' }}>
+      <main className="relative min-h-screen bg-black overflow-hidden flex flex-col items-center p-0" dir="rtl" onClick={handleGlobalClick} suppressHydrationWarning>
+        {/* Background effects */}
+        <div className="pointer-events-none absolute inset-0 opacity-[0.015]" style={{ backgroundImage: 'linear-gradient(rgba(212,160,23,0.8) 1px, transparent 1px), linear-gradient(90deg, rgba(212,160,23,0.8) 1px, transparent 1px)', backgroundSize: '40px 40px' }} />
+        <div className="pointer-events-none absolute top-0 left-1/2 -translate-x-1/2 h-[500px] w-[500px] rounded-full" style={{ background: 'radial-gradient(circle, rgba(212,160,23,0.06) 0%, transparent 60%)', filter: 'blur(40px)' }} />
+
+        {/* Developer bar */}
+        <div className="relative w-full py-1.5" style={{ background: 'linear-gradient(90deg, #0a0500, #1a0d00, #3d1f00, #D4A017, #3d1f00, #1a0d00, #0a0500)' }}>
           <div className="flex items-center justify-center gap-2">
-            <span className="text-[10px] tracking-widest uppercase text-amber-200/60">✦</span>
+            <span className="text-[10px] tracking-widest uppercase" style={{ color: 'rgba(255,232,160,0.5)' }}>✦</span>
             <span className="text-[11px] font-semibold tracking-[0.18em] uppercase" style={{ color: '#ffe8a0' }}>Developed by Basem Samir Ebeid</span>
-            <span className="text-[10px] tracking-widest uppercase text-amber-200/60">✦</span>
+            <span className="text-[10px] tracking-widest uppercase" style={{ color: 'rgba(255,232,160,0.5)' }}>✦</span>
           </div>
         </div>
 
-        <div className="w-full max-w-sm space-y-6 mt-8">
+        <div className="w-full max-w-sm space-y-5 px-5 pt-6 pb-8">
           {/* Welcome Banner */}
-          <div className="relative overflow-hidden rounded-xl px-4 py-3 text-center"
+          <div className="relative overflow-hidden rounded-2xl px-5 py-4 text-center"
             style={{
-              background: 'linear-gradient(135deg, #0f172a 0%, #1e1b4b 45%, #2d3461 75%, #1a2744 100%)',
-              border: '1px solid rgba(99,102,241,0.35)',
-              boxShadow: '0 4px 18px rgba(79,70,229,0.2), inset 0 1px 0 rgba(255,255,255,0.05)'
+              background: 'linear-gradient(135deg, #0a0600 0%, #1a0d00 50%, #0f0800 100%)',
+              border: '1px solid rgba(212,160,23,0.2)',
+              boxShadow: '0 4px 20px rgba(212,160,23,0.06), inset 0 1px 0 rgba(255,255,255,0.03)'
             }}>
-            <div className="absolute top-1.5 right-2 text-indigo-300/25 text-[9px] tracking-widest">✦ ✦</div>
-            <div className="absolute top-1.5 left-2 text-indigo-300/25 text-[9px] tracking-widest">✦ ✦</div>
-            <p className="text-[9px] tracking-[0.22em] uppercase font-semibold mb-1" style={{ color: '#a5b4fc' }}>
-              Welcome · أهلاً وسهلاً
+            <div className="pointer-events-none absolute inset-x-0 top-0 h-px" style={{ background: 'linear-gradient(90deg, transparent, rgba(212,160,23,0.5), transparent)' }} />
+            <p className="font-mono text-[10px] tracking-[0.25em] uppercase font-semibold mb-1.5" style={{ color: 'rgba(212,160,23,0.7)' }}>
+              welcome · أهلاً وسهلاً
             </p>
-            <p className="text-sm font-bold leading-snug" style={{ color: '#e0e7ff', fontFamily: 'Georgia, serif' }}>
+            <p className="text-sm font-bold leading-relaxed" style={{ color: '#e8c76a', fontFamily: 'Georgia, serif' }}>
               نتمنى لكم يوماً جميلاً وممتعاً معنا في{' '}
               <span style={{ color: '#fbbf24' }}>SîpFlõw</span> ☕
             </p>
-            <div className="mt-2 mx-auto h-px w-20 rounded-full" style={{ background: 'linear-gradient(90deg, transparent, #818cf8, transparent)' }} />
+            <div className="mt-2.5 mx-auto h-px w-16 rounded-full" style={{ background: 'linear-gradient(90deg, transparent, rgba(212,160,23,0.4), transparent)' }} />
           </div>
 
           {/* Logo */}
-          <div className="flex flex-col items-center space-y-3">
-            {/* Logo with rotating golden zigzag frame */}
-            <div className="relative flex items-center justify-center" style={{ width: 164, height: 164 }}>
-
-              {/* ── Outer animated zigzag stroke ring (counter-rotates) ── */}
+          <div className="flex flex-col items-center space-y-2 py-1">
+            <div className="relative flex items-center justify-center" style={{ width: 148, height: 148 }}>
               <svg
                 viewBox="0 0 180 180"
                 className="animate-zigzag-ring"
-                style={{ position: 'absolute', top: -8, left: -8, width: 180, height: 180, zIndex: 0 }}
+                style={{ position: 'absolute', top: -16, left: -16, width: 180, height: 180, zIndex: 0 }}
               >
                 <defs>
                   <linearGradient id="zigStrokeGoldA" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -1662,133 +1663,105 @@ export default function HomePage() {
                 <polygon
                   fill="none"
                   stroke="url(#zigStrokeGoldA)"
-                  strokeWidth="2.5"
+                  strokeWidth="2"
                   strokeLinecap="round"
                   strokeLinejoin="round"
                   className="animate-zigzag-dash"
                   points="90,2 110.7,12.73 134,13.79 146.57,33.43 166.21,46 167.27,69.3 178,90 167.27,110.7 166.21,134 146.57,146.57 134,166.21 110.7,167.27 90,178 69.3,167.27 46,166.21 33.43,146.57 13.79,134 12.73,110.7 2,90 12.73,69.3 13.79,46 33.43,33.43 46,13.79 69.3,12.73"
                 />
               </svg>
-
-              {/* Circular logo */}
-              <div className="absolute rounded-full overflow-hidden bg-black shadow-lg" style={{ width: 128, height: 128, zIndex: 1 }}>
-                <Image src="/images/qa3da-logo.jpg" alt="SîpFlõw" fill sizes="128px" loading="eager" style={{ objectFit: 'cover', objectPosition: 'center' }} />
+              <div className="absolute rounded-full overflow-hidden" style={{ width: 112, height: 112, zIndex: 1, boxShadow: '0 0 30px rgba(212,160,23,0.15)' }}>
+                <Image src="/images/qa3da-logo.jpg" alt="SîpFlõw" fill sizes="112px" loading="eager" style={{ objectFit: 'cover', objectPosition: 'center' }} />
               </div>
             </div>
-            <p className="text-4xl font-bold" style={{ color: '#C17A3A', fontFamily: 'Georgia, serif' }}>SîpFlõw</p>
-            <p className="text-sm text-gray-400 tracking-widest">Order Management System</p>
+            <div className="text-center">
+              <p className="text-3xl font-bold tracking-tight" style={{ background: 'linear-gradient(135deg, #f0c040 0%, #D4A017 40%, #C17A3A 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', fontFamily: 'Georgia, serif' }}>SîpFlõw</p>
+              <p className="font-mono text-[11px] tracking-[0.2em] uppercase mt-1" style={{ color: 'rgba(255,255,255,0.35)' }}>Order Management System</p>
+            </div>
           </div>
 
           {/* Place Picker Button */}
-          <div>
-            <button
-              onClick={handleOpenPlacesPicker}
-              disabled={isLoadingPlaces}
-              className="w-full rounded-2xl flex items-center justify-between px-4 py-3 transition-all hover:brightness-110 active:scale-95 disabled:opacity-50"
-              style={{
-                background: 'linear-gradient(135deg, #0f0a00, #1c1200)',
-                border: '1px solid rgba(212,160,23,0.35)',
-                boxShadow: '0 0 18px rgba(212,160,23,0.12), inset 0 1px 0 rgba(255,255,255,0.04)'
-              }}
-            >
-              <div className="flex items-center gap-3">
-                <div className="flex h-8 w-8 items-center justify-center rounded-xl" style={{ background: 'rgba(212,160,23,0.1)', border: '1px solid rgba(212,160,23,0.2)' }}>
-                  {isLoadingPlaces
-                    ? <Loader2 className="h-4 w-4 animate-spin" style={{ color: '#D4A017' }} />
-                    : <MapPin className="h-4 w-4" style={{ color: '#D4A017' }} />}
-                </div>
-                <div className="text-right">
-                  <p className="text-sm font-bold leading-tight" style={{ color: '#e8c76a' }}>
-                    {isLoadingPlaces ? '��اري التحميل...' : 'اختار مكانك'}
-                  </p>
-                  {!isLoadingPlaces && (
-                    <p className="text-[11px] leading-tight mt-0.5" style={{ color: 'rgba(212,160,23,0.5)' }}>لتقديم طلبك</p>
-                  )}
-                </div>
+          <button
+            onClick={handleOpenPlacesPicker}
+            disabled={isLoadingPlaces}
+            className="w-full rounded-2xl flex items-center justify-between px-4 py-3.5 transition-all hover:brightness-110 active:scale-[0.98] disabled:opacity-50 group focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
+            style={{
+              background: 'linear-gradient(135deg, #0f0a00, #1c1200, #0f0a00)',
+              border: '1px solid rgba(212,160,23,0.2)',
+              boxShadow: '0 2px 12px rgba(212,160,23,0.06)'
+            }}
+          >
+            <div className="flex items-center gap-3">
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl shrink-0" style={{ background: 'rgba(212,160,23,0.08)', border: '1px solid rgba(212,160,23,0.18)' }}>
+                {isLoadingPlaces
+                  ? <Loader2 className="h-4 w-4 animate-spin" style={{ color: '#D4A017' }} />
+                  : <MapPin className="h-4 w-4" style={{ color: '#D4A017' }} />}
               </div>
-              <ChevronLeft className="h-4 w-4 shrink-0" style={{ color: 'rgba(212,160,23,0.4)' }} />
-            </button>
+              <div className="text-right">
+                <p className="text-sm font-bold leading-tight" style={{ color: '#e8c76a' }}>
+                  {isLoadingPlaces ? 'جاري التحميل...' : 'اختار مكانك'}
+                </p>
+                {!isLoadingPlaces && (
+                  <p className="text-[11px] leading-tight mt-0.5" style={{ color: 'rgba(212,160,23,0.55)' }}>لتقديم طلبك</p>
+                )}
+              </div>
+            </div>
+            <ChevronLeft className="h-4 w-4 shrink-0 transition-transform group-hover:-translate-x-0.5" style={{ color: 'rgba(212,160,23,0.3)' }} />
+          </button>
+
+          {/* Separator */}
+          <div className="flex items-center gap-3 py-1">
+            <div className="h-px flex-1" style={{ background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.08))' }} />
+            <p className="font-mono text-[10px] tracking-[0.2em] uppercase" style={{ color: 'rgba(255,255,255,0.25)' }}>الموظفين والإدارة</p>
+            <div className="h-px flex-1" style={{ background: 'linear-gradient(90deg, rgba(255,255,255,0.08), transparent)' }} />
           </div>
 
           {/* Admin Buttons */}
-          <div className="flex flex-col items-center gap-2">
-            <p className="text-[10px] tracking-[0.2em] uppercase text-gray-600 mb-1">للإدارة فقط</p>
-            <div className="flex flex-col gap-2 w-full">
-
-              {/* Dev Admin — eye-catching full-width premium button */}
-              <button
-                onClick={() => setShowAdminLogin(true)}
-                className="relative w-full overflow-hidden rounded-2xl py-4 px-5 flex items-center justify-between transition-all hover:scale-[1.02] active:scale-95"
-                style={{
-                  background: 'linear-gradient(135deg, #0d0520 0%, #1a0a3d 40%, #2d1060 70%, #1a0a3d 100%)',
-                  border: '1px solid rgba(139,92,246,0.5)',
-                  boxShadow: '0 0 30px rgba(124,58,237,0.25), 0 0 60px rgba(124,58,237,0.08), inset 0 1px 0 rgba(255,255,255,0.06)'
-                }}
-              >
-                {/* Glow orb */}
-                <div className="absolute -top-4 -right-4 h-16 w-16 rounded-full blur-xl opacity-40" style={{ background: 'radial-gradient(#a78bfa, transparent)' }} />
-                <div className="absolute -bottom-4 -left-4 h-12 w-12 rounded-full blur-xl opacity-30" style={{ background: 'radial-gradient(#818cf8, transparent)' }} />
-                <div className="relative flex items-center gap-3">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-xl text-2xl" style={{ background: 'rgba(139,92,246,0.2)', border: '1px solid rgba(139,92,246,0.3)' }}>
-                    👑
-                  </div>
-                  <div className="text-right">
-                    <p className="text-xs font-bold tracking-[0.15em] uppercase" style={{ color: '#c4b5fd' }}>Developer Admin</p>
-                    <p className="text-[11px]" style={{ color: 'rgba(167,139,250,0.6)' }}>System Control Panel</p>
-                  </div>
+          <div className="flex flex-col gap-2.5 w-full">
+            {/* Dev Admin */}
+            <button
+              onClick={() => setShowAdminLogin(true)}
+              className="relative w-full overflow-hidden rounded-2xl py-3.5 px-4 flex items-center justify-between transition-all hover:scale-[1.01] active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-violet-500/50 focus-visible:outline-none"
+              style={{
+                background: 'linear-gradient(135deg, #0d0520 0%, #1a0a3d 50%, #0d0520 100%)',
+                border: '1px solid rgba(139,92,246,0.3)',
+                boxShadow: '0 2px 16px rgba(124,58,237,0.12)'
+              }}
+            >
+              <div className="absolute inset-x-0 top-0 h-px" style={{ background: 'linear-gradient(90deg, transparent, rgba(139,92,246,0.5), transparent)' }} />
+              <div className="relative flex items-center gap-3">
+                <div className="flex h-9 w-9 items-center justify-center rounded-xl text-xl shrink-0" style={{ background: 'rgba(139,92,246,0.12)', border: '1px solid rgba(139,92,246,0.2)' }}>
+                  👑
                 </div>
-                <div className="relative flex items-center gap-1.5">
-                  <div className="h-1.5 w-1.5 rounded-full animate-pulse" style={{ background: '#a78bfa' }} />
-                  <span className="text-[10px] font-bold tracking-wider" style={{ color: '#a78bfa' }}>VIP</span>
+                <div className="text-right">
+                  <p className="text-xs font-bold tracking-[0.12em] uppercase" style={{ color: '#c4b5fd' }}>Developer Admin</p>
+                  <p className="text-[11px] mt-0.5" style={{ color: 'rgba(167,139,250,0.6)' }}>System Control Panel</p>
                 </div>
-              </button>
-
-              {/* Second row: 4 buttons 2x2 */}
-              <div className="grid grid-cols-2 gap-2">
-                <button
-                  onClick={() => { setShowPlaceAdminLanding(true); setPlaceAdminConfirmError('') }}
-                  className="flex flex-col items-center gap-1.5 py-3 px-2 rounded-xl transition-all hover:scale-105 active:scale-95"
-                  style={{ background: 'rgba(212,160,23,0.08)', border: '1px solid rgba(212,160,23,0.25)' }}
-                >
-                  <span className="text-lg">⚙️</span>
-                  <span className="text-[10px] font-bold tracking-wide" style={{ background: 'linear-gradient(135deg, #fbbf24, #f97316)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-                    Place Admin
-                  </span>
-                </button>
-
-                <button
-                  onClick={() => { setShowCashierLogin(true); setCashierLoginError('') }}
-                  className="flex flex-col items-center gap-1.5 py-3 px-2 rounded-xl transition-all hover:scale-105 active:scale-95"
-                  style={{ background: 'rgba(22,163,74,0.08)', border: '1px solid rgba(22,163,74,0.25)' }}
-                >
-                  <span className="text-lg">🧾</span>
-                  <span className="text-[10px] font-bold tracking-wide" style={{ background: 'linear-gradient(135deg, #4ade80, #22c55e)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-                    Cashier
-                  </span>
-                </button>
-
-                <button
-                  onClick={() => window.location.href = '/waiter'}
-                  className="flex flex-col items-center gap-1.5 py-3 px-2 rounded-xl transition-all hover:scale-105 active:scale-95"
-                  style={{ background: 'rgba(212,160,23,0.08)', border: '1px solid rgba(212,160,23,0.3)' }}
-                >
-                  <span className="text-lg">🛎️</span>
-                  <span className="text-[10px] font-bold tracking-wide" style={{ background: 'linear-gradient(135deg, #D4A017, #f0c040)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-                    Waiter
-                  </span>
-                </button>
-
-                <button
-                  onClick={() => window.location.href = '/bar'}
-                  className="flex flex-col items-center gap-1.5 py-3 px-2 rounded-xl transition-all hover:scale-105 active:scale-95"
-                  style={{ background: 'rgba(56,189,248,0.07)', border: '1px solid rgba(56,189,248,0.25)' }}
-                >
-                  <span className="text-lg">☕</span>
-                  <span className="text-[10px] font-bold tracking-wide" style={{ background: 'linear-gradient(135deg, #38bdf8, #0ea5e9)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-                    Bar
-                  </span>
-                </button>
               </div>
+              <div className="relative flex items-center gap-1.5">
+                <div className="h-1.5 w-1.5 rounded-full animate-pulse" style={{ background: '#a78bfa' }} />
+                <span className="font-mono text-[10px] font-bold tracking-wider" style={{ color: '#a78bfa' }}>VIP</span>
+              </div>
+            </button>
+
+            {/* Role buttons 2x2 */}
+            <div className="grid grid-cols-2 gap-2">
+              {[
+                { label: 'Place Admin', icon: '⚙️', onClick: () => { setShowPlaceAdminLanding(true); setPlaceAdminConfirmError('') }, color: '#D4A017', bg: 'rgba(212,160,23,0.06)', border: 'rgba(212,160,23,0.18)' },
+                { label: 'Cashier', icon: '🧾', onClick: () => { setShowCashierLogin(true); setCashierLoginError('') }, color: '#22c55e', bg: 'rgba(22,163,74,0.06)', border: 'rgba(22,163,74,0.18)' },
+                { label: 'Waiter', icon: '🛎️', onClick: () => { window.location.href = '/waiter' }, color: '#f59e0b', bg: 'rgba(245,158,11,0.06)', border: 'rgba(245,158,11,0.18)' },
+                { label: 'Bar', icon: '☕', onClick: () => { window.location.href = '/bar' }, color: '#38bdf8', bg: 'rgba(56,189,248,0.06)', border: 'rgba(56,189,248,0.18)' },
+              ].map((btn, i) => (
+                <button
+                  key={i}
+                  onClick={btn.onClick}
+                  className="flex items-center gap-2.5 py-3 px-3 rounded-xl transition-all hover:brightness-125 active:scale-[0.97] focus-visible:ring-2 focus-visible:ring-white/20 focus-visible:outline-none"
+                  style={{ background: btn.bg, border: `1px solid ${btn.border}` }}
+                >
+                  <span className="text-lg shrink-0">{btn.icon}</span>
+                  <span className="text-xs font-semibold tracking-wide" style={{ color: btn.color }}>{btn.label}</span>
+                </button>
+              ))}
             </div>
           </div>
         </div>
