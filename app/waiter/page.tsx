@@ -424,7 +424,7 @@ export default function WaiterPage() {
             <div className="relative mx-auto mb-5 h-20 w-20">
               <div className="h-20 w-20 rounded-2xl overflow-hidden border shadow-lg"
                 style={{ borderColor: 'rgba(212,160,23,0.35)', boxShadow: '0 4px 20px rgba(212,160,23,0.2)' }}>
-                <Image src="/images/qa3da-logo.jpg" alt="SîpFlõw" width={80} height={80} className="object-cover w-full h-full" />
+                <Image src="/images/sipflow-logo.jpg" alt="SîpFlõw" width={80} height={80} className="object-cover w-full h-full" />
               </div>
               <div className="absolute -bottom-2 -left-2 flex h-7 w-7 items-center justify-center rounded-full text-base"
                 style={{ background: 'linear-gradient(135deg, #D4A017, #b8860b)', boxShadow: '0 0 12px rgba(212,160,23,0.6)' }}>

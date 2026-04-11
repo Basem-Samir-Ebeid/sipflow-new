@@ -357,7 +357,7 @@ export default function StaffPage() {
             <div className="text-center mb-7">
               <div className="relative mx-auto mb-5 h-20 w-20">
                 <div className="h-20 w-20 rounded-2xl overflow-hidden border border-violet-500/30 shadow-lg shadow-violet-500/15">
-                  <Image src="/images/qa3da-logo.jpg" alt="SîpFlõw" width={80} height={80} className="object-cover w-full h-full" />
+                  <Image src="/images/sipflow-logo.jpg" alt="SîpFlõw" width={80} height={80} className="object-cover w-full h-full" />
                 </div>
                 <div className="absolute -bottom-2 -left-2 flex h-7 w-7 items-center justify-center rounded-full text-sm"
                   style={{ background: 'linear-gradient(135deg, #a855f7, #7c3aed)', boxShadow: '0 0 10px rgba(168,85,247,0.5)' }}>
@@ -526,7 +526,7 @@ export default function StaffPage() {
               <p className="text-xs text-muted-foreground">Staff</p>
             </div>
             <div className="h-9 w-9 rounded-full overflow-hidden border border-amber-500/30 shrink-0">
-              <Image src="/images/qa3da-logo.jpg" alt="logo" width={36} height={36} className="object-cover w-full h-full" />
+              <Image src="/images/sipflow-logo.jpg" alt="logo" width={36} height={36} className="object-cover w-full h-full" />
             </div>
           </div>
         </div>

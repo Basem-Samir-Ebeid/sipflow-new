@@ -273,7 +273,7 @@ export function CashierDashboard({ currentUser, currentPlace, onLogout }: Cashie
     ].filter(Boolean).join('')
     return `
     <div style="text-align:center;margin-bottom:6px">
-      <img src="${window.location.origin}/images/sipflow-logo.png" alt="SîpFlõw" style="width:90px;height:90px;object-fit:contain;display:block;margin:0 auto 4px" />
+      <img src="${window.location.origin}/images/sipflow-logo.jpg" alt="SîpFlõw" style="width:90px;height:90px;object-fit:contain;display:block;margin:0 auto 4px" />
       <div style="font-size:20px;font-weight:900;letter-spacing:2px;color:#1a1a2e">SîpFlõw</div>
       <div style="font-size:10px;letter-spacing:3px;color:#666;margin:2px 0 10px">— SYSTEM POS —</div>
     </div>
@@ -692,7 +692,7 @@ export function CashierDashboard({ currentUser, currentPlace, onLogout }: Cashie
               <div className="bg-white mx-auto shadow-md" style={{ maxWidth: '300px', padding: '20px 14px', fontFamily: 'Arial, sans-serif', fontSize: '13px', color: '#1a1a2e' }}>
                 {/* Logo */}
                 <div style={{ textAlign: 'center', marginBottom: '8px' }}>
-                  <img src="/images/sipflow-logo.png" alt="SîpFlõw" style={{ width: '90px', height: '90px', objectFit: 'contain', margin: '0 auto 4px' }} />
+                  <img src="/images/sipflow-logo.jpg" alt="SîpFlõw" style={{ width: '90px', height: '90px', objectFit: 'contain', margin: '0 auto 4px' }} />
                   <div style={{ fontSize: '20px', fontWeight: 900, letterSpacing: '2px', color: '#1a1a2e' }}>SîpFlõw</div>
                   <div style={{ fontSize: '10px', letterSpacing: '3px', color: '#666', margin: '2px 0 8px' }}>— SYSTEM POS —</div>
                 </div>

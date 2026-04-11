@@ -1507,7 +1507,7 @@ export default function HomePage() {
             }`}
             style={activeTab === 'menu' ? { boxShadow: '0 0 10px rgba(212,160,23,0.5)' } : {}}
           >
-            <img src="/images/qa3da-logo.jpg" alt="SîpFlõw" className="h-full w-full object-cover" />
+            <img src="/images/sipflow-logo.jpg" alt="SîpFlõw" className="h-full w-full object-cover" />
           </button>
           <button
             onClick={() => { setActiveTab('board'); if (isDevAdmin) fetchBoardPlaces().then(list => { if (list.length > 0) { const pid = list[0].id; setBoardDevPlaceId(prev => { const chosen = prev || pid; fetchBoardOrdersForPlace(chosen); return chosen }) } }) }}
@@ -1589,7 +1589,7 @@ export default function HomePage() {
           >
             <span className="text-lg font-bold text-foreground">SîpFlõw</span>
             <div className="flex h-11 w-11 items-center justify-center rounded-full overflow-hidden bg-black border-2" style={{ borderColor: '#D4A017' }}>
-              <img src="/images/qa3da-logo.jpg" alt="SîpFlõw" className="h-full w-full object-cover" />
+              <img src="/images/sipflow-logo.jpg" alt="SîpFlõw" className="h-full w-full object-cover" />
             </div>
           </button>
         </div>
@@ -1671,7 +1671,7 @@ export default function HomePage() {
                 />
               </svg>
               <div className="absolute rounded-full overflow-hidden" style={{ width: 112, height: 112, zIndex: 1, boxShadow: '0 0 30px rgba(212,160,23,0.15)' }}>
-                <Image src="/images/qa3da-logo.jpg" alt="SîpFlõw" fill sizes="112px" loading="eager" style={{ objectFit: 'cover', objectPosition: 'center' }} />
+                <Image src="/images/sipflow-logo.jpg" alt="SîpFlõw" fill sizes="112px" loading="eager" style={{ objectFit: 'cover', objectPosition: 'center' }} />
               </div>
             </div>
             <div className="text-center">
@@ -1773,7 +1773,7 @@ export default function HomePage() {
               <div className="text-center mb-7">
                 <div className="relative mx-auto mb-5 h-20 w-20">
                   <div className="h-20 w-20 rounded-2xl overflow-hidden border border-rose-500/30 shadow-lg shadow-rose-500/15">
-                    <Image src="/images/qa3da-logo.jpg" alt="SîpFlõw" width={80} height={80} className="object-cover w-full h-full" />
+                    <Image src="/images/sipflow-logo.jpg" alt="SîpFlõw" width={80} height={80} className="object-cover w-full h-full" />
                   </div>
                   <div className="absolute -bottom-2 -left-2 flex h-7 w-7 items-center justify-center rounded-full"
                     style={{ background: 'linear-gradient(135deg, #f43f5e, #e11d48)', boxShadow: '0 0 10px rgba(244,63,94,0.5)' }}>
@@ -1826,7 +1826,7 @@ export default function HomePage() {
               <div className="text-center mb-7">
                 <div className="relative mx-auto mb-5 h-20 w-20">
                   <div className="h-20 w-20 rounded-2xl overflow-hidden border border-violet-500/30 shadow-lg shadow-violet-500/15">
-                    <Image src="/images/qa3da-logo.jpg" alt="SîpFlõw" width={80} height={80} className="object-cover w-full h-full" />
+                    <Image src="/images/sipflow-logo.jpg" alt="SîpFlõw" width={80} height={80} className="object-cover w-full h-full" />
                   </div>
                   <div className="absolute -bottom-2 -left-2 flex h-7 w-7 items-center justify-center rounded-full"
                     style={{ background: 'linear-gradient(135deg, #a855f7, #7c3aed)', boxShadow: '0 0 10px rgba(168,85,247,0.5)' }}>
@@ -1879,7 +1879,7 @@ export default function HomePage() {
               <div className="text-center mb-7">
                 <div className="relative mx-auto mb-5 h-20 w-20">
                   <div className="h-20 w-20 rounded-2xl overflow-hidden shadow-lg" style={{ border: '1px solid rgba(212,160,23,0.35)', boxShadow: '0 4px 20px rgba(212,160,23,0.15)' }}>
-                    <Image src="/images/qa3da-logo.jpg" alt="SîpFlõw" width={80} height={80} className="object-cover w-full h-full" />
+                    <Image src="/images/sipflow-logo.jpg" alt="SîpFlõw" width={80} height={80} className="object-cover w-full h-full" />
                   </div>
                   <div className="absolute -bottom-2 -left-2 flex h-7 w-7 items-center justify-center rounded-full"
                     style={{ background: 'linear-gradient(135deg, #D4A017, #b8860b)', boxShadow: '0 0 10px rgba(212,160,23,0.5)' }}>
@@ -2045,7 +2045,7 @@ export default function HomePage() {
                 {/* Circular logo */}
                 <div className="absolute rounded-full overflow-hidden bg-black shadow-lg" style={{ width: 128, height: 128, zIndex: 1 }}>
                   <Image
-                    src="/images/qa3da-logo.jpg"
+                    src="/images/sipflow-logo.jpg"
                     alt="SîpFlõw"
                     fill
                     sizes="128px"
@@ -2271,7 +2271,7 @@ export default function HomePage() {
               <div className="text-center mb-7">
                 <div className="relative mx-auto mb-5 h-20 w-20">
                   <div className="h-20 w-20 rounded-2xl overflow-hidden shadow-lg" style={{ border: '1px solid rgba(212,160,23,0.35)', boxShadow: '0 4px 20px rgba(212,160,23,0.15)' }}>
-                    <Image src="/images/qa3da-logo.jpg" alt="SîpFlõw" width={80} height={80} className="object-cover w-full h-full" />
+                    <Image src="/images/sipflow-logo.jpg" alt="SîpFlõw" width={80} height={80} className="object-cover w-full h-full" />
                   </div>
                   <div className="absolute -bottom-2 -left-2 flex h-7 w-7 items-center justify-center rounded-full"
                     style={{ background: 'linear-gradient(135deg, #D4A017, #b8860b)', boxShadow: '0 0 10px rgba(212,160,23,0.5)' }}>
@@ -2451,7 +2451,7 @@ export default function HomePage() {
             <div className="mb-4 flex justify-center">
               <div className="relative h-20 w-20 overflow-hidden rounded-full bg-black">
                 <Image 
-                  src="/images/qa3da-logo.jpg" 
+                  src="/images/sipflow-logo.jpg" 
                   alt="SîpFlõw" 
                   fill 
                   style={{ objectFit: 'cover', objectPosition: 'center' }}
@@ -2503,7 +2503,7 @@ export default function HomePage() {
               <div className="absolute inset-[-6px] rounded-full animate-spin" style={{ background: 'conic-gradient(from 0deg, transparent 0%, rgba(147,51,234,0.5) 25%, transparent 50%, rgba(99,102,241,0.5) 75%, transparent 100%)', animationDuration: '4s' }} />
               <div className="absolute inset-[-5px] rounded-full" style={{ background: '#0a0018' }} />
               <div className="h-24 w-24 rounded-full overflow-hidden" style={{ border: '2px solid rgba(147,51,234,0.5)', boxShadow: '0 0 30px rgba(147,51,234,0.25), inset 0 0 20px rgba(147,51,234,0.1)' }}>
-                <img src="/images/qa3da-logo.jpg" alt="SîpFlõw" className="h-full w-full object-cover" />
+                <img src="/images/sipflow-logo.jpg" alt="SîpFlõw" className="h-full w-full object-cover" />
               </div>
             </div>
 
@@ -4104,7 +4104,7 @@ export default function HomePage() {
             <div className="text-center mb-7">
               <div className="relative mx-auto mb-5 h-20 w-20">
                 <div className="h-20 w-20 rounded-2xl overflow-hidden shadow-lg" style={{ border: '1px solid rgba(212,160,23,0.35)', boxShadow: '0 4px 20px rgba(212,160,23,0.15)' }}>
-                  <Image src="/images/qa3da-logo.jpg" alt="SîpFlõw" width={80} height={80} className="object-cover w-full h-full" />
+                  <Image src="/images/sipflow-logo.jpg" alt="SîpFlõw" width={80} height={80} className="object-cover w-full h-full" />
                 </div>
                 <div className="absolute -bottom-2 -left-2 flex h-7 w-7 items-center justify-center rounded-full"
                   style={{ background: 'linear-gradient(135deg, #D4A017, #b8860b)', boxShadow: '0 0 10px rgba(212,160,23,0.5)' }}>
