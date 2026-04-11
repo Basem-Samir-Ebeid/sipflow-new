@@ -1686,9 +1686,9 @@ const handleSaveSettings = async () => {
 
             {/* ── Group 3: People (emerald) ── */}
             <span className="shrink-0 self-center px-1 text-[9px] font-bold uppercase tracking-widest" style={{ color: '#059669' }}>الأشخاص</span>
-            <TabsTrigger value="users"
+            <TabsTrigger value="place-admins"
               className="flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-medium data-[state=active]:bg-emerald-700 data-[state=active]:text-white data-[state=active]:shadow-md">
-              <Users className="h-3.5 w-3.5" /><span>المستخدمين</span>
+              <UserCog className="h-3.5 w-3.5" /><span>أدمنز الأماكن</span>
             </TabsTrigger>
             <TabsTrigger value="staff"
               className="flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-medium data-[state=active]:bg-emerald-700 data-[state=active]:text-white data-[state=active]:shadow-md">
@@ -2717,186 +2717,254 @@ const handleSaveSettings = async () => {
           )}
         </TabsContent>
 
-        <TabsContent value="users" className="space-y-4">
-          {/* Dev admin: grouped by place */}
-          {isDevAdmin ? (
-            <div className="space-y-4">
-
-              {/* Create user button & form */}
-              <div className="flex justify-end">
-                <Button size="sm" className="gap-1 text-xs" style={{ background: 'linear-gradient(135deg, #92400e, #D4A017)', color: '#fff' }} onClick={() => { setShowCreateUser(v => !v); setCreateUserError(''); setCreateUserName(''); setCreateUserPassword(''); setCreateUserConfirmPass(''); setCreateUserPlaceId(''); setCreateUserTableNum(''); setShowCreatePass(false) }}>
-                  <Plus className="h-3 w-3" />مستخدم جديد
+        {/* ── Place Admins Tab (Dev Admin only) ── */}
+        <TabsContent value="place-admins" className="space-y-4">
+          <div className="space-y-4">
+            {/* Header */}
+            <div className="relative overflow-hidden rounded-2xl p-4" style={{ background: 'linear-gradient(135deg, rgba(124,58,237,0.15), rgba(79,70,229,0.1))', border: '1px solid rgba(124,58,237,0.2)' }}>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl" style={{ background: 'linear-gradient(135deg, #7c3aed, #4f46e5)' }}>
+                    <UserCog className="h-5 w-5 text-white" />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-white text-sm">أدمنز الأماكن</h3>
+                    <p className="text-xs text-violet-300">
+                      {users.filter(u => u.role === 'admin').length} أدمن في {places.length} مكان
+                    </p>
+                  </div>
+                </div>
+                <Button size="sm" className="gap-1 text-xs" style={{ background: 'linear-gradient(135deg, #7c3aed, #4f46e5)', color: '#fff' }} onClick={() => { setShowCreateUser(v => !v); setCreateUserError(''); setCreateUserName(''); setCreateUserPassword(''); setCreateUserConfirmPass(''); setCreateUserPlaceId(''); setCreateUserTableNum(''); setShowCreatePass(false) }}>
+                  <Plus className="h-3 w-3" />أدمن جديد
                 </Button>
               </div>
+            </div>
 
-              {showCreateUser && (
-                <div className="rounded-xl border border-border bg-card p-4 space-y-3">
-                  <p className="text-sm font-semibold text-foreground">إنشاء مستخدم جديد</p>
-                  <div>
-                    <label className="text-xs text-muted-foreground block mb-1">المكان</label>
-                    <select value={createUserPlaceId} onChange={e => setCreateUserPlaceId(e.target.value)} className="w-full rounded-md border border-border bg-muted px-3 py-2 text-sm text-foreground">
-                      <option value="">— اختر المكان —</option>
-                      {places.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
-                    </select>
+            {/* Create admin form */}
+            {showCreateUser && (
+              <div className="rounded-xl p-4 space-y-3" style={{ background: 'rgba(124,58,237,0.08)', border: '1px solid rgba(124,58,237,0.2)' }}>
+                <p className="text-sm font-semibold text-violet-300">إنشاء أدمن مكان جديد</p>
+                <div>
+                  <label className="text-xs text-muted-foreground block mb-1">المكان</label>
+                  <select value={createUserPlaceId} onChange={e => setCreateUserPlaceId(e.target.value)} className="w-full rounded-md border border-border bg-muted px-3 py-2 text-sm text-foreground">
+                    <option value="">— اختر المكان —</option>
+                    {places.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className="text-xs text-muted-foreground block mb-1">اسم الأدمن</label>
+                  <Input value={createUserName} onChange={e => setCreateUserName(e.target.value)} placeholder="اسم أدمن المكان..." className="border-border bg-muted text-foreground text-sm" />
+                </div>
+                <div>
+                  <label className="text-xs text-muted-foreground block mb-1">الباسورد</label>
+                  <div className="relative">
+                    <Input type={showCreatePass ? 'text' : 'password'} value={createUserPassword} onChange={e => setCreateUserPassword(e.target.value)} placeholder="باسورد الأدمن..." className="border-border bg-muted text-foreground text-sm pr-9" />
+                    <button type="button" onClick={() => setShowCreatePass(v => !v)} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+                      {showCreatePass ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+                    </button>
                   </div>
+                </div>
+                {createUserPassword.trim() && (
                   <div>
-                    <label className="text-xs text-muted-foreground block mb-1">الاسم</label>
-                    <Input value={createUserName} onChange={e => setCreateUserName(e.target.value)} placeholder="اسم المستخدم..." className="border-border bg-muted text-foreground text-sm" />
-                  </div>
-                  <div>
-                    <label className="text-xs text-muted-foreground block mb-1">رقم الطاولة (اختياري)</label>
-                    <Input value={createUserTableNum} onChange={e => setCreateUserTableNum(e.target.value)} placeholder="مثال: 5" className="border-border bg-muted text-foreground text-sm" />
-                  </div>
-                  <div>
-                    <label className="text-xs text-muted-foreground block mb-1">الباسورد (اختياري)</label>
+                    <label className="text-xs text-muted-foreground block mb-1">تأكيد الباسورد</label>
                     <div className="relative">
-                      <Input type={showCreatePass ? 'text' : 'password'} value={createUserPassword} onChange={e => setCreateUserPassword(e.target.value)} placeholder="الباسورد..." className="border-border bg-muted text-foreground text-sm pr-9" />
+                      <Input type={showCreatePass ? 'text' : 'password'} value={createUserConfirmPass} onChange={e => setCreateUserConfirmPass(e.target.value)} placeholder="أعد الباسورد..." className="border-border bg-muted text-foreground text-sm pr-9" />
                       <button type="button" onClick={() => setShowCreatePass(v => !v)} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
                         {showCreatePass ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
                       </button>
                     </div>
                   </div>
-                  {createUserPassword.trim() && (
-                    <div>
-                      <label className="text-xs text-muted-foreground block mb-1">تأكيد الباسورد</label>
-                      <div className="relative">
-                        <Input type={showCreatePass ? 'text' : 'password'} value={createUserConfirmPass} onChange={e => setCreateUserConfirmPass(e.target.value)} placeholder="أعد الباسورد..." className="border-border bg-muted text-foreground text-sm pr-9" />
-                        <button type="button" onClick={() => setShowCreatePass(v => !v)} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
-                          {showCreatePass ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
-                        </button>
-                      </div>
-                    </div>
-                  )}
-                  {createUserError && <p className="text-xs text-destructive text-center">{createUserError}</p>}
-                  <div className="flex gap-2 pt-1">
-                    <Button size="sm" className="flex-1" style={{ background: 'linear-gradient(135deg, #92400e, #D4A017)', color: '#fff' }} onClick={handleCreateUser} disabled={isCreatingUser}>
-                      {isCreatingUser ? '⏳ جاري...' : '✓ إنشاء'}
-                    </Button>
-                    <Button size="sm" variant="outline" className="flex-1 border-border" onClick={() => setShowCreateUser(false)}>إلغاء</Button>
-                  </div>
+                )}
+                {createUserError && <p className="text-xs text-destructive text-center">{createUserError}</p>}
+                <div className="flex gap-2 pt-1">
+                  <Button size="sm" className="flex-1" style={{ background: 'linear-gradient(135deg, #7c3aed, #4f46e5)', color: '#fff' }} onClick={async () => {
+                    if (!createUserPlaceId) { setCreateUserError('اختر المكان أولاً'); return }
+                    if (!createUserName.trim()) { setCreateUserError('أدخل اسم الأدمن'); return }
+                    if (!createUserPassword.trim()) { setCreateUserError('الباسورد مطلوب للأدمن'); return }
+                    if (createUserPassword !== createUserConfirmPass) { setCreateUserError('الباسورد غير متطابق'); return }
+                    setIsCreatingUser(true)
+                    setCreateUserError('')
+                    try {
+                      const res = await fetch('/api/users', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ name: createUserName.trim(), password: createUserPassword, role: 'admin', place_id: createUserPlaceId })
+                      })
+                      if (!res.ok) throw new Error('Failed')
+                      toast.success('تم إنشاء أدمن المكان بنجاح')
+                      setShowCreateUser(false)
+                      onRefresh()
+                    } catch { setCreateUserError('فشل إنشاء الأدمن') }
+                    setIsCreatingUser(false)
+                  }} disabled={isCreatingUser}>
+                    {isCreatingUser ? '⏳ جاري...' : '✓ إنشاء أدمن'}
+                  </Button>
+                  <Button size="sm" variant="outline" className="flex-1 border-border" onClick={() => setShowCreateUser(false)}>إلغاء</Button>
                 </div>
-              )}
+              </div>
+            )}
 
-              {places.length === 0 && (
-                <p className="text-center text-muted-foreground py-6">جاري تحميل الأماكن...</p>
-              )}
-              {places.map(place => {
-                const placeUsers = users.filter(u => u.place_id === place.id)
-                return (
-                  <div key={place.id} className="rounded-2xl border border-border bg-card p-4">
-                    <div className="mb-3 flex items-center gap-2">
-                      <span className="text-sm font-bold text-primary">📍 {place.name}</span>
-                      <span className="rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">{placeUsers.length} مستخدم</span>
+            {/* Places with their admins */}
+            {places.length === 0 && (
+              <p className="text-center text-muted-foreground py-6">جاري تحميل الأماكن...</p>
+            )}
+            {places.map(place => {
+              const placeAdmins = users.filter(u => u.place_id === place.id && u.role === 'admin')
+              const placeNonAdmins = users.filter(u => u.place_id === place.id && u.role !== 'admin')
+              return (
+                <div key={place.id} className="rounded-2xl overflow-hidden" style={{ border: '1px solid rgba(124,58,237,0.15)' }}>
+                  {/* Place header */}
+                  <div className="flex items-center justify-between px-4 py-3" style={{ background: 'linear-gradient(135deg, rgba(124,58,237,0.12), rgba(79,70,229,0.08))' }}>
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-bold text-violet-300">📍 {place.name}</span>
+                      <span className="rounded-full px-2 py-0.5 text-[10px] font-bold" style={{ background: placeAdmins.length > 0 ? 'rgba(16,185,129,0.15)' : 'rgba(239,68,68,0.15)', color: placeAdmins.length > 0 ? '#6ee7b7' : '#fca5a5' }}>
+                        {placeAdmins.length > 0 ? `${placeAdmins.length} أدمن` : 'بدون أدمن'}
+                      </span>
                     </div>
-                    {placeUsers.length === 0 ? (
-                      <p className="text-center text-xs text-muted-foreground py-2">لا يوجد مستخدمين</p>
-                    ) : (
-                      <div className="space-y-2">
-                        {placeUsers.map(user => (
-                          <div
-                            key={user.id}
-                            className={`flex items-center justify-between rounded-xl p-3 ${
-                              user.role === 'admin'
-                                ? 'bg-amber-500/15 border border-amber-500/30'
-                                : 'bg-muted'
-                            }`}
-                          >
-                            <div>
-                              <div className="flex items-center gap-2">
-                                <p className={`font-medium ${user.role === 'admin' ? 'text-amber-400' : 'text-foreground'}`}>{user.name}</p>
-                                {user.role === 'admin' && (
-                                  <span className="rounded-full bg-amber-500/20 px-2 py-0.5 text-[10px] font-bold text-amber-400">👑 أدمن</span>
-                                )}
-                              </div>
-                              {user.password ? (
-                                <div className="flex items-center gap-1">
-                                  <p className="text-xs text-muted-foreground font-mono">
-                                    {revealedPassUserId === user.id ? user.password : '●●●●●'}
-                                  </p>
-                                  <button
-                                    type="button"
-                                    onClick={() => setRevealedPassUserId(v => v === user.id ? null : user.id)}
-                                    className="text-muted-foreground hover:text-foreground transition-colors"
-                                    title={revealedPassUserId === user.id ? 'إخفاء الباسورد' : 'إظهار الباسورد'}
-                                  >
-                                    {revealedPassUserId === user.id ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
+                    <span className="text-[10px] text-muted-foreground">{placeNonAdmins.length} مستخدم عادي</span>
+                  </div>
+
+                  <div className="p-4 space-y-2 bg-card">
+                    {/* Current admins */}
+                    {placeAdmins.length === 0 && (
+                      <p className="text-center text-xs text-muted-foreground py-3">لا يوجد أدمن لهذا المكان</p>
+                    )}
+                    {placeAdmins.map(admin => (
+                      <div key={admin.id} className="flex items-center justify-between rounded-xl p-3" style={{ background: 'rgba(124,58,237,0.1)', border: '1px solid rgba(124,58,237,0.2)' }}>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm font-semibold text-violet-300">{admin.name}</span>
+                            <span className="rounded-full px-2 py-0.5 text-[9px] font-bold" style={{ background: 'rgba(124,58,237,0.25)', color: '#c4b5fd' }}>👑 أدمن</span>
+                          </div>
+                          {admin.password ? (
+                            <div className="flex items-center gap-1 mt-0.5">
+                              <p className="text-xs text-muted-foreground font-mono">
+                                {revealedPassUserId === admin.id ? admin.password : '●●●●●'}
+                              </p>
+                              <button type="button" onClick={() => setRevealedPassUserId(v => v === admin.id ? null : admin.id)} className="text-muted-foreground hover:text-foreground transition-colors">
+                                {revealedPassUserId === admin.id ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
+                              </button>
+                            </div>
+                          ) : (
+                            <p className="text-[10px] text-muted-foreground mt-0.5">بدون باسورد</p>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          <Dialog>
+                            <DialogTrigger asChild>
+                              <Button variant="outline" size="sm" className="h-7 text-[10px] border-violet-500/30 hover:bg-violet-500/10" onClick={() => openSetPassword(admin)}>
+                                <Key className="ml-1 h-3 w-3" />باسورد
+                              </Button>
+                            </DialogTrigger>
+                            <DialogContent className="border-border bg-card">
+                              <DialogHeader>
+                                <DialogTitle className="text-foreground">تعيين باسورد لـ {admin.name}</DialogTitle>
+                              </DialogHeader>
+                              <div className="space-y-4">
+                                <div className="relative">
+                                  <Input type={showNewPass ? 'text' : 'password'} value={newUserPassword} onChange={e => setNewUserPassword(e.target.value)} placeholder="الباسورد الجديد..." className="border-border bg-muted text-foreground pr-10" />
+                                  <button type="button" onClick={() => setShowNewPass(v => !v)} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors">
+                                    {showNewPass ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                                   </button>
                                 </div>
-                              ) : (
-                                <p className="text-xs text-muted-foreground">بدون باسورد</p>
-                              )}
-                            </div>
-                            <div className="flex gap-2">
-                              <Dialog>
-                                <DialogTrigger asChild>
-                                  <Button variant="outline" size="sm" className="border-border" onClick={() => openSetPassword(user)}>
-                                    <Key className="ml-2 h-3 w-3" />باسورد
-                                  </Button>
-                                </DialogTrigger>
-                                <DialogContent className="border-border bg-card">
-                                  <DialogHeader>
-                                    <DialogTitle className="text-foreground">تعيين باسورد لـ {user.name}</DialogTitle>
-                                  </DialogHeader>
-                                  <div className="space-y-4">
-                                    <div className="relative">
-                                      <Input type={showNewPass ? 'text' : 'password'} value={newUserPassword} onChange={e => setNewUserPassword(e.target.value)} placeholder="الباسورد الجديد..." className="border-border bg-muted text-foreground pr-10" />
-                                      <button type="button" onClick={() => setShowNewPass(v => !v)} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors">
-                                        {showNewPass ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                                      </button>
-                                    </div>
-                                    <div className="relative">
-                                      <Input type={showNewPass ? 'text' : 'password'} value={confirmUserPassword} onChange={e => setConfirmUserPassword(e.target.value)} placeholder="تأكيد الباسورد..." className="border-border bg-muted text-foreground pr-10" />
-                                      <button type="button" onClick={() => setShowNewPass(v => !v)} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors">
-                                        {showNewPass ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                                      </button>
-                                    </div>
-                                    {passwordError && <p className="text-center text-sm text-destructive">{passwordError}</p>}
-                                    <Button className="w-full bg-primary text-primary-foreground" onClick={handleSetPassword}>حفظ الباسورد</Button>
-                                  </div>
-                                </DialogContent>
-                              </Dialog>
-                              {user.password && (
-                                <AlertDialog>
-                                  <AlertDialogTrigger asChild>
-                                    <Button variant="outline" size="sm" className="border-border"><RefreshCw className="ml-2 h-3 w-3" />ريسيت</Button>
-                                  </AlertDialogTrigger>
-                                  <AlertDialogContent className="border-border bg-card">
-                                    <AlertDialogHeader>
-                                      <AlertDialogTitle>ريسيت الباسورد</AlertDialogTitle>
-                                      <AlertDialogDescription>إزالة باسورد &quot;{user.name}&quot;؟</AlertDialogDescription>
-                                    </AlertDialogHeader>
-                                    <AlertDialogFooter>
-                                      <AlertDialogCancel>إلغاء</AlertDialogCancel>
-                                      <AlertDialogAction onClick={() => onUserPasswordReset(user.id)} className="bg-primary text-primary-foreground">ريسيت</AlertDialogAction>
-                                    </AlertDialogFooter>
-                                  </AlertDialogContent>
-                                </AlertDialog>
-                              )}
-                              <AlertDialog>
-                                <AlertDialogTrigger asChild>
-                                  <Button variant="ghost" size="icon"><Trash2 className="h-4 w-4 text-destructive" /></Button>
-                                </AlertDialogTrigger>
-                                <AlertDialogContent className="border-border bg-card">
-                                  <AlertDialogHeader>
-                                    <AlertDialogTitle>حذف المستخدم</AlertDialogTitle>
-                                    <AlertDialogDescription>حذف &quot;{user.name}&quot;؟ لا يمكن التراجع.</AlertDialogDescription>
-                                  </AlertDialogHeader>
-                                  <AlertDialogFooter>
-                                    <AlertDialogCancel>إلغاء</AlertDialogCancel>
-                                    <AlertDialogAction onClick={() => onUserDelete(user.id)} className="bg-destructive text-destructive-foreground">حذف</AlertDialogAction>
-                                  </AlertDialogFooter>
-                                </AlertDialogContent>
-                              </AlertDialog>
-                            </div>
-                          </div>
-                        ))}
+                                <div className="relative">
+                                  <Input type={showNewPass ? 'text' : 'password'} value={confirmUserPassword} onChange={e => setConfirmUserPassword(e.target.value)} placeholder="تأكيد الباسورد..." className="border-border bg-muted text-foreground pr-10" />
+                                  <button type="button" onClick={() => setShowNewPass(v => !v)} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors">
+                                    {showNewPass ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                                  </button>
+                                </div>
+                                {passwordError && <p className="text-center text-sm text-destructive">{passwordError}</p>}
+                                <Button className="w-full" style={{ background: 'linear-gradient(135deg, #7c3aed, #4f46e5)', color: '#fff' }} onClick={handleSetPassword}>حفظ الباسورد</Button>
+                              </div>
+                            </DialogContent>
+                          </Dialog>
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button variant="outline" size="sm" className="h-7 text-[10px] border-amber-500/30 hover:bg-amber-500/10" onClick={() => {}}>
+                                <Minus className="ml-1 h-3 w-3" />سحب الأدمن
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent className="border-border bg-card">
+                              <AlertDialogHeader>
+                                <AlertDialogTitle className="text-foreground">سحب صلاحية الأدمن</AlertDialogTitle>
+                                <AlertDialogDescription>هل أنت متأكد من سحب صلاحية الأدمن من &quot;{admin.name}&quot;؟ سيصبح مستخدم عادي.</AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>إلغاء</AlertDialogCancel>
+                                <AlertDialogAction className="bg-amber-600 text-white hover:bg-amber-700" onClick={async () => {
+                                  try {
+                                    await fetch(`/api/users/${admin.id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ role: 'customer' }) })
+                                    toast.success(`تم سحب صلاحية الأدمن من ${admin.name}`)
+                                    onRefresh()
+                                  } catch { toast.error('فشل سحب الصلاحية') }
+                                }}>سحب الأدمن</AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button variant="ghost" size="icon" className="h-7 w-7"><Trash2 className="h-3.5 w-3.5 text-destructive" /></Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent className="border-border bg-card">
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>حذف الأدمن</AlertDialogTitle>
+                                <AlertDialogDescription>حذف &quot;{admin.name}&quot; نهائياً؟ لا يمكن التراجع.</AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>إلغاء</AlertDialogCancel>
+                                <AlertDialogAction onClick={() => onUserDelete(admin.id)} className="bg-destructive text-destructive-foreground">حذف</AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        </div>
+                      </div>
+                    ))}
+
+                    {/* Promote existing user to admin */}
+                    {placeNonAdmins.length > 0 && (
+                      <div className="pt-2 border-t border-border/50">
+                        <p className="text-[10px] text-muted-foreground mb-1.5 font-medium">ترقية مستخدم لأدمن:</p>
+                        <div className="flex flex-wrap gap-1.5">
+                          {placeNonAdmins.slice(0, 10).map(u => (
+                            <AlertDialog key={u.id}>
+                              <AlertDialogTrigger asChild>
+                                <button className="rounded-lg px-2.5 py-1 text-[10px] font-medium transition-colors hover:bg-violet-500/15" style={{ background: 'rgba(255,255,255,0.05)', color: '#a5b4fc', border: '1px solid rgba(124,58,237,0.15)' }}>
+                                  <UserPlus className="inline h-3 w-3 ml-1" />{u.name}
+                                </button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent className="border-border bg-card">
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle className="text-foreground">ترقية لأدمن</AlertDialogTitle>
+                                  <AlertDialogDescription>ترقية &quot;{u.name}&quot; ليصبح أدمن في {place.name}؟</AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>إلغاء</AlertDialogCancel>
+                                  <AlertDialogAction style={{ background: 'linear-gradient(135deg, #7c3aed, #4f46e5)', color: '#fff' }} onClick={async () => {
+                                    try {
+                                      await fetch(`/api/users/${u.id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ role: 'admin' }) })
+                                      toast.success(`تم ترقية ${u.name} لأدمن`)
+                                      onRefresh()
+                                    } catch { toast.error('فشل الترقية') }
+                                  }}>ترقية</AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
+                          ))}
+                          {placeNonAdmins.length > 10 && (
+                            <span className="text-[10px] text-muted-foreground self-center">+{placeNonAdmins.length - 10} آخرين</span>
+                          )}
+                        </div>
                       </div>
                     )}
                   </div>
-                )
-              })}
-            </div>
-          ) : (
+                </div>
+              )
+            })}
+          </div>
+        </TabsContent>
+
+        <TabsContent value="users" className="space-y-4">
+          {isDevAdmin ? null : (
           <div className="rounded-2xl border border-border bg-card p-4">
             <div className="flex items-center justify-between mb-4">
               <h3 className="font-semibold text-foreground">المستخدمين ({users.filter(u => !placeId || u.place_id === placeId).length})</h3>
