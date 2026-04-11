@@ -106,6 +106,7 @@ export default function WaiterPage() {
   const [waiterCalls, setWaiterCalls] = useState<WaiterCall[]>([])
   const [dismissedCallIds, setDismissedCallIds] = useState<Set<string>>(new Set())
   const seenCallIds = useRef<Set<string>>(new Set())
+  const isFirstCallsFetch = useRef(true)
 
   const playSound = () => {
     try {
@@ -126,21 +127,22 @@ export default function WaiterPage() {
   const fetchWaiterCalls = useCallback(async () => {
     if (!staffUser?.place_id) return
     try {
-      const res = await fetch(`/api/messages?place_id=${staffUser.place_id}`)
+      const res = await fetch(`/api/messages?place_id=${staffUser.place_id}&limit=20`)
       if (!res.ok) return
       const msgs = await res.json()
       if (!Array.isArray(msgs)) return
       const calls: WaiterCall[] = msgs
         .filter((m: { title: string; id: string; message: string; created_at: string }) => m.title === '🔔 نداء نادل')
         .map((m: { title: string; id: string; message: string; created_at: string }) => ({ id: m.id, message: m.message, created_at: m.created_at }))
-      // detect new calls and play sound
+      // detect new calls and play sound (skip sound on first fetch to avoid noise on login)
       let hasNew = false
       for (const c of calls) {
         if (!seenCallIds.current.has(c.id)) {
           seenCallIds.current.add(c.id)
-          hasNew = true
+          if (!isFirstCallsFetch.current) hasNew = true
         }
       }
+      isFirstCallsFetch.current = false
       if (hasNew) playSound()
       setWaiterCalls(calls)
     } catch {}

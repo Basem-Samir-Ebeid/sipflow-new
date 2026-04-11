@@ -772,7 +772,7 @@ export default function StaffPage() {
         {staffTab === 'reservations' && staffUser.place_id && (
           <>
             <div className="flex items-center justify-between mb-4">
-              <Button variant="outline" size="sm" onClick={fetchReservations} className="gap-2" disabled={isFetchingReservations}>
+              <Button variant="outline" size="sm" onClick={() => fetchReservations()} className="gap-2" disabled={isFetchingReservations}>
                 <RefreshCw className={`h-4 w-4 ${isFetchingReservations ? 'animate-spin' : ''}`} />
                 تحديث
               </Button>

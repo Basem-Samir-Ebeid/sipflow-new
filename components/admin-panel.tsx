@@ -4612,7 +4612,7 @@ const handleSaveSettings = async () => {
                 <h3 className="font-bold text-foreground flex items-center gap-2">
                   <Users className="h-4 w-4 text-muted-foreground" /> حسابات الكاشير ({cashierUsers.length})
                 </h3>
-                <button onClick={() => fetchCashierUsers(isDevAdmin ? undefined : placeId)} className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1">
+                <button onClick={() => fetchCashierUsers(isDevAdmin ? undefined : placeId ?? undefined)} className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1">
                   <RefreshCw className="h-3 w-3" /> تحديث
                 </button>
               </div>
