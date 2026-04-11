@@ -1487,7 +1487,7 @@ export default function HomePage() {
 
   // Header Component
   const Header = () => (
-    <header className="sticky top-0 z-40 border-b border-zinc-700/60 bg-zinc-800/90 backdrop-blur-sm">
+    <header className="sticky top-0 z-40 bg-black/95 backdrop-blur-md" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
       {/* Creative developer attribution bar */}
       <div className="relative overflow-hidden py-[5px]" style={{ background: 'linear-gradient(90deg, #1a0a00, #3d1f00, #6b3a00, #D4A017, #6b3a00, #3d1f00, #1a0a00)' }}>
         <div className="flex items-center justify-center gap-2">
@@ -3134,7 +3134,6 @@ export default function HomePage() {
             )}
 
             <div className="text-center space-y-3">
-              {/* Place logo above menu title */}
               {(() => {
                 const logoUrl = isDevAdmin
                   ? boardDevPlaces.find(p => p.id === menuDevPlaceId)?.logo_url
@@ -3142,13 +3141,13 @@ export default function HomePage() {
                 if (!logoUrl) return null
                 return (
                   <div className="flex justify-center">
-                    <div className="h-20 w-20 rounded-2xl overflow-hidden border-2 shadow-lg" style={{ borderColor: 'rgba(212,160,23,0.5)' }}>
+                    <div className="relative h-[72px] w-[72px] rounded-2xl overflow-hidden" style={{ border: '2px solid rgba(212,160,23,0.35)', boxShadow: '0 4px 16px rgba(212,160,23,0.1)' }}>
                       <img src={logoUrl} alt="place logo" className="h-full w-full object-cover" />
                     </div>
                   </div>
                 )
               })()}
-              <h1 className="text-2xl font-bold text-foreground">منيو المشروبات</h1>
+              <h1 className="text-xl font-bold" style={{ color: 'rgba(255,255,255,0.9)' }}>منيو المشروبات</h1>
             </div>
 
             {/* QR table indicator — shown when table comes from QR scan */}
@@ -3202,15 +3201,15 @@ export default function HomePage() {
             {(!isDevAdmin || menuDevPlaceId) && (
             <button
               onClick={handleSurpriseMe}
-              className="w-full relative overflow-hidden rounded-2xl p-4 text-right transition-transform active:scale-95"
-              style={{ background: 'linear-gradient(135deg, #1a0050, #3a0080, #6a00cc, #9000ff)' }}
+              className="w-full relative overflow-hidden rounded-2xl px-4 py-3.5 text-right transition-all active:scale-[0.98] hover:brightness-110"
+              style={{ background: 'linear-gradient(135deg, #1a0d00, #2a1500, #1a0d00)', border: '1px solid rgba(212,160,23,0.2)' }}
             >
-              <div className="absolute inset-0 opacity-20" style={{ backgroundImage: 'radial-gradient(circle at 20% 50%, #fff 0%, transparent 50%)' }} />
-              <div className="relative flex items-center justify-between">
-                <span className="text-4xl animate-spin" style={{ animationDuration: '3s' }}>🎲</span>
-                <div className="text-right">
-                  <p className="text-lg font-black text-white">مش عارف تختار؟</p>
-                  <p className="text-sm text-purple-200">اضغط وهنفاجئك بمشروب عشوائي ✨</p>
+              <div className="absolute inset-x-0 top-0 h-px" style={{ background: 'linear-gradient(90deg, transparent, rgba(212,160,23,0.4), transparent)' }} />
+              <div className="relative flex items-center justify-between gap-3">
+                <span className="text-3xl shrink-0" style={{ animation: 'spin 4s linear infinite' }}>🎲</span>
+                <div className="text-right flex-1">
+                  <p className="text-sm font-bold" style={{ color: '#e8c76a' }}>مش عارف تختار؟</p>
+                  <p className="text-xs mt-0.5" style={{ color: 'rgba(212,160,23,0.55)' }}>اضغط وهنفاجئك بمشروب عشوائي</p>
                 </div>
               </div>
             </button>
@@ -3218,18 +3217,20 @@ export default function HomePage() {
 
             {/* Category Tabs */}
             {(!isDevAdmin || menuDevPlaceId) && (
-            <div className="flex gap-2 rounded-2xl bg-muted p-1.5">
+            <div className="flex gap-1.5 rounded-2xl p-1.5" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
               {([
-                { key: 'hot', label: '☕ Hot', active: 'bg-red-500 text-white shadow-sm' },
-                { key: 'cold', label: '🧊 Cold', active: 'bg-blue-500 text-white shadow-sm' },
-                { key: 'shisha', label: '💨 Shisha', active: 'bg-purple-500 text-white shadow-sm' },
+                { key: 'hot', label: 'Hot ☕', color: '#ef4444', bg: 'rgba(239,68,68,0.15)', border: 'rgba(239,68,68,0.3)' },
+                { key: 'cold', label: 'Cold 🧊', color: '#3b82f6', bg: 'rgba(59,130,246,0.15)', border: 'rgba(59,130,246,0.3)' },
+                { key: 'shisha', label: 'Shisha 💨', color: '#a855f7', bg: 'rgba(168,85,247,0.15)', border: 'rgba(168,85,247,0.3)' },
               ] as const).map(tab => (
                 <button
                   key={tab.key}
                   onClick={() => setMenuCategory(tab.key)}
-                  className={`flex-1 rounded-xl py-2 text-sm font-bold transition-all duration-200 ${
-                    menuCategory === tab.key ? tab.active : 'text-muted-foreground hover:text-foreground'
-                  }`}
+                  className="flex-1 rounded-xl py-2 text-xs font-bold tracking-wide transition-all duration-200"
+                  style={menuCategory === tab.key
+                    ? { background: tab.bg, color: tab.color, border: `1px solid ${tab.border}` }
+                    : { color: 'rgba(255,255,255,0.35)', border: '1px solid transparent' }
+                  }
                 >
                   {tab.label}
                 </button>
@@ -3279,17 +3280,18 @@ export default function HomePage() {
             )}
 
             {cartCount > 0 && (!isDevAdmin || menuDevPlaceId) && (
-              <div className="sticky bottom-4 rounded-xl border border-border bg-card p-4 shadow-lg">
+              <div className="sticky bottom-4 rounded-2xl p-4 shadow-xl" style={{ background: 'linear-gradient(135deg, #1a0d00, #0f0800)', border: '1px solid rgba(212,160,23,0.2)', boxShadow: '0 -4px 20px rgba(0,0,0,0.5)' }}>
                 <div className="mb-3 flex items-center justify-between">
-                  <span className="font-semibold text-foreground">
+                  <span className="text-sm font-semibold" style={{ color: 'rgba(255,255,255,0.7)' }}>
                     {cartCount} صنف في السلة
                   </span>
                   {cartTotal > 0 && (
-                    <span className="font-bold text-primary">{cartTotal.toFixed(2)} ج.م</span>
+                    <span className="text-sm font-bold" style={{ color: '#fbbf24' }}>{cartTotal.toFixed(2)} ج.م</span>
                   )}
                 </div>
                 <Button 
-                  className="h-12 w-full bg-primary text-primary-foreground hover:bg-primary/90"
+                  className="h-11 w-full rounded-xl text-sm font-bold"
+                  style={{ background: 'linear-gradient(135deg, #D4A017, #b8860b)', color: '#0a0500' }}
                   onClick={handleSubmitOrder}
                   disabled={(!isDevAdmin && !session) || isSubmittingOrder}
                 >
