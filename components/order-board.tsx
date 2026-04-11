@@ -82,14 +82,14 @@ export function OrderBoard({ orders, drinks, currentUser, onDeleteOrder, isAdmin
 
   if (Object.keys(ordersByCustomer).length === 0) {
     return (
-      <div className="rounded-2xl border-2 border-dashed border-border bg-card p-8 text-center">
+      <div className="rounded-2xl p-10 text-center" style={{ background: 'linear-gradient(160deg, #141210, #1a1714)', border: '1px solid rgba(255,255,255,0.06)' }}>
         <div className="mb-4 flex justify-center">
-          <div className="flex h-16 w-16 items-center justify-center rounded-full bg-muted">
-            <Coffee className="h-8 w-8 text-muted-foreground" />
+          <div className="flex h-14 w-14 items-center justify-center rounded-2xl" style={{ background: 'rgba(212,160,23,0.08)', border: '1px solid rgba(212,160,23,0.15)' }}>
+            <Coffee className="h-6 w-6" style={{ color: 'rgba(212,160,23,0.5)' }} />
           </div>
         </div>
-        <h3 className="mb-2 text-lg font-bold text-foreground">SîpFlõw لسه فاضية</h3>
-        <p className="text-muted-foreground">أطلب أول مشروب وافتح SîpFlõw!</p>
+        <h3 className="mb-1.5 text-base font-bold" style={{ color: 'rgba(255,255,255,0.8)' }}>SîpFlõw لسه فاضية</h3>
+        <p className="text-xs" style={{ color: 'rgba(255,255,255,0.35)' }}>أطلب أول مشروب وافتح SîpFlõw!</p>
       </div>
     )
   }
