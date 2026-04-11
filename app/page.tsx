@@ -1130,7 +1130,7 @@ export default function HomePage() {
 
   const handleAdminLogin = () => {
     if (!devAdminName.trim()) { setAdminError('أدخل اسم المطور'); return }
-    if (adminPassword === 'Basem.s.ebeid#@55!') {
+    if (adminPassword === process.env.NEXT_PUBLIC_ADMIN_SECRET) {
       const name = devAdminName.trim()
       setSavedDevName(name)
       setIsAdmin(true)

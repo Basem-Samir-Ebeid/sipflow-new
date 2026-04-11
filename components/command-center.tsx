@@ -61,7 +61,7 @@ export function CommandCenter() {
   const fetchData = async () => {
     try {
       const res = await fetch('/api/command-center', {
-        headers: { 'x-admin-secret': 'Basem.s.ebeid#@55!' },
+        headers: { 'x-admin-secret': process.env.NEXT_PUBLIC_ADMIN_SECRET || '' },
       })
       const json = await res.json()
       if (!json.error) {

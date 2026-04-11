@@ -4,7 +4,7 @@ import { getSql } from '@/lib/db'
 export async function GET(request: Request) {
   try {
     const secret = request.headers.get('x-admin-secret')
-    const expectedSecret = process.env.ADMIN_SECRET || 'Basem.s.ebeid#@55!'
+    const expectedSecret = process.env.ADMIN_SECRET
     if (secret !== expectedSecret) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }

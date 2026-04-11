@@ -331,7 +331,7 @@ export function AdminPanel({
     try {
       const res = await fetch('/api/reset-data', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'x-admin-secret': 'Basem.s.ebeid#@55!' },
+        headers: { 'Content-Type': 'application/json', 'x-admin-secret': process.env.NEXT_PUBLIC_ADMIN_SECRET || '' },
         body: JSON.stringify({ action: 'delete_old', months: parseInt(bulkDeleteMonths, 10) })
       })
       const data = await res.json()
@@ -985,7 +985,7 @@ export function AdminPanel({
     try {
       await fetch('/api/reset-data', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'x-admin-secret': 'Basem.s.ebeid#@55!' },
+        headers: { 'Content-Type': 'application/json', 'x-admin-secret': process.env.NEXT_PUBLIC_ADMIN_SECRET || '' },
         body: JSON.stringify({ place_id: effectivePlaceId })
       })
       setShowFullResetConfirm(false)
