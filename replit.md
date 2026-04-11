@@ -3,10 +3,12 @@
 ## Overview
 A Next.js multi-tenant café/social space drink ordering and management system. Each café location (Place) has isolated data. Customers browse a categorized menu (Hot/Cold/Shisha), place orders with notes, and get assigned a table. Staff manage orders via a dashboard. Admins manage drinks, users, inventory, send broadcast messages, and view revenue analytics. A developer admin manages all places (create/toggle/delete).
 
-## Recent Features (v2.3 — Dev Admin UI Refresh)
-- **شاشة ترحيب المطور:** Completely redesigned with violet/indigo command-center aesthetic — animated spinning ring around logo, conic gradient, "secure session" badge with live ping dot, "ACCESS GRANTED" glow text, 2×2 system status cards with icons, terminal-style log line, rounded corner frames. Replaces old amber/gold design.
-- **Header محسّن:** Live clock (HH:MM:SS Arabic), grid pattern overlay, animated top-border sweep, 4 stat cards (places/staff/clients/drinks), quick actions strip, enhanced ping-style online indicator.
-- **Tab bar محسّن:** Colored group labels (تحليلات/المحتوى/الأشخاص/النظام), styled separators, bouncing notification badge.
+## Recent Features (v2.3 — Admin UI Refresh)
+- **شاشة ترحيب المطور:** Violet/indigo command-center aesthetic — animated spinning ring, "secure session" badge, "ACCESS GRANTED" glow, 2×2 status cards, terminal-style log line.
+- **شاشة ترحيب أدمن المكان:** Warm amber theme — spinning ring around café icon, "PLACE ADMIN" badge, 2×2 status cards, rounded corner frames. Simpler but cohesive with dev admin design.
+- **Header أدمن المطور محسّن:** Live clock, grid overlay, animated sweep, 4 stat cards, quick actions strip, ping indicator.
+- **Header أدمن المكان محسّن:** Dark amber gradient, place name + icon, 3 stat cards (drinks/users/orders), "ADMIN" badge, connection status bar.
+- **Tab bars محسّنة:** Both admin types now use horizontal scrollable bars. Dev admin has colored group labels; place admin has amber/emerald/sky themed groups with separators.
 
 ## Recent Features (v2.2 — Dev Admin Exclusives)
 - **البنر العالمي:** Dev admin can enable a global announcement banner (Settings tab) with custom text and 4 color themes. Banner appears at the top of the customer page (sticky, dismissable) using `global_banner_enabled/text/color` app_settings keys.

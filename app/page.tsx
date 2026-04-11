@@ -2595,62 +2595,68 @@ export default function HomePage() {
 
       {/* Place Admin welcome */}
       {showPlaceAdminWelcome && (
-        <div className="fixed inset-0 z-[999] flex items-center justify-center overflow-hidden" style={{ background: 'linear-gradient(160deg, #0f0800 0%, #1a0d00 50%, #0f0800 100%)' }} dir="rtl">
-          {/* Warm glow */}
-          <div className="absolute inset-0" style={{ background: 'radial-gradient(ellipse 60% 50% at 50% 50%, #92400e22 0%, transparent 70%)' }} />
+        <div className="fixed inset-0 z-[999] flex items-center justify-center overflow-hidden" style={{ background: 'linear-gradient(160deg, #060300 0%, #0f0800 35%, #1a0d00 65%, #0a0500 100%)' }} dir="rtl">
+          <div className="absolute inset-0 opacity-[0.02]" style={{ backgroundImage: 'linear-gradient(rgba(212,160,23,0.8) 1px, transparent 1px), linear-gradient(90deg, rgba(212,160,23,0.8) 1px, transparent 1px)', backgroundSize: '36px 36px' }} />
+          <div className="absolute inset-0" style={{ background: 'radial-gradient(ellipse 50% 40% at 50% 45%, rgba(146,64,14,0.1) 0%, transparent 70%)' }} />
+          <div className="absolute -top-16 -right-16 h-60 w-60 rounded-full" style={{ background: 'radial-gradient(circle, rgba(212,160,23,0.12), transparent 60%)', filter: 'blur(30px)' }} />
 
-          <div className="relative w-full max-w-xs px-6 text-center animate-in fade-in zoom-in-95 duration-600">
-            {/* Corner brackets — amber */}
-            <div className="absolute -top-2 -left-2 w-8 h-8 border-t-2 border-l-2" style={{ borderColor: 'rgba(212,160,23,0.5)' }} />
-            <div className="absolute -top-2 -right-2 w-8 h-8 border-t-2 border-r-2" style={{ borderColor: 'rgba(212,160,23,0.5)' }} />
-            <div className="absolute -bottom-2 -left-2 w-8 h-8 border-b-2 border-l-2" style={{ borderColor: 'rgba(212,160,23,0.5)' }} />
-            <div className="absolute -bottom-2 -right-2 w-8 h-8 border-b-2 border-r-2" style={{ borderColor: 'rgba(212,160,23,0.5)' }} />
+          <div className="relative w-full max-w-xs px-6 text-center animate-in fade-in zoom-in-95 duration-700">
+            <div className="absolute -top-3 -left-3 w-10 h-10 border-t-2 border-l-2 rounded-tl-lg" style={{ borderColor: 'rgba(212,160,23,0.4)' }} />
+            <div className="absolute -top-3 -right-3 w-10 h-10 border-t-2 border-r-2 rounded-tr-lg" style={{ borderColor: 'rgba(212,160,23,0.4)' }} />
+            <div className="absolute -bottom-3 -left-3 w-10 h-10 border-b-2 border-l-2 rounded-bl-lg" style={{ borderColor: 'rgba(212,160,23,0.4)' }} />
+            <div className="absolute -bottom-3 -right-3 w-10 h-10 border-b-2 border-r-2 rounded-br-lg" style={{ borderColor: 'rgba(212,160,23,0.4)' }} />
 
-            {/* Sparkles — top */}
-            <div className="flex items-center justify-center gap-3 mb-5">
-              <span className="text-lg" style={{ color: '#fbbf24' }}>✦</span>
-              <span className="text-sm" style={{ color: '#f97316' }}>✦</span>
-              <span className="text-lg" style={{ color: '#D4A017' }}>✦</span>
-              <span className="text-sm" style={{ color: '#fbbf24' }}>✦</span>
-              <span className="text-lg" style={{ color: '#f97316' }}>✦</span>
+            <div className="mb-5 flex items-center justify-center">
+              <span className="inline-flex items-center gap-2 rounded-full px-3 py-1 font-mono text-[10px] font-semibold uppercase tracking-[0.3em]"
+                style={{ background: 'rgba(212,160,23,0.1)', border: '1px solid rgba(212,160,23,0.3)', color: '#fcd34d' }}>
+                <span className="h-1.5 w-1.5 rounded-full bg-amber-400 animate-pulse" />
+                place admin
+              </span>
             </div>
 
-            {/* Icon */}
-            <div className="relative mx-auto mb-4 flex h-20 w-20 items-center justify-center">
-              <div className="absolute inset-0 rounded-full" style={{ background: 'radial-gradient(circle, #D4A01733 0%, transparent 70%)', animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite' }} />
-              <div className="h-20 w-20 rounded-full flex items-center justify-center border" style={{ borderColor: 'rgba(212,160,23,0.3)', background: 'linear-gradient(135deg, #2a1500, #3d1f00)', boxShadow: '0 0 40px #D4A01740, inset 0 1px 0 #ffffff10' }}>
-                <span className="text-4xl">⚙️</span>
+            <div className="relative mx-auto mb-5 flex h-20 w-20 items-center justify-center">
+              <div className="absolute inset-[-4px] rounded-full" style={{ background: 'conic-gradient(from 0deg, transparent 0%, rgba(212,160,23,0.35) 25%, transparent 50%, rgba(245,158,11,0.35) 75%, transparent 100%)', animation: 'spin 6s linear infinite' }} />
+              <div className="absolute inset-[-3px] rounded-full" style={{ background: '#0f0800' }} />
+              <div className="h-20 w-20 rounded-full flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #1a0d00, #2a1600)', border: '2px solid rgba(212,160,23,0.35)', boxShadow: '0 0 20px rgba(212,160,23,0.15)' }}>
+                <span className="text-3xl">☕</span>
               </div>
             </div>
 
-            {/* Greeting */}
-            <p className="text-sm mb-1" style={{ color: 'rgba(212,160,23,0.7)' }}>أهلاً وسهلاً يا</p>
-            <h2 className="text-3xl font-black tracking-tight mb-2 leading-none" style={{ background: 'linear-gradient(135deg, #fef3c7 0%, #fbbf24 50%, #D4A017 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+            <p className="text-sm font-medium mb-2" style={{ color: 'rgba(212,160,23,0.6)' }}>مرحباً بك يا</p>
+            <h2 className="text-3xl font-black tracking-tight mb-2 leading-none" style={{ background: 'linear-gradient(135deg, #fef3c7 0%, #fbbf24 40%, #D4A017 80%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
               {placeAdminWelcomeName}
             </h2>
-            <p className="text-sm mb-5" style={{ color: 'rgba(212,160,23,0.6)' }}>تفضل بإدارة مكانك</p>
+            <p className="font-mono text-[10px] tracking-[0.2em] uppercase mb-5" style={{ color: 'rgba(212,160,23,0.35)' }}>إدارة المكان</p>
 
-            {/* Separator */}
             <div className="flex items-center gap-3 mb-4">
-              <div className="h-px flex-1" style={{ background: 'linear-gradient(90deg, transparent, #D4A01760)' }} />
-              <div className="h-1.5 w-1.5 rotate-45" style={{ background: '#D4A017' }} />
-              <div className="h-px flex-1" style={{ background: 'linear-gradient(90deg, #D4A01760, transparent)' }} />
+              <div className="h-px flex-1" style={{ background: 'linear-gradient(90deg, transparent, rgba(212,160,23,0.4))' }} />
+              <div className="h-1.5 w-1.5 rotate-45 rounded-sm" style={{ background: '#D4A017' }} />
+              <div className="h-px flex-1" style={{ background: 'linear-gradient(90deg, rgba(212,160,23,0.4), transparent)' }} />
             </div>
 
-            {/* Simple status */}
-            <div className="flex items-center justify-between px-4 py-2.5 rounded-xl mb-5" style={{ background: 'rgba(212,160,23,0.06)', border: '1px solid rgba(212,160,23,0.15)' }}>
-              <span className="text-xs font-semibold" style={{ color: '#34d399' }}>متاحة الآن</span>
-              <span className="text-xs" style={{ color: 'rgba(212,160,23,0.7)' }}>لوحة الإدارة</span>
+            <div className="grid grid-cols-2 gap-2 mb-5">
+              {[
+                { icon: '☕', label: 'الأصناف', status: 'متاحة', color: '#34d399', bg: 'rgba(16,185,129,0.06)', border: 'rgba(16,185,129,0.15)' },
+                { icon: '📋', label: 'الطلبات', status: 'متاحة', color: '#34d399', bg: 'rgba(16,185,129,0.06)', border: 'rgba(16,185,129,0.15)' },
+                { icon: '👥', label: 'الموظفين', status: 'متاحة', color: '#34d399', bg: 'rgba(16,185,129,0.06)', border: 'rgba(16,185,129,0.15)' },
+                { icon: '⚙️', label: 'الإعدادات', status: 'متاحة', color: '#fcd34d', bg: 'rgba(212,160,23,0.06)', border: 'rgba(212,160,23,0.15)' },
+              ].map((item, i) => (
+                <div key={i} className="flex items-center gap-2 rounded-lg px-2.5 py-2 text-right"
+                  style={{ background: item.bg, border: `1px solid ${item.border}` }}>
+                  <span className="text-sm shrink-0">{item.icon}</span>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[11px] font-medium truncate" style={{ color: 'rgba(255,255,255,0.6)' }}>{item.label}</p>
+                    <p className="font-mono text-[9px]" style={{ color: item.color }}>{item.status}</p>
+                  </div>
+                </div>
+              ))}
             </div>
 
-            {/* Sparkles — bottom */}
-            <div className="flex items-center justify-center gap-3 mb-4">
-              <span className="text-sm" style={{ color: '#f97316' }}>✦</span>
-              <span className="text-lg" style={{ color: '#D4A017' }}>✦</span>
-              <span className="text-sm" style={{ color: '#fbbf24' }}>✦</span>
+            <div className="flex items-center justify-center gap-2">
+              <div className="h-px w-6" style={{ background: 'rgba(212,160,23,0.2)' }} />
+              <p className="font-mono text-[9px] tracking-[0.25em] uppercase" style={{ color: 'rgba(212,160,23,0.25)' }}>SipFlow</p>
+              <div className="h-px w-6" style={{ background: 'rgba(212,160,23,0.2)' }} />
             </div>
-
-            <p className="text-[10px] tracking-widest font-mono" style={{ color: 'rgba(212,160,23,0.3)' }}>SîpFlõw · SipFlow</p>
           </div>
         </div>
       )}

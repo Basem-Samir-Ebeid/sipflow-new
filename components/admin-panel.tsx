@@ -1543,12 +1543,59 @@ const handleSaveSettings = async () => {
         </div>
 
       ) : (
-        /* ── Place Admin simple header ── */
-        <div className="rounded-2xl p-4 text-center" style={{ background: 'rgba(212,160,23,0.05)', border: '1px solid rgba(212,160,23,0.15)' }}>
-          <h1 className="text-xl font-bold text-foreground">لوحة الإدارة</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            {currentPlace ? `📍 ${currentPlace.name}` : 'إدارة الأصناف والمستخدمين'}
-          </p>
+        /* ── Place Admin header ── */
+        <div className="relative rounded-2xl overflow-hidden" style={{
+          background: 'linear-gradient(135deg, #0a0600 0%, #1a0f00 40%, #241600 75%, #1c1000 100%)',
+          boxShadow: '0 0 0 1px rgba(212,160,23,0.25), 0 0 30px rgba(212,160,23,0.05), inset 0 1px 0 rgba(255,255,255,0.04)'
+        }}>
+          <div className="pointer-events-none absolute inset-x-0 top-0 h-px" style={{ background: 'linear-gradient(90deg, transparent, rgba(212,160,23,0.6), rgba(245,158,11,0.8), rgba(212,160,23,0.6), transparent)' }} />
+          <div className="pointer-events-none absolute -top-10 -right-10 h-40 w-40 rounded-full" style={{ background: 'radial-gradient(circle, rgba(212,160,23,0.15), transparent 70%)', filter: 'blur(16px)' }} />
+
+          <div className="relative p-4 space-y-3">
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-xl"
+                  style={{ background: 'rgba(212,160,23,0.12)', border: '1px solid rgba(212,160,23,0.3)' }}>
+                  ☕
+                </div>
+                <div>
+                  <h1 className="text-base font-bold text-white">لوحة الإدارة</h1>
+                  <p className="text-[11px]" style={{ color: '#d4a017' }}>
+                    {currentPlace ? `📍 ${currentPlace.name}` : 'إدارة الأصناف والمستخدمين'}
+                  </p>
+                </div>
+              </div>
+              <span className="inline-flex items-center gap-1.5 rounded-full px-2 py-1 text-[10px] font-semibold tracking-wider"
+                style={{ background: 'rgba(212,160,23,0.12)', border: '1px solid rgba(212,160,23,0.3)', color: '#fcd34d' }}>
+                <span className="h-1.5 w-1.5 rounded-full bg-amber-400 animate-pulse" />
+                ADMIN
+              </span>
+            </div>
+
+            <div className="grid grid-cols-3 gap-2">
+              {[
+                { label: 'الأصناف', value: drinks.length, icon: '🍹', color: '#fcd34d', bg: 'rgba(212,160,23,0.08)', border: 'rgba(212,160,23,0.2)' },
+                { label: 'المستخدمين', value: users.length, icon: '👥', color: '#6ee7b7', bg: 'rgba(16,185,129,0.06)', border: 'rgba(16,185,129,0.15)' },
+                { label: 'الطلبات', value: orders.length, icon: '📋', color: '#93c5fd', bg: 'rgba(59,130,246,0.06)', border: 'rgba(59,130,246,0.15)' },
+              ].map(s => (
+                <div key={s.label} className="rounded-lg px-2 py-2 text-center"
+                  style={{ background: s.bg, border: `1px solid ${s.border}` }}>
+                  <p className="text-sm">{s.icon}</p>
+                  <p className="text-sm font-bold text-white tabular-nums">{s.value}</p>
+                  <p className="text-[10px]" style={{ color: s.color }}>{s.label}</p>
+                </div>
+              ))}
+            </div>
+
+            <div className="flex items-center justify-between rounded-lg px-3 py-1.5"
+              style={{ background: 'rgba(0,0,0,0.25)', border: '1px solid rgba(255,255,255,0.04)' }}>
+              <div className="flex items-center gap-1.5">
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                <span className="text-[10px] font-medium text-emerald-400">متصل</span>
+              </div>
+              <span className="text-[10px]" style={{ color: 'rgba(212,160,23,0.4)' }}>SîpFlõw</span>
+            </div>
+          </div>
         </div>
       )}
 
@@ -1664,15 +1711,21 @@ const handleSaveSettings = async () => {
             </TabsTrigger>
           </TabsList>
         ) : (
-          /* ── Place Admin: compact grid tabs ── */
-          <TabsList className="mb-4 grid w-full grid-cols-12 bg-muted">
-            <TabsTrigger value="stats" className="gap-1 data-[state=active]:bg-card">
-              <BarChart3 className="h-4 w-4" />
-              <span className="hidden sm:inline text-xs">الإحصائيات</span>
+          /* ── Place Admin: scrollable tab bar ── */
+          <TabsList className="mb-3 flex w-full overflow-x-auto gap-0.5 rounded-xl p-1.5 h-auto [&>*]:shrink-0 [&>*]:whitespace-nowrap" style={{ scrollbarWidth: 'none', background: 'rgba(212,160,23,0.04)', border: '1px solid rgba(212,160,23,0.1)' }}>
+            {/* Analytics */}
+            <TabsTrigger value="stats"
+              className="flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-medium data-[state=active]:bg-amber-700 data-[state=active]:text-white data-[state=active]:shadow-md">
+              <BarChart3 className="h-3.5 w-3.5" /><span>الإحصائيات</span>
             </TabsTrigger>
-            <TabsTrigger value="tables" className="relative gap-1 data-[state=active]:bg-card">
-              <TableProperties className="h-4 w-4" />
-              <span className="hidden sm:inline text-xs">الطاولات</span>
+            <TabsTrigger value="analytics"
+              className="flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-medium data-[state=active]:bg-amber-700 data-[state=active]:text-white data-[state=active]:shadow-md">
+              <TrendingUp className="h-3.5 w-3.5" /><span>التقارير</span>
+            </TabsTrigger>
+            <div className="mx-1 h-5 w-px self-center rounded-full" style={{ background: 'rgba(212,160,23,0.15)' }} />
+            {/* Content */}
+            <TabsTrigger value="tables" className="relative flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-medium data-[state=active]:bg-amber-800 data-[state=active]:text-white data-[state=active]:shadow-md">
+              <TableProperties className="h-3.5 w-3.5" /><span>الطاولات</span>
               {(() => {
                 const occupied = new Set(orders.filter(o => o.table_number && o.status !== 'completed').map(o => o.table_number)).size
                 return occupied > 0 ? (
@@ -1680,13 +1733,12 @@ const handleSaveSettings = async () => {
                 ) : null
               })()}
             </TabsTrigger>
-            <TabsTrigger value="drinks" className="gap-1 data-[state=active]:bg-card">
-              <Coffee className="h-4 w-4" />
-              <span className="hidden sm:inline text-xs">الأصناف</span>
+            <TabsTrigger value="drinks"
+              className="flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-medium data-[state=active]:bg-amber-800 data-[state=active]:text-white data-[state=active]:shadow-md">
+              <Coffee className="h-3.5 w-3.5" /><span>الأصناف</span>
             </TabsTrigger>
-            <TabsTrigger value="inventory" className="relative gap-1 data-[state=active]:bg-card">
-              <Package className="h-4 w-4" />
-              <span className="hidden sm:inline text-xs">المخزون</span>
+            <TabsTrigger value="inventory" className="relative flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-medium data-[state=active]:bg-amber-800 data-[state=active]:text-white data-[state=active]:shadow-md">
+              <Package className="h-3.5 w-3.5" /><span>المخزون</span>
               {(() => {
                 const lowCount = drinks.filter(d => (inventoryMap[d.id] ?? 0) < lowStockThreshold && (inventoryMap[d.id] ?? 0) >= 0).length
                 return lowCount > 0 ? (
@@ -1694,37 +1746,36 @@ const handleSaveSettings = async () => {
                 ) : null
               })()}
             </TabsTrigger>
-            <TabsTrigger value="users" className="gap-1 data-[state=active]:bg-card">
-              <Users className="h-4 w-4" />
-              <span className="hidden sm:inline text-xs">المستخدمين</span>
+            <TabsTrigger value="cashier"
+              className="flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-medium data-[state=active]:bg-amber-800 data-[state=active]:text-white data-[state=active]:shadow-md">
+              <Banknote className="h-3.5 w-3.5" /><span>الكاشير</span>
             </TabsTrigger>
-            <TabsTrigger value="staff" className="gap-1 data-[state=active]:bg-card">
-              <UserCog className="h-4 w-4" />
-              <span className="hidden sm:inline text-xs">Staff</span>
+            <TabsTrigger value="reservations"
+              className="flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-medium data-[state=active]:bg-amber-800 data-[state=active]:text-white data-[state=active]:shadow-md">
+              <CalendarDays className="h-3.5 w-3.5" /><span>الحجوزات</span>
             </TabsTrigger>
-            <TabsTrigger value="messages" className="relative gap-1 data-[state=active]:bg-card">
-              <MessageSquare className="h-4 w-4" />
-              <span className="hidden sm:inline text-xs">الرسائل</span>
+            <div className="mx-1 h-5 w-px self-center rounded-full" style={{ background: 'rgba(212,160,23,0.15)' }} />
+            {/* People */}
+            <TabsTrigger value="users"
+              className="flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-medium data-[state=active]:bg-emerald-700 data-[state=active]:text-white data-[state=active]:shadow-md">
+              <Users className="h-3.5 w-3.5" /><span>المستخدمين</span>
             </TabsTrigger>
-            <TabsTrigger value="settings" className="gap-1 data-[state=active]:bg-card">
-              <Settings2 className="h-4 w-4" />
-              <span className="hidden sm:inline text-xs">الإعدادات</span>
+            <TabsTrigger value="staff"
+              className="flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-medium data-[state=active]:bg-emerald-700 data-[state=active]:text-white data-[state=active]:shadow-md">
+              <UserCog className="h-3.5 w-3.5" /><span>Staff</span>
             </TabsTrigger>
-            <TabsTrigger value="danger" className="gap-1 data-[state=active]:bg-card">
-              <Trash2 className="h-4 w-4" />
-              <span className="hidden sm:inline text-xs">الخطرة</span>
+            <div className="mx-1 h-5 w-px self-center rounded-full" style={{ background: 'rgba(212,160,23,0.15)' }} />
+            {/* System */}
+            <TabsTrigger value="messages" className="relative flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-medium data-[state=active]:bg-sky-700 data-[state=active]:text-white data-[state=active]:shadow-md">
+              <MessageSquare className="h-3.5 w-3.5" /><span>الرسائل</span>
             </TabsTrigger>
-            <TabsTrigger value="reservations" className="gap-1 data-[state=active]:bg-card">
-              <CalendarDays className="h-4 w-4" />
-              <span className="hidden sm:inline text-xs">الحجوزات</span>
+            <TabsTrigger value="settings"
+              className="flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-medium data-[state=active]:bg-sky-700 data-[state=active]:text-white data-[state=active]:shadow-md">
+              <Settings2 className="h-3.5 w-3.5" /><span>الإعدادات</span>
             </TabsTrigger>
-            <TabsTrigger value="cashier" className="gap-1 data-[state=active]:bg-card">
-              <Banknote className="h-4 w-4" />
-              <span className="hidden sm:inline text-xs">الكاشير</span>
-            </TabsTrigger>
-            <TabsTrigger value="analytics" className="gap-1 data-[state=active]:bg-card">
-              <TrendingUp className="h-4 w-4" />
-              <span className="hidden sm:inline text-xs">التقارير</span>
+            <TabsTrigger value="danger"
+              className="flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-medium data-[state=active]:bg-rose-700 data-[state=active]:text-white data-[state=active]:shadow-md">
+              <Trash2 className="h-3.5 w-3.5" /><span>الخطرة</span>
             </TabsTrigger>
           </TabsList>
         )}
