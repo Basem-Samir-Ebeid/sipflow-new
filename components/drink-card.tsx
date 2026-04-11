@@ -68,8 +68,8 @@ export function DrinkCard({ drink, quantity, stock, note, onAdd, onRemove, onNot
         <h3 className="text-sm font-bold" style={{ color: 'rgba(255,255,255,0.85)' }}>
           {drink.name}
         </h3>
-        {drink.price > 0 && (
-          <p className="text-xs font-semibold mt-0.5" style={{ color: '#D4A017' }}>{drink.price.toFixed(2)} ج.م</p>
+        {Number(drink.price) > 0 && (
+          <p className="text-xs font-semibold mt-0.5" style={{ color: '#D4A017' }}>{Number(drink.price).toFixed(2)} ج.م</p>
         )}
       </div>
 

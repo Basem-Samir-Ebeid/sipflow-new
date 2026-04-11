@@ -221,11 +221,11 @@ export function ReceiptModal({ orders, drinks, currentUser, onClose }: ReceiptMo
   const calculateUserTotal = (userOrders: OrderWithDetails[]) =>
     userOrders.reduce((total, order) => {
       const drink = drinks.find(d => d.id === order.drink_id)
-      return total + (drink?.price || 0) * order.quantity
+      return total + (Number(drink?.price) || 0) * order.quantity
     }, 0)
 
   const totalOrdersPrice = orders.reduce((total, order) =>
-    total + (order.drink?.price || 0) * order.quantity, 0)
+    total + (Number(order.drink?.price) || 0) * order.quantity, 0)
 
   const currentUserOrders = currentUser ? orders.filter(o => o.user_id === currentUser.id) : []
   const currentUserTotal = calculateUserTotal(currentUserOrders)
@@ -253,7 +253,7 @@ export function ReceiptModal({ orders, drinks, currentUser, onClose }: ReceiptMo
   const ItemRows = ({ itemOrders }: { itemOrders: OrderWithDetails[] }) => (
     <>
       {itemOrders.map((order, i) => {
-        const itemTotal = (order.drink?.price || 0) * order.quantity
+        const itemTotal = (Number(order.drink?.price) || 0) * order.quantity
         return (
           <div key={order.id}>
             <div className="item-row">

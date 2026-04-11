@@ -193,9 +193,9 @@ export function CashierDashboard({ currentUser, currentPlace, onLogout }: Cashie
   })
 
   const settledRevenue = settlements.reduce((s, st) => s + st.total, 0)
-  const activeRevenue = orders.filter(o => !paidTables.has(getTableNum(o))).reduce((s, o) => s + (o.drink?.price || 0) * o.quantity, 0)
+  const activeRevenue = orders.filter(o => !paidTables.has(getTableNum(o))).reduce((s, o) => s + (Number(o.drink?.price) || 0) * o.quantity, 0)
   const selectedOrders = selectedTable ? (tableMap.get(selectedTable) || []) : []
-  const selectedTotal = selectedOrders.reduce((s, o) => s + (o.drink?.price || 0) * o.quantity, 0)
+  const selectedTotal = selectedOrders.reduce((s, o) => s + (Number(o.drink?.price) || 0) * o.quantity, 0)
   const selectedIsPaid = selectedTable ? paidTables.has(selectedTable) : false
 
   const serviceChargeRate = currentPlace.service_charge ?? 0
@@ -211,8 +211,8 @@ export function CashierDashboard({ currentUser, currentPlace, onLogout }: Cashie
     ords.map(o => ({
       name: o.drink?.name ?? '—',
       quantity: o.quantity,
-      unitPrice: o.drink?.price || 0,
-      total: (o.drink?.price || 0) * o.quantity
+      unitPrice: Number(o.drink?.price) || 0,
+      total: (Number(o.drink?.price) || 0) * o.quantity
     }))
 
   const openReceiptPreview = (tableNum: string, ords: OrderWithDetails[], subtotal: number) => {
@@ -516,7 +516,7 @@ export function CashierDashboard({ currentUser, currentPlace, onLogout }: Cashie
               const tOrds = tableMap.get(tableNum) || []
               const isActive = tOrds.length > 0
               const isPaid = paidTables.has(tableNum)
-              const total = tOrds.reduce((s, o) => s + (o.drink?.price || 0) * o.quantity, 0)
+              const total = tOrds.reduce((s, o) => s + (Number(o.drink?.price) || 0) * o.quantity, 0)
               const hasPending = tOrds.some(o => o.status === 'pending')
               let cardClass = 'border-zinc-700 bg-zinc-800/60 text-zinc-500'
               if (isPaid) cardClass = 'border-green-500/60 bg-green-500/15 text-green-400 cursor-pointer hover:bg-green-500/25 active:scale-95'
@@ -597,7 +597,7 @@ export function CashierDashboard({ currentUser, currentPlace, onLogout }: Cashie
                         </div>
                       </div>
                       <div className="flex items-center gap-2 shrink-0">
-                        <span className="text-zinc-400 text-xs tabular-nums">{((o.drink?.price || 0) * o.quantity).toFixed(0)} ج</span>
+                        <span className="text-zinc-400 text-xs tabular-nums">{((Number(o.drink?.price) || 0) * o.quantity).toFixed(0)} ج</span>
                         {nextLabel && (
                           <button
                             onClick={async () => {

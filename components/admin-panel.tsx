@@ -2168,7 +2168,7 @@ const handleSaveSettings = async () => {
                   {sortedTables.map(tableNum => {
                     const tableOrders = tableOrdersMap[tableNum] || []
                     const isOccupied = tableOrders.length > 0
-                    const totalBill = tableOrders.reduce((s, o) => s + ((o.drink?.price || 0) * (o.quantity || 1)), 0)
+                    const totalBill = tableOrders.reduce((s, o) => s + ((Number(o.drink?.price) || 0) * (o.quantity || 1)), 0)
                     const pendingCount = tableOrders.filter(o => o.status === 'pending').length
                     const readyCount = tableOrders.filter(o => o.status === 'ready').length
                     const uniqueUsers = [...new Set(tableOrders.map(o => o.customer_name || o.user?.name || '').filter(Boolean))]
@@ -2388,7 +2388,7 @@ const handleSaveSettings = async () => {
                             <div>
                               <p className="font-medium text-foreground">{drink.name}</p>
                               <div className="flex items-center gap-2">
-                                {drink.price > 0 && <p className="text-xs text-primary">{drink.price} ج.م</p>}
+                                {Number(drink.price) > 0 && <p className="text-xs text-primary">{Number(drink.price)} ج.م</p>}
                                 <span className="text-[10px] text-muted-foreground">{drink.category === 'hot' ? '☕' : drink.category === 'cold' ? '🧊' : '💨'}</span>
                               </div>
                             </div>
@@ -2443,8 +2443,8 @@ const handleSaveSettings = async () => {
                     </div>
                     <div>
                       <p className="font-medium text-foreground">{drink.name}</p>
-                      {drink.price > 0 && (
-                        <p className="text-xs text-primary">{drink.price} ج.م</p>
+                      {Number(drink.price) > 0 && (
+                        <p className="text-xs text-primary">{Number(drink.price)} ج.م</p>
                       )}
                     </div>
                   </div>
@@ -2618,7 +2618,7 @@ const handleSaveSettings = async () => {
                               <div>
                                 <p className="font-medium text-foreground">{drink.name}</p>
                                 <div className="flex items-center gap-2">
-                                  {drink.price > 0 && <p className="text-xs text-primary">{drink.price} ج.م</p>}
+                                  {Number(drink.price) > 0 && <p className="text-xs text-primary">{Number(drink.price)} ج.م</p>}
                                   {qty === 0 && <span className="text-[10px] font-bold text-destructive bg-destructive/10 px-1.5 py-0.5 rounded-full">Out of Stock</span>}
                                 </div>
                               </div>
@@ -2673,7 +2673,7 @@ const handleSaveSettings = async () => {
                     <div>
                       <p className="font-medium text-foreground">{drink.name}</p>
                       <div className="flex items-center gap-2">
-                        {drink.price > 0 && <p className="text-xs text-primary">{drink.price} ج.م</p>}
+                        {Number(drink.price) > 0 && <p className="text-xs text-primary">{Number(drink.price)} ج.م</p>}
                         {isOut && <span className="text-[10px] font-bold text-destructive bg-destructive/10 px-1.5 py-0.5 rounded-full">نفد</span>}
                         {isLow && <span className="text-[10px] font-bold text-amber-500 bg-amber-500/10 px-1.5 py-0.5 rounded-full">⚠️ منخفض</span>}
                       </div>
@@ -4060,7 +4060,7 @@ const handleSaveSettings = async () => {
           {/* ── Shift Summary Card ── */}
           {!isDevAdmin && (() => {
             const totalOrders = orders.length
-            const totalRevenue = orders.reduce((s, o) => s + ((o.drink?.price || 0) * (o.quantity || 1)), 0)
+            const totalRevenue = orders.reduce((s, o) => s + ((Number(o.drink?.price) || 0) * (o.quantity || 1)), 0)
             const completedOrders = orders.filter(o => o.status === 'completed' || o.status === 'ready').length
             const pendingOrders = orders.filter(o => o.status === 'pending').length
             const preparingOrders = orders.filter(o => o.status === 'preparing').length
@@ -5157,7 +5157,7 @@ const handleSaveSettings = async () => {
               return (
                 <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                   {sortedTables.map(([tableNum, tOrders]) => {
-                    const total = tOrders.reduce((s, o) => s + (o.drink?.price || 0) * o.quantity, 0)
+                    const total = tOrders.reduce((s, o) => s + (Number(o.drink?.price) || 0) * o.quantity, 0)
                     const isPaid = paidTables.has(tableNum)
                     return (
                       <div
@@ -5186,7 +5186,7 @@ const handleSaveSettings = async () => {
                                 {o.quantity > 1 && <span className="text-muted-foreground ml-1">× {o.quantity}</span>}
                               </span>
                               <span className="text-muted-foreground tabular-nums">
-                                {((o.drink?.price || 0) * o.quantity).toFixed(0)} ج.م
+                                {((Number(o.drink?.price) || 0) * o.quantity).toFixed(0)} ج.م
                               </span>
                             </div>
                           ))}

@@ -55,7 +55,7 @@ export function OrderBoard({ orders, drinks, currentUser, onDeleteOrder, isAdmin
   const calculateTotal = (userOrders: OrderWithDetails[]) => {
     return userOrders.reduce((total, order) => {
       const drink = drinks.find(d => d.id === order.drink_id)
-      return total + (drink?.price || 0) * order.quantity
+      return total + (Number(drink?.price) || 0) * order.quantity
     }, 0)
   }
 
@@ -144,7 +144,7 @@ export function OrderBoard({ orders, drinks, currentUser, onDeleteOrder, isAdmin
             {/* Orders List with Date/Time */}
             <div className="space-y-2">
               {customerOrders.map((order) => {
-                const drinkPrice = order.drink?.price || 0
+                const drinkPrice = Number(order.drink?.price) || 0
                 const orderTotal = drinkPrice * order.quantity
                 return (
                   <div 

@@ -1015,7 +1015,7 @@ export default function HomePage() {
             user_id: isDevAdmin ? null : resolvedUser?.id || null,
             drink_id: drinkId,
             quantity,
-            total_price: (drink?.price || 0) * quantity,
+            total_price: (Number(drink?.price) || 0) * quantity,
             notes: orderNotes,
             customer_name: customerName,
             table_number: tableNum,
@@ -1395,7 +1395,7 @@ export default function HomePage() {
 
   const cartTotal = Object.entries(cart).reduce((total, [drinkId, qty]) => {
     const drink = drinks.find(d => d.id === drinkId)
-    return total + (drink?.price || 0) * qty
+    return total + (Number(drink?.price) || 0) * qty
   }, 0)
 
   const cartCount = Object.values(cart).reduce((sum, qty) => sum + qty, 0)
@@ -1410,7 +1410,7 @@ export default function HomePage() {
   const boardOrders = (isToday && viewingLiveSession) ? orders : (dateOrders ?? [])
 
   const totalOrdersPrice = boardOrders.reduce((total, order) => {
-    return total + (order.drink?.price || 0) * order.quantity
+    return total + (Number(order.drink?.price) || 0) * order.quantity
   }, 0)
 
   const uniqueUsers = [...new Set(boardOrders.map(o => o.user_id))].length
@@ -3741,7 +3741,7 @@ export default function HomePage() {
                               <div className="text-right">
                                 <p className="text-sm text-muted-foreground">الإجمالي</p>
                                 <p className="text-2xl font-bold text-foreground">
-                                  {archivedOrders.reduce((t, o) => t + (o.drink?.price || 0) * o.quantity, 0).toFixed(0)}
+                                  {archivedOrders.reduce((t, o) => t + (Number(o.drink?.price) || 0) * o.quantity, 0).toFixed(0)}
                                 </p>
                               </div>
                               <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-muted">
@@ -3769,7 +3769,7 @@ export default function HomePage() {
                             }, {} as Record<string, { orders: OrderWithDetails[]; tableNum?: string | null; displayName: string }>)
 
                             return Object.entries(grouped).map(([key, { orders: userOrders, tableNum, displayName }]) => {
-                              const total = userOrders.reduce((s, o) => s + (o.drink?.price || 0) * o.quantity, 0)
+                              const total = userOrders.reduce((s, o) => s + (Number(o.drink?.price) || 0) * o.quantity, 0)
                               return (
                                 <div key={key} className="rounded-2xl border border-border bg-card overflow-hidden">
                                   <div className="flex items-center justify-between px-4 py-3 border-b border-border">
@@ -3790,7 +3790,7 @@ export default function HomePage() {
                                             <span className="text-sm font-medium text-foreground">{o.drink?.name || '—'}</span>
                                             <span className="text-xs text-muted-foreground bg-muted px-1.5 py-0.5 rounded">x{o.quantity}</span>
                                           </div>
-                                          <span className="text-sm font-semibold" style={{ color: '#D4A017' }}>{(o.drink?.price || 0) * o.quantity} ج.م</span>
+                                          <span className="text-sm font-semibold" style={{ color: '#D4A017' }}>{(Number(o.drink?.price) || 0) * o.quantity} ج.م</span>
                                         </div>
                                         {o.notes && (
                                           <p className="text-xs text-muted-foreground mt-1">📝 {o.notes}</p>
@@ -3863,7 +3863,7 @@ export default function HomePage() {
               const filteredBo = tableNum
                 ? bo.filter(o => o.user?.table_number === tableNum)
                 : bo
-              const boTotal = filteredBo.reduce((t, o) => t + (o.drink?.price || 0) * o.quantity, 0)
+              const boTotal = filteredBo.reduce((t, o) => t + (Number(o.drink?.price) || 0) * o.quantity, 0)
               const boUsers = [...new Set(filteredBo.map(o => o.user_id))].length
               return (
                 <>
