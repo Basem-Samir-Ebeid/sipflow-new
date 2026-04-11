@@ -249,6 +249,98 @@ export function AdminPanel({
     }
   }
 
+  // ── Fetch global banner settings (dev admin) ──
+  const fetchGlobalBanner = async () => {
+    try {
+      const [enRes, txtRes, colRes] = await Promise.all([
+        fetch('/api/settings?key=global_banner_enabled'),
+        fetch('/api/settings?key=global_banner_text'),
+        fetch('/api/settings?key=global_banner_color'),
+      ])
+      if (enRes.ok) { const d = await enRes.json(); setGlobalBannerEnabled(d.value === 'true') }
+      if (txtRes.ok) { const d = await txtRes.json(); if (d.value) setGlobalBannerText(d.value) }
+      if (colRes.ok) { const d = await colRes.json(); if (d.value) setGlobalBannerColor(d.value) }
+    } catch {}
+  }
+
+  // ── Save global banner ──
+  const handleSaveBanner = async () => {
+    setIsSavingBanner(true)
+    try {
+      await Promise.all([
+        fetch('/api/settings', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ key: 'global_banner_enabled', value: globalBannerEnabled.toString() }) }),
+        fetch('/api/settings', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ key: 'global_banner_text', value: globalBannerText }) }),
+        fetch('/api/settings', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ key: 'global_banner_color', value: globalBannerColor }) }),
+      ])
+      toast.success('تم حفظ البنر العالمي')
+    } catch { toast.error('خطأ في حفظ البنر') }
+    finally { setIsSavingBanner(false) }
+  }
+
+  // ── Clone place ──
+  const handleClonePlace = async () => {
+    if (!cloneSourceId || !cloneNewName.trim() || !cloneNewCode.trim()) {
+      toast.error('اختر مكان المصدر وأدخل الاسم والكود')
+      return
+    }
+    setIsCloningPlace(true)
+    try {
+      const res = await fetch('/api/places/clone', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ source_place_id: cloneSourceId, new_name: cloneNewName, new_code: cloneNewCode })
+      })
+      const data = await res.json()
+      if (!res.ok) { toast.error(data.error || 'فشل نسخ المكان'); return }
+      toast.success(`تم نسخ المكان بنجاح — ${data.drinks_copied} مشروب تم نسخه`)
+      setCloneNewName('')
+      setCloneNewCode('')
+      setCloneSourceId('')
+      fetchPlaces()
+    } catch { toast.error('خطأ في نسخ المكان') }
+    finally { setIsCloningPlace(false) }
+  }
+
+  // ── Broadcast message to all places ──
+  const handleBroadcast = async () => {
+    if (!broadcastTitle.trim() || !broadcastMsg.trim()) { toast.error('أدخل العنوان والرسالة'); return }
+    if (places.length === 0) { toast.error('لا توجد أماكن'); return }
+    setIsBroadcasting(true)
+    try {
+      await Promise.all(
+        places.map(p =>
+          fetch('/api/messages', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ title: broadcastTitle.trim(), message: broadcastMsg.trim(), place_id: p.id, is_from_admin: true })
+          })
+        )
+      )
+      toast.success(`تم إرسال الرسالة لـ ${places.length} مكان`)
+      setBroadcastTitle('')
+      setBroadcastMsg('')
+    } catch { toast.error('خطأ في إرسال الرسائل') }
+    finally { setIsBroadcasting(false) }
+  }
+
+  // ── Delete old sessions (dev admin) ──
+  const handleDeleteOldData = async () => {
+    setIsDeletingOldData(true)
+    setBulkDeleteResult(null)
+    try {
+      const res = await fetch('/api/reset-data', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-admin-secret': 'Basem.s.ebeid#@55!' },
+        body: JSON.stringify({ action: 'delete_old', months: parseInt(bulkDeleteMonths, 10) })
+      })
+      const data = await res.json()
+      if (!res.ok) { toast.error('خطأ في الحذف'); return }
+      setBulkDeleteResult(`تم حذف ${data.deleted_sessions} جلسة قديمة`)
+      toast.success(`تم حذف ${data.deleted_sessions} جلسة قديمة وطلباتها`)
+    } catch { toast.error('خطأ في حذف البيانات') }
+    finally { setIsDeletingOldData(false) }
+  }
+
   // Fetch place closed status
   const fetchClosedStatus = async () => {
     if (!placeId) return
@@ -398,6 +490,29 @@ export function AdminPanel({
   const [isPlaceClosed, setIsPlaceClosed] = useState(false)
   const [placeClosedMsg, setPlaceClosedMsg] = useState('المكان مغلق حالياً، نعتذر عن الإزعاج')
   const [isSavingClosedStatus, setIsSavingClosedStatus] = useState(false)
+
+  // ── Dev admin exclusive states ──
+  // Clone place
+  const [cloneSourceId, setCloneSourceId] = useState('')
+  const [cloneNewName, setCloneNewName] = useState('')
+  const [cloneNewCode, setCloneNewCode] = useState('')
+  const [isCloningPlace, setIsCloningPlace] = useState(false)
+
+  // Bulk delete old data
+  const [bulkDeleteMonths, setBulkDeleteMonths] = useState('3')
+  const [isDeletingOldData, setIsDeletingOldData] = useState(false)
+  const [bulkDeleteResult, setBulkDeleteResult] = useState<string | null>(null)
+
+  // Global banner
+  const [globalBannerEnabled, setGlobalBannerEnabled] = useState(false)
+  const [globalBannerText, setGlobalBannerText] = useState('')
+  const [globalBannerColor, setGlobalBannerColor] = useState('amber')
+  const [isSavingBanner, setIsSavingBanner] = useState(false)
+
+  // Broadcast message
+  const [broadcastTitle, setBroadcastTitle] = useState('')
+  const [broadcastMsg, setBroadcastMsg] = useState('')
+  const [isBroadcasting, setIsBroadcasting] = useState(false)
 
   // Staff users state
   interface StaffUser {
@@ -1399,7 +1514,7 @@ const handleSaveSettings = async () => {
         if (v === 'tables' && !isDevAdmin) { fetchPlaceTableCount(); fetchInventory() }
         if (v === 'settings' && !isDevAdmin && placeId) { fetchClosedStatus() }
         if (v === 'settings' && !isDevAdmin && placeId) { fetchPlaces().then(list => { const p = list.find((pl: Place) => pl.id === placeId); if (p) { setReservationsEnabledMap(prev => ({ ...prev, [placeId]: !!p.reservations_enabled })); setOrderTrackingMap(prev => ({ ...prev, [placeId]: p.order_tracking_enabled !== false })) } }) }
-        if (v === 'settings' && isDevAdmin) { fetchPlaces().then(list => { const m: Record<string, boolean> = {}; list.forEach((p: Place) => { m[p.id] = p.order_tracking_enabled !== false }); setOrderTrackingMap(m) }) }
+        if (v === 'settings' && isDevAdmin) { fetchGlobalBanner(); fetchPlaces().then(list => { const m: Record<string, boolean> = {}; list.forEach((p: Place) => { m[p.id] = p.order_tracking_enabled !== false }); setOrderTrackingMap(m) }) }
         if (v === 'cashier') { if (isDevAdmin) { fetchPlaces().then(list => { if (list.length > 0) setCashierPlaceId(prev => { const chosen = prev || list[0].id; fetchCashierOrders(chosen); return chosen }) }); fetchCashierUsers() } else if (placeId) { setCashierPlaceId(placeId); setCashierUserPlaceId(placeId); setTableNewPlaceId(placeId); setTablesPlaceId(placeId); setFeeSettingsPlaceId(placeId); fetchCashierOrders(placeId); fetchCashierUsers(placeId); fetchTableUsers(placeId); fetchPlaces().then(list => { const p = list.find((pl: Place) => pl.id === placeId); if (p) { setFeeServiceCharge(p.service_charge != null ? String(p.service_charge) : '0'); setFeeTaxRate(p.tax_rate != null ? String(p.tax_rate) : '0') } }) } }
         if (v === 'reservations') { if (!isDevAdmin && placeId) { setReservationsPlaceId(placeId); fetchReservations(placeId) } fetchPlaces().then(list => { if (list.length > 0) { const pid = isDevAdmin ? (reservationsPlaceId || list[0].id) : (placeId || list[0].id); if (isDevAdmin) { setReservationsPlaceId(pid); fetchReservations(pid) } const p = list.find((pl: Place) => pl.id === pid); if (p) setReservationsEnabledMap(prev => ({ ...prev, [pid]: !!p.reservations_enabled })) } }) }
         if (v === 'analytics') {
@@ -2874,6 +2989,43 @@ const handleSaveSettings = async () => {
         </TabsContent>
 
         <TabsContent value="messages" className="space-y-4">
+
+          {/* ── Broadcast Message (dev admin only) ── */}
+          {isDevAdmin && (
+            <div className="rounded-2xl p-4 space-y-3" style={{ background: 'rgba(99,102,241,0.05)', border: '1px solid rgba(99,102,241,0.25)' }}>
+              <div className="flex items-center gap-2 mb-1">
+                <span className="text-lg">📣</span>
+                <div>
+                  <h3 className="text-sm font-bold text-foreground">رسالة جماعية</h3>
+                  <p className="text-xs text-muted-foreground">ترسل لكل الأماكن دفعة واحدة ({places.length} مكان)</p>
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Input
+                  value={broadcastTitle}
+                  onChange={e => setBroadcastTitle(e.target.value)}
+                  placeholder="عنوان الرسالة — مثال: تنبيه هام"
+                  className="border-border bg-muted text-foreground text-sm"
+                />
+                <textarea
+                  value={broadcastMsg}
+                  onChange={e => setBroadcastMsg(e.target.value)}
+                  placeholder="نص الرسالة التي ستصل لكل الأماكن..."
+                  rows={3}
+                  className="w-full rounded-lg border border-border bg-muted px-3 py-2 text-sm text-foreground resize-none focus:outline-none focus:ring-1 focus:ring-primary"
+                />
+              </div>
+              <Button
+                className="w-full"
+                style={{ background: 'rgba(99,102,241,0.2)', color: '#a5b4fc', border: '1px solid rgba(99,102,241,0.4)' }}
+                onClick={handleBroadcast}
+                disabled={isBroadcasting || places.length === 0}
+              >
+                {isBroadcasting ? 'جاري الإرسال...' : `📣 إرسال لكل الأماكن (${places.length})`}
+              </Button>
+            </div>
+          )}
+
           {/* Dev admin only: place admin activity notifications */}
           {isDevAdmin && (
             <div className="rounded-2xl border border-amber-500/40 bg-card p-4">
@@ -3490,6 +3642,92 @@ const handleSaveSettings = async () => {
             </div>
           )}
 
+          {/* ── Global Banner (dev admin only) ── */}
+          {isDevAdmin && (
+            <div className="rounded-2xl p-4 space-y-4" style={{
+              background: globalBannerEnabled ? 'rgba(212,160,23,0.06)' : 'rgba(255,255,255,0.02)',
+              border: `1px solid ${globalBannerEnabled ? 'rgba(212,160,23,0.4)' : 'rgba(255,255,255,0.08)'}`
+            }}>
+              {/* Header row */}
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className="text-lg">📢</span>
+                  <div>
+                    <h3 className="text-sm font-bold text-foreground">البنر العالمي</h3>
+                    <p className="text-xs text-muted-foreground">يظهر لكل الزبائن في كل الأماكن</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setGlobalBannerEnabled(v => !v)}
+                  className={`relative inline-flex h-7 w-12 items-center rounded-full transition-colors ${globalBannerEnabled ? 'bg-amber-500' : 'bg-muted-foreground/30'}`}
+                >
+                  <span className={`inline-block h-5 w-5 transform rounded-full bg-white shadow-lg transition-transform ${globalBannerEnabled ? 'translate-x-6' : 'translate-x-1'}`} />
+                </button>
+              </div>
+
+              {/* Banner text */}
+              <div className="space-y-2">
+                <Label className="text-xs text-muted-foreground">نص البنر</Label>
+                <Input
+                  value={globalBannerText}
+                  onChange={e => setGlobalBannerText(e.target.value)}
+                  placeholder="مثال: سيتم صيانة النظام الساعة 2 صباحاً"
+                  className="border-border bg-muted text-foreground text-sm"
+                />
+              </div>
+
+              {/* Color selector */}
+              <div className="space-y-2">
+                <Label className="text-xs text-muted-foreground">لون البنر</Label>
+                <div className="flex gap-2">
+                  {[
+                    { key: 'amber', label: '🟡 ذهبي' },
+                    { key: 'red', label: '🔴 أحمر' },
+                    { key: 'blue', label: '🔵 أزرق' },
+                    { key: 'green', label: '🟢 أخضر' },
+                  ].map(c => (
+                    <button
+                      key={c.key}
+                      onClick={() => setGlobalBannerColor(c.key)}
+                      className="flex-1 rounded-lg py-1.5 text-xs font-medium transition-all"
+                      style={{
+                        background: globalBannerColor === c.key ? 'rgba(212,160,23,0.2)' : 'rgba(255,255,255,0.04)',
+                        border: `1px solid ${globalBannerColor === c.key ? 'rgba(212,160,23,0.5)' : 'rgba(255,255,255,0.08)'}`,
+                        color: globalBannerColor === c.key ? '#D4A017' : '#9ca3af'
+                      }}
+                    >{c.label}</button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Preview */}
+              {globalBannerText && (
+                <div className="rounded-lg px-3 py-2 text-xs font-medium text-center" style={{
+                  background: globalBannerColor === 'amber' ? 'rgba(212,160,23,0.15)' :
+                    globalBannerColor === 'red' ? 'rgba(239,68,68,0.15)' :
+                    globalBannerColor === 'blue' ? 'rgba(59,130,246,0.15)' : 'rgba(34,197,94,0.15)',
+                  color: globalBannerColor === 'amber' ? '#D4A017' :
+                    globalBannerColor === 'red' ? '#f87171' :
+                    globalBannerColor === 'blue' ? '#60a5fa' : '#4ade80',
+                  border: `1px solid ${globalBannerColor === 'amber' ? 'rgba(212,160,23,0.3)' :
+                    globalBannerColor === 'red' ? 'rgba(239,68,68,0.3)' :
+                    globalBannerColor === 'blue' ? 'rgba(59,130,246,0.3)' : 'rgba(34,197,94,0.3)'}`
+                }}>
+                  📢 {globalBannerText}
+                </div>
+              )}
+
+              <Button
+                className="w-full"
+                style={{ background: 'rgba(212,160,23,0.15)', color: '#D4A017', border: '1px solid rgba(212,160,23,0.3)' }}
+                onClick={handleSaveBanner}
+                disabled={isSavingBanner}
+              >
+                {isSavingBanner ? 'جاري الحفظ...' : '💾 حفظ البنر'}
+              </Button>
+            </div>
+          )}
+
           {/* Working Hours */}
           <div className="rounded-2xl border border-border bg-card p-4">
             <div className="mb-4 flex items-center gap-2">
@@ -3801,6 +4039,56 @@ const handleSaveSettings = async () => {
             )
           })()}
 
+          {/* ── Bulk Delete Old Data (dev admin only) ── */}
+          {isDevAdmin && (
+            <div className="rounded-2xl p-4 space-y-3" style={{ background: 'rgba(239,68,68,0.04)', border: '1px solid rgba(239,68,68,0.2)' }}>
+              <div className="flex items-center gap-2">
+                <span className="text-lg">🗑️</span>
+                <div>
+                  <h3 className="text-sm font-bold text-foreground">ضغط البيانات القديمة</h3>
+                  <p className="text-xs text-muted-foreground">احذف الجلسات والطلبات الأقدم من X شهر من كل الأماكن</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3">
+                <Label className="text-xs text-muted-foreground whitespace-nowrap">أقدم من</Label>
+                <select
+                  value={bulkDeleteMonths}
+                  onChange={e => setBulkDeleteMonths(e.target.value)}
+                  className="flex-1 rounded-lg border border-border bg-muted px-3 py-2 text-sm text-foreground"
+                >
+                  <option value="1">1 شهر</option>
+                  <option value="3">3 أشهر</option>
+                  <option value="6">6 أشهر</option>
+                  <option value="12">سنة</option>
+                </select>
+              </div>
+              {bulkDeleteResult && (
+                <p className="text-xs text-green-400 font-medium">✓ {bulkDeleteResult}</p>
+              )}
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button className="w-full" style={{ background: 'rgba(239,68,68,0.15)', color: '#f87171', border: '1px solid rgba(239,68,68,0.35)' }} disabled={isDeletingOldData}>
+                    {isDeletingOldData ? 'جاري الحذف...' : `🗑️ احذف البيانات الأقدم من ${bulkDeleteMonths} شهر`}
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent className="border-border bg-card">
+                  <AlertDialogHeader>
+                    <AlertDialogTitle className="text-foreground">تأكيد حذف البيانات القديمة</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      سيتم حذف كل الجلسات والطلبات الأقدم من {bulkDeleteMonths} شهر من جميع الأماكن. هذا الإجراء لا يمكن التراجع عنه.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel className="border-border">إلغاء</AlertDialogCancel>
+                    <AlertDialogAction onClick={handleDeleteOldData} className="bg-destructive text-destructive-foreground">
+                      حذف البيانات
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            </div>
+          )}
+
           <div className="rounded-2xl border border-destructive/50 bg-destructive/10 p-4">
             <h3 className="mb-4 font-semibold text-destructive">بدء SîpFlõw جديدة</h3>
             <p className="mb-4 text-sm text-muted-foreground">
@@ -4008,6 +4296,53 @@ const handleSaveSettings = async () => {
               <Button className="w-full" onClick={handleAddPlace} disabled={isAddingPlace}>
                 <Plus className="ml-2 h-4 w-4" />
                 {isAddingPlace ? 'جاري الإضافة...' : 'إضافة المكان'}
+              </Button>
+            </div>
+
+            {/* ── Clone Place ── */}
+            <div className="rounded-2xl p-4 space-y-3" style={{ background: 'rgba(168,85,247,0.04)', border: '1px solid rgba(168,85,247,0.2)' }}>
+              <div className="flex items-center gap-2">
+                <span className="text-lg">🪄</span>
+                <div>
+                  <h3 className="text-sm font-bold text-foreground">نسخ مكان</h3>
+                  <p className="text-xs text-muted-foreground">ينسخ المنيو والإعدادات لمكان جديد</p>
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label className="text-xs text-muted-foreground">المكان المصدر</Label>
+                <select
+                  value={cloneSourceId}
+                  onChange={e => {
+                    setCloneSourceId(e.target.value)
+                    const src = places.find(p => p.id === e.target.value)
+                    if (src && !cloneNewName) setCloneNewName(`${src.name} (نسخة)`)
+                    if (src && !cloneNewCode) setCloneNewCode(`${src.code}-copy`)
+                  }}
+                  className="w-full rounded-lg border border-border bg-muted px-3 py-2 text-sm text-foreground"
+                >
+                  <option value="">— اختر المكان المصدر —</option>
+                  {places.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                </select>
+                <Input
+                  value={cloneNewName}
+                  onChange={e => setCloneNewName(e.target.value)}
+                  placeholder="اسم المكان الجديد"
+                  className="border-border bg-muted text-foreground text-sm"
+                />
+                <Input
+                  value={cloneNewCode}
+                  onChange={e => setCloneNewCode(e.target.value)}
+                  placeholder="كود المكان الجديد (يكتبه الزبون)"
+                  className="border-border bg-muted text-foreground text-sm"
+                />
+              </div>
+              <Button
+                className="w-full"
+                style={{ background: 'rgba(168,85,247,0.15)', color: '#c084fc', border: '1px solid rgba(168,85,247,0.35)' }}
+                onClick={handleClonePlace}
+                disabled={isCloningPlace}
+              >
+                {isCloningPlace ? 'جاري النسخ...' : '🪄 نسخ المكان'}
               </Button>
             </div>
 

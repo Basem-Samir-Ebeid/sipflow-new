@@ -94,6 +94,12 @@ export default function HomePage() {
   const [isPlaceCurrentlyClosed, setIsPlaceCurrentlyClosed] = useState(false)
   const [placeClosedMessage, setPlaceClosedMessage] = useState('المكان مغلق حالياً، نعتذر عن الإزعاج')
 
+  // Global banner state
+  const [globalBannerEnabled, setGlobalBannerEnabled] = useState(false)
+  const [globalBannerText, setGlobalBannerText] = useState('')
+  const [globalBannerColor, setGlobalBannerColor] = useState('amber')
+  const [bannerDismissed, setBannerDismissed] = useState(false)
+
   // Rating state
   const [ratingValue, setRatingValue] = useState(0)
   const [ratingHover, setRatingHover] = useState(0)
@@ -285,6 +291,19 @@ export default function HomePage() {
       localStorage.setItem('qa3da_app_version', APP_VERSION)
     }
     setMounted(true)
+  }, [])
+
+  // Fetch global banner on mount
+  useEffect(() => {
+    Promise.all([
+      fetch('/api/settings?key=global_banner_enabled').then(r => r.json()).catch(() => ({})),
+      fetch('/api/settings?key=global_banner_text').then(r => r.json()).catch(() => ({})),
+      fetch('/api/settings?key=global_banner_color').then(r => r.json()).catch(() => ({})),
+    ]).then(([en, txt, col]) => {
+      if (en.value === 'true') setGlobalBannerEnabled(true)
+      if (txt.value) setGlobalBannerText(txt.value)
+      if (col.value) setGlobalBannerColor(col.value)
+    })
   }, [])
 
   // Fetch place closed status whenever place changes
@@ -2370,6 +2389,29 @@ export default function HomePage() {
               <Sparkles className="h-4 w-4 text-green-300 animate-pulse" />
             </div>
             <span className="text-xs text-green-300/60 font-mono">v{APP_VERSION}</span>
+          </div>
+        </div>
+      )}
+
+      {/* ── Global Banner ── */}
+      {globalBannerEnabled && globalBannerText && !bannerDismissed && (
+        <div className="sticky top-0 z-40 w-full" style={{
+          background: globalBannerColor === 'amber' ? 'linear-gradient(90deg,rgba(120,70,0,0.95),rgba(160,100,0,0.95),rgba(120,70,0,0.95))' :
+            globalBannerColor === 'red' ? 'linear-gradient(90deg,rgba(120,10,10,0.95),rgba(180,20,20,0.95),rgba(120,10,10,0.95))' :
+            globalBannerColor === 'blue' ? 'linear-gradient(90deg,rgba(10,30,100,0.95),rgba(30,80,180,0.95),rgba(10,30,100,0.95))' :
+            'linear-gradient(90deg,rgba(10,80,30,0.95),rgba(20,130,50,0.95),rgba(10,80,30,0.95))',
+          borderBottom: `1px solid ${globalBannerColor === 'amber' ? 'rgba(212,160,23,0.4)' : globalBannerColor === 'red' ? 'rgba(239,68,68,0.4)' : globalBannerColor === 'blue' ? 'rgba(59,130,246,0.4)' : 'rgba(34,197,94,0.4)'}`
+        }}>
+          <div className="flex items-center justify-between gap-3 px-4 py-2.5 max-w-2xl mx-auto">
+            <span className="text-sm">📢</span>
+            <p className="flex-1 text-center text-sm font-medium" style={{
+              color: globalBannerColor === 'amber' ? '#fde68a' : globalBannerColor === 'red' ? '#fca5a5' : globalBannerColor === 'blue' ? '#bfdbfe' : '#bbf7d0'
+            }}>
+              {globalBannerText}
+            </p>
+            <button onClick={() => setBannerDismissed(true)} className="text-white/40 hover:text-white/80 transition-colors shrink-0">
+              <X className="h-4 w-4" />
+            </button>
           </div>
         </div>
       )}

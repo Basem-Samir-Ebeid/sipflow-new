@@ -3,6 +3,12 @@
 ## Overview
 A Next.js multi-tenant café/social space drink ordering and management system. Each café location (Place) has isolated data. Customers browse a categorized menu (Hot/Cold/Shisha), place orders with notes, and get assigned a table. Staff manage orders via a dashboard. Admins manage drinks, users, inventory, send broadcast messages, and view revenue analytics. A developer admin manages all places (create/toggle/delete).
 
+## Recent Features (v2.2 — Dev Admin Exclusives)
+- **البنر العالمي:** Dev admin can enable a global announcement banner (Settings tab) with custom text and 4 color themes. Banner appears at the top of the customer page (sticky, dismissable) using `global_banner_enabled/text/color` app_settings keys.
+- **رسالة جماعية:** Dev admin can broadcast a titled message to all places simultaneously (Messages tab). POSTs to `/api/messages` for each place in parallel.
+- **نسخ مكان:** Dev admin can clone any existing place (Places tab) — copies all metadata + drinks to a new place with a custom name/code. New API endpoint `POST /api/places/clone`.
+- **ضغط البيانات:** Dev admin can bulk-delete old sessions & orders older than 1/3/6/12 months across all places (Danger tab). Extended `POST /api/reset-data` with `action: 'delete_old'`.
+
 ## Recent Features (v2.1)
 - **نداء النادل (Call Waiter):** Customers with a table number see a "🔔 اطلب النادل" button in the tracker widget while orders are active. 60-second cooldown after each call. POSTs to `/api/messages` with title "🔔 نداء نادل". Waiter page polls messages every 10s, plays sound for new calls, and shows dismissable indigo notification cards with a badge count in the header.
 - **طباعة الفاتورة (Print Receipt):** Customers see a "🖨️ اطبع فاتورتك" button in the tracker widget when all orders are delivered. Triggers existing receipt modal (`setShowReceipt(true)`).
