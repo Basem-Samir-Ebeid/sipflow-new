@@ -6,6 +6,9 @@ A Next.js multi-tenant café/social space drink ordering and management system. 
 ## Known Fix — Price Type Coercion
 PostgreSQL returns DECIMAL/NUMERIC columns as strings (e.g., `'15.00'`). All `drink.price` references across the codebase use `Number()` conversion before arithmetic, comparisons, and `.toFixed()` calls. This prevents `TypeError` crashes in DrinkCard and other components.
 
+## Recent Features (v2.4 — Live Command Center)
+- **مركز التحكم (Command Center):** Dev admin's default tab — real-time overview of all active places. Shows global stats (total places, orders, revenue, active tables), per-place health indicators (green/yellow/red pulse), order counts by status, revenue, waiter calls. Auto-refreshes every 5 seconds. Violet/indigo theme. Recent activity feed with live notifications. API: `GET /api/command-center` (auth-protected via `x-admin-secret` header).
+
 ## Recent Features (v2.3 — Admin UI Refresh)
 - **شاشة ترحيب المطور:** Violet/indigo command-center aesthetic — animated spinning ring, "secure session" badge, "ACCESS GRANTED" glow, 2×2 status cards, terminal-style log line.
 - **شاشة ترحيب أدمن المكان:** Warm amber theme — spinning ring around café icon, "PLACE ADMIN" badge, 2×2 status cards, rounded corner frames. Simpler but cohesive with dev admin design.

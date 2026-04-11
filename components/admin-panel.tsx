@@ -25,9 +25,10 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Plus, Trash2, Pencil, Upload, RefreshCw, Users, Coffee, Key, BarChart3, TrendingUp, Award, Clock, Send, MessageSquare, Settings2, Hash, UserPlus, UserCog, Minus, Package, Banknote, CheckCircle2, Hourglass, TableProperties, Copy, ExternalLink, Link2, Eye, EyeOff, QrCode, CalendarDays, CalendarCheck, CalendarX, Download, Loader2 } from 'lucide-react'
+import { Plus, Trash2, Pencil, Upload, RefreshCw, Users, Coffee, Key, BarChart3, TrendingUp, Award, Clock, Send, MessageSquare, Settings2, Hash, UserPlus, UserCog, Minus, Package, Banknote, CheckCircle2, Hourglass, TableProperties, Copy, ExternalLink, Link2, Eye, EyeOff, QrCode, CalendarDays, CalendarCheck, CalendarX, Download, Loader2, Activity } from 'lucide-react'
 import { Checkbox } from '@/components/ui/checkbox'
 import Image from 'next/image'
+import { CommandCenter } from '@/components/command-center'
 
 
 
@@ -185,7 +186,7 @@ export function AdminPanel({
   const [showCreatePass, setShowCreatePass] = useState(false)
 
   // Admin tabs controlled state
-  const [activeAdminTab, setActiveAdminTab] = useState('stats')
+  const [activeAdminTab, setActiveAdminTab] = useState(isDevAdmin ? 'command-center' : 'stats')
   const [staffUrlCopied, setStaffUrlCopied] = useState(false)
   const [staffOrigin, setStaffOrigin] = useState('')
 
@@ -1635,6 +1636,17 @@ const handleSaveSettings = async () => {
         {/* ── Dev Admin: horizontal scroll tab bar ── */}
         {isDevAdmin ? (
           <TabsList className="mb-3 flex w-full overflow-x-auto gap-0.5 rounded-xl p-1.5 h-auto [&>*]:shrink-0 [&>*]:whitespace-nowrap" style={{ scrollbarWidth: 'none', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}>
+            {/* ── Command Center ── */}
+            <TabsTrigger value="command-center"
+              className="relative flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-medium data-[state=active]:text-white data-[state=active]:shadow-lg"
+              style={{ background: activeAdminTab === 'command-center' ? 'linear-gradient(135deg, #7c3aed, #4f46e5)' : undefined }}>
+              <Activity className="h-3.5 w-3.5" /><span>مركز التحكم</span>
+              <span className="absolute -top-0.5 -left-0.5 flex h-2 w-2">
+                <span className="absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75 animate-ping" />
+                <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-400" />
+              </span>
+            </TabsTrigger>
+            <div className="mx-1.5 h-6 w-px self-center rounded-full" style={{ background: 'rgba(255,255,255,0.08)' }} />
             {/* ── Group 1: Analytics (violet) ── */}
             <span className="shrink-0 self-center px-1 text-[9px] font-bold uppercase tracking-widest" style={{ color: '#7c3aed' }}>تحليلات</span>
             <TabsTrigger value="stats"
@@ -1779,6 +1791,11 @@ const handleSaveSettings = async () => {
             </TabsTrigger>
           </TabsList>
         )}
+
+        {/* ── Command Center Tab ── */}
+        <TabsContent value="command-center" className="space-y-4">
+          <CommandCenter />
+        </TabsContent>
 
         <TabsContent value="stats" className="space-y-4">
 
