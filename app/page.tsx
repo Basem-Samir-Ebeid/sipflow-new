@@ -2503,7 +2503,7 @@ export default function HomePage() {
               <div className="absolute inset-[-6px] rounded-full animate-spin" style={{ background: 'conic-gradient(from 0deg, transparent 0%, rgba(147,51,234,0.5) 25%, transparent 50%, rgba(99,102,241,0.5) 75%, transparent 100%)', animationDuration: '4s' }} />
               <div className="absolute inset-[-5px] rounded-full" style={{ background: '#0a0018' }} />
               <div className="h-24 w-24 rounded-full overflow-hidden" style={{ border: '2px solid rgba(147,51,234,0.5)', boxShadow: '0 0 30px rgba(147,51,234,0.25), inset 0 0 20px rgba(147,51,234,0.1)' }}>
-                <img src="/images/qa3da-logo.jpg" alt="SipFlow" className="h-full w-full object-cover" />
+                <img src="/images/dev-admin-avatar.jpg" alt={savedDevName} className="h-full w-full object-cover" />
               </div>
             </div>
 
