@@ -2806,71 +2806,86 @@ export default function HomePage() {
       <div className="relative z-10 mx-auto max-w-2xl p-4">
         {/* Surprise Me Modal */}
         {showSurpriseModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-            <div className="w-full max-w-sm rounded-3xl overflow-hidden shadow-2xl" style={{ background: 'linear-gradient(160deg, #1a0050, #3a0080)' }}>
-              {/* Header */}
-              <div className="p-6 text-center relative overflow-hidden">
-                <div className="absolute inset-0 opacity-10" style={{ backgroundImage: 'radial-gradient(circle at 50% 0%, #fff 0%, transparent 60%)' }} />
-                <p className="text-5xl mb-2">{isSurprising ? '🎲' : '✨'}</p>
-                <h2 className="text-xl font-black text-white">
-                  {isSurprising ? 'جاري الاختيار...' : 'مشروبك العشوائي!'}
-                </h2>
-              </div>
-              {/* Drink Display */}
-              <div className={`mx-4 mb-4 rounded-2xl bg-white/10 p-5 text-center transition-all duration-100 ${isSurprising ? 'scale-95 opacity-70' : 'scale-100 opacity-100'}`}>
-                {surpriseDrink ? (
-                  <>
-                    {surpriseDrink.image_url && (
-                      <div className="relative w-24 h-24 mx-auto mb-3 rounded-2xl overflow-hidden">
-                        <Image src={surpriseDrink.image_url} alt={surpriseDrink.name} fill className="object-cover" />
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-md p-4" onClick={() => !isSurprising && setShowSurpriseModal(false)}>
+            <div className="w-full max-w-sm overflow-hidden" onClick={e => e.stopPropagation()}>
+              <div className="relative rounded-3xl overflow-hidden" style={{ background: 'linear-gradient(170deg, #1a1a2e 0%, #0d0d1a 100%)', border: '1px solid rgba(212,160,23,0.2)', boxShadow: '0 25px 60px rgba(0,0,0,0.7), 0 0 40px rgba(212,160,23,0.08)' }}>
+                <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: 'radial-gradient(circle at 30% 20%, rgba(212,160,23,0.4) 0%, transparent 50%), radial-gradient(circle at 70% 80%, rgba(212,160,23,0.2) 0%, transparent 50%)' }} />
+
+                <div className="relative p-6 pb-3 text-center">
+                  <div className="inline-flex items-center gap-2 rounded-full px-4 py-1.5 mb-3" style={{ background: 'rgba(212,160,23,0.1)', border: '1px solid rgba(212,160,23,0.2)' }}>
+                    <span className="text-xs font-bold tracking-widest" style={{ color: '#D4A017' }}>
+                      {isSurprising ? 'جاري الاختيار' : 'اختيار عشوائي'}
+                    </span>
+                  </div>
+                  <h2 className="text-lg font-bold text-white/90">
+                    {isSurprising ? 'لحظة واحدة...' : 'مشروبك العشوائي'}
+                  </h2>
+                </div>
+
+                <div className={`mx-5 mb-5 rounded-2xl p-5 text-center transition-all duration-300 ${isSurprising ? 'scale-[0.97] opacity-60' : 'scale-100 opacity-100'}`} style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(212,160,23,0.12)' }}>
+                  {surpriseDrink ? (
+                    <>
+                      {surpriseDrink.image_url ? (
+                        <div className="relative w-28 h-28 mx-auto mb-4 rounded-2xl overflow-hidden" style={{ boxShadow: '0 8px 24px rgba(0,0,0,0.4), 0 0 0 1px rgba(212,160,23,0.15)' }}>
+                          <Image src={surpriseDrink.image_url} alt={surpriseDrink.name} fill className="object-cover" />
+                        </div>
+                      ) : (
+                        <div className="w-28 h-28 mx-auto mb-4 rounded-2xl flex items-center justify-center" style={{ background: 'rgba(212,160,23,0.08)', border: '1px solid rgba(212,160,23,0.15)' }}>
+                          <span className="text-5xl">☕</span>
+                        </div>
+                      )}
+                      <h3 className="text-xl font-bold text-white mb-1">{surpriseDrink.name}</h3>
+                      <p className="text-sm font-semibold" style={{ color: '#D4A017' }}>{Number(surpriseDrink.price).toFixed(2)} ج.م</p>
+                    </>
+                  ) : (
+                    <div className="py-8">
+                      <div className="flex justify-center gap-1.5">
+                        {[0,1,2].map(i => (
+                          <div key={i} className="w-2 h-2 rounded-full animate-bounce" style={{ background: '#D4A017', animationDelay: `${i * 0.15}s` }} />
+                        ))}
                       </div>
-                    )}
-                    {!surpriseDrink.image_url && <p className="text-6xl mb-3">☕</p>}
-                    <h3 className="text-2xl font-black text-white mb-1">{surpriseDrink.name}</h3>
-                    <p className="text-purple-200 text-lg font-bold">{surpriseDrink.price} ج.م</p>
-                  </>
-                ) : (
-                  <p className="text-white/50 py-6">...</p>
+                    </div>
+                  )}
+                </div>
+
+                {!isSurprising && surpriseDrink && (
+                  <div className="px-5 pb-5 space-y-2.5">
+                    <Button
+                      className="w-full h-12 font-bold text-sm rounded-xl text-white"
+                      style={{ background: 'linear-gradient(135deg, #D4A017, #b8860b)', boxShadow: '0 4px 15px rgba(212,160,23,0.3)' }}
+                      onClick={() => { handleAddToCart(surpriseDrink.id); setShowSurpriseModal(false) }}
+                    >
+                      أضفه للسلة
+                    </Button>
+                    <div className="flex gap-2.5">
+                      <Button
+                        variant="outline"
+                        className="flex-1 h-10 text-xs font-medium rounded-xl"
+                        style={{ borderColor: 'rgba(212,160,23,0.25)', color: '#D4A017', background: 'rgba(212,160,23,0.05)' }}
+                        onClick={handleSurpriseMe}
+                      >
+                        اختيار آخر
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        className="flex-1 h-10 text-xs font-medium rounded-xl text-white/40 hover:text-white/70 hover:bg-white/5"
+                        onClick={() => setShowSurpriseModal(false)}
+                      >
+                        إغلاق
+                      </Button>
+                    </div>
+                  </div>
+                )}
+                {isSurprising && (
+                  <div className="flex justify-center pb-6">
+                    <div className="flex gap-1.5">
+                      {[0,1,2].map(i => (
+                        <div key={i} className="w-1.5 h-1.5 rounded-full animate-bounce" style={{ background: '#D4A017', animationDelay: `${i * 0.15}s` }} />
+                      ))}
+                    </div>
+                  </div>
                 )}
               </div>
-              {/* Actions */}
-              {!isSurprising && surpriseDrink && (
-                <div className="flex gap-3 p-4 pt-0">
-                  <Button
-                    className="flex-1 h-12 font-bold text-base rounded-xl"
-                    style={{ background: 'linear-gradient(135deg, #9000ff, #6a00cc)', color: '#fff' }}
-                    onClick={() => {
-                      handleAddToCart(surpriseDrink.id)
-                      setShowSurpriseModal(false)
-                    }}
-                  >
-                    أضفه للسلة 🛒
-                  </Button>
-                  <Button
-                    variant="outline"
-                    className="h-12 px-4 rounded-xl border-white/20 text-white hover:bg-white/10"
-                    onClick={handleSurpriseMe}
-                  >
-                    🔄
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    className="h-12 px-4 rounded-xl text-white/60 hover:bg-white/10"
-                    onClick={() => setShowSurpriseModal(false)}
-                  >
-                    لأ
-                  </Button>
-                </div>
-              )}
-              {isSurprising && (
-                <div className="flex justify-center p-4 pt-0">
-                  <div className="flex gap-1">
-                    {[0,1,2].map(i => (
-                      <div key={i} className="w-2 h-2 rounded-full bg-purple-300 animate-bounce" style={{ animationDelay: `${i * 0.15}s` }} />
-                    ))}
-                  </div>
-                </div>
-              )}
             </div>
           </div>
         )}
