@@ -249,6 +249,19 @@ export function AdminPanel({
     }
   }
 
+  // Fetch place closed status
+  const fetchClosedStatus = async () => {
+    if (!placeId) return
+    try {
+      const [closedRes, msgRes] = await Promise.all([
+        fetch(`/api/settings?key=place_closed_${placeId}`),
+        fetch(`/api/settings?key=place_closed_message_${placeId}`)
+      ])
+      if (closedRes.ok) { const d = await closedRes.json(); setIsPlaceClosed(d.value === 'true') }
+      if (msgRes.ok) { const d = await msgRes.json(); if (d.value) setPlaceClosedMsg(d.value) }
+    } catch {}
+  }
+
   // Fetch table count for table map
   const fetchPlaceTableCount = async () => {
     if (!placeId) return
@@ -380,6 +393,11 @@ export function AdminPanel({
   const [archivePasswordError, setArchivePasswordError] = useState('')
   const [archivePasswordSuccess, setArchivePasswordSuccess] = useState('')
   const [showArchivePassword, setShowArchivePassword] = useState(false)
+
+  // Place closed mode state
+  const [isPlaceClosed, setIsPlaceClosed] = useState(false)
+  const [placeClosedMsg, setPlaceClosedMsg] = useState('المكان مغلق حالياً، نعتذر عن الإزعاج')
+  const [isSavingClosedStatus, setIsSavingClosedStatus] = useState(false)
 
   // Staff users state
   interface StaffUser {
@@ -1379,6 +1397,7 @@ const handleSaveSettings = async () => {
         if (v === 'danger' && isDevAdmin) fetchPlaces().then(list => { if (list.length > 0) setResetPlaceId(prev => prev || list[0].id) })
         if (v === 'clients' && isDevAdmin) fetchClients()
         if (v === 'tables' && !isDevAdmin) { fetchPlaceTableCount(); fetchInventory() }
+        if (v === 'settings' && !isDevAdmin && placeId) { fetchClosedStatus() }
         if (v === 'settings' && !isDevAdmin && placeId) { fetchPlaces().then(list => { const p = list.find((pl: Place) => pl.id === placeId); if (p) { setReservationsEnabledMap(prev => ({ ...prev, [placeId]: !!p.reservations_enabled })); setOrderTrackingMap(prev => ({ ...prev, [placeId]: p.order_tracking_enabled !== false })) } }) }
         if (v === 'settings' && isDevAdmin) { fetchPlaces().then(list => { const m: Record<string, boolean> = {}; list.forEach((p: Place) => { m[p.id] = p.order_tracking_enabled !== false }); setOrderTrackingMap(m) }) }
         if (v === 'cashier') { if (isDevAdmin) { fetchPlaces().then(list => { if (list.length > 0) setCashierPlaceId(prev => { const chosen = prev || list[0].id; fetchCashierOrders(chosen); return chosen }) }); fetchCashierUsers() } else if (placeId) { setCashierPlaceId(placeId); setCashierUserPlaceId(placeId); setTableNewPlaceId(placeId); setTablesPlaceId(placeId); setFeeSettingsPlaceId(placeId); fetchCashierOrders(placeId); fetchCashierUsers(placeId); fetchTableUsers(placeId); fetchPlaces().then(list => { const p = list.find((pl: Place) => pl.id === placeId); if (p) { setFeeServiceCharge(p.service_charge != null ? String(p.service_charge) : '0'); setFeeTaxRate(p.tax_rate != null ? String(p.tax_rate) : '0') } }) } }
@@ -3320,6 +3339,70 @@ const handleSaveSettings = async () => {
         </TabsContent>
 
         <TabsContent value="settings" className="space-y-4">
+
+          {/* ── Place Closed Mode (place admin only) ── */}
+          {!isDevAdmin && placeId && (
+            <div className="rounded-2xl p-4 space-y-3" style={{
+              background: isPlaceClosed ? 'rgba(239,68,68,0.05)' : 'rgba(34,197,94,0.04)',
+              border: `1px solid ${isPlaceClosed ? 'rgba(239,68,68,0.35)' : 'rgba(34,197,94,0.2)'}`
+            }}>
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-sm font-bold text-foreground">
+                    {isPlaceClosed ? '🔴 المكان مغلق' : '🟢 المكان مفتوح'}
+                  </h3>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    {isPlaceClosed ? 'الزبائن لا يستطيعون الطلب حالياً' : 'الطلبات تعمل بشكل طبيعي'}
+                  </p>
+                </div>
+                <button
+                  onClick={async () => {
+                    setIsSavingClosedStatus(true)
+                    const next = !isPlaceClosed
+                    try {
+                      await fetch('/api/settings', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ key: `place_closed_${placeId}`, value: next.toString() })
+                      })
+                      setIsPlaceClosed(next)
+                      toast.success(next ? '🔴 تم إغلاق المكان' : '🟢 تم فتح المكان')
+                    } catch { toast.error('خطأ في تغيير حالة المكان') }
+                    finally { setIsSavingClosedStatus(false) }
+                  }}
+                  disabled={isSavingClosedStatus}
+                  className={`relative inline-flex h-7 w-12 items-center rounded-full transition-colors focus:outline-none ${isPlaceClosed ? 'bg-destructive' : 'bg-emerald-600'}`}
+                >
+                  <span className={`inline-block h-5 w-5 transform rounded-full bg-white shadow-lg transition-transform ${isPlaceClosed ? 'translate-x-1' : 'translate-x-6'}`} />
+                </button>
+              </div>
+
+              {isPlaceClosed && (
+                <div className="space-y-2 pt-1">
+                  <Label className="text-xs text-muted-foreground">رسالة الإغلاق (تظهر للزبون)</Label>
+                  <Input
+                    value={placeClosedMsg}
+                    onChange={e => setPlaceClosedMsg(e.target.value)}
+                    className="border-border bg-muted text-foreground text-sm"
+                    placeholder="مثال: المكان مغلق حالياً للصيانة"
+                  />
+                  <Button size="sm" variant="outline" className="w-full border-destructive/30 text-destructive hover:bg-destructive/10"
+                    onClick={async () => {
+                      await fetch('/api/settings', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ key: `place_closed_message_${placeId}`, value: placeClosedMsg })
+                      })
+                      toast.success('تم حفظ رسالة الإغلاق')
+                    }}
+                  >
+                    حفظ الرسالة
+                  </Button>
+                </div>
+              )}
+            </div>
+          )}
+
           {/* Archive Password Setting — dev admin only */}
           {isDevAdmin && (
             <div className="rounded-2xl border border-amber-500/20 bg-amber-500/5 p-4 space-y-3">

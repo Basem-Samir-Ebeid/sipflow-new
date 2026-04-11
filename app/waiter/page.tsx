@@ -101,6 +101,12 @@ export default function WaiterPage() {
   const seenReservationIds = useRef<Set<string>>(new Set())
   const previousGroupCount = useRef<number>(0)
 
+  // Waiter call notifications state
+  interface WaiterCall { id: string; message: string; created_at: string }
+  const [waiterCalls, setWaiterCalls] = useState<WaiterCall[]>([])
+  const [dismissedCallIds, setDismissedCallIds] = useState<Set<string>>(new Set())
+  const seenCallIds = useRef<Set<string>>(new Set())
+
   const playSound = () => {
     try {
       const ctx = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)()
@@ -116,6 +122,29 @@ export default function WaiterPage() {
       playBeep(t, 880, 0.18); playBeep(t + 0.22, 1100, 0.18); playBeep(t + 0.44, 1320, 0.25)
     } catch {}
   }
+
+  const fetchWaiterCalls = useCallback(async () => {
+    if (!staffUser?.place_id) return
+    try {
+      const res = await fetch(`/api/messages?place_id=${staffUser.place_id}`)
+      if (!res.ok) return
+      const msgs = await res.json()
+      if (!Array.isArray(msgs)) return
+      const calls: WaiterCall[] = msgs
+        .filter((m: { title: string; id: string; message: string; created_at: string }) => m.title === '🔔 نداء نادل')
+        .map((m: { title: string; id: string; message: string; created_at: string }) => ({ id: m.id, message: m.message, created_at: m.created_at }))
+      // detect new calls and play sound
+      let hasNew = false
+      for (const c of calls) {
+        if (!seenCallIds.current.has(c.id)) {
+          seenCallIds.current.add(c.id)
+          hasNew = true
+        }
+      }
+      if (hasNew) playSound()
+      setWaiterCalls(calls)
+    } catch {}
+  }, [staffUser])
 
   const fetchOrders = useCallback(async () => {
     if (!staffUser) return
@@ -286,10 +315,12 @@ export default function WaiterPage() {
     if (!staffUser) return
     fetchOrders()
     fetchReservationNotifs()
+    fetchWaiterCalls()
     const id = setInterval(fetchOrders, 4000)
     const rid = setInterval(fetchReservationNotifs, 15000)
-    return () => { clearInterval(id); clearInterval(rid) }
-  }, [staffUser, fetchOrders, fetchReservationNotifs])
+    const cid = setInterval(fetchWaiterCalls, 10000)
+    return () => { clearInterval(id); clearInterval(rid); clearInterval(cid) }
+  }, [staffUser, fetchOrders, fetchReservationNotifs, fetchWaiterCalls])
 
   const handleLogin = async () => {
     if (!username.trim() || !password.trim()) { toast.error('أدخل اسم المستخدم وكلمة المرور'); return }
@@ -453,6 +484,11 @@ export default function WaiterPage() {
             <div className="flex items-center gap-2">
               <Coffee className="h-4 w-4 text-amber-500" />
               <span className="font-bold text-foreground text-sm">بوابة الويتر</span>
+              {waiterCalls.filter(c => !dismissedCallIds.has(c.id)).length > 0 && (
+                <span className="inline-flex items-center justify-center rounded-full bg-indigo-500 text-white text-[10px] font-bold h-4 min-w-4 px-1 animate-bounce">
+                  {waiterCalls.filter(c => !dismissedCallIds.has(c.id)).length}🔔
+                </span>
+              )}
             </div>
             <p className="text-[11px] text-muted-foreground mt-0.5">{staffUser.name}</p>
           </div>
@@ -796,6 +832,28 @@ export default function WaiterPage() {
             </div>
           )
         })}
+
+        {/* ── Waiter Call Notifications ── */}
+        {waiterCalls.filter(c => !dismissedCallIds.has(c.id)).map(c => (
+          <div key={c.id} className="rounded-2xl p-4 space-y-2 relative animate-pulse-once" style={{
+            background: 'linear-gradient(135deg, rgba(99,102,241,0.14), rgba(67,56,202,0.08))',
+            border: '1.5px solid rgba(99,102,241,0.5)',
+            boxShadow: '0 0 18px rgba(99,102,241,0.15)'
+          }}>
+            <button
+              onClick={() => setDismissedCallIds(prev => new Set([...prev, c.id]))}
+              className="absolute top-2 left-2 text-muted-foreground hover:text-foreground transition-colors"
+            >
+              <X className="h-4 w-4" />
+            </button>
+            <div className="flex items-center gap-2">
+              <span className="text-xl">🔔</span>
+              <p className="font-bold text-indigo-300 text-sm">نداء نادل</p>
+            </div>
+            <p className="text-xs text-indigo-200/80">{c.message}</p>
+            <p className="text-xs text-muted-foreground">{new Date(c.created_at).toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' })}</p>
+          </div>
+        ))}
 
         {/* Summary badges */}
         <div className="flex gap-2 flex-wrap">

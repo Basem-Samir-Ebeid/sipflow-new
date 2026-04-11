@@ -87,6 +87,13 @@ export default function HomePage() {
   const [pendingCustomerName, setPendingCustomerName] = useState('')
   const [tableModalError, setTableModalError] = useState('')
 
+  // Waiter call state
+  const [waiterCallCooldown, setWaiterCallCooldown] = useState(0)
+
+  // Place closed state
+  const [isPlaceCurrentlyClosed, setIsPlaceCurrentlyClosed] = useState(false)
+  const [placeClosedMessage, setPlaceClosedMessage] = useState('المكان مغلق حالياً، نعتذر عن الإزعاج')
+
   // Rating state
   const [ratingValue, setRatingValue] = useState(0)
   const [ratingHover, setRatingHover] = useState(0)
@@ -279,6 +286,19 @@ export default function HomePage() {
     }
     setMounted(true)
   }, [])
+
+  // Fetch place closed status whenever place changes
+  useEffect(() => {
+    if (!currentPlace?.id) return
+    fetch(`/api/settings?key=place_closed_${currentPlace.id}`)
+      .then(r => r.json())
+      .then(d => { setIsPlaceCurrentlyClosed(d.value === 'true') })
+      .catch(() => {})
+    fetch(`/api/settings?key=place_closed_message_${currentPlace.id}`)
+      .then(r => r.json())
+      .then(d => { if (d.value) setPlaceClosedMessage(d.value) })
+      .catch(() => {})
+  }, [currentPlace?.id])
 
   // Auto-login shared user when place is loaded from localStorage (no user saved)
   useEffect(() => {
@@ -835,6 +855,30 @@ export default function HomePage() {
     setGuestName('')
     setTableModalError('')
     setShowTableModal(true)
+  }
+
+  // Call waiter handler
+  const handleCallWaiter = async () => {
+    if (waiterCallCooldown > 0) return
+    try {
+      await fetch('/api/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: '🔔 نداء نادل',
+          message: `طلب مساعدة من طاولة ${tableNumber}`,
+          place_id: currentPlace?.id || null
+        })
+      })
+      toast.success('تم إرسال نداء النادل ✓')
+      setWaiterCallCooldown(60)
+      let remaining = 60
+      const interval = setInterval(() => {
+        remaining--
+        setWaiterCallCooldown(remaining)
+        if (remaining <= 0) clearInterval(interval)
+      }, 1000)
+    } catch { toast.error('فشل إرسال النداء') }
   }
 
   const handleConfirmTableAndSubmit = async (tableOverride?: string) => {
@@ -2889,6 +2933,39 @@ export default function HomePage() {
                       </span>
                     </div>
 
+                    {/* ── Call Waiter + Print Receipt row ── */}
+                    <div className="px-4 py-2.5 border-t flex gap-2" style={{ borderColor: 'rgba(212,160,23,0.08)' }}>
+                      {/* Call Waiter — shown when not all done and table is known */}
+                      {!allDone && tableNumber && (
+                        <button
+                          onClick={handleCallWaiter}
+                          disabled={waiterCallCooldown > 0}
+                          className="flex-1 flex items-center justify-center gap-1.5 rounded-xl py-2 text-xs font-bold transition-all"
+                          style={{
+                            background: waiterCallCooldown > 0 ? 'rgba(255,255,255,0.04)' : 'rgba(99,102,241,0.12)',
+                            border: `1px solid ${waiterCallCooldown > 0 ? 'rgba(255,255,255,0.06)' : 'rgba(99,102,241,0.3)'}`,
+                            color: waiterCallCooldown > 0 ? '#6b7280' : '#a5b4fc'
+                          }}
+                        >
+                          🔔 {waiterCallCooldown > 0 ? `اتصبر ${waiterCallCooldown}ث` : 'اطلب النادل'}
+                        </button>
+                      )}
+                      {/* Print Receipt — shown when all done */}
+                      {allDone && (
+                        <button
+                          onClick={() => setShowReceipt(true)}
+                          className="flex-1 flex items-center justify-center gap-1.5 rounded-xl py-2 text-xs font-bold transition-all"
+                          style={{
+                            background: 'rgba(34,197,94,0.08)',
+                            border: '1px solid rgba(34,197,94,0.25)',
+                            color: '#4ade80'
+                          }}
+                        >
+                          🖨️ اطبع فاتورتك
+                        </button>
+                      )}
+                    </div>
+
                     {/* Rating section — shown when all orders delivered */}
                     {allDone && (
                       <div className="px-4 py-3 border-t" style={{ borderColor: 'rgba(212,160,23,0.12)', background: 'rgba(255,255,255,0.02)' }}>
@@ -2998,6 +3075,20 @@ export default function HomePage() {
         {/* Menu Tab */}
         {activeTab === 'menu' && (
           <div className="space-y-4">
+            {/* ── Place Closed Overlay ── */}
+            {isPlaceCurrentlyClosed && !isAdmin && !isDevAdmin && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-6">
+                <div className="w-full max-w-sm rounded-3xl text-center space-y-5 p-8" style={{ background: 'rgba(20,10,10,0.95)', border: '1px solid rgba(239,68,68,0.3)' }}>
+                  <div className="text-6xl">🔴</div>
+                  <h2 className="text-2xl font-bold" style={{ color: '#f87171' }}>المكان مغلق</h2>
+                  <p className="text-sm leading-relaxed" style={{ color: '#9ca3af' }}>{placeClosedMessage}</p>
+                  {currentPlace?.name && (
+                    <p className="text-xs" style={{ color: 'rgba(255,255,255,0.3)' }}>— {currentPlace.name}</p>
+                  )}
+                </div>
+              </div>
+            )}
+
             <div className="text-center space-y-3">
               {/* Place logo above menu title */}
               {(() => {

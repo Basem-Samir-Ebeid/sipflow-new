@@ -3,7 +3,10 @@
 ## Overview
 A Next.js multi-tenant café/social space drink ordering and management system. Each café location (Place) has isolated data. Customers browse a categorized menu (Hot/Cold/Shisha), place orders with notes, and get assigned a table. Staff manage orders via a dashboard. Admins manage drinks, users, inventory, send broadcast messages, and view revenue analytics. A developer admin manages all places (create/toggle/delete).
 
-## Recent Features (v1.9)
+## Recent Features (v2.1)
+- **نداء النادل (Call Waiter):** Customers with a table number see a "🔔 اطلب النادل" button in the tracker widget while orders are active. 60-second cooldown after each call. POSTs to `/api/messages` with title "🔔 نداء نادل". Waiter page polls messages every 10s, plays sound for new calls, and shows dismissable indigo notification cards with a badge count in the header.
+- **طباعة الفاتورة (Print Receipt):** Customers see a "🖨️ اطبع فاتورتك" button in the tracker widget when all orders are delivered. Triggers existing receipt modal (`setShowReceipt(true)`).
+- **وضع المكان مغلق (Closed Mode):** Place admin can toggle open/closed in Settings tab. When closed, saves key `place_closed_${placeId}=true` via `/api/settings`. Customer page fetches this on load; when closed, shows a full-screen red overlay blocking the menu. Admin can set a custom closure message stored as `place_closed_message_${placeId}`.
 - **Order Rating System:** Customers see 1-5 star rating widget in the order tracker after all orders are delivered. Ratings stored in DB and displayed in cashier report tab with avg + distribution chart.
 - **WhatsApp Notifications:** Customer enters optional phone number when ordering. When bar marks order ready, a popup appears with a WhatsApp button linking to `wa.me/<phone>?text=...` to notify the customer.
 - **DB additions:** `orders.rating` (smallint), `orders.rating_comment` (text), `orders.customer_phone` (text)
