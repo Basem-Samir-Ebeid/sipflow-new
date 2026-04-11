@@ -1436,14 +1436,16 @@ const handleSaveSettings = async () => {
           boxShadow: '0 0 0 1px rgba(147,51,234,0.3), 0 0 40px rgba(147,51,234,0.07), inset 0 1px 0 rgba(255,255,255,0.05)'
         }}>
           {/* Animated top-border sweep */}
-          <div className="pointer-events-none absolute inset-x-0 top-0 h-px"
-            style={{ background: 'linear-gradient(90deg, transparent 0%, rgba(147,51,234,0.8) 30%, rgba(99,102,241,1) 50%, rgba(147,51,234,0.8) 70%, transparent 100%)' }} />
+          <div className="pointer-events-none absolute inset-x-0 top-0 h-px overflow-hidden">
+            <div className="h-full w-[200%]" style={{ background: 'linear-gradient(90deg, transparent 0%, rgba(147,51,234,0.8) 15%, rgba(99,102,241,1) 25%, rgba(147,51,234,0.8) 35%, transparent 50%, transparent 100%)', animation: 'sweep 3s linear infinite' }} />
+          </div>
+          <style>{`@keyframes sweep { 0% { transform: translateX(-50%); } 100% { transform: translateX(0%); } }`}</style>
 
           {/* Glow orbs */}
           <div className="pointer-events-none absolute -top-12 -right-12 h-56 w-56 rounded-full opacity-20"
             style={{ background: 'radial-gradient(circle, #7c3aed, transparent 70%)', filter: 'blur(24px)' }} />
-          <div className="pointer-events-none absolute -bottom-8 -left-8 h-44 w-44 rounded-full opacity-12"
-            style={{ background: 'radial-gradient(circle, #4f46e5, transparent 70%)', filter: 'blur(20px)' }} />
+          <div className="pointer-events-none absolute -bottom-8 -left-8 h-44 w-44 rounded-full"
+            style={{ background: 'radial-gradient(circle, #4f46e5, transparent 70%)', filter: 'blur(20px)', opacity: 0.12 }} />
           {/* Grid pattern overlay */}
           <div className="pointer-events-none absolute inset-0 opacity-[0.03]"
             style={{ backgroundImage: 'linear-gradient(rgba(255,255,255,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.5) 1px, transparent 1px)', backgroundSize: '24px 24px' }} />

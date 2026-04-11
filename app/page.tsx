@@ -2494,78 +2494,101 @@ export default function HomePage() {
 
       {/* Dev Admin special welcome */}
       {showDevWelcome && (
-        <div className="fixed inset-0 z-[999] flex items-center justify-center overflow-hidden" style={{ background: 'linear-gradient(160deg, #0f0800 0%, #1a0d00 50%, #0f0800 100%)' }} dir="rtl">
-          {/* Grid background */}
-          <div className="absolute inset-0 opacity-[0.04]" style={{ backgroundImage: 'linear-gradient(#D4A017 1px, transparent 1px), linear-gradient(90deg, #D4A017 1px, transparent 1px)', backgroundSize: '40px 40px' }} />
-          {/* Radial glow */}
-          <div className="absolute inset-0" style={{ background: 'radial-gradient(ellipse 60% 50% at 50% 50%, #92400e22 0%, transparent 70%)' }} />
+        <div className="fixed inset-0 z-[999] flex items-center justify-center overflow-hidden" style={{ background: 'linear-gradient(160deg, #03000a 0%, #0a0018 35%, #0e0025 65%, #060012 100%)' }} dir="rtl">
+          {/* Subtle grid */}
+          <div className="absolute inset-0 opacity-[0.025]" style={{ backgroundImage: 'linear-gradient(rgba(147,51,234,0.8) 1px, transparent 1px), linear-gradient(90deg, rgba(147,51,234,0.8) 1px, transparent 1px)', backgroundSize: '32px 32px' }} />
+          {/* Central glow */}
+          <div className="absolute inset-0" style={{ background: 'radial-gradient(ellipse 55% 45% at 50% 45%, rgba(124,58,237,0.12) 0%, transparent 70%)' }} />
+          {/* Top-right glow orb */}
+          <div className="absolute -top-20 -right-20 h-80 w-80 rounded-full" style={{ background: 'radial-gradient(circle, #7c3aed, transparent 60%)', filter: 'blur(40px)', opacity: 0.15 }} />
+          {/* Bottom-left glow orb */}
+          <div className="absolute -bottom-16 -left-16 h-60 w-60 rounded-full" style={{ background: 'radial-gradient(circle, #4f46e5, transparent 60%)', filter: 'blur(30px)', opacity: 0.1 }} />
+          {/* Animated scan line */}
+          <div className="pointer-events-none absolute inset-x-0 h-px opacity-20" style={{ background: 'linear-gradient(90deg, transparent, rgba(147,51,234,0.8), rgba(99,102,241,1), rgba(147,51,234,0.8), transparent)', top: '50%', animation: 'pulse 3s ease-in-out infinite' }} />
 
-          <div className="relative w-full max-w-xs px-6 text-center animate-in fade-in zoom-in-95 duration-700">
-            {/* Corner brackets */}
-            <div className="absolute -top-2 -left-2 w-8 h-8 border-t-2 border-l-2" style={{ borderColor: 'rgba(212,160,23,0.5)' }} />
-            <div className="absolute -top-2 -right-2 w-8 h-8 border-t-2 border-r-2" style={{ borderColor: 'rgba(212,160,23,0.5)' }} />
-            <div className="absolute -bottom-2 -left-2 w-8 h-8 border-b-2 border-l-2" style={{ borderColor: 'rgba(212,160,23,0.5)' }} />
-            <div className="absolute -bottom-2 -right-2 w-8 h-8 border-b-2 border-r-2" style={{ borderColor: 'rgba(212,160,23,0.5)' }} />
+          <div className="relative w-full max-w-sm px-8 text-center animate-in fade-in zoom-in-95 duration-700">
+            {/* Outer frame */}
+            <div className="absolute -top-4 -left-4 w-12 h-12 border-t-2 border-l-2 rounded-tl-lg" style={{ borderColor: 'rgba(147,51,234,0.5)' }} />
+            <div className="absolute -top-4 -right-4 w-12 h-12 border-t-2 border-r-2 rounded-tr-lg" style={{ borderColor: 'rgba(147,51,234,0.5)' }} />
+            <div className="absolute -bottom-4 -left-4 w-12 h-12 border-b-2 border-l-2 rounded-bl-lg" style={{ borderColor: 'rgba(147,51,234,0.5)' }} />
+            <div className="absolute -bottom-4 -right-4 w-12 h-12 border-b-2 border-r-2 rounded-br-lg" style={{ borderColor: 'rgba(147,51,234,0.5)' }} />
 
-            {/* Sparkles row — top */}
-            <div className="flex items-center justify-center gap-3 mb-5">
-              <span className="text-lg" style={{ color: '#fbbf24' }}>✦</span>
-              <span className="text-sm" style={{ color: '#f97316' }}>✦</span>
-              <span className="text-lg" style={{ color: '#D4A017' }}>✦</span>
-              <span className="text-sm" style={{ color: '#fbbf24' }}>✦</span>
-              <span className="text-lg" style={{ color: '#f97316' }}>✦</span>
+            {/* Top badge */}
+            <div className="mb-6 flex items-center justify-center">
+              <span className="inline-flex items-center gap-2 rounded-full px-4 py-1.5 font-mono text-[10px] font-bold uppercase tracking-[0.4em]"
+                style={{ background: 'rgba(147,51,234,0.15)', border: '1px solid rgba(147,51,234,0.4)', color: '#c4b5fd', boxShadow: '0 0 20px rgba(147,51,234,0.15)' }}>
+                <span className="relative flex h-2 w-2">
+                  <span className="absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75 animate-ping" />
+                  <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-400" />
+                </span>
+                secure session
+              </span>
             </div>
 
-            {/* Icon */}
-            <div className="relative mx-auto mb-4 flex h-20 w-20 items-center justify-center">
-              <div className="absolute inset-0 rounded-full" style={{ background: 'radial-gradient(circle, #D4A01733 0%, transparent 70%)', animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite' }} />
-              <div className="h-20 w-20 rounded-full overflow-hidden border-2" style={{ borderColor: 'rgba(212,160,23,0.5)', boxShadow: '0 0 40px #D4A01740, inset 0 1px 0 #ffffff10' }}>
-                <img src="/images/qa3da-logo.jpg" alt="SîpFlõw" className="h-full w-full object-cover" />
+            {/* Logo with animated ring */}
+            <div className="relative mx-auto mb-5 flex h-24 w-24 items-center justify-center">
+              <div className="absolute inset-[-6px] rounded-full animate-spin" style={{ background: 'conic-gradient(from 0deg, transparent 0%, rgba(147,51,234,0.5) 25%, transparent 50%, rgba(99,102,241,0.5) 75%, transparent 100%)', animationDuration: '4s' }} />
+              <div className="absolute inset-[-5px] rounded-full" style={{ background: '#0a0018' }} />
+              <div className="h-24 w-24 rounded-full overflow-hidden" style={{ border: '2px solid rgba(147,51,234,0.5)', boxShadow: '0 0 30px rgba(147,51,234,0.25), inset 0 0 20px rgba(147,51,234,0.1)' }}>
+                <img src="/images/qa3da-logo.jpg" alt="SipFlow" className="h-full w-full object-cover" />
               </div>
             </div>
 
-            {/* Access label */}
-            <p className="text-[10px] tracking-[0.5em] uppercase font-mono mb-2" style={{ color: '#D4A017' }}>✦ ACCESS GRANTED ✦</p>
-
-            {/* Personal greeting */}
-            <p className="text-sm mb-1" style={{ color: 'rgba(212,160,23,0.7)' }}>أهلاً وسهلاً يا</p>
-            <h2 className="text-4xl font-black tracking-tight mb-1 leading-none" style={{ background: 'linear-gradient(135deg, #fef3c7 0%, #fbbf24 50%, #D4A017 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-              {savedDevName}
-            </h2>
-            <p className="text-xs mb-1" style={{ color: 'rgba(212,160,23,0.6)' }}>مرحباً بعودتك لنظام SîpFlõw</p>
-            <p className="font-mono text-[10px] tracking-widest mb-5" style={{ color: 'rgba(212,160,23,0.3)' }}>SYSTEM DEVELOPER · ROOT</p>
-
-            {/* Separator */}
-            <div className="flex items-center gap-3 mb-4">
-              <div className="h-px flex-1" style={{ background: 'linear-gradient(90deg, transparent, #D4A01760)' }} />
-              <div className="h-1.5 w-1.5 rotate-45" style={{ background: '#D4A017' }} />
-              <div className="h-px flex-1" style={{ background: 'linear-gradient(90deg, #D4A01760, transparent)' }} />
+            {/* ACCESS GRANTED */}
+            <div className="mb-4">
+              <p className="font-mono text-[11px] font-bold tracking-[0.5em] uppercase" style={{ color: '#a78bfa', textShadow: '0 0 12px rgba(147,51,234,0.6)' }}>access granted</p>
             </div>
 
-            {/* Status rows */}
-            <div className="space-y-2 text-right font-mono text-[11px] mb-5">
+            {/* Personal greeting */}
+            <p className="text-sm font-medium mb-2" style={{ color: 'rgba(196,181,253,0.7)' }}>مرحباً بك في مركز التحكم</p>
+            <h2 className="text-[2.5rem] font-black tracking-tight mb-2 leading-none" style={{ background: 'linear-gradient(135deg, #e2d9f3 0%, #c4b5fd 30%, #a78bfa 60%, #7c3aed 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', filter: 'drop-shadow(0 0 8px rgba(147,51,234,0.4))' }}>
+              {savedDevName}
+            </h2>
+            <p className="font-mono text-[10px] tracking-[0.3em] uppercase mb-6" style={{ color: 'rgba(167,139,250,0.4)' }}>system architect · root access</p>
+
+            {/* Divider */}
+            <div className="flex items-center gap-3 mb-5">
+              <div className="h-px flex-1" style={{ background: 'linear-gradient(90deg, transparent, rgba(147,51,234,0.5))' }} />
+              <div className="h-1.5 w-1.5 rotate-45 rounded-sm" style={{ background: '#7c3aed', boxShadow: '0 0 6px rgba(147,51,234,0.8)' }} />
+              <div className="h-px flex-1" style={{ background: 'linear-gradient(90deg, rgba(147,51,234,0.5), transparent)' }} />
+            </div>
+
+            {/* System status cards */}
+            <div className="grid grid-cols-2 gap-2 mb-5">
               {[
-                { label: 'الأماكن', value: 'UNLOCKED', color: '#34d399' },
-                { label: 'الإحصائيات', value: 'FULL ACCESS', color: '#34d399' },
-                { label: 'المستخدمين', value: 'FULL ACCESS', color: '#34d399' },
-                { label: 'صلاح��ة النظام', value: 'SUPERADMIN', color: '#fbbf24' },
+                { icon: '🏠', label: 'الأماكن', status: 'UNLOCKED', color: '#34d399', bg: 'rgba(16,185,129,0.06)', border: 'rgba(16,185,129,0.2)' },
+                { icon: '📊', label: 'الإحصائيات', status: 'FULL ACCESS', color: '#34d399', bg: 'rgba(16,185,129,0.06)', border: 'rgba(16,185,129,0.2)' },
+                { icon: '👥', label: 'المستخدمين', status: 'FULL ACCESS', color: '#34d399', bg: 'rgba(16,185,129,0.06)', border: 'rgba(16,185,129,0.2)' },
+                { icon: '⚡', label: 'صلاحية النظام', status: 'SUPERADMIN', color: '#c4b5fd', bg: 'rgba(147,51,234,0.08)', border: 'rgba(147,51,234,0.3)' },
               ].map((item, i) => (
-                <div key={i} className="flex items-center justify-between px-3 py-1.5 rounded" style={{ background: 'rgba(212,160,23,0.04)', border: '1px solid rgba(212,160,23,0.15)' }}>
-                  <span style={{ color: item.color, fontSize: '10px', letterSpacing: '0.05em' }}>{item.value}</span>
-                  <span style={{ color: 'rgba(212,160,23,0.7)' }}>{item.label}</span>
+                <div key={i} className="flex items-center gap-2 rounded-xl px-3 py-2.5 text-right"
+                  style={{ background: item.bg, border: `1px solid ${item.border}` }}>
+                  <span className="text-base shrink-0">{item.icon}</span>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[11px] font-medium truncate" style={{ color: 'rgba(255,255,255,0.7)' }}>{item.label}</p>
+                    <p className="font-mono text-[9px] tracking-wider" style={{ color: item.color }}>{item.status}</p>
+                  </div>
                 </div>
               ))}
             </div>
 
-            {/* Sparkles row — bottom */}
-            <div className="flex items-center justify-center gap-3 mb-4">
-              <span className="text-sm" style={{ color: '#f97316' }}>✦</span>
-              <span className="text-lg" style={{ color: '#D4A017' }}>✦</span>
-              <span className="text-sm" style={{ color: '#fbbf24' }}>✦</span>
+            {/* Terminal-style log line */}
+            <div className="rounded-lg px-3 py-2 mb-5 text-left font-mono text-[10px]"
+              style={{ background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(147,51,234,0.15)' }}>
+              <span style={{ color: '#34d399' }}>$</span>{' '}
+              <span style={{ color: 'rgba(167,139,250,0.6)' }}>sipflow</span>{' '}
+              <span style={{ color: 'rgba(255,255,255,0.4)' }}>--mode</span>{' '}
+              <span style={{ color: '#c4b5fd' }}>developer</span>{' '}
+              <span style={{ color: 'rgba(255,255,255,0.4)' }}>--auth</span>{' '}
+              <span style={{ color: '#34d399' }}>verified ✓</span>
             </div>
 
             {/* Footer */}
-            <p className="font-mono text-[10px] tracking-widest" style={{ color: 'rgba(212,160,23,0.3)' }}>SîpFlõw · SipFlow</p>
+            <div className="flex items-center justify-center gap-2">
+              <div className="h-px w-8" style={{ background: 'rgba(147,51,234,0.3)' }} />
+              <p className="font-mono text-[9px] tracking-[0.3em] uppercase" style={{ color: 'rgba(147,51,234,0.3)' }}>SipFlow Control</p>
+              <div className="h-px w-8" style={{ background: 'rgba(147,51,234,0.3)' }} />
+            </div>
           </div>
         </div>
       )}
