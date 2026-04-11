@@ -2793,7 +2793,7 @@ const handleSaveSettings = async () => {
                       if (!res.ok) throw new Error('Failed')
                       toast.success('تم إنشاء أدمن المكان بنجاح')
                       setShowCreateUser(false)
-                      onRefresh()
+                      onRefreshUsers?.()
                     } catch { setCreateUserError('فشل إنشاء الأدمن') }
                     setIsCreatingUser(false)
                   }} disabled={isCreatingUser}>
@@ -2895,7 +2895,7 @@ const handleSaveSettings = async () => {
                                   try {
                                     await fetch(`/api/users/${admin.id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ role: 'customer' }) })
                                     toast.success(`تم سحب صلاحية الأدمن من ${admin.name}`)
-                                    onRefresh()
+                                    onRefreshUsers?.()
                                   } catch { toast.error('فشل سحب الصلاحية') }
                                 }}>سحب الأدمن</AlertDialogAction>
                               </AlertDialogFooter>
@@ -2943,7 +2943,7 @@ const handleSaveSettings = async () => {
                                     try {
                                       await fetch(`/api/users/${u.id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ role: 'admin' }) })
                                       toast.success(`تم ترقية ${u.name} لأدمن`)
-                                      onRefresh()
+                                      onRefreshUsers?.()
                                     } catch { toast.error('فشل الترقية') }
                                   }}>ترقية</AlertDialogAction>
                                 </AlertDialogFooter>

@@ -108,19 +108,41 @@ export default function WaiterPage() {
   const seenCallIds = useRef<Set<string>>(new Set())
   const isFirstCallsFetch = useRef(true)
 
+  const activeAlarmRef = useRef<{ stop: () => void } | null>(null)
+
   const playSound = () => {
+    if (activeAlarmRef.current) activeAlarmRef.current.stop()
     try {
       const ctx = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)()
+      const totalDuration = 10
       const t = ctx.currentTime
-      const playBeep = (time: number, freq: number, dur: number) => {
-        const osc = ctx.createOscillator(); const g = ctx.createGain()
-        osc.connect(g); g.connect(ctx.destination)
-        osc.frequency.value = freq; osc.type = 'sine'
-        g.gain.setValueAtTime(0, time); g.gain.linearRampToValueAtTime(0.6, time + 0.01)
-        g.gain.exponentialRampToValueAtTime(0.001, time + dur)
-        osc.start(time); osc.stop(time + dur)
+      const pattern = [
+        { freq: 880, dur: 0.15 },
+        { freq: 1100, dur: 0.15 },
+        { freq: 1320, dur: 0.2 },
+      ]
+      const cycleLen = 0.8
+      const cycles = Math.floor(totalDuration / cycleLen)
+      for (let c = 0; c < cycles; c++) {
+        let offset = 0
+        for (const note of pattern) {
+          const osc = ctx.createOscillator()
+          const g = ctx.createGain()
+          osc.connect(g); g.connect(ctx.destination)
+          osc.type = 'sine'
+          const st = t + c * cycleLen + offset
+          osc.frequency.setValueAtTime(note.freq, st)
+          g.gain.setValueAtTime(0, st)
+          g.gain.linearRampToValueAtTime(0.7, st + 0.01)
+          g.gain.exponentialRampToValueAtTime(0.001, st + note.dur)
+          osc.start(st)
+          osc.stop(st + note.dur)
+          offset += note.dur + 0.05
+        }
       }
-      playBeep(t, 880, 0.18); playBeep(t + 0.22, 1100, 0.18); playBeep(t + 0.44, 1320, 0.25)
+      const stopFn = () => { try { ctx.close() } catch {} }
+      activeAlarmRef.current = { stop: stopFn }
+      setTimeout(() => { stopFn(); activeAlarmRef.current = null }, totalDuration * 1000)
     } catch {}
   }
 

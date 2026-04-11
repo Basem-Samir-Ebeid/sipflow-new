@@ -60,35 +60,50 @@ export default function BarPage() {
   const [staffTab, setStaffTab] = useState<StaffTab>('pending')
   const previousOrderCount = useRef<number>(0)
 
+  const activeAlarmRef = useRef<{ stop: () => void } | null>(null)
+
   const playOrderSound = () => {
+    if (activeAlarmRef.current) activeAlarmRef.current.stop()
     try {
       const ctx = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)()
-
-      const playBeep = (startTime: number, freq: number, duration: number, gain: number) => {
-        const osc = ctx.createOscillator()
-        const gainNode = ctx.createGain()
-        osc.connect(gainNode)
-        gainNode.connect(ctx.destination)
-        osc.type = 'sine'
-        osc.frequency.setValueAtTime(freq, startTime)
-        gainNode.gain.setValueAtTime(0, startTime)
-        gainNode.gain.linearRampToValueAtTime(gain, startTime + 0.01)
-        gainNode.gain.exponentialRampToValueAtTime(0.001, startTime + duration)
-        osc.start(startTime)
-        osc.stop(startTime + duration)
-      }
-
+      const totalDuration = 10
       const t = ctx.currentTime
-      playBeep(t,        880, 0.18, 1.0)
-      playBeep(t + 0.2,  1100, 0.18, 1.0)
-      playBeep(t + 0.4,  1320, 0.25, 1.0)
-      playBeep(t + 0.7,  880, 0.18, 1.0)
-      playBeep(t + 0.9,  1100, 0.18, 1.0)
-      playBeep(t + 1.1,  1320, 0.25, 1.0)
+      const pattern = [
+        { freq: 880, dur: 0.15 },
+        { freq: 1100, dur: 0.15 },
+        { freq: 1320, dur: 0.2 },
+      ]
+      const cycleLen = 0.8
+      const cycles = Math.floor(totalDuration / cycleLen)
+      for (let c = 0; c < cycles; c++) {
+        let offset = 0
+        for (const note of pattern) {
+          const osc = ctx.createOscillator()
+          const gainNode = ctx.createGain()
+          osc.connect(gainNode)
+          gainNode.connect(ctx.destination)
+          osc.type = 'sine'
+          const st = t + c * cycleLen + offset
+          osc.frequency.setValueAtTime(note.freq, st)
+          gainNode.gain.setValueAtTime(0, st)
+          gainNode.gain.linearRampToValueAtTime(0.8, st + 0.01)
+          gainNode.gain.exponentialRampToValueAtTime(0.001, st + note.dur)
+          osc.start(st)
+          osc.stop(st + note.dur)
+          offset += note.dur + 0.05
+        }
+      }
+      const stopFn = () => { try { ctx.close() } catch {} }
+      activeAlarmRef.current = { stop: stopFn }
+      setTimeout(() => { stopFn(); activeAlarmRef.current = null }, totalDuration * 1000)
     } catch {
       const audio = new Audio('/sounds/order.wav')
       audio.volume = 1.0
+      audio.loop = true
       audio.play().catch(() => {})
+      const stopFn = () => { audio.pause(); audio.currentTime = 0 }
+      activeAlarmRef.current = { stop: stopFn }
+      setTimeout(stopFn, 10000)
     }
   }
 
