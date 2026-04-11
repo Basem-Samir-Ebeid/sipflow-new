@@ -66,7 +66,7 @@ export default function BarPage() {
     if (activeAlarmRef.current) activeAlarmRef.current.stop()
     try {
       const ctx = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)()
-      const totalDuration = 10
+      const totalDuration = 20
       const t = ctx.currentTime
       const pattern = [
         { freq: 880, dur: 0.15 },
@@ -103,7 +103,7 @@ export default function BarPage() {
       audio.play().catch(() => {})
       const stopFn = () => { audio.pause(); audio.currentTime = 0 }
       activeAlarmRef.current = { stop: stopFn }
-      setTimeout(stopFn, 10000)
+      setTimeout(stopFn, 20000)
     }
   }
 
