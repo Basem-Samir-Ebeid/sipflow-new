@@ -29,6 +29,8 @@ import { Plus, Trash2, Pencil, Upload, RefreshCw, Users, Coffee, Key, BarChart3,
 import { Checkbox } from '@/components/ui/checkbox'
 import Image from 'next/image'
 import { CommandCenter } from '@/components/command-center'
+import { DevTerminal } from '@/components/dev-terminal'
+import { HealthCheck } from '@/components/health-check'
 
 
 
@@ -2808,7 +2810,7 @@ const handleSaveSettings = async () => {
                   {devAdminResetError && <p className="text-xs text-destructive text-center">{devAdminResetError}</p>}
                   <div className="flex gap-2 pt-1">
                     <Button size="sm" className="flex-1" style={{ background: 'linear-gradient(135deg, #dc2626, #b91c1c)', color: '#fff' }} onClick={async () => {
-                      if (!devAdminNewPassword.trim()) { setDevAdminResetError('أدخل الباسورد الجديد'); return }
+                      if (!devAdminNewPassword.trim()) { setDevAdminResetError('أدخل الباسورد الجدي��'); return }
                       if (devAdminNewPassword.length < 8) { setDevAdminResetError('الباسورد يجب أن يكون 8 حروف على الأقل'); return }
                       if (devAdminNewPassword !== devAdminConfirmPassword) { setDevAdminResetError('الباسورد غير متطابق'); return }
                       setIsResettingDevAdmin(true)
@@ -3193,7 +3195,7 @@ const handleSaveSettings = async () => {
                             </div>
                           </div>
                           <div>
-                            <Label className="text-muted-foreground">تأكيد الباسورد</Label>
+                            <Label className="text-muted-foreground">تأكيد ال��اسورد</Label>
                             <div className="relative mt-1">
                               <Input
                                 type={showNewPass ? 'text' : 'password'}
@@ -5085,7 +5087,7 @@ const handleSaveSettings = async () => {
                       const win = window.open('', '_blank')
                       if (!win) return
                       const sorted = [...tableUsers].sort((a, b) => (parseInt(a.table_number || '0') || 9999) - (parseInt(b.table_number || '0') || 9999))
-                      const html = `<!DOCTYPE html><html dir="rtl"><head><meta charset="utf-8"><title>QR طاولات ${placeObj.name}</title><style>body{font-family:Arial,sans-serif;background:#fff;padding:20px}h1{text-align:center;margin-bottom:30px}.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:20px}.card{border:2px solid #ddd;border-radius:12px;padding:16px;text-align:center;page-break-inside:avoid}.card h2{font-size:18px;margin:0 0 12px}.card img{width:150px;height:150px}@media print{.no-print{display:none}}</style></head><body><h1>${placeObj.name} — QR الطاولات</h1><div class="no-print" style="text-align:center;margin-bottom:20px"><button onclick="window.print()" style="padding:10px 24px;background:#7c3aed;color:#fff;border:none;border-radius:8px;font-size:16px;cursor:pointer">🖨️ طباعة الكل</button></div><div class="grid">${sorted.map(u => `<div class="card"><h2>طاولة ${u.table_number}</h2><img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(window.location.origin + '/?place=' + placeObj.code + '&table=' + u.table_number)}" alt="QR طاولة ${u.table_number}" /></div>`).join('')}</div></body></html>`
+                      const html = `<!DOCTYPE html><html dir="rtl"><head><meta charset="utf-8"><title>QR طاولات ${placeObj.name}</title><style>body{font-family:Arial,sans-serif;background:#fff;padding:20px}h1{text-align:center;margin-bottom:30px}.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:20px}.card{border:2px solid #ddd;border-radius:12px;padding:16px;text-align:center;page-break-inside:avoid}.card h2{font-size:18px;margin:0 0 12px}.card img{width:150px;height:150px}@media print{.no-print{display:none}}</style></head><body><h1>${placeObj.name} — QR الطاولات</h1><div class="no-print" style="text-align:center;margin-bottom:20px"><button onclick="window.print()" style="padding:10px 24px;background:#7c3aed;color:#fff;border:none;border-radius:8px;font-size:16px;cursor:pointer">🖨️ طباعة ا��كل</button></div><div class="grid">${sorted.map(u => `<div class="card"><h2>طاولة ${u.table_number}</h2><img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(window.location.origin + '/?place=' + placeObj.code + '&table=' + u.table_number)}" alt="QR طاولة ${u.table_number}" /></div>`).join('')}</div></body></html>`
                       win.document.write(html)
                       win.document.close()
                     }}
@@ -5618,7 +5620,7 @@ const handleSaveSettings = async () => {
                     { label: 'إجمالي المبيعات', value: `${analyticsData.totalRevenue.toFixed(0)} جنيه`, icon: '💰' },
                     { label: 'عدد الطلبات',     value: String(analyticsData.totalOrders),            icon: '🧾' },
                     ...(analyticsData.avgOrderValue != null
-                      ? [{ label: 'متوسط الطلب', value: `${analyticsData.avgOrderValue.toFixed(0)} جنيه`, icon: '📊' }]
+                      ? [{ label: 'متوسط الطلب', value: `${analyticsData.avgOrderValue.toFixed(0)} جنيه`, icon: '����' }]
                       : []),
                     ...(analyticsData.totalSessions != null
                       ? [{ label: 'جلسات العمل', value: String(analyticsData.totalSessions), icon: '📅' }]
