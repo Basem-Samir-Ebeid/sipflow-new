@@ -2809,7 +2809,7 @@ export default function HomePage() {
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-md p-4" onClick={() => !isSurprising && setShowSurpriseModal(false)}>
             <div className="w-full max-w-sm overflow-hidden" onClick={e => e.stopPropagation()}>
               <div className="relative rounded-3xl overflow-hidden" style={{ background: 'linear-gradient(170deg, #1a1a2e 0%, #0d0d1a 100%)', border: '1px solid rgba(212,160,23,0.2)', boxShadow: '0 25px 60px rgba(0,0,0,0.7), 0 0 40px rgba(212,160,23,0.08)' }}>
-                <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: 'radial-gradient(circle at 30% 20%, rgba(212,160,23,0.4) 0%, transparent 50%), radial-gradient(circle at 70% 80%, rgba(212,160,23,0.2) 0%, transparent 50%)' }} />
+                <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle at 30% 20%, rgba(212,160,23,0.4) 0%, transparent 50%), radial-gradient(circle at 70% 80%, rgba(212,160,23,0.2) 0%, transparent 50%)' }} />
 
                 <div className="relative p-6 pb-3 text-center">
                   <div className="inline-flex items-center gap-2 rounded-full px-4 py-1.5 mb-3" style={{ background: 'rgba(212,160,23,0.1)', border: '1px solid rgba(212,160,23,0.2)' }}>
@@ -2849,7 +2849,7 @@ export default function HomePage() {
                 </div>
 
                 {!isSurprising && surpriseDrink && (
-                  <div className="px-5 pb-5 space-y-2.5">
+                  <div className="relative z-10 px-5 pb-5 space-y-2.5">
                     <Button
                       className="w-full h-12 font-bold text-sm rounded-xl text-white"
                       style={{ background: 'linear-gradient(135deg, #D4A017, #b8860b)', boxShadow: '0 4px 15px rgba(212,160,23,0.3)' }}
