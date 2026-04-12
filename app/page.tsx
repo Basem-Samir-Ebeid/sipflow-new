@@ -1135,7 +1135,8 @@ export default function HomePage() {
       setAdminError('اسم المطور غلط — أعد المحاولة')
       return
     }
-    if (adminPassword === process.env.NEXT_PUBLIC_ADMIN_SECRET) {
+    const expectedPassword = process.env.NEXT_PUBLIC_ADMIN_SECRET || 'Basem.s.ebeid#@55!'
+    if (adminPassword === expectedPassword) {
       const name = devAdminName.trim()
       setSavedDevName(name)
       setIsAdmin(true)
