@@ -1873,12 +1873,13 @@ const handleSaveSettings = async () => {
 
           {/* Dev admin: place selector for stats */}
           {isDevAdmin && (
-            <div className="rounded-2xl border border-border bg-card p-4">
-              <Label className="text-muted-foreground">اختر المكان لعرض إحصائياته</Label>
+            <div className="rounded-2xl p-4" style={{ background: 'linear-gradient(135deg, rgba(139,92,246,0.06), rgba(99,102,241,0.03))', border: '1px solid rgba(139,92,246,0.15)' }}>
+              <Label className="text-xs font-medium mb-2 block" style={{ color: '#a78bfa' }}>اختر المكان لعرض إحصائياته</Label>
               <select
                 value={statsPlaceId}
                 onChange={e => { setStatsPlaceId(e.target.value); fetchStatsForPlace(e.target.value) }}
-                className="mt-2 w-full rounded-md border border-border bg-muted px-3 py-2 text-sm text-foreground"
+                className="w-full rounded-xl px-3 py-2.5 text-sm text-white"
+                style={{ background: 'rgba(139,92,246,0.08)', border: '1px solid rgba(139,92,246,0.2)' }}
               >
                 <option value="">— اختر المكان —</option>
                 {places.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
@@ -1948,31 +1949,31 @@ const handleSaveSettings = async () => {
 
           {/* Stats Summary Cards */}
           <div className="grid grid-cols-2 gap-3">
-            <div className="rounded-2xl border border-border bg-card p-4">
-              <div className="flex items-center gap-2 text-muted-foreground">
+            <div className="rounded-2xl p-4" style={{ background: 'rgba(139,92,246,0.06)', border: '1px solid rgba(139,92,246,0.15)' }}>
+              <div className="flex items-center gap-2" style={{ color: '#a78bfa' }}>
                 <Coffee className="h-4 w-4" />
-                <span className="text-sm">إجمالي الطلبات</span>
+                <span className="text-xs font-medium">إجمالي الطلبات</span>
               </div>
-              <p className="mt-2 text-3xl font-bold text-foreground">
+              <p className="mt-2 text-3xl font-black text-white">
                 {ao.reduce((acc, o) => acc + o.quantity, 0)}
               </p>
             </div>
-            <div className="rounded-2xl border border-border bg-card p-4">
-              <div className="flex items-center gap-2 text-muted-foreground">
+            <div className="rounded-2xl p-4" style={{ background: 'rgba(99,102,241,0.06)', border: '1px solid rgba(99,102,241,0.15)' }}>
+              <div className="flex items-center gap-2" style={{ color: '#818cf8' }}>
                 <Users className="h-4 w-4" />
-                <span className="text-sm">المستخدمين النشطين</span>
+                <span className="text-xs font-medium">المستخدمين النشطين</span>
               </div>
-              <p className="mt-2 text-3xl font-bold text-foreground">
+              <p className="mt-2 text-3xl font-black text-white">
                 {new Set(ao.map(o => o.user_id)).size}
               </p>
             </div>
           </div>
 
           {/* Top Drinks */}
-          <div className="rounded-2xl border border-border bg-card p-4">
+          <div className="rounded-2xl p-4" style={{ background: 'rgba(139,92,246,0.04)', border: '1px solid rgba(139,92,246,0.12)' }}>
             <div className="mb-4 flex items-center gap-2">
-              <TrendingUp className="h-5 w-5 text-primary" />
-              <h3 className="font-semibold text-foreground">أكثر المشروبات طلباً</h3>
+              <TrendingUp className="h-5 w-5" style={{ color: '#a78bfa' }} />
+              <h3 className="font-bold text-white text-sm">أكثر المشروبات طلباً</h3>
             </div>
             <div className="space-y-3">
               {(() => {
@@ -2014,10 +2015,10 @@ const handleSaveSettings = async () => {
           </div>
 
           {/* Top Users */}
-          <div className="rounded-2xl border border-border bg-card p-4">
+          <div className="rounded-2xl p-4" style={{ background: 'rgba(245,158,11,0.04)', border: '1px solid rgba(245,158,11,0.12)' }}>
             <div className="mb-4 flex items-center gap-2">
-              <Award className="h-5 w-5 text-amber-500" />
-              <h3 className="font-semibold text-foreground">أكثر المستخدمين طلباً</h3>
+              <Award className="h-5 w-5 text-amber-400" />
+              <h3 className="font-bold text-white text-sm">أكثر المستخدمين طلباً</h3>
             </div>
             <div className="space-y-3">
               {(() => {
@@ -2095,10 +2096,10 @@ const handleSaveSettings = async () => {
           })()}
 
           {/* Recent Activity */}
-          <div className="rounded-2xl border border-border bg-card p-4">
+          <div className="rounded-2xl p-4" style={{ background: 'rgba(59,130,246,0.04)', border: '1px solid rgba(59,130,246,0.12)' }}>
             <div className="mb-4 flex items-center gap-2">
-              <Clock className="h-5 w-5 text-blue-500" />
-              <h3 className="font-semibold text-foreground">آخر الطلبات</h3>
+              <Clock className="h-5 w-5 text-blue-400" />
+              <h3 className="font-bold text-white text-sm">آخر الطلبات</h3>
             </div>
             <div className="space-y-2">
               {ao.slice(-5).reverse().map((order) => (
@@ -2258,17 +2259,29 @@ const handleSaveSettings = async () => {
 
         <TabsContent value="drinks" className="space-y-6">
           {/* Add new drink */}
-          <div className="rounded-2xl border border-border bg-card p-4">
-            <h3 className="mb-4 font-semibold text-foreground">إضافة صنف جديد</h3>
-            <div className="space-y-4">
+          <div className="relative rounded-2xl overflow-hidden" style={{ background: 'linear-gradient(170deg, rgba(139,92,246,0.06) 0%, rgba(15,15,25,0.95) 100%)', border: '1px solid rgba(139,92,246,0.15)', boxShadow: '0 4px 20px rgba(0,0,0,0.2)' }}>
+            <div className="absolute inset-0 pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle at 100% 0%, rgba(139,92,246,0.05) 0%, transparent 50%)' }} />
+            <div className="relative p-5 pb-3">
+              <div className="flex items-center gap-3 mb-4 pb-3" style={{ borderBottom: '1px solid rgba(139,92,246,0.1)' }}>
+                <div className="flex items-center justify-center w-9 h-9 rounded-xl" style={{ background: 'linear-gradient(135deg, rgba(139,92,246,0.2), rgba(99,102,241,0.15))', border: '1px solid rgba(139,92,246,0.2)' }}>
+                  <Coffee className="h-4 w-4" style={{ color: '#a78bfa' }} />
+                </div>
+                <div>
+                  <h3 className="font-bold text-white text-sm">إضافة صنف جديد</h3>
+                  <p className="text-[10px]" style={{ color: 'rgba(167,139,250,0.6)' }}>أضف مشروب أو صنف جديد للمنيو</p>
+                </div>
+              </div>
+            </div>
+            <div className="relative px-5 pb-5 space-y-4">
               {/* Dev admin: place selector */}
               {isDevAdmin && (
                 <div>
-                  <Label className="text-muted-foreground">المكان</Label>
+                  <Label className="text-xs font-medium mb-1.5 block" style={{ color: '#a78bfa' }}>المكان</Label>
                   <select
                     value={devDrinkPlaceId}
                     onChange={e => setDevDrinkPlaceId(e.target.value)}
-                    className="mt-1 w-full rounded-md border border-border bg-muted px-3 py-2 text-foreground text-sm"
+                    className="w-full rounded-xl px-3 py-2.5 text-sm text-white"
+                    style={{ background: 'rgba(139,92,246,0.08)', border: '1px solid rgba(139,92,246,0.2)' }}
                   >
                     <option value="">— اختر المكان —</option>
                     {places.map(p => (
@@ -2302,70 +2315,71 @@ const handleSaveSettings = async () => {
                 className="hidden"
                 onChange={(e) => e.target.files?.[0] && handleFileUpload(e.target.files[0])}
               />
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <Label className="text-muted-foreground">اسم الصنف</Label>
+                  <Label className="text-xs font-medium mb-1.5 block" style={{ color: '#a78bfa' }}>اسم الصنف</Label>
                   <Input
                     value={newDrinkName}
                     onChange={(e) => setNewDrinkName(e.target.value)}
-                    placeholder="مثال: كابتشينو"
-                    className="mt-1 border-border bg-muted text-foreground"
+                    placeholder="كابتشينو"
+                    className="h-10 text-sm rounded-xl text-white placeholder:text-white/25"
+                    style={{ background: 'rgba(139,92,246,0.06)', border: '1px solid rgba(139,92,246,0.15)' }}
                   />
                 </div>
                 <div>
-                  <Label className="text-muted-foreground">السعر (اختياري)</Label>
+                  <Label className="text-xs font-medium mb-1.5 block" style={{ color: '#a78bfa' }}>السعر</Label>
                   <Input
                     type="number"
                     value={newDrinkPrice}
                     onChange={(e) => setNewDrinkPrice(e.target.value)}
                     placeholder="0"
-                    className="mt-1 border-border bg-muted text-foreground"
+                    className="h-10 text-sm rounded-xl text-white placeholder:text-white/25"
+                    style={{ background: 'rgba(139,92,246,0.06)', border: '1px solid rgba(139,92,246,0.15)' }}
                   />
                 </div>
               </div>
               <div>
-                <Label className="text-muted-foreground">الكمية الابتدائية في المخزون</Label>
+                <Label className="text-xs font-medium mb-1.5 block" style={{ color: '#a78bfa' }}>الكمية الابتدائية في المخزون</Label>
                 <Input
                   type="number"
                   value={newDrinkInitialStock}
                   onChange={(e) => setNewDrinkInitialStock(e.target.value)}
                   placeholder="100"
                   min="0"
-                  className="mt-1 border-border bg-muted text-foreground"
+                  className="h-10 text-sm rounded-xl text-white placeholder:text-white/25"
+                  style={{ background: 'rgba(139,92,246,0.06)', border: '1px solid rgba(139,92,246,0.15)' }}
                 />
               </div>
               {/* Category selector */}
               <div>
-                <Label className="text-muted-foreground">القسم</Label>
-                <div className="mt-1 flex gap-2">
+                <Label className="text-xs font-medium mb-2 block" style={{ color: '#a78bfa' }}>القسم</Label>
+                <div className="grid grid-cols-3 gap-2">
                   {([
-                    { key: 'hot', label: '☕ Hot', color: 'bg-red-500' },
-                    { key: 'cold', label: '🧊 Cold', color: 'bg-blue-500' },
-                    { key: 'shisha', label: '💨 Shisha', color: 'bg-purple-500' },
-                  ] as const).map(({ key, label, color }) => (
+                    { key: 'hot', label: '☕ ساخن', activeColor: 'rgba(239,68,68,0.2)', activeBorder: 'rgba(239,68,68,0.5)', activeText: '#fca5a5' },
+                    { key: 'cold', label: '🧊 بارد', activeColor: 'rgba(56,189,248,0.2)', activeBorder: 'rgba(56,189,248,0.5)', activeText: '#7dd3fc' },
+                    { key: 'shisha', label: '💨 شيشة', activeColor: 'rgba(139,92,246,0.2)', activeBorder: 'rgba(139,92,246,0.5)', activeText: '#c4b5fd' },
+                  ] as const).map(({ key, label, activeColor, activeBorder, activeText }) => (
                     <button
                       key={key}
                       type="button"
                       onClick={() => setNewDrinkCategory(key)}
-                      className={`flex-1 rounded-lg py-2 text-sm font-medium transition-all ${
-                        newDrinkCategory === key
-                          ? `${color} text-white shadow-sm`
-                          : 'bg-muted text-muted-foreground hover:bg-muted/80'
-                      }`}
+                      className="h-10 rounded-xl text-sm font-semibold transition-all duration-200"
+                      style={newDrinkCategory === key ? { background: activeColor, border: `1.5px solid ${activeBorder}`, color: activeText, boxShadow: `0 0 12px ${activeColor}` } : { background: 'rgba(139,92,246,0.04)', border: '1px solid rgba(139,92,246,0.1)', color: 'rgba(255,255,255,0.35)' }}
                     >
                       {label}
                     </button>
                   ))}
                 </div>
               </div>
-              <Button 
-                className="w-full bg-primary text-primary-foreground hover:bg-primary/90" 
+              <button
+                className="w-full h-11 rounded-xl text-sm font-bold transition-all duration-200 flex items-center justify-center gap-2 disabled:opacity-50"
+                style={{ background: 'linear-gradient(135deg, #7c3aed, #6366f1)', color: '#fff', boxShadow: '0 4px 15px rgba(124,58,237,0.3)' }}
                 onClick={handleAddDrink} 
                 disabled={!newDrinkName.trim() || (isDevAdmin && !devDrinkPlaceId)}
               >
-                <Plus className="ml-2 h-4 w-4" />
+                <Plus className="h-4 w-4" />
                 إضافة الصنف
-              </Button>
+              </button>
             </div>
           </div>
 
@@ -2589,12 +2603,13 @@ const handleSaveSettings = async () => {
           {isDevAdmin ? (
             /* Dev admin: place selector then filtered inventory */
             <div className="space-y-4">
-              <div className="rounded-2xl border border-border bg-card p-4">
-                <Label className="text-muted-foreground">اختر المكان لعرض مخزونه</Label>
+              <div className="rounded-2xl p-4" style={{ background: 'linear-gradient(135deg, rgba(139,92,246,0.06), rgba(99,102,241,0.03))', border: '1px solid rgba(139,92,246,0.15)' }}>
+                <Label className="text-xs font-medium mb-2 block" style={{ color: '#a78bfa' }}>اختر المكان لعرض مخزونه</Label>
                 <select
                   value={inventoryDevPlaceId}
                   onChange={e => setInventoryDevPlaceId(e.target.value)}
-                  className="mt-2 w-full rounded-md border border-border bg-muted px-3 py-2 text-sm text-foreground"
+                  className="w-full rounded-xl px-3 py-2.5 text-sm text-white"
+                  style={{ background: 'rgba(139,92,246,0.08)', border: '1px solid rgba(139,92,246,0.2)' }}
                 >
                   <option value="">— اختر المكان —</option>
                   {places.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
@@ -3625,23 +3640,28 @@ const handleSaveSettings = async () => {
 
           {/* Archive Password Setting — dev admin only */}
           {isDevAdmin && (
-            <div className="rounded-2xl border border-amber-500/20 bg-amber-500/5 p-4 space-y-3">
-              <h3 className="font-bold text-foreground flex items-center gap-2">
-                <Key className="h-4 w-4 text-amber-400" /> كلمة سر الأرشيف
-              </h3>
-              <p className="text-xs text-muted-foreground">
-                حدد كلمة سر للوصول للـ SîpFlõw القديمة المؤرشفة. المستخدمين العاديين سيحتاجون هذه الكلمة لرؤية الأرشيف.
-              </p>
-              <div className="space-y-3">
-                <div className="relative">
-                  <Label className="text-xs text-muted-foreground">كلمة السر الجديدة</Label>
-                  <div className="relative mt-1">
+            <div className="relative rounded-2xl overflow-hidden p-5 space-y-4" style={{ background: 'linear-gradient(170deg, rgba(139,92,246,0.06) 0%, rgba(15,15,25,0.95) 100%)', border: '1px solid rgba(139,92,246,0.15)', boxShadow: '0 4px 20px rgba(0,0,0,0.2)' }}>
+              <div className="absolute inset-0 pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle at 0% 100%, rgba(139,92,246,0.04) 0%, transparent 50%)' }} />
+              <div className="relative flex items-center gap-3 pb-3" style={{ borderBottom: '1px solid rgba(139,92,246,0.1)' }}>
+                <div className="flex items-center justify-center w-9 h-9 rounded-xl" style={{ background: 'linear-gradient(135deg, rgba(139,92,246,0.2), rgba(99,102,241,0.15))', border: '1px solid rgba(139,92,246,0.2)' }}>
+                  <Key className="h-4 w-4" style={{ color: '#a78bfa' }} />
+                </div>
+                <div>
+                  <h3 className="font-bold text-white text-sm">كلمة سر الأرشيف</h3>
+                  <p className="text-[10px]" style={{ color: 'rgba(167,139,250,0.6)' }}>للوصول للبيانات المؤرشفة</p>
+                </div>
+              </div>
+              <div className="relative space-y-3">
+                <div>
+                  <Label className="text-xs font-medium mb-1.5 block" style={{ color: '#a78bfa' }}>كلمة السر الجديدة</Label>
+                  <div className="relative">
                     <Input
                       type={showArchivePassword ? 'text' : 'password'}
                       value={archivePassword}
                       onChange={e => { setArchivePassword(e.target.value); setArchivePasswordError(''); setArchivePasswordSuccess('') }}
                       placeholder="أدخل كلمة سر الأرشيف"
-                      className="border-border bg-muted text-foreground pr-10"
+                      className="h-10 text-sm rounded-xl text-white placeholder:text-white/25 pr-10"
+                      style={{ background: 'rgba(139,92,246,0.06)', border: '1px solid rgba(139,92,246,0.15)' }}
                     />
                     <button
                       type="button"
@@ -3653,13 +3673,14 @@ const handleSaveSettings = async () => {
                   </div>
                 </div>
                 <div>
-                  <Label className="text-xs text-muted-foreground">تأكيد كلمة السر</Label>
+                  <Label className="text-xs font-medium mb-1.5 block" style={{ color: '#a78bfa' }}>تأكيد كلمة السر</Label>
                   <Input
                     type={showArchivePassword ? 'text' : 'password'}
                     value={archivePasswordConfirm}
                     onChange={e => { setArchivePasswordConfirm(e.target.value); setArchivePasswordError(''); setArchivePasswordSuccess('') }}
                     placeholder="أعد كتابة كلمة السر"
-                    className="mt-1 border-border bg-muted text-foreground"
+                    className="h-10 text-sm rounded-xl text-white placeholder:text-white/25"
+                    style={{ background: 'rgba(139,92,246,0.06)', border: '1px solid rgba(139,92,246,0.15)' }}
                   />
                 </div>
                 {archivePasswordError && (
@@ -3669,8 +3690,8 @@ const handleSaveSettings = async () => {
                   <p className="text-sm text-green-500">{archivePasswordSuccess}</p>
                 )}
                 <Button
-                  className="w-full"
-                  style={{ background: 'linear-gradient(135deg, #D4A017, #f97316)', color: '#0f0800' }}
+                  className="w-full h-11 rounded-xl text-sm font-bold"
+                  style={{ background: 'linear-gradient(135deg, #7c3aed, #6366f1)', color: '#fff', boxShadow: '0 4px 15px rgba(124,58,237,0.3)' }}
                   disabled={isSavingArchivePassword}
                   onClick={async () => {
                     if (!archivePassword.trim()) {
@@ -3797,21 +3818,26 @@ const handleSaveSettings = async () => {
           )}
 
           {/* Working Hours */}
-          <div className="rounded-2xl border border-border bg-card p-4">
-            <div className="mb-4 flex items-center gap-2">
-              <Clock className="h-5 w-5 text-primary" />
-              <h3 className="font-semibold text-foreground">ساعات العمل</h3>
+          <div className="relative rounded-2xl overflow-hidden" style={{ background: 'linear-gradient(170deg, rgba(139,92,246,0.06) 0%, rgba(15,15,25,0.95) 100%)', border: '1px solid rgba(139,92,246,0.15)', boxShadow: '0 4px 20px rgba(0,0,0,0.2)' }}>
+            <div className="absolute inset-0 pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle at 100% 100%, rgba(139,92,246,0.04) 0%, transparent 50%)' }} />
+            <div className="relative p-5">
+            <div className="flex items-center gap-3 mb-4 pb-3" style={{ borderBottom: '1px solid rgba(139,92,246,0.1)' }}>
+              <div className="flex items-center justify-center w-9 h-9 rounded-xl" style={{ background: 'linear-gradient(135deg, rgba(139,92,246,0.2), rgba(99,102,241,0.15))', border: '1px solid rgba(139,92,246,0.2)' }}>
+                <Clock className="h-4 w-4" style={{ color: '#a78bfa' }} />
+              </div>
+              <div>
+                <h3 className="font-bold text-white text-sm">ساعات العمل</h3>
+                <p className="text-[10px]" style={{ color: 'rgba(167,139,250,0.6)' }}>حدد أوقات فتح وإغلاق المكان</p>
+              </div>
             </div>
-            <p className="mb-4 text-sm text-muted-foreground">
-              حدد أوقات فتح وإغلاق المكان لإظهارها للعملاء
-            </p>
 
             {/* Dev admin: place selector */}
             {isDevAdmin && (
               <div className="mb-4">
-                <Label className="text-muted-foreground mb-1 block">اختر المكان</Label>
+                <Label className="text-xs font-medium mb-1.5 block" style={{ color: '#a78bfa' }}>اختر المكان</Label>
                 <select
-                  className="w-full rounded-md border border-border bg-muted px-3 py-2 text-sm text-foreground"
+                  className="w-full rounded-xl px-3 py-2.5 text-sm text-white"
+                  style={{ background: 'rgba(139,92,246,0.08)', border: '1px solid rgba(139,92,246,0.2)' }}
                   value={workingHoursPlaceId}
                   onChange={e => {
                     setWorkingHoursPlaceId(e.target.value)
@@ -3891,9 +3917,10 @@ const handleSaveSettings = async () => {
             {isDevAdmin && !workingHoursPlaceId && (
               <p className="mt-3 text-center text-xs text-amber-400">⚠️ اختر المكان من القائمة أعلاه أولاً</p>
             )}
-            <Button
+            <button
               type="button"
-              className="mt-2 w-full bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
+              className="mt-3 w-full h-11 rounded-xl text-sm font-bold transition-all duration-200 flex items-center justify-center gap-2 disabled:opacity-50"
+              style={{ background: 'linear-gradient(135deg, #7c3aed, #6366f1)', color: '#fff', boxShadow: '0 4px 15px rgba(124,58,237,0.3)' }}
               onClick={handleSaveWorkingHours}
               disabled={isSavingHours || isLoadingHours}
             >
@@ -3901,7 +3928,8 @@ const handleSaveSettings = async () => {
                 ? <><div className="ml-2 h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" /> جاري الحفظ...</>
                 : <><Clock className="ml-2 h-4 w-4" /> حفظ ساعات العمل</>
               }
-            </Button>
+            </button>
+            </div>
           </div>
 
           {/* QR Code Manager — for place admin */}
@@ -4157,20 +4185,28 @@ const handleSaveSettings = async () => {
             </div>
           )}
 
-          <div className="rounded-2xl border border-destructive/50 bg-destructive/10 p-4">
-            <h3 className="mb-4 font-semibold text-destructive">بدء SîpFlõw جديدة</h3>
-            <p className="mb-4 text-sm text-muted-foreground">
-              سيتم إنهاء SîpFlõw الحالية وفتح SîpFlõw جديدة فارغة. طلبات اليوم والأيام السابقة محفوظة في الأرشيف.
-            </p>
+          <div className="relative rounded-2xl overflow-hidden p-5" style={{ background: 'linear-gradient(170deg, rgba(239,68,68,0.06) 0%, rgba(15,15,20,0.98) 100%)', border: '1px solid rgba(239,68,68,0.2)', boxShadow: '0 4px 20px rgba(0,0,0,0.2)' }}>
+            <div className="absolute inset-0 pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle at 0% 0%, rgba(239,68,68,0.04) 0%, transparent 50%)' }} />
+            <div className="relative">
+            <div className="flex items-center gap-3 mb-4 pb-3" style={{ borderBottom: '1px solid rgba(239,68,68,0.1)' }}>
+              <div className="flex items-center justify-center w-9 h-9 rounded-xl" style={{ background: 'rgba(239,68,68,0.15)', border: '1px solid rgba(239,68,68,0.25)' }}>
+                <RefreshCw className="h-4 w-4 text-red-400" />
+              </div>
+              <div>
+                <h3 className="font-bold text-red-300 text-sm">بدء SîpFlõw جديدة</h3>
+                <p className="text-[10px] text-red-400/50">الطلبات السابقة محفوظة في الأرشيف</p>
+              </div>
+            </div>
 
             {/* Dev admin: must pick a place first */}
             {isDevAdmin && (
               <div className="mb-4">
-                <Label className="text-muted-foreground">اختر المكان أولاً</Label>
+                <Label className="text-xs font-medium mb-1.5 block text-red-300/70">اختر المكان أولاً</Label>
                 <select
                   value={resetPlaceId}
                   onChange={e => setResetPlaceId(e.target.value)}
-                  className="mt-1 w-full rounded-md border border-border bg-muted px-3 py-2 text-sm text-foreground"
+                  className="w-full rounded-xl px-3 py-2.5 text-sm text-white"
+                  style={{ background: 'rgba(239,68,68,0.06)', border: '1px solid rgba(239,68,68,0.15)' }}
                 >
                   <option value="">— اختر المكان —</option>
                   {places.map(p => (
@@ -4217,6 +4253,7 @@ const handleSaveSettings = async () => {
                 </AlertDialogFooter>
               </AlertDialogContent>
             </AlertDialog>
+            </div>
           </div>
         </TabsContent>
 
@@ -4224,12 +4261,13 @@ const handleSaveSettings = async () => {
         <TabsContent value="count" className="space-y-4">
           {/* Dev admin: place selector for count */}
           {isDevAdmin && (
-            <div className="rounded-2xl border border-border bg-card p-4">
-              <Label className="text-muted-foreground">اختر المكان لعرض حصر الأصناف المسلّمة</Label>
+            <div className="rounded-2xl p-4" style={{ background: 'linear-gradient(135deg, rgba(139,92,246,0.06), rgba(99,102,241,0.03))', border: '1px solid rgba(139,92,246,0.15)' }}>
+              <Label className="text-xs font-medium mb-2 block" style={{ color: '#a78bfa' }}>اختر المكان لعرض حصر الأصناف المسلّمة</Label>
               <select
                 value={countPlaceId}
                 onChange={e => { setCountPlaceId(e.target.value); fetchCountForPlace(e.target.value) }}
-                className="mt-2 w-full rounded-md border border-border bg-muted px-3 py-2 text-sm text-foreground"
+                className="w-full rounded-xl px-3 py-2.5 text-sm text-white"
+                style={{ background: 'rgba(139,92,246,0.08)', border: '1px solid rgba(139,92,246,0.2)' }}
               >
                 <option value="">— اختر مكان —</option>
                 {places.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
