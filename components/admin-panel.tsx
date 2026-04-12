@@ -4661,58 +4661,83 @@ const handleSaveSettings = async () => {
           <TabsContent value="clients" className="space-y-4">
 
             {/* Add new client */}
-            <div className="rounded-2xl border border-border bg-card p-4 space-y-3">
-              <h3 className="font-bold text-foreground flex items-center gap-2">
-                <UserPlus className="h-4 w-4 text-primary" /> إضافة عميل / مالك
-              </h3>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <Label className="text-xs text-muted-foreground">الاسم <span className="text-destructive">*</span></Label>
-                  <Input value={newClientName} onChange={e => setNewClientName(e.target.value)}
-                    placeholder="مثال: أحمد محمد" className="mt-1 border-border bg-muted text-foreground" />
-                </div>
-                <div>
-                  <Label className="text-xs text-muted-foreground">رقم التليفون</Label>
-                  <Input value={newClientPhone} onChange={e => setNewClientPhone(e.target.value)}
-                    placeholder="مثال: 01012345678" className="mt-1 border-border bg-muted text-foreground" dir="ltr" />
-                </div>
-                <div>
-                  <Label className="text-xs text-muted-foreground">اسم المكان / الكافيه</Label>
-                  <Input value={newClientPlace} onChange={e => setNewClientPlace(e.target.value)}
-                    placeholder="مثال: كافيه النيل" className="mt-1 border-border bg-muted text-foreground" />
-                </div>
-                <div>
-                  <Label className="text-xs text-muted-foreground">نوع الاشتراك</Label>
-                  <div className="mt-1 flex gap-2">
-                    <button
-                      onClick={() => setNewClientSub('monthly')}
-                      className={`flex-1 rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors ${newClientSub === 'monthly' ? 'border-primary bg-primary/10 text-primary' : 'border-border bg-muted text-muted-foreground'}`}
-                    >
-                      شهري
-                    </button>
-                    <button
-                      onClick={() => setNewClientSub('owned')}
-                      className={`flex-1 rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors ${newClientSub === 'owned' ? 'border-primary bg-primary/10 text-primary' : 'border-border bg-muted text-muted-foreground'}`}
-                    >
-                      اشترى البرنامج
-                    </button>
+            <div className="relative rounded-2xl overflow-hidden" style={{ background: 'linear-gradient(170deg, rgba(139,92,246,0.08) 0%, rgba(99,102,241,0.04) 50%, rgba(15,15,25,0.95) 100%)', border: '1px solid rgba(139,92,246,0.15)', boxShadow: '0 8px 32px rgba(0,0,0,0.3), inset 0 1px 0 rgba(139,92,246,0.1)' }}>
+              <div className="absolute inset-0 pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle at 100% 0%, rgba(139,92,246,0.06) 0%, transparent 50%)' }} />
+              <div className="relative p-5 space-y-4">
+                <div className="flex items-center gap-3 pb-3" style={{ borderBottom: '1px solid rgba(139,92,246,0.1)' }}>
+                  <div className="flex items-center justify-center w-9 h-9 rounded-xl" style={{ background: 'linear-gradient(135deg, rgba(139,92,246,0.2), rgba(99,102,241,0.15))', border: '1px solid rgba(139,92,246,0.2)' }}>
+                    <UserPlus className="h-4 w-4" style={{ color: '#a78bfa' }} />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-white text-sm">إضافة عميل جديد</h3>
+                    <p className="text-[10px]" style={{ color: 'rgba(167,139,250,0.6)' }}>تسجيل مالك أو مشترك جديد في النظام</p>
                   </div>
                 </div>
+
+                <div className="space-y-3">
+                  <div>
+                    <Label className="text-xs font-medium mb-1.5 flex items-center gap-1" style={{ color: '#a78bfa' }}>الاسم <span className="text-red-400 text-[10px]">مطلوب</span></Label>
+                    <Input value={newClientName} onChange={e => setNewClientName(e.target.value)}
+                      placeholder="أحمد محمد" className="h-10 text-sm rounded-xl text-white placeholder:text-white/25" style={{ background: 'rgba(139,92,246,0.06)', border: '1px solid rgba(139,92,246,0.15)' }} />
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <Label className="text-xs font-medium mb-1.5 block" style={{ color: '#a78bfa' }}>رقم التليفون</Label>
+                      <Input value={newClientPhone} onChange={e => setNewClientPhone(e.target.value)}
+                        placeholder="01012345678" className="h-10 text-sm rounded-xl text-white placeholder:text-white/25" style={{ background: 'rgba(139,92,246,0.06)', border: '1px solid rgba(139,92,246,0.15)' }} dir="ltr" />
+                    </div>
+                    <div>
+                      <Label className="text-xs font-medium mb-1.5 block" style={{ color: '#a78bfa' }}>اسم المكان</Label>
+                      <Input value={newClientPlace} onChange={e => setNewClientPlace(e.target.value)}
+                        placeholder="كافيه النيل" className="h-10 text-sm rounded-xl text-white placeholder:text-white/25" style={{ background: 'rgba(139,92,246,0.06)', border: '1px solid rgba(139,92,246,0.15)' }} />
+                    </div>
+                  </div>
+                  <div>
+                    <Label className="text-xs font-medium mb-2 block" style={{ color: '#a78bfa' }}>نوع الاشتراك</Label>
+                    <div className="grid grid-cols-2 gap-2">
+                      <button
+                        onClick={() => setNewClientSub('monthly')}
+                        className="relative h-11 rounded-xl text-sm font-semibold transition-all duration-200"
+                        style={newClientSub === 'monthly' ? { background: 'linear-gradient(135deg, rgba(139,92,246,0.25), rgba(99,102,241,0.2))', border: '1.5px solid rgba(139,92,246,0.5)', color: '#c4b5fd', boxShadow: '0 0 15px rgba(139,92,246,0.15)' } : { background: 'rgba(139,92,246,0.04)', border: '1px solid rgba(139,92,246,0.1)', color: 'rgba(255,255,255,0.35)' }}
+                      >
+                        {newClientSub === 'monthly' && <span className="absolute top-1.5 left-1.5 w-1.5 h-1.5 rounded-full" style={{ background: '#a78bfa' }} />}
+                        🔄 شهري
+                      </button>
+                      <button
+                        onClick={() => setNewClientSub('owned')}
+                        className="relative h-11 rounded-xl text-sm font-semibold transition-all duration-200"
+                        style={newClientSub === 'owned' ? { background: 'linear-gradient(135deg, rgba(245,158,11,0.2), rgba(217,119,6,0.15))', border: '1.5px solid rgba(245,158,11,0.45)', color: '#fbbf24', boxShadow: '0 0 15px rgba(245,158,11,0.1)' } : { background: 'rgba(139,92,246,0.04)', border: '1px solid rgba(139,92,246,0.1)', color: 'rgba(255,255,255,0.35)' }}
+                      >
+                        {newClientSub === 'owned' && <span className="absolute top-1.5 left-1.5 w-1.5 h-1.5 rounded-full" style={{ background: '#fbbf24' }} />}
+                        🏆 اشترى البرنامج
+                      </button>
+                    </div>
+                  </div>
+                  <div>
+                    <Label className="text-xs font-medium mb-1.5 block" style={{ color: 'rgba(167,139,250,0.5)' }}>ملاحظات <span className="text-[10px]">(اختياري)</span></Label>
+                    <Input value={newClientNotes} onChange={e => setNewClientNotes(e.target.value)}
+                      placeholder="أي ملاحظات إضافية..." className="h-10 text-sm rounded-xl text-white placeholder:text-white/20" style={{ background: 'rgba(139,92,246,0.04)', border: '1px solid rgba(139,92,246,0.08)' }} />
+                  </div>
+                </div>
+
+                {clientsError && (
+                  <div className="rounded-lg px-3 py-2 text-sm text-red-300" style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)' }}>{clientsError}</div>
+                )}
+
+                <button
+                  onClick={handleAddClient}
+                  disabled={isAddingClient}
+                  className="w-full h-11 rounded-xl text-sm font-bold transition-all duration-200 flex items-center justify-center gap-2 disabled:opacity-50"
+                  style={{ background: 'linear-gradient(135deg, #7c3aed, #6366f1)', color: '#fff', boxShadow: '0 4px 15px rgba(124,58,237,0.3), inset 0 1px 0 rgba(255,255,255,0.1)' }}
+                >
+                  {isAddingClient ? (
+                    <RefreshCw className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Plus className="h-4 w-4" />
+                  )}
+                  {isAddingClient ? 'جاري الإضافة...' : 'إضافة عميل'}
+                </button>
               </div>
-
-              <div>
-                <Label className="text-xs text-muted-foreground">ملاحظات (اختياري)</Label>
-                <Input value={newClientNotes} onChange={e => setNewClientNotes(e.target.value)}
-                  placeholder="أي ملاحظات إضافية..." className="mt-1 border-border bg-muted text-foreground" />
-              </div>
-
-              {clientsError && <p className="text-sm text-destructive">{clientsError}</p>}
-
-              <Button className="w-full" onClick={handleAddClient} disabled={isAddingClient}>
-                <Plus className="ml-2 h-4 w-4" />
-                {isAddingClient ? 'جاري الإضافة...' : 'إضافة عميل'}
-              </Button>
             </div>
 
             {/* Clients list */}
