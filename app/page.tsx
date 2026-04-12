@@ -1130,6 +1130,11 @@ export default function HomePage() {
 
   const handleAdminLogin = () => {
     if (!devAdminName.trim()) { setAdminError('أدخل اسم المطور'); return }
+    const expectedUsername = process.env.NEXT_PUBLIC_ADMIN_USERNAME || 'Basem'
+    if (devAdminName.trim() !== expectedUsername) {
+      setAdminError('اسم المطور غلط — أعد المحاولة')
+      return
+    }
     if (adminPassword === process.env.NEXT_PUBLIC_ADMIN_SECRET) {
       const name = devAdminName.trim()
       setSavedDevName(name)
@@ -2753,7 +2758,7 @@ export default function HomePage() {
               </div>
               <h3 className="text-xl font-bold" style={{ color: '#fbbf24' }}>حذف الجلسة</h3>
               <p className="text-sm mt-2" style={{ color: 'rgba(212,160,23,0.6)' }}>
-                هل أنت متأكد من حذف هذه الـ SîpFlõw؟ سيتم حذف جميع الطلبات أيضاً
+                هل أنت متأكد من حذف هذه الـ SîpFlõw؟ سيتم حذف جميع ا��طلبات أيضاً
               </p>
             </div>
 
@@ -3363,7 +3368,7 @@ export default function HomePage() {
                 setSelectedDate(new Date(yr - 1, mo, Math.min(dy, lastDayOf(yr - 1, mo))))
               }
 
-              // ── Month ─────────────────────────────
+              // ── Month ─────────────────────────��───
               const goMonthNewer = () => {
                 const nm = mo === 11 ? 0 : mo + 1
                 const ny = mo === 11 ? yr + 1 : yr
