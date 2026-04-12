@@ -60,9 +60,7 @@ export function CommandCenter() {
 
   const fetchData = async () => {
     try {
-      const res = await fetch('/api/command-center', {
-        headers: { 'x-admin-secret': process.env.NEXT_PUBLIC_ADMIN_SECRET || '' },
-      })
+      const res = await fetch('/api/command-center')
       const json = await res.json()
       if (!json.error) {
         setData(json)
@@ -114,7 +112,23 @@ export function CommandCenter() {
     )
   }
 
-  if (!data) return null
+  if (!data) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20 gap-4" dir="rtl">
+        <div className="flex h-14 w-14 items-center justify-center rounded-2xl" style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)' }}>
+          <AlertTriangle className="h-7 w-7" style={{ color: '#f87171' }} />
+        </div>
+        <div className="text-center">
+          <p className="text-sm font-semibold" style={{ color: 'rgba(255,255,255,0.7)' }}>تعذّر تحميل مركز التحكم</p>
+          <p className="text-xs mt-1" style={{ color: 'rgba(255,255,255,0.3)' }}>تأكد من اتصال قاعدة البيانات</p>
+        </div>
+        <button onClick={fetchData} className="flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-semibold transition-all hover:scale-105" style={{ background: 'rgba(124,58,237,0.15)', border: '1px solid rgba(124,58,237,0.3)', color: '#a78bfa' }}>
+          <RefreshCw className="h-3.5 w-3.5" />
+          إعادة المحاولة
+        </button>
+      </div>
+    )
+  }
 
   const { globalStats: g, places, recentActivity } = data
 
