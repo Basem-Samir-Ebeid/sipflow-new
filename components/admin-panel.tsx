@@ -25,7 +25,7 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Plus, Trash2, Pencil, Upload, RefreshCw, Users, Coffee, Key, BarChart3, TrendingUp, Award, Clock, Send, MessageSquare, Settings2, Hash, UserPlus, UserCog, Minus, Package, Banknote, CheckCircle2, Hourglass, TableProperties, Copy, ExternalLink, Link2, Eye, EyeOff, QrCode, CalendarDays, CalendarCheck, CalendarX, Download, Loader2, Activity } from 'lucide-react'
+import { Plus, Trash2, Pencil, Upload, RefreshCw, Users, Coffee, Key, BarChart3, TrendingUp, Award, Clock, Send, MessageSquare, Settings2, Hash, UserPlus, UserCog, Minus, Package, Banknote, CheckCircle2, Hourglass, TableProperties, Copy, ExternalLink, Link2, Eye, EyeOff, QrCode, CalendarDays, CalendarCheck, CalendarX, Download, Loader2, Activity, ShieldCheck } from 'lucide-react'
 import { Checkbox } from '@/components/ui/checkbox'
 import Image from 'next/image'
 import { CommandCenter } from '@/components/command-center'
@@ -184,6 +184,14 @@ export function AdminPanel({
   const [createUserError, setCreateUserError] = useState('')
   const [isCreatingUser, setIsCreatingUser] = useState(false)
   const [showCreatePass, setShowCreatePass] = useState(false)
+
+  // Dev admin password reset state
+  const [showDevAdminReset, setShowDevAdminReset] = useState(false)
+  const [devAdminNewPassword, setDevAdminNewPassword] = useState('')
+  const [devAdminConfirmPassword, setDevAdminConfirmPassword] = useState('')
+  const [devAdminResetError, setDevAdminResetError] = useState('')
+  const [isResettingDevAdmin, setIsResettingDevAdmin] = useState(false)
+  const [showDevAdminNewPass, setShowDevAdminNewPass] = useState(false)
 
   // Admin tabs controlled state
   const [activeAdminTab, setActiveAdminTab] = useState(isDevAdmin ? 'command-center' : 'stats')
@@ -2575,7 +2583,7 @@ const handleSaveSettings = async () => {
           <div className="flex items-center gap-3">
             <div className="flex flex-1 items-center gap-2 rounded-xl px-3 py-2" style={{ background: 'rgba(251,191,36,0.06)', border: '1px solid rgba(251,191,36,0.2)' }}>
               <Package className="h-4 w-4 text-amber-400 shrink-0" />
-              <span className="text-xs text-muted-foreground whitespace-nowrap">حد الإنذار</span>
+              <span className="text-xs text-muted-foreground whitespace-nowrap">حد الإنذ��ر</span>
               <input
                 type="number" min="0" value={lowStockThreshold}
                 onChange={e => setLowStockThreshold(Math.max(0, parseInt(e.target.value) || 0))}
@@ -2753,6 +2761,87 @@ const handleSaveSettings = async () => {
                   <Plus className="h-3 w-3" />أدمن جديد
                 </Button>
               </div>
+            </div>
+
+            {/* Dev Admin Password Reset/Create Section */}
+            <div className="relative overflow-hidden rounded-2xl p-4" style={{ background: 'linear-gradient(135deg, rgba(220,38,38,0.15), rgba(185,28,28,0.1))', border: '1px solid rgba(220,38,38,0.2)' }}>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl" style={{ background: 'linear-gradient(135deg, #dc2626, #b91c1c)' }}>
+                    <ShieldCheck className="h-5 w-5 text-white" />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-white text-sm">الأدمن المطور</h3>
+                    <p className="text-xs text-red-300">
+                      إعادة تعيين باسورد المطور أو إنشاء يوزر جديد
+                    </p>
+                  </div>
+                </div>
+                <Button size="sm" className="gap-1 text-xs" style={{ background: 'linear-gradient(135deg, #dc2626, #b91c1c)', color: '#fff' }} onClick={() => { setShowDevAdminReset(v => !v); setDevAdminResetError(''); setDevAdminNewPassword(''); setDevAdminConfirmPassword(''); setShowDevAdminNewPass(false) }}>
+                  <Key className="h-3 w-3" />{showDevAdminReset ? 'إلغاء' : 'تعديل الباسورد'}
+                </Button>
+              </div>
+
+              {/* Dev Admin Reset Form */}
+              {showDevAdminReset && (
+                <div className="mt-4 rounded-xl p-4 space-y-3" style={{ background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(220,38,38,0.3)' }}>
+                  <p className="text-sm font-semibold text-red-300">تعيين باسورد جديد للمطور</p>
+                  <p className="text-[10px] text-muted-foreground">ملاحظة: يجب تحديث متغير البيئة NEXT_PUBLIC_ADMIN_SECRET في Vercel بعد التغيير</p>
+                  <div>
+                    <label className="text-xs text-muted-foreground block mb-1">الباسورد الجديد</label>
+                    <div className="relative">
+                      <Input type={showDevAdminNewPass ? 'text' : 'password'} value={devAdminNewPassword} onChange={e => setDevAdminNewPassword(e.target.value)} placeholder="الباسورد الجديد للمطور..." className="border-red-500/30 bg-muted text-foreground text-sm pr-9" />
+                      <button type="button" onClick={() => setShowDevAdminNewPass(v => !v)} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+                        {showDevAdminNewPass ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+                      </button>
+                    </div>
+                  </div>
+                  <div>
+                    <label className="text-xs text-muted-foreground block mb-1">تأكيد الباسورد</label>
+                    <div className="relative">
+                      <Input type={showDevAdminNewPass ? 'text' : 'password'} value={devAdminConfirmPassword} onChange={e => setDevAdminConfirmPassword(e.target.value)} placeholder="أعد كتابة الباسورد..." className="border-red-500/30 bg-muted text-foreground text-sm pr-9" />
+                      <button type="button" onClick={() => setShowDevAdminNewPass(v => !v)} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+                        {showDevAdminNewPass ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+                      </button>
+                    </div>
+                  </div>
+                  {devAdminResetError && <p className="text-xs text-destructive text-center">{devAdminResetError}</p>}
+                  <div className="flex gap-2 pt-1">
+                    <Button size="sm" className="flex-1" style={{ background: 'linear-gradient(135deg, #dc2626, #b91c1c)', color: '#fff' }} onClick={async () => {
+                      if (!devAdminNewPassword.trim()) { setDevAdminResetError('أدخل الباسورد الجديد'); return }
+                      if (devAdminNewPassword.length < 8) { setDevAdminResetError('الباسورد يجب أن يكون 8 حروف على الأقل'); return }
+                      if (devAdminNewPassword !== devAdminConfirmPassword) { setDevAdminResetError('الباسورد غير متطابق'); return }
+                      setIsResettingDevAdmin(true)
+                      setDevAdminResetError('')
+                      try {
+                        // Save to settings table for reference
+                        await fetch('/api/settings', {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({ key: 'dev_admin_password_updated', value: new Date().toISOString() })
+                        })
+                        toast.success('تم تسجيل طلب تغيير الباسورد. يرجى تحديث NEXT_PUBLIC_ADMIN_SECRET في Vercel Environment Variables إلى: ' + devAdminNewPassword, { duration: 15000 })
+                        // Copy to clipboard
+                        navigator.clipboard.writeText(devAdminNewPassword).then(() => {
+                          toast.info('تم نسخ الباسورد الجديد إلى الحافظة')
+                        })
+                        setShowDevAdminReset(false)
+                        setDevAdminNewPassword('')
+                        setDevAdminConfirmPassword('')
+                      } catch { setDevAdminResetError('فشل في حفظ التغيير') }
+                      setIsResettingDevAdmin(false)
+                    }} disabled={isResettingDevAdmin}>
+                      {isResettingDevAdmin ? '⏳ جاري...' : '✓ حفظ الباسورد الجديد'}
+                    </Button>
+                    <Button size="sm" variant="outline" className="flex-1 border-red-500/30" onClick={() => setShowDevAdminReset(false)}>إلغاء</Button>
+                  </div>
+                  <div className="pt-2 border-t border-red-500/20 mt-2">
+                    <p className="text-[10px] text-red-300/70 text-center">
+                      خطوات التحديث: Settings في Vercel → Environment Variables → NEXT_PUBLIC_ADMIN_SECRET → Edit → Save → Redeploy
+                    </p>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Create admin form */}
@@ -3742,7 +3831,7 @@ const handleSaveSettings = async () => {
                 <div className="flex items-center gap-2">
                   <span className="text-lg">📢</span>
                   <div>
-                    <h3 className="text-sm font-bold text-foreground">البنر العالمي</h3>
+                    <h3 className="text-sm font-bold text-foreground">الب��ر العالمي</h3>
                     <p className="text-xs text-muted-foreground">يظهر لكل الزبائن في كل الأماكن</p>
                   </div>
                 </div>
