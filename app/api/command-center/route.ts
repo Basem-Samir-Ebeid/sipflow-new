@@ -1,14 +1,8 @@
 import { NextResponse } from 'next/server'
 import { getSql } from '@/lib/db'
 
-export async function GET(request: Request) {
+export async function GET() {
   try {
-    const secret = request.headers.get('x-admin-secret')
-    const expectedSecret = process.env.ADMIN_SECRET
-    if (secret !== expectedSecret) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
     const sql = getSql()
     const today = new Date().toISOString().split('T')[0]
 
@@ -73,8 +67,8 @@ export async function GET(request: Request) {
         let recentWaiterCalls = 0
         try {
           const waiterCalls = await sql`
-            SELECT COUNT(*) as count FROM messages 
-            WHERE place_id = ${place.id} 
+            SELECT COUNT(*) as count FROM admin_messages
+            WHERE place_id = ${place.id}
             AND title LIKE '%نداء نادل%'
             AND created_at > NOW() - INTERVAL '30 minutes'
           `
@@ -90,7 +84,7 @@ export async function GET(request: Request) {
           id: place.id,
           name: place.name,
           code: place.code,
-          logo_url: place.logo_url,
+          logo_url: place.logo_url || null,
           isClosed,
           health,
           stats: {
