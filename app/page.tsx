@@ -2369,7 +2369,7 @@ export default function HomePage() {
                           textShadow: 'none'
                         }}
                       >
-                        ✨ نتمنى لكم يوماً جميلاً ✨
+                        ✨ نتمنى لكم يوماً جمي��اً ✨
                       </p>
                       <div className="flex items-center gap-2 mt-0.5">
                         <span className="text-blue-300 text-xs">✦</span>
