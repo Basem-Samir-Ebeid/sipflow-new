@@ -75,6 +75,13 @@ export default function HomePage() {
   const [adminPassword, setAdminPassword] = useState('')
   const [adminError, setAdminError] = useState('')
   const [isAdmin, setIsAdmin] = useState(false)
+  const [showResetModal, setShowResetModal] = useState(false)
+  const [resetCode, setResetCode] = useState('')
+  const [resetNewPassword, setResetNewPassword] = useState('')
+  const [resetType, setResetType] = useState<'admin' | 'user' | 'both'>('admin')
+  const [resetError, setResetError] = useState('')
+  const [resetSuccess, setResetSuccess] = useState('')
+  const [isResetting, setIsResetting] = useState(false)
   const [showPlaceAdminConfirm, setShowPlaceAdminConfirm] = useState(false)
   const [showPlaceAdminLanding, setShowPlaceAdminLanding] = useState(false)
   const [placeAdminConfirmName, setPlaceAdminConfirmName] = useState('')
@@ -1251,6 +1258,40 @@ export default function HomePage() {
     }
   }
 
+  const handleReset = async () => {
+    if (!resetCode.trim()) { setResetError('أدخل كود الريسيت'); return }
+    if ((resetType === 'admin' || resetType === 'both') && !resetNewPassword.trim()) {
+      setResetError('أدخل كلمة المرور الجديدة'); return
+    }
+    setIsResetting(true)
+    setResetError('')
+    setResetSuccess('')
+    try {
+      const res = await fetch('/api/dev-reset', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ resetCode: resetCode.trim(), type: resetType, newPassword: resetNewPassword.trim() })
+      })
+      const data = await res.json()
+      if (data.success) {
+        setResetSuccess(data.message)
+        setResetCode('')
+        setResetNewPassword('')
+        if (resetType === 'user' || resetType === 'both') {
+          localStorage.removeItem('qa3da_devadmin')
+          localStorage.removeItem('qa3da_tab')
+        }
+        setTimeout(() => { setShowResetModal(false); setResetSuccess('') }, 2000)
+      } else {
+        setResetError(data.error || 'حدث خطأ')
+      }
+    } catch {
+      setResetError('حدث خطأ في الاتصال')
+    } finally {
+      setIsResetting(false)
+    }
+  }
+
   const handlePlaceAdminConfirm = async () => {
     if (!placeAdminConfirmName.trim() || !placeAdminConfirmPwd.trim()) {
       setPlaceAdminConfirmError('أدخل الاسم والباسورد')
@@ -1963,9 +2004,75 @@ export default function HomePage() {
         </div>
 
         {/* Admin Login Modal for Developer on place screen */}
+        {showResetModal && (
+          <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4" dir="rtl">
+            <div className="w-full max-w-xs rounded-2xl p-5 shadow-2xl" style={{ background: '#141414', border: '1px solid rgba(234,179,8,0.3)' }}>
+              <div className="text-center mb-5">
+                <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl mb-3" style={{ background: 'rgba(234,179,8,0.12)', border: '1px solid rgba(234,179,8,0.3)' }}>
+                  <span className="text-2xl">🔑</span>
+                </div>
+                <h2 className="text-lg font-bold text-white">إعادة ضبط النظام</h2>
+                <p className="text-xs text-zinc-500 mt-1">أدخل كود الريسيت لتأكيد العملية</p>
+              </div>
+              <div className="space-y-3">
+                <div>
+                  <label className="text-xs font-medium text-zinc-400 mb-1.5 block">نوع الريسيت</label>
+                  <div className="grid grid-cols-3 gap-1.5">
+                    {(['admin', 'user', 'both'] as const).map(t => (
+                      <button key={t} onClick={() => setResetType(t)}
+                        className="h-9 rounded-lg text-xs font-semibold transition-all"
+                        style={{
+                          background: resetType === t ? 'rgba(234,179,8,0.2)' : 'rgba(255,255,255,0.05)',
+                          border: `1px solid ${resetType === t ? 'rgba(234,179,8,0.5)' : 'rgba(255,255,255,0.08)'}`,
+                          color: resetType === t ? '#fbbf24' : '#71717a'
+                        }}>
+                        {t === 'admin' ? 'أدمن' : t === 'user' ? 'يوزر' : 'الكل'}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                {(resetType === 'admin' || resetType === 'both') && (
+                  <div>
+                    <label className="text-xs font-medium text-zinc-400 mb-1.5 block">باسورد الأدمن الجديد</label>
+                    <Input type="password" value={resetNewPassword} onChange={e => { setResetNewPassword(e.target.value); setResetError('') }}
+                      placeholder="••••••••" dir="ltr"
+                      className="bg-zinc-900 border-zinc-700 text-white placeholder:text-zinc-600 focus-visible:ring-yellow-500/40 focus-visible:border-yellow-500/50" />
+                  </div>
+                )}
+                <div>
+                  <label className="text-xs font-medium text-zinc-400 mb-1.5 block">كود الريسيت</label>
+                  <Input type="password" value={resetCode} onChange={e => { setResetCode(e.target.value); setResetError('') }}
+                    onKeyDown={e => e.key === 'Enter' && handleReset()}
+                    placeholder="••••••" dir="ltr"
+                    className="bg-zinc-900 border-zinc-700 text-white placeholder:text-zinc-600 focus-visible:ring-yellow-500/40 focus-visible:border-yellow-500/50" />
+                </div>
+                {resetError && <p className="text-center text-sm text-rose-400">{resetError}</p>}
+                {resetSuccess && <p className="text-center text-sm text-emerald-400">{resetSuccess}</p>}
+                <button onClick={handleReset} disabled={isResetting}
+                  className="w-full h-11 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-all active:scale-95 disabled:opacity-60"
+                  style={{ background: 'linear-gradient(135deg, #d97706, #b45309)', color: '#fff', boxShadow: '0 2px 14px rgba(217,119,6,0.3)' }}>
+                  {isResetting ? <Loader2 className="h-4 w-4 animate-spin" /> : <span>🔄</span>}
+                  {isResetting ? 'جاري الريسيت...' : 'تأكيد الريسيت'}
+                </button>
+                <button onClick={() => { setShowResetModal(false); setResetCode(''); setResetNewPassword(''); setResetError(''); setResetSuccess('') }}
+                  className="w-full h-9 rounded-xl text-sm text-zinc-500 hover:text-zinc-300 transition-colors">
+                  إلغاء
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {showAdminLogin && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4" dir="rtl">
             <div className="w-full max-w-xs rounded-2xl p-5 shadow-2xl" style={{ background: '#141414', border: '1px solid rgba(244,63,94,0.2)' }}>
+              <div className="flex justify-end mb-2">
+                <button onClick={() => { setShowResetModal(true); setResetError(''); setResetSuccess('') }}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all hover:opacity-80"
+                  style={{ background: 'rgba(234,179,8,0.1)', border: '1px solid rgba(234,179,8,0.25)', color: '#fbbf24' }}>
+                  <span>🔑</span> ريسيت
+                </button>
+              </div>
               <div className="text-center mb-7">
                 <div className="relative mx-auto mb-5 h-20 w-20">
                   <div className="h-20 w-20 rounded-2xl overflow-hidden border border-rose-500/30 shadow-lg shadow-rose-500/15">
