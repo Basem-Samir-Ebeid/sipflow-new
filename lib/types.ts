@@ -10,8 +10,31 @@ export interface Place {
   tax_rate: number | null
   reservations_enabled: boolean | null
   order_tracking_enabled: boolean | null
+  place_type: 'cafe' | 'company'
   created_at: string
   updated_at: string
+}
+
+export interface CompanyEmployee {
+  id: string
+  place_id: string
+  name: string
+  email: string
+  password: string
+  is_active: boolean
+  created_at: string
+  updated_at: string
+}
+
+export interface EmployeeMonthlyReport {
+  employee_id: string
+  employee_name: string
+  employee_email: string
+  month: string
+  total_orders: number
+  total_drinks: number
+  total_amount: number
+  drinks_breakdown: { drink_name: string; quantity: number; total: number }[]
 }
 
 export interface Reservation {

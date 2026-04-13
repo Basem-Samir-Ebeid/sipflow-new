@@ -54,6 +54,14 @@ export default function HomePage() {
   const [tableNumber, setTableNumber] = useState('')
   const [guestName, setGuestName] = useState('')
   const [loginError, setLoginError] = useState('')
+
+  // Company employee login
+  const [currentEmployee, setCurrentEmployee] = useState<{ id: string; name: string; email: string; place_id: string } | null>(null)
+  const [employeeEmail, setEmployeeEmail] = useState('')
+  const [employeePassword, setEmployeePassword] = useState('')
+  const [employeeLoginError, setEmployeeLoginError] = useState('')
+  const [isEmployeeLoggingIn, setIsEmployeeLoggingIn] = useState(false)
+  const [showEmployeePass, setShowEmployeePass] = useState(false)
   const [cart, setCart] = useState<Record<string, number>>({})
   const [activeTab, setActiveTab] = useState<TabType>('menu')
   const [showAdminLogin, setShowAdminLogin] = useState(false)
@@ -256,6 +264,12 @@ export default function HomePage() {
           setIsAdmin(true)
         }
       }
+    } catch {}
+
+    // Restore company employee session
+    try {
+      const savedEmployee = localStorage.getItem('sipflow_employee')
+      if (savedEmployee) setCurrentEmployee(JSON.parse(savedEmployee))
     } catch {}
 
     // Restore dev admin session
@@ -688,6 +702,28 @@ export default function HomePage() {
     }
   }
 
+  const handleEmployeeLogin = async () => {
+    setEmployeeLoginError('')
+    if (!employeeEmail.trim() || !employeePassword.trim()) {
+      setEmployeeLoginError('أدخل الإيميل وكلمة المرور')
+      return
+    }
+    if (!currentPlace?.id) return
+    setIsEmployeeLoggingIn(true)
+    try {
+      const res = await fetch('/api/employee-login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ place_id: currentPlace.id, email: employeeEmail.trim(), password: employeePassword })
+      })
+      const data = await res.json()
+      if (!res.ok) { setEmployeeLoginError(data.error || 'حدث خطأ'); return }
+      setCurrentEmployee(data)
+      localStorage.setItem('sipflow_employee', JSON.stringify(data))
+    } catch { setEmployeeLoginError('حدث خطأ في الاتصال') }
+    finally { setIsEmployeeLoggingIn(false) }
+  }
+
   const validatePassword = (pwd: string, name: string): string | null => {
     if (!pwd.trim()) return 'الباسورد مطلوب'
 
@@ -766,11 +802,22 @@ export default function HomePage() {
     mutateUsers()
   }
 
+  const handleEmployeeLogout = () => {
+    localStorage.removeItem('sipflow_employee')
+    setCurrentEmployee(null)
+    setEmployeeEmail('')
+    setEmployeePassword('')
+    setCart({})
+    setCartNotes({})
+  }
+
   const handleLogout = () => {
     localStorage.removeItem('qa3da_user')
     localStorage.removeItem('qa3da_place')
     localStorage.removeItem('qa3da_devadmin')
     localStorage.removeItem('qa3da_tab')
+    localStorage.removeItem('sipflow_employee')
+    setCurrentEmployee(null)
     setCurrentUser(null)
     setCurrentPlace(null)
     setPlaceCode('')
@@ -886,7 +933,7 @@ export default function HomePage() {
       setShowTableModal(true)
       return
     }
-    if (!session && !currentUser) {
+    if (!session && !currentUser && !currentEmployee) {
       toast.error('في مشكلة في الجلسة، حاول تحدّث الصفحة')
       return
     }
@@ -900,9 +947,9 @@ export default function HomePage() {
       return
     }
 
-    // Show table number modal — always start empty
+    // Show table number modal — pre-fill employee name if employee is logged in
     setPendingTableNumber('')
-    setPendingCustomerName('')
+    setPendingCustomerName(currentEmployee?.name || '')
     setGuestName('')
     setTableModalError('')
     setShowTableModal(true)
@@ -1051,7 +1098,8 @@ export default function HomePage() {
             notes: orderNotes,
             customer_name: customerName,
             table_number: tableNum,
-            customer_phone: null
+            customer_phone: null,
+            employee_id: currentEmployee?.id || null
           })
         })
         if (!orderRes.ok) {
@@ -2460,6 +2508,79 @@ export default function HomePage() {
   }
 
   // Main App
+  // Company Employee Login Screen
+  if (currentPlace?.place_type === 'company' && !currentEmployee && !isDevAdmin && !isAdmin) {
+    return (
+      <main className="relative min-h-screen bg-black flex flex-col items-center justify-center p-4" dir="rtl">
+        <div className="w-full max-w-sm space-y-6">
+          {/* Logo */}
+          <div className="flex flex-col items-center gap-3">
+            <div className="h-16 w-16 rounded-2xl overflow-hidden border-2 flex items-center justify-center text-3xl" style={{ borderColor: 'rgba(212,160,23,0.5)', background: 'rgba(212,160,23,0.1)' }}>
+              {currentPlace.logo_url
+                ? <img src={currentPlace.logo_url} alt={currentPlace.name} className="h-full w-full object-cover" />
+                : '🏢'
+              }
+            </div>
+            <div className="text-center">
+              <p className="text-lg font-bold text-white">{currentPlace.name}</p>
+              <p className="text-xs text-gray-400">سجّل دخولك كموظف لإتمام الطلب</p>
+            </div>
+          </div>
+          {/* Login card */}
+          <div className="rounded-2xl border p-6 space-y-4" style={{ background: 'rgba(255,255,255,0.04)', borderColor: 'rgba(255,255,255,0.08)' }}>
+            <h2 className="text-base font-bold text-white text-center">تسجيل دخول الموظف</h2>
+            <div>
+              <label className="text-sm text-gray-400 block mb-1">الإيميل</label>
+              <Input
+                type="email"
+                value={employeeEmail}
+                onChange={e => setEmployeeEmail(e.target.value)}
+                onKeyDown={e => e.key === 'Enter' && handleEmployeeLogin()}
+                placeholder="employee@company.com"
+                className="h-11 bg-[#1a1a1a] border-white/10 text-white placeholder:text-gray-600 rounded-xl"
+              />
+            </div>
+            <div>
+              <label className="text-sm text-gray-400 block mb-1">كلمة المرور</label>
+              <div className="relative">
+                <Input
+                  type={showEmployeePass ? 'text' : 'password'}
+                  value={employeePassword}
+                  onChange={e => setEmployeePassword(e.target.value)}
+                  onKeyDown={e => e.key === 'Enter' && handleEmployeeLogin()}
+                  placeholder="••••••••"
+                  className="h-11 bg-[#1a1a1a] border-white/10 text-white placeholder:text-gray-600 rounded-xl pr-10"
+                />
+                <button type="button" onClick={() => setShowEmployeePass(v => !v)}
+                  className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300">
+                  {showEmployeePass ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
+            </div>
+            {employeeLoginError && (
+              <p className="text-sm text-red-400 text-center">{employeeLoginError}</p>
+            )}
+            <Button
+              className="w-full h-11 rounded-xl font-bold text-base"
+              style={{ background: 'linear-gradient(135deg, #D4A017, #b8891a)', color: '#000' }}
+              onClick={handleEmployeeLogin}
+              disabled={isEmployeeLoggingIn}
+            >
+              {isEmployeeLoggingIn ? 'جاري الدخول...' : 'تسجيل الدخول'}
+            </Button>
+          </div>
+          {/* Back button */}
+          <button
+            onClick={() => { setCurrentPlace(null); localStorage.removeItem('qa3da_place'); setPlaceCode('') }}
+            className="w-full text-center text-sm text-gray-500 hover:text-gray-300 transition-colors"
+          >
+            ← العودة واختيار مكان آخر
+          </button>
+        </div>
+      </main>
+    )
+  }
+
   return (
     <main className="relative min-h-screen bg-zinc-900 overflow-hidden" onClick={handleGlobalClick} suppressHydrationWarning>
       {/* Background decorative shapes */}
@@ -3301,6 +3422,26 @@ export default function HomePage() {
                   طاولة رقم {tableNumber}
                 </span>
                 <span className="text-xs text-muted-foreground">— سيتم تسجيل طلبك تلقائياً لهذه الطاولة</span>
+              </div>
+            )}
+
+            {/* Employee badge */}
+            {currentEmployee && !isDevAdmin && (
+              <div className="flex items-center justify-between gap-3 rounded-xl px-4 py-2.5"
+                style={{ background: 'rgba(59,130,246,0.1)', border: '1px solid rgba(59,130,246,0.3)' }}>
+                <div className="flex items-center gap-2">
+                  <span className="text-base">👤</span>
+                  <div>
+                    <p className="text-sm font-semibold text-blue-300">{currentEmployee.name}</p>
+                    <p className="text-xs text-muted-foreground">{currentEmployee.email}</p>
+                  </div>
+                </div>
+                <button
+                  onClick={handleEmployeeLogout}
+                  className="text-xs text-muted-foreground hover:text-red-400 transition-colors px-2 py-1 rounded border border-border/40"
+                >
+                  خروج
+                </button>
               </div>
             )}
 

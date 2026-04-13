@@ -60,10 +60,10 @@ export const db = {
     return result[0] || null
   },
 
-  async createPlace(data: { name: string; code: string; description?: string }) {
+  async createPlace(data: { name: string; code: string; description?: string; place_type?: string }) {
     const result = await sql`
-      INSERT INTO places (name, code, description, is_active)
-      VALUES (${data.name}, ${data.code}, ${data.description || null}, true)
+      INSERT INTO places (name, code, description, is_active, place_type)
+      VALUES (${data.name}, ${data.code}, ${data.description || null}, true, ${data.place_type || 'cafe'})
       RETURNING *
     `
     return result[0]
@@ -343,10 +343,10 @@ export const db = {
     `
   },
 
-  async createOrder(data: { user_id: string; session_id: string; drink_id: string; quantity: number; sugar_level?: string; notes?: string; total_price?: number; customer_name?: string; table_number?: string; customer_phone?: string }) {
+  async createOrder(data: { user_id: string; session_id: string; drink_id: string; quantity: number; sugar_level?: string; notes?: string; total_price?: number; customer_name?: string; table_number?: string; customer_phone?: string; employee_id?: string | null }) {
     const result = await sql`
-      INSERT INTO orders (user_id, session_id, drink_id, quantity, sugar_level, notes, total_price, customer_name, table_number, customer_phone)
-      VALUES (${data.user_id}, ${data.session_id}, ${data.drink_id}, ${data.quantity}, ${data.sugar_level || 'normal'}, ${data.notes || null}, ${data.total_price || 0}, ${data.customer_name || null}, ${data.table_number || null}, ${data.customer_phone || null})
+      INSERT INTO orders (user_id, session_id, drink_id, quantity, sugar_level, notes, total_price, customer_name, table_number, customer_phone, employee_id)
+      VALUES (${data.user_id}, ${data.session_id}, ${data.drink_id}, ${data.quantity}, ${data.sugar_level || 'normal'}, ${data.notes || null}, ${data.total_price || 0}, ${data.customer_name || null}, ${data.table_number || null}, ${data.customer_phone || null}, ${data.employee_id || null})
       RETURNING *
     `
     return result[0]
@@ -602,5 +602,96 @@ export const db = {
 
   async deleteReservation(id: string) {
     await sql`DELETE FROM reservations WHERE id = ${id}`
+  },
+
+  // ─── Company Employees ─────────────────────────────────
+  async setupCompanyEmployees() {
+    await sql`ALTER TABLE places ADD COLUMN IF NOT EXISTS place_type TEXT DEFAULT 'cafe'`.catch(() => {})
+    await sql`
+      CREATE TABLE IF NOT EXISTS company_employees (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        place_id UUID NOT NULL REFERENCES places(id) ON DELETE CASCADE,
+        name TEXT NOT NULL,
+        email TEXT NOT NULL,
+        password TEXT NOT NULL,
+        is_active BOOLEAN DEFAULT true,
+        created_at TIMESTAMPTZ DEFAULT NOW(),
+        updated_at TIMESTAMPTZ DEFAULT NOW(),
+        UNIQUE(place_id, email)
+      )
+    `.catch(() => {})
+    await sql`ALTER TABLE orders ADD COLUMN IF NOT EXISTS employee_id UUID REFERENCES company_employees(id) ON DELETE SET NULL`.catch(() => {})
+  },
+
+  async getCompanyEmployees(placeId: string) {
+    await this.setupCompanyEmployees()
+    return await sql`SELECT * FROM company_employees WHERE place_id = ${placeId} ORDER BY created_at ASC`
+  },
+
+  async getCompanyEmployeeByEmail(placeId: string, email: string) {
+    await this.setupCompanyEmployees()
+    const result = await sql`SELECT * FROM company_employees WHERE place_id = ${placeId} AND email = ${email} AND is_active = true LIMIT 1`
+    return result[0] || null
+  },
+
+  async createCompanyEmployee(data: { place_id: string; name: string; email: string; password: string }) {
+    await this.setupCompanyEmployees()
+    const result = await sql`
+      INSERT INTO company_employees (place_id, name, email, password)
+      VALUES (${data.place_id}, ${data.name}, ${data.email}, ${data.password})
+      RETURNING *
+    `
+    return result[0]
+  },
+
+  async updateCompanyEmployee(id: string, data: { name?: string; email?: string; password?: string; is_active?: boolean }) {
+    const result = await sql`
+      UPDATE company_employees
+      SET name = COALESCE(${data.name ?? null}, name),
+          email = COALESCE(${data.email ?? null}, email),
+          password = COALESCE(${data.password ?? null}, password),
+          is_active = COALESCE(${data.is_active ?? null}, is_active),
+          updated_at = NOW()
+      WHERE id = ${id}
+      RETURNING *
+    `
+    return result[0]
+  },
+
+  async deleteCompanyEmployee(id: string) {
+    await sql`DELETE FROM company_employees WHERE id = ${id}`
+  },
+
+  async getEmployeeMonthlyReport(placeId: string, month: string) {
+    await this.setupCompanyEmployees()
+    return await sql`
+      SELECT
+        ce.id AS employee_id,
+        ce.name AS employee_name,
+        ce.email AS employee_email,
+        TO_CHAR(o.created_at, 'YYYY-MM') AS month,
+        COUNT(DISTINCT o.id) AS total_orders,
+        COALESCE(SUM(o.quantity), 0) AS total_drinks,
+        COALESCE(SUM(o.total_price), 0) AS total_amount
+      FROM company_employees ce
+      LEFT JOIN orders o ON o.employee_id = ce.id AND TO_CHAR(o.created_at, 'YYYY-MM') = ${month}
+      WHERE ce.place_id = ${placeId} AND ce.is_active = true
+      GROUP BY ce.id, ce.name, ce.email, TO_CHAR(o.created_at, 'YYYY-MM')
+      ORDER BY ce.name
+    `
+  },
+
+  async getEmployeeDrinksBreakdown(employeeId: string, month: string) {
+    return await sql`
+      SELECT
+        d.name AS drink_name,
+        SUM(o.quantity) AS quantity,
+        SUM(o.total_price) AS total
+      FROM orders o
+      JOIN drinks d ON o.drink_id = d.id
+      WHERE o.employee_id = ${employeeId} AND TO_CHAR(o.created_at, 'YYYY-MM') = ${month}
+      GROUP BY d.name
+      ORDER BY quantity DESC
+    `
   }
 }

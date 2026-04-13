@@ -25,7 +25,7 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Plus, Trash2, Pencil, Upload, RefreshCw, Users, Coffee, Key, BarChart3, TrendingUp, Award, Clock, Send, MessageSquare, Settings2, Hash, UserPlus, UserCog, Minus, Package, Banknote, CheckCircle2, Hourglass, TableProperties, Copy, ExternalLink, Link2, Eye, EyeOff, QrCode, CalendarDays, CalendarCheck, CalendarX, Download, Loader2, Activity, ShieldCheck } from 'lucide-react'
+import { Plus, Trash2, Pencil, Upload, RefreshCw, Users, Coffee, Key, BarChart3, TrendingUp, Award, Clock, Send, MessageSquare, Settings2, Hash, UserPlus, UserCog, Minus, Package, Banknote, CheckCircle2, Hourglass, TableProperties, Copy, ExternalLink, Link2, Eye, EyeOff, QrCode, CalendarDays, CalendarCheck, CalendarX, Download, Loader2, Activity, ShieldCheck, ChevronLeft } from 'lucide-react'
 import { Checkbox } from '@/components/ui/checkbox'
 import Image from 'next/image'
 import { CommandCenter } from '@/components/command-center'
@@ -1158,8 +1158,83 @@ const handleSaveSettings = async () => {
   const [newPlaceName, setNewPlaceName] = useState('')
   const [newPlaceCode, setNewPlaceCode] = useState('')
   const [newPlaceDesc, setNewPlaceDesc] = useState('')
+  const [newPlaceType, setNewPlaceType] = useState<'cafe' | 'company'>('cafe')
   const [placesError, setPlacesError] = useState('')
   const [isAddingPlace, setIsAddingPlace] = useState(false)
+
+  // ─── Company Employees state ──────────────────────────
+  const [companyEmpPlace, setCompanyEmpPlace] = useState<string | null>(null)
+  const [companyEmployees, setCompanyEmployees] = useState<any[]>([])
+  const [isFetchingEmployees, setIsFetchingEmployees] = useState(false)
+  const [newEmpName, setNewEmpName] = useState('')
+  const [newEmpEmail, setNewEmpEmail] = useState('')
+  const [newEmpPassword, setNewEmpPassword] = useState('')
+  const [empError, setEmpError] = useState('')
+  const [isAddingEmp, setIsAddingEmp] = useState(false)
+  const [showEmpPass, setShowEmpPass] = useState(false)
+
+  // ─── Employee Reports state ───────────────────────────
+  const [reportsPlace, setReportsPlace] = useState<string | null>(null)
+  const [reportsMonth, setReportsMonth] = useState(() => {
+    const now = new Date()
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
+  })
+  const [employeeReports, setEmployeeReports] = useState<any[]>([])
+  const [isFetchingReports, setIsFetchingReports] = useState(false)
+  const [expandedEmployee, setExpandedEmployee] = useState<string | null>(null)
+
+  const fetchCompanyEmployees = async (placeId: string) => {
+    setIsFetchingEmployees(true)
+    try {
+      const res = await fetch(`/api/company-employees?place_id=${placeId}`)
+      if (res.ok) setCompanyEmployees(await res.json())
+    } finally { setIsFetchingEmployees(false) }
+  }
+
+  const handleAddEmployee = async () => {
+    if (!newEmpName.trim() || !newEmpEmail.trim() || !newEmpPassword.trim()) {
+      setEmpError('الاسم والإيميل وكلمة المرور مطلوبة'); return
+    }
+    if (!companyEmpPlace) return
+    setIsAddingEmp(true); setEmpError('')
+    try {
+      const res = await fetch('/api/company-employees', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ place_id: companyEmpPlace, name: newEmpName.trim(), email: newEmpEmail.trim(), password: newEmpPassword })
+      })
+      const data = await res.json()
+      if (!res.ok) { setEmpError(data.error || 'حدث خطأ'); return }
+      setNewEmpName(''); setNewEmpEmail(''); setNewEmpPassword('')
+      fetchCompanyEmployees(companyEmpPlace)
+      toast.success('تم إضافة الموظف ✅')
+    } catch { setEmpError('حدث خطأ') } finally { setIsAddingEmp(false) }
+  }
+
+  const handleDeleteEmployee = async (empId: string) => {
+    if (!companyEmpPlace) return
+    await fetch(`/api/company-employees/${empId}`, { method: 'DELETE' })
+    fetchCompanyEmployees(companyEmpPlace)
+    toast.success('تم حذف الموظف')
+  }
+
+  const handleToggleEmployee = async (empId: string, isActive: boolean) => {
+    if (!companyEmpPlace) return
+    await fetch(`/api/company-employees/${empId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ is_active: !isActive })
+    })
+    fetchCompanyEmployees(companyEmpPlace)
+  }
+
+  const fetchEmployeeReports = async (placeId: string, month: string) => {
+    setIsFetchingReports(true)
+    try {
+      const res = await fetch(`/api/employee-reports?place_id=${placeId}&month=${month}`)
+      if (res.ok) setEmployeeReports(await res.json())
+    } finally { setIsFetchingReports(false) }
+  }
 
   const fetchClients = async () => {
     setIsFetchingClients(true)
@@ -1295,11 +1370,11 @@ const handleSaveSettings = async () => {
       const res = await fetch('/api/places', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: newPlaceName.trim(), code: newPlaceName.trim(), description: newPlaceDesc.trim() || undefined })
+        body: JSON.stringify({ name: newPlaceName.trim(), code: newPlaceName.trim(), description: newPlaceDesc.trim() || undefined, place_type: newPlaceType })
       })
       const data = await res.json()
       if (!res.ok) { setPlacesError(data.error || 'حدث خطأ'); return }
-      setNewPlaceName(''); setNewPlaceDesc('')
+      setNewPlaceName(''); setNewPlaceDesc(''); setNewPlaceType('cafe')
       fetchPlaces()
     } catch { setPlacesError('حدث خطأ') } finally { setIsAddingPlace(false) }
   }
@@ -4487,6 +4562,26 @@ const handleSaveSettings = async () => {
                 <Input value={newPlaceDesc} onChange={e => setNewPlaceDesc(e.target.value)}
                   placeholder="وصف المكان..." className="mt-1 border-border bg-muted text-foreground" />
               </div>
+              <div>
+                <Label className="text-xs text-muted-foreground mb-2 block">نوع المكان</Label>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setNewPlaceType('cafe')}
+                    className={`flex-1 rounded-xl border py-2 px-3 text-sm font-medium transition-colors flex items-center justify-center gap-2 ${newPlaceType === 'cafe' ? 'border-amber-500/60 bg-amber-500/10 text-amber-400' : 'border-border bg-muted text-muted-foreground'}`}
+                  >
+                    ☕ كافيه / مطعم
+                  </button>
+                  <button
+                    onClick={() => setNewPlaceType('company')}
+                    className={`flex-1 rounded-xl border py-2 px-3 text-sm font-medium transition-colors flex items-center justify-center gap-2 ${newPlaceType === 'company' ? 'border-blue-500/60 bg-blue-500/10 text-blue-400' : 'border-border bg-muted text-muted-foreground'}`}
+                  >
+                    🏢 شركة
+                  </button>
+                </div>
+                {newPlaceType === 'company' && (
+                  <p className="text-xs text-blue-400/80 mt-1.5">الشركات لها موظفون بإيميل وباسورد — يُخصم إجمالي مشاريبهم من مرتباتهم شهرياً</p>
+                )}
+              </div>
               {placesError && <p className="text-sm text-destructive">{placesError}</p>}
               <Button className="w-full" onClick={handleAddPlace} disabled={isAddingPlace}>
                 <Plus className="ml-2 h-4 w-4" />
@@ -4570,6 +4665,9 @@ const handleSaveSettings = async () => {
                         <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${place.is_active ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}`}>
                           {place.is_active ? 'مفعّل' : 'موقوف'}
                         </span>
+                        {place.place_type === 'company' && (
+                          <span className="text-[10px] px-2 py-0.5 rounded-full font-medium bg-blue-500/20 text-blue-400">🏢 شركة</span>
+                        )}
                       </div>
                       {place.description && <p className="text-xs text-muted-foreground mt-0.5 truncate">{place.description}</p>}
                       <div className="flex items-center gap-1 mt-0.5">
@@ -4632,6 +4730,32 @@ const handleSaveSettings = async () => {
                           </AlertDialogFooter>
                         </AlertDialogContent>
                       </AlertDialog>
+                    )}
+                    {/* Company employees button */}
+                    {place.place_type === 'company' && (
+                      <Button size="sm" variant="outline"
+                        className={`text-xs ${companyEmpPlace === place.id ? 'border-blue-500/60 text-blue-400 bg-blue-500/10' : ''}`}
+                        onClick={() => {
+                          if (companyEmpPlace === place.id) { setCompanyEmpPlace(null); setCompanyEmployees([]); return }
+                          setCompanyEmpPlace(place.id)
+                          setReportsPlace(null)
+                          fetchCompanyEmployees(place.id)
+                        }}>
+                        <Users className="h-3 w-3 ml-1" /> موظفي الشركة
+                      </Button>
+                    )}
+                    {/* Employee reports button */}
+                    {place.place_type === 'company' && (
+                      <Button size="sm" variant="outline"
+                        className={`text-xs ${reportsPlace === place.id ? 'border-green-500/60 text-green-400 bg-green-500/10' : ''}`}
+                        onClick={() => {
+                          if (reportsPlace === place.id) { setReportsPlace(null); setEmployeeReports([]); return }
+                          setReportsPlace(place.id)
+                          setCompanyEmpPlace(null)
+                          fetchEmployeeReports(place.id, reportsMonth)
+                        }}>
+                        <BarChart3 className="h-3 w-3 ml-1" /> التقارير
+                      </Button>
                     )}
                     {/* Spacer */}
                     <div className="flex-1" />
@@ -4739,6 +4863,146 @@ const handleSaveSettings = async () => {
                   )}
 
                   {/* Assign / Edit admin inline form */}
+                  {/* Company Employees Panel */}
+                  {companyEmpPlace === place.id && (
+                    <div className="rounded-lg border border-blue-500/30 bg-blue-500/5 p-3 space-y-3">
+                      <p className="text-xs font-semibold text-blue-400 flex items-center gap-2">
+                        <Users className="h-3.5 w-3.5" /> موظفو {place.name}
+                      </p>
+                      {/* Add employee form */}
+                      <div className="space-y-2 rounded-lg border border-blue-500/20 bg-blue-500/5 p-2">
+                        <p className="text-[11px] text-blue-300/70 font-medium">➕ إضافة موظف جديد</p>
+                        <div className="grid grid-cols-2 gap-2">
+                          <div>
+                            <Label className="text-xs text-muted-foreground">الاسم</Label>
+                            <Input value={newEmpName} onChange={e => setNewEmpName(e.target.value)}
+                              placeholder="اسم الموظف" className="mt-1 h-9 border-border bg-muted text-foreground text-sm" />
+                          </div>
+                          <div>
+                            <Label className="text-xs text-muted-foreground">الإيميل</Label>
+                            <Input value={newEmpEmail} onChange={e => setNewEmpEmail(e.target.value)}
+                              placeholder="email@company.com" className="mt-1 h-9 border-border bg-muted text-foreground text-sm" />
+                          </div>
+                        </div>
+                        <div>
+                          <Label className="text-xs text-muted-foreground">كلمة المرور</Label>
+                          <div className="relative mt-1">
+                            <Input type={showEmpPass ? 'text' : 'password'} value={newEmpPassword} onChange={e => setNewEmpPassword(e.target.value)}
+                              placeholder="••••••••" className="h-9 border-border bg-muted text-foreground text-sm pr-8" />
+                            <button type="button" onClick={() => setShowEmpPass(v => !v)} className="absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+                              {showEmpPass ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+                            </button>
+                          </div>
+                        </div>
+                        {empError && <p className="text-xs text-destructive">{empError}</p>}
+                        <Button size="sm" className="w-full" onClick={handleAddEmployee} disabled={isAddingEmp}>
+                          <Plus className="h-3.5 w-3.5 ml-1" />
+                          {isAddingEmp ? 'جاري الإضافة...' : 'إضافة الموظف'}
+                        </Button>
+                      </div>
+                      {/* Employees list */}
+                      {isFetchingEmployees ? (
+                        <p className="text-xs text-muted-foreground text-center py-2">جاري التحميل...</p>
+                      ) : companyEmployees.length === 0 ? (
+                        <p className="text-xs text-muted-foreground text-center py-2">لا يوجد موظفون بعد</p>
+                      ) : (
+                        <div className="space-y-1.5">
+                          {companyEmployees.map((emp: any) => (
+                            <div key={emp.id} className="flex items-center gap-2 rounded-lg border border-border/40 bg-muted/30 px-2.5 py-1.5">
+                              <div className="flex-1 min-w-0">
+                                <p className="text-xs font-medium text-foreground truncate">{emp.name}</p>
+                                <p className="text-[10px] text-muted-foreground truncate">{emp.email}</p>
+                              </div>
+                              <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${emp.is_active ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}`}>
+                                {emp.is_active ? 'مفعّل' : 'موقوف'}
+                              </span>
+                              <button onClick={() => handleToggleEmployee(emp.id, emp.is_active)}
+                                className="text-[10px] px-2 py-1 rounded border border-border hover:bg-muted text-muted-foreground transition-colors">
+                                {emp.is_active ? 'إيقاف' : 'تفعيل'}
+                              </button>
+                              <button onClick={() => handleDeleteEmployee(emp.id)}
+                                className="text-destructive hover:bg-destructive/10 rounded p-1 transition-colors">
+                                <Trash2 className="h-3.5 w-3.5" />
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Employee Reports Panel */}
+                  {reportsPlace === place.id && (
+                    <div className="rounded-lg border border-green-500/30 bg-green-500/5 p-3 space-y-3">
+                      <div className="flex items-center justify-between">
+                        <p className="text-xs font-semibold text-green-400 flex items-center gap-2">
+                          <BarChart3 className="h-3.5 w-3.5" /> تقارير موظفي {place.name}
+                        </p>
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="month"
+                            value={reportsMonth}
+                            onChange={e => { setReportsMonth(e.target.value); fetchEmployeeReports(place.id, e.target.value) }}
+                            className="rounded border border-border bg-muted text-foreground text-xs px-2 py-1"
+                          />
+                          <button onClick={() => fetchEmployeeReports(place.id, reportsMonth)}
+                            className="text-muted-foreground hover:text-foreground transition-colors">
+                            <RefreshCw className="h-3.5 w-3.5" />
+                          </button>
+                        </div>
+                      </div>
+                      {isFetchingReports ? (
+                        <p className="text-xs text-muted-foreground text-center py-4">جاري التحميل...</p>
+                      ) : employeeReports.length === 0 ? (
+                        <p className="text-xs text-muted-foreground text-center py-4">لا توجد تقارير لهذا الشهر</p>
+                      ) : (
+                        <div className="space-y-2">
+                          {employeeReports.map((rep: any) => (
+                            <div key={rep.employee_id} className="rounded-lg border border-border/40 bg-muted/20 overflow-hidden">
+                              <button
+                                className="w-full flex items-center gap-3 px-3 py-2 hover:bg-muted/40 transition-colors text-right"
+                                onClick={() => setExpandedEmployee(expandedEmployee === rep.employee_id ? null : rep.employee_id)}
+                              >
+                                <div className="flex-1 min-w-0">
+                                  <p className="text-xs font-semibold text-foreground">{rep.employee_name}</p>
+                                  <p className="text-[10px] text-muted-foreground">{rep.employee_email}</p>
+                                </div>
+                                <div className="text-left shrink-0">
+                                  <p className="text-xs font-bold text-green-400">{Number(rep.total_amount).toFixed(2)} ج.م</p>
+                                  <p className="text-[10px] text-muted-foreground">{rep.total_drinks} مشروب</p>
+                                </div>
+                                <ChevronLeft className={`h-4 w-4 text-muted-foreground transition-transform shrink-0 ${expandedEmployee === rep.employee_id ? '-rotate-90' : ''}`} />
+                              </button>
+                              {expandedEmployee === rep.employee_id && rep.drinks_breakdown.length > 0 && (
+                                <div className="border-t border-border/30 px-3 py-2 space-y-1">
+                                  <p className="text-[10px] text-muted-foreground font-medium mb-1.5">تفاصيل المشاريب:</p>
+                                  {rep.drinks_breakdown.map((d: any, i: number) => (
+                                    <div key={i} className="flex items-center justify-between text-[11px]">
+                                      <span className="text-foreground/80">{d.drink_name}</span>
+                                      <span className="text-muted-foreground">× {d.quantity}</span>
+                                      <span className="text-green-400 font-medium">{Number(d.total).toFixed(2)} ج.م</span>
+                                    </div>
+                                  ))}
+                                  <div className="border-t border-border/30 mt-1.5 pt-1.5 flex justify-between text-xs font-bold">
+                                    <span className="text-foreground">الإجمالي</span>
+                                    <span className="text-green-400">{Number(rep.total_amount).toFixed(2)} ج.م</span>
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          ))}
+                          {/* Summary */}
+                          <div className="rounded-lg border border-green-500/20 bg-green-500/5 px-3 py-2 flex items-center justify-between">
+                            <span className="text-xs text-muted-foreground">إجمالي الشهر (كل الموظفين)</span>
+                            <span className="text-sm font-bold text-green-400">
+                              {employeeReports.reduce((sum: number, r: any) => sum + Number(r.total_amount), 0).toFixed(2)} ج.م
+                            </span>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
                   {assigningForPlace === place.id && (
                     <div className="rounded-lg border border-primary/30 bg-primary/5 p-3 space-y-2">
                       <p className="text-xs font-semibold text-primary">
