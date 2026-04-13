@@ -7,9 +7,9 @@ declare global {
 
 function getPool() {
   if (!global._pgPool) {
-    const dbUrl = process.env.DATABASE_URL
+    const dbUrl = process.env.DATABASE_URL || process.env.POSTGRES_URL
     if (!dbUrl) {
-      throw new Error('DATABASE_URL environment variable is not set.')
+      throw new Error('DATABASE_URL or POSTGRES_URL environment variable is not set.')
     }
     const isLocalDb = dbUrl.includes('localhost') || dbUrl.includes('127.0.0.1') || dbUrl.includes('/var/run')
     if (isLocalDb) {
