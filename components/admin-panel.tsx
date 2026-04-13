@@ -568,9 +568,14 @@ export function AdminPanel({
 
   // Fetch staff users
   const fetchStaffUsers = async () => {
-    const res = await fetch('/api/staff')
-    const data = await res.json()
-    setStaffUsers(data || [])
+    try {
+      const res = await fetch('/api/staff')
+      const data = await res.json()
+      // Ensure data is an array before setting state
+      setStaffUsers(Array.isArray(data) ? data : [])
+    } catch {
+      setStaffUsers([])
+    }
   }
 
   const handleAddStaffUser = async () => {
@@ -4251,7 +4256,7 @@ const handleSaveSettings = async () => {
                   </div>
                   <div className="rounded-xl p-3" style={{ background: 'rgba(212,160,23,0.06)' }}>
                     <p className="text-xl font-black text-yellow-400">{totalRevenue.toFixed(0)} ج</p>
-                    <p className="text-[10px] text-muted-foreground">الإيراد المتوقع</p>
+                    <p className="text-[10px] text-muted-foreground">الإير��د المتوقع</p>
                   </div>
                   <div className="rounded-xl p-3" style={{ background: 'rgba(34,197,94,0.06)' }}>
                     <p className="text-xl font-black text-emerald-400">{completedOrders}</p>
@@ -5943,7 +5948,7 @@ const handleSaveSettings = async () => {
                               <span className="text-xs text-muted-foreground w-4 text-center">{i + 1}</span>
                               {d.name}
                             </span>
-                            <span className="text-xs text-muted-foreground">{d.qty} طلب • {d.revenue.toFixed(0)} جنيه</span>
+                            <span className="text-xs text-muted-foreground">{d.qty} طل�� • {d.revenue.toFixed(0)} جنيه</span>
                           </div>
                           <div className="h-2.5 rounded-full bg-muted overflow-hidden">
                             <div
