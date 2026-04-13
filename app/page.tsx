@@ -78,6 +78,9 @@ export default function HomePage() {
   const [isLoadingDateOrders, setIsLoadingDateOrders] = useState(false)
   const [showUpdateBanner, setShowUpdateBanner] = useState(false)
   const [showWelcome, setShowWelcome] = useState(false)
+  const [sysStatus, setSysStatus] = useState<{ places: number; activePlaces: number; totalOrders: number; totalPending: number; totalRevenue: number } | null>(null)
+  const [sysOnline, setSysOnline] = useState<boolean | null>(null)
+  const [sysLastUpdate, setSysLastUpdate] = useState<Date | null>(null)
   const [welcomeName, setWelcomeName] = useState('')
   const [showMessages, setShowMessages] = useState(false)
   const [showReceipt, setShowReceipt] = useState(false)
@@ -304,6 +307,35 @@ export default function HomePage() {
       if (txt.value) setGlobalBannerText(txt.value)
       if (col.value) setGlobalBannerColor(col.value)
     })
+  }, [])
+
+  // Fetch system status for landing page widget
+  useEffect(() => {
+    const fetchSysStatus = async () => {
+      try {
+        const res = await fetch('/api/command-center')
+        const json = await res.json()
+        if (!json.error && json.globalStats) {
+          const g = json.globalStats
+          setSysStatus({
+            places: g.totalPlaces,
+            activePlaces: g.activePlaces,
+            totalOrders: g.totalOrders,
+            totalPending: g.totalPending,
+            totalRevenue: g.totalRevenue,
+          })
+          setSysOnline(true)
+          setSysLastUpdate(new Date())
+        } else {
+          setSysOnline(false)
+        }
+      } catch {
+        setSysOnline(false)
+      }
+    }
+    fetchSysStatus()
+    const interval = setInterval(fetchSysStatus, 30000)
+    return () => clearInterval(interval)
   }, [])
 
   // Fetch place closed status whenever place changes
@@ -1130,13 +1162,7 @@ export default function HomePage() {
 
   const handleAdminLogin = () => {
     if (!devAdminName.trim()) { setAdminError('أدخل اسم المطور'); return }
-    const expectedUsername = process.env.NEXT_PUBLIC_ADMIN_USERNAME || 'Basem'
-    if (devAdminName.trim() !== expectedUsername) {
-      setAdminError('اسم المطور غلط — أعد المحاولة')
-      return
-    }
-    const expectedPassword = process.env.NEXT_PUBLIC_ADMIN_SECRET || 'Basem.s.ebeid#@55!'
-    if (adminPassword === expectedPassword) {
+    if (adminPassword === process.env.NEXT_PUBLIC_ADMIN_SECRET) {
       const name = devAdminName.trim()
       setSavedDevName(name)
       setIsAdmin(true)
@@ -1617,7 +1643,7 @@ export default function HomePage() {
   // Place Selection Screen
   if (!currentPlace && !isAdmin) {
     return (
-      <main className="relative min-h-screen bg-black overflow-hidden flex flex-col items-center p-0" dir="rtl" onClick={handleGlobalClick} suppressHydrationWarning>
+      <main className="relative min-h-screen bg-black overflow-x-hidden overflow-y-auto flex flex-col items-center p-0" dir="rtl" onClick={handleGlobalClick} suppressHydrationWarning>
         {/* Background effects */}
         <div className="pointer-events-none absolute inset-0 opacity-[0.015]" style={{ backgroundImage: 'linear-gradient(rgba(212,160,23,0.8) 1px, transparent 1px), linear-gradient(90deg, rgba(212,160,23,0.8) 1px, transparent 1px)', backgroundSize: '40px 40px' }} />
         <div className="pointer-events-none absolute top-0 left-1/2 -translate-x-1/2 h-[500px] w-[500px] rounded-full" style={{ background: 'radial-gradient(circle, rgba(212,160,23,0.06) 0%, transparent 60%)', filter: 'blur(40px)' }} />
@@ -1768,6 +1794,101 @@ export default function HomePage() {
                   <span className="text-xs font-semibold tracking-wide" style={{ color: btn.color }}>{btn.label}</span>
                 </button>
               ))}
+            </div>
+          </div>
+
+          {/* ── System Status Widget ── */}
+          <div className="w-full mt-1" dir="rtl">
+            {/* Header */}
+            <div className="flex items-center gap-2 mb-2 px-1">
+              <div className="h-px flex-1" style={{ background: 'linear-gradient(90deg, transparent, rgba(212,160,23,0.15))' }} />
+              <div className="flex items-center gap-1.5">
+                <div className="relative flex h-1.5 w-1.5">
+                  <span className={`absolute inline-flex h-full w-full rounded-full opacity-75 ${sysOnline === false ? 'bg-red-500' : 'bg-emerald-400 animate-ping'}`} />
+                  <span className={`relative inline-flex h-1.5 w-1.5 rounded-full ${sysOnline === false ? 'bg-red-500' : 'bg-emerald-400'}`} />
+                </div>
+                <span className="font-mono text-[9px] tracking-[0.18em] uppercase" style={{ color: 'rgba(255,255,255,0.2)' }}>
+                  {sysOnline === null ? 'جاري الاتصال...' : sysOnline ? 'النظام متصل' : 'غير متصل'}
+                </span>
+              </div>
+              <div className="h-px flex-1" style={{ background: 'linear-gradient(90deg, rgba(212,160,23,0.15), transparent)' }} />
+            </div>
+
+            {/* Stats Row */}
+            <div className="grid grid-cols-3 gap-2 mb-2">
+              {[
+                {
+                  icon: '🏪',
+                  label: 'أماكن نشطة',
+                  value: sysStatus ? `${sysStatus.activePlaces}/${sysStatus.places}` : '—',
+                  color: '#a78bfa',
+                  bg: 'rgba(139,92,246,0.06)',
+                  border: 'rgba(139,92,246,0.15)',
+                },
+                {
+                  icon: '☕',
+                  label: 'طلبات اليوم',
+                  value: sysStatus ? String(sysStatus.totalOrders) : '—',
+                  color: '#60a5fa',
+                  bg: 'rgba(59,130,246,0.06)',
+                  border: 'rgba(59,130,246,0.15)',
+                },
+                {
+                  icon: '⏳',
+                  label: 'معلقة الآن',
+                  value: sysStatus ? String(sysStatus.totalPending) : '—',
+                  color: sysStatus && sysStatus.totalPending > 5 ? '#f87171' : '#fbbf24',
+                  bg: sysStatus && sysStatus.totalPending > 5 ? 'rgba(239,68,68,0.06)' : 'rgba(251,191,36,0.06)',
+                  border: sysStatus && sysStatus.totalPending > 5 ? 'rgba(239,68,68,0.15)' : 'rgba(251,191,36,0.15)',
+                },
+              ].map((card, i) => (
+                <div
+                  key={i}
+                  className="flex flex-col items-center justify-center rounded-xl py-2.5 px-1"
+                  style={{ background: card.bg, border: `1px solid ${card.border}` }}
+                >
+                  <span className="text-base leading-none mb-1">{card.icon}</span>
+                  <span className="text-base font-bold tabular-nums leading-none" style={{ color: card.color }}>
+                    {card.value}
+                  </span>
+                  <span className="text-[9px] mt-1 text-center leading-tight" style={{ color: 'rgba(255,255,255,0.3)' }}>
+                    {card.label}
+                  </span>
+                </div>
+              ))}
+            </div>
+
+            {/* Revenue Bar */}
+            {sysStatus && sysStatus.totalRevenue > 0 && (
+              <div
+                className="flex items-center justify-between rounded-xl px-3.5 py-2.5 mb-2"
+                style={{ background: 'rgba(16,185,129,0.05)', border: '1px solid rgba(16,185,129,0.12)' }}
+              >
+                <div className="flex items-center gap-2">
+                  <span className="text-sm">💰</span>
+                  <span className="text-xs font-medium" style={{ color: 'rgba(255,255,255,0.4)' }}>إيراد اليوم</span>
+                </div>
+                <span className="text-sm font-bold tabular-nums" style={{ color: '#34d399' }}>
+                  {sysStatus.totalRevenue.toFixed(0)} ج.م
+                </span>
+              </div>
+            )}
+
+            {/* Tech Stack Pills */}
+            <div className="flex items-center justify-between px-1">
+              <div className="flex items-center gap-2">
+                {['Auth', 'API', 'PostgreSQL'].map((tech, i) => (
+                  <div key={i} className="flex items-center gap-1 rounded-full px-2 py-0.5" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}>
+                    <span className="h-1.5 w-1.5 rounded-full" style={{ background: sysOnline ? '#34d399' : '#6b7280', boxShadow: sysOnline ? '0 0 4px #34d399' : 'none' }} />
+                    <span className="text-[9px] font-mono" style={{ color: 'rgba(255,255,255,0.25)' }}>{tech}</span>
+                  </div>
+                ))}
+              </div>
+              {sysLastUpdate && (
+                <span className="text-[9px] font-mono" style={{ color: 'rgba(255,255,255,0.15)' }}>
+                  {sysLastUpdate.toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' })}
+                </span>
+              )}
             </div>
           </div>
         </div>
@@ -2759,7 +2880,7 @@ export default function HomePage() {
               </div>
               <h3 className="text-xl font-bold" style={{ color: '#fbbf24' }}>حذف الجلسة</h3>
               <p className="text-sm mt-2" style={{ color: 'rgba(212,160,23,0.6)' }}>
-                هل أنت متأكد من حذف هذه الـ SîpFlõw؟ سيتم حذف جميع ا��طلبات أيضاً
+                هل أنت متأكد من حذف هذه الـ SîpFlõw؟ سيتم حذف جميع الطلبات أيضاً
               </p>
             </div>
 
@@ -3369,7 +3490,7 @@ export default function HomePage() {
                 setSelectedDate(new Date(yr - 1, mo, Math.min(dy, lastDayOf(yr - 1, mo))))
               }
 
-              // ── Month ─────────────────────────��───
+              // ── Month ─────────────────────────────
               const goMonthNewer = () => {
                 const nm = mo === 11 ? 0 : mo + 1
                 const ny = mo === 11 ? yr + 1 : yr
