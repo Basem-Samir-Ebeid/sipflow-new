@@ -1208,25 +1208,46 @@ export default function HomePage() {
     mutateUsers()
   }
 
-  const handleAdminLogin = () => {
+  const [isVerifyingDevAdmin, setIsVerifyingDevAdmin] = useState(false)
+
+  const handleAdminLogin = async () => {
     if (!devAdminName.trim()) { setAdminError('أدخل اسم المطور'); return }
-    if (adminPassword === process.env.NEXT_PUBLIC_ADMIN_SECRET) {
-      const name = devAdminName.trim()
-      setSavedDevName(name)
-      setIsAdmin(true)
-      setIsDevAdmin(true)
-      setShowAdminLogin(false)
-      setDevAdminName('')
-      setAdminPassword('')
-      setAdminError('')
-      setActiveTab('admin')
-      localStorage.setItem('qa3da_devadmin', JSON.stringify({ name }))
-      localStorage.setItem('qa3da_tab', 'admin')
-      setShowDevWelcome(true)
-      setTimeout(() => setShowDevWelcome(false), 4000)
-    } else {
-      setAdminError('كلمة المرور غلط — أعد المحاولة')
-      setAdminPassword('')
+    if (!adminPassword.trim()) { setAdminError('أدخل كلمة المرور'); return }
+    
+    setIsVerifyingDevAdmin(true)
+    setAdminError('')
+    
+    try {
+      const res = await fetch('/api/dev-verify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password: adminPassword })
+      })
+      const data = await res.json()
+      
+      if (data.success) {
+        const name = devAdminName.trim()
+        setSavedDevName(name)
+        setIsAdmin(true)
+        setIsDevAdmin(true)
+        setShowAdminLogin(false)
+        setDevAdminName('')
+        setAdminPassword('')
+        setAdminError('')
+        setActiveTab('admin')
+        localStorage.setItem('qa3da_devadmin', JSON.stringify({ name }))
+        localStorage.setItem('qa3da_tab', 'admin')
+        setShowDevWelcome(true)
+        setTimeout(() => setShowDevWelcome(false), 4000)
+      } else {
+        setAdminError('كلمة المرور غلط — أعد المحاولة')
+        setAdminPassword('')
+      }
+    } catch (error) {
+      console.error('Admin login error:', error)
+      setAdminError('حدث خطأ — حاول مرة أخرى')
+    } finally {
+      setIsVerifyingDevAdmin(false)
     }
   }
 
@@ -1978,13 +1999,14 @@ export default function HomePage() {
                     placeholder="••••••••" dir="ltr"
                     className="bg-zinc-900 border-zinc-700 text-white placeholder:text-zinc-600 focus-visible:ring-rose-500/40 focus-visible:border-rose-500/50" />
                 </div>
-                {adminError && <p className="text-center text-sm text-rose-400">{adminError}</p>}
-                <button onClick={handleAdminLogin}
-                  className="w-full h-11 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-all active:scale-95"
-                  style={{ background: 'linear-gradient(135deg, #f43f5e, #e11d48)', color: '#fff', boxShadow: '0 2px 14px rgba(244,63,94,0.3)' }}>
-                  <ShieldCheck className="h-4 w-4" />
-                  دخول المطور
-                </button>
+{adminError && <p className="text-center text-sm text-rose-400">{adminError}</p>}
+  <button onClick={handleAdminLogin}
+  disabled={isVerifyingDevAdmin}
+  className="w-full h-11 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-all active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed"
+  style={{ background: 'linear-gradient(135deg, #f43f5e, #e11d48)', color: '#fff', boxShadow: '0 2px 14px rgba(244,63,94,0.3)' }}>
+  {isVerifyingDevAdmin ? <Loader2 className="h-4 w-4 animate-spin" /> : <ShieldCheck className="h-4 w-4" />}
+  {isVerifyingDevAdmin ? 'جاري التحقق...' : 'دخول المطور'}
+  </button>
                 <button onClick={() => { setShowAdminLogin(false); setDevAdminName(''); setAdminPassword(''); setAdminError('') }}
                   className="w-full h-9 rounded-xl text-sm text-zinc-500 hover:text-zinc-300 transition-colors">
                   إلغاء
@@ -2369,7 +2391,7 @@ export default function HomePage() {
                           textShadow: 'none'
                         }}
                       >
-                        ✨ نتمنى لكم يوماً جمي��اً ✨
+                        ✨ نتمنى لكم يوماً جمي����اً ✨
                       </p>
                       <div className="flex items-center gap-2 mt-0.5">
                         <span className="text-blue-300 text-xs">✦</span>
