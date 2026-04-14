@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import useSWR from 'swr'
 import { Drink, User, OrderWithDetails, Session, Place } from '@/lib/types'
 import { DrinkCard } from '@/components/drink-card'
@@ -1561,9 +1561,28 @@ export default function HomePage() {
     autoLoginSharedUser(place)
   }
 
+  const freeDrinksState = useMemo(() => {
+    const freeDrinkId = currentPlace?.free_drink_id || null
+    const freeDrinksLimit = Number(currentPlace?.free_drinks_count) || 0
+    if (!currentEmployee || !freeDrinkId || freeDrinksLimit === 0) {
+      return { freeDrinkId: null, freeDrinksLimit: 0, usedCount: 0, freeDrinksLeft: 0 }
+    }
+    const usedCount = orders
+      .filter((o: any) => o.employee_id === currentEmployee.id && o.drink_id === freeDrinkId)
+      .reduce((sum: number, o: any) => sum + (o.quantity || 0), 0)
+    const freeDrinksLeft = Math.max(0, freeDrinksLimit - usedCount)
+    return { freeDrinkId, freeDrinksLimit, usedCount, freeDrinksLeft }
+  }, [currentEmployee, currentPlace?.free_drink_id, currentPlace?.free_drinks_count, orders])
+
   const cartTotal = Object.entries(cart).reduce((total, [drinkId, qty]) => {
     const drink = drinks.find(d => d.id === drinkId)
-    return total + (Number(drink?.price) || 0) * qty
+    const price = Number(drink?.price) || 0
+    if (freeDrinksState.freeDrinkId === drinkId && freeDrinksState.freeDrinksLeft > 0) {
+      const freeQty = Math.min(qty, freeDrinksState.freeDrinksLeft)
+      const paidQty = qty - freeQty
+      return total + price * paidQty
+    }
+    return total + price * qty
   }, 0)
 
   const cartCount = Object.values(cart).reduce((sum, qty) => sum + qty, 0)
@@ -3575,21 +3594,56 @@ export default function HomePage() {
 
             {/* Employee badge */}
             {currentEmployee && !isDevAdmin && (
-              <div className="flex items-center justify-between gap-3 rounded-xl px-4 py-2.5"
+              <div className="rounded-xl px-4 py-3 space-y-2"
                 style={{ background: 'rgba(59,130,246,0.1)', border: '1px solid rgba(59,130,246,0.3)' }}>
-                <div className="flex items-center gap-2">
-                  <span className="text-base">👤</span>
-                  <div>
-                    <p className="text-sm font-semibold text-blue-300">{currentEmployee.name}</p>
-                    <p className="text-xs text-muted-foreground">{currentEmployee.email}</p>
+                <div className="flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-2">
+                    <span className="text-base">👤</span>
+                    <div>
+                      <p className="text-sm font-semibold text-blue-300">{currentEmployee.name}</p>
+                      <p className="text-xs text-muted-foreground">{currentEmployee.email}</p>
+                    </div>
                   </div>
+                  <button
+                    onClick={handleEmployeeLogout}
+                    className="text-xs text-muted-foreground hover:text-red-400 transition-colors px-2 py-1 rounded border border-border/40"
+                  >
+                    خروج
+                  </button>
                 </div>
-                <button
-                  onClick={handleEmployeeLogout}
-                  className="text-xs text-muted-foreground hover:text-red-400 transition-colors px-2 py-1 rounded border border-border/40"
-                >
-                  خروج
-                </button>
+                {freeDrinksState.freeDrinkId && freeDrinksState.freeDrinksLimit > 0 && (() => {
+                  const freeDrink = drinks.find(d => d.id === freeDrinksState.freeDrinkId)
+                  const { freeDrinksLimit, usedCount, freeDrinksLeft } = freeDrinksState
+                  return (
+                    <div className="rounded-lg px-3 py-2 flex items-center justify-between gap-2"
+                      style={{ background: freeDrinksLeft > 0 ? 'rgba(34,197,94,0.1)' : 'rgba(239,68,68,0.08)', border: `1px solid ${freeDrinksLeft > 0 ? 'rgba(34,197,94,0.25)' : 'rgba(239,68,68,0.2)'}` }}>
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-sm">🎁</span>
+                        <div>
+                          <p className="text-[11px] font-semibold" style={{ color: freeDrinksLeft > 0 ? '#86efac' : '#fca5a5' }}>
+                            {freeDrink?.name || 'مشروب مجاني'}
+                          </p>
+                          {usedCount > 0 && (
+                            <p className="text-[10px]" style={{ color: 'rgba(255,255,255,0.45)' }}>
+                              تم استخدام {usedCount} من {freeDrinksLimit}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                      <div className="text-left">
+                        {freeDrinksLeft > 0 ? (
+                          <span className="text-xs font-bold" style={{ color: '#4ade80' }}>
+                            {freeDrinksLeft} متاح
+                          </span>
+                        ) : (
+                          <span className="text-xs font-bold" style={{ color: '#f87171' }}>
+                            الكوتة خلصت
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  )
+                })()}
               </div>
             )}
 
@@ -3691,6 +3745,11 @@ export default function HomePage() {
                     onAdd={() => handleAddToCart(drink.id)}
                     onRemove={() => handleRemoveFromCart(drink.id)}
                     onNoteChange={(note) => setCartNotes(prev => ({ ...prev, [drink.id]: note }))}
+                    freeInfo={freeDrinksState.freeDrinkId === drink.id ? {
+                      limit: freeDrinksState.freeDrinksLimit,
+                      used: freeDrinksState.usedCount,
+                      left: freeDrinksState.freeDrinksLeft,
+                    } : undefined}
                   />
                 ))}
               {drinks.filter(d => {

@@ -14,9 +14,14 @@ interface DrinkCardProps {
   onAdd: () => void
   onRemove: () => void
   onNoteChange: (note: string) => void
+  freeInfo?: {
+    limit: number
+    used: number
+    left: number
+  }
 }
 
-export function DrinkCard({ drink, quantity, stock, note, onAdd, onRemove, onNoteChange }: DrinkCardProps) {
+export function DrinkCard({ drink, quantity, stock, note, onAdd, onRemove, onNoteChange, freeInfo }: DrinkCardProps) {
   const isOutOfStock = stock <= 0
   const [showNote, setShowNote] = useState(false)
 
@@ -68,8 +73,30 @@ export function DrinkCard({ drink, quantity, stock, note, onAdd, onRemove, onNot
         <h3 className="text-sm font-bold" style={{ color: 'rgba(255,255,255,0.85)' }}>
           {drink.name}
         </h3>
-        {Number(drink.price) > 0 && (
-          <p className="text-xs font-semibold mt-0.5" style={{ color: '#D4A017' }}>{Number(drink.price).toFixed(2)} ج.م</p>
+        {freeInfo ? (
+          freeInfo.left > 0 ? (
+            <div className="mt-0.5 space-y-0.5">
+              <p className="text-xs font-bold" style={{ color: '#22c55e' }}>مجاني 🎁</p>
+              <p className="text-[10px]" style={{ color: 'rgba(134,239,172,0.7)' }}>
+                {freeInfo.used > 0
+                  ? `تم استخدام ${freeInfo.used} من ${freeInfo.limit}`
+                  : `متاح ${freeInfo.left} من ${freeInfo.limit}`}
+              </p>
+            </div>
+          ) : (
+            <div className="mt-0.5 space-y-0.5">
+              {Number(drink.price) > 0 && (
+                <p className="text-xs font-semibold" style={{ color: '#D4A017' }}>{Number(drink.price).toFixed(2)} ج.م</p>
+              )}
+              <p className="text-[10px]" style={{ color: 'rgba(248,113,113,0.8)' }}>
+                استنفذت المجاني ({freeInfo.limit}/{freeInfo.limit})
+              </p>
+            </div>
+          )
+        ) : (
+          Number(drink.price) > 0 && (
+            <p className="text-xs font-semibold mt-0.5" style={{ color: '#D4A017' }}>{Number(drink.price).toFixed(2)} ج.م</p>
+          )
         )}
       </div>
 
