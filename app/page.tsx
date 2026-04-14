@@ -987,11 +987,14 @@ export default function HomePage() {
   }
 
   const handleConfirmTableAndSubmit = async (tableOverride?: string) => {
+    const isCompanyPlace = currentPlace?.place_type === 'company'
     const tableNum = String(tableOverride ?? pendingTableNumber ?? '').trim()
-    const customerName = pendingCustomerName.trim()
+    const customerName = isCompanyPlace
+      ? (currentEmployee?.name || pendingCustomerName).trim()
+      : pendingCustomerName.trim()
     
     if (!tableNum) {
-      setTableModalError('رقم الطربيزة مطلوب')
+      setTableModalError(isCompanyPlace ? 'الإدارة مطلوبة' : 'رقم الطربيزة مطلوب')
       return
     }
     
@@ -1088,11 +1091,33 @@ export default function HomePage() {
       const cartItems = Object.entries(cart).filter(([, qty]) => qty > 0)
       let anyFailed = false
 
+      // Free drinks logic for company places
+      const freeDrinksLimit = Number(currentPlace?.free_drinks_count) || 0
+      let freeDrinksLeft = 0
+      if (currentEmployee && freeDrinksLimit > 0) {
+        const usedCount = orders
+          .filter((o: any) => o.employee_id === currentEmployee.id)
+          .reduce((sum, o) => sum + o.quantity, 0)
+        freeDrinksLeft = Math.max(0, freeDrinksLimit - usedCount)
+      }
+
       for (const [drinkId, quantity] of cartItems) {
         const drink = drinks.find(d => d.id === drinkId)
         const orderNotes = isDevAdmin
           ? [cartNotes[drinkId]?.trim(), `طاولة ${tableNum}`, 'مطور'].filter(Boolean).join(' | ')
           : cartNotes[drinkId]?.trim() || null
+
+        // Calculate price considering free drinks
+        let totalPrice: number
+        if (currentEmployee && freeDrinksLeft > 0) {
+          const freeQty = Math.min(quantity, freeDrinksLeft)
+          const paidQty = quantity - freeQty
+          totalPrice = (Number(drink?.price) || 0) * paidQty
+          freeDrinksLeft -= freeQty
+        } else {
+          totalPrice = (Number(drink?.price) || 0) * quantity
+        }
+
         const orderRes = await fetch('/api/orders', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -1101,7 +1126,7 @@ export default function HomePage() {
             user_id: isDevAdmin ? null : resolvedUser?.id || null,
             drink_id: drinkId,
             quantity,
-            total_price: (Number(drink?.price) || 0) * quantity,
+            total_price: totalPrice,
             notes: orderNotes,
             customer_name: customerName,
             table_number: tableNum,
@@ -3426,39 +3451,62 @@ export default function HomePage() {
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
             <div className="w-full max-w-sm rounded-2xl border border-border bg-card p-6 shadow-xl text-center" dir="rtl">
               <div className="mb-4 flex justify-center">
-                <div className="flex h-16 w-16 items-center justify-center rounded-full bg-amber-500/20 text-4xl">
-                  🪑
+                <div className={`flex h-16 w-16 items-center justify-center rounded-full text-4xl ${currentPlace?.place_type === 'company' ? 'bg-blue-500/20' : 'bg-amber-500/20'}`}>
+                  {currentPlace?.place_type === 'company' ? '🏢' : '🪑'}
                 </div>
               </div>
               <h2 className="mb-1 text-xl font-bold text-foreground">تأكيد الطلب</h2>
-              <p className="mb-5 text-sm text-muted-foreground">أدخل اسمك ورقم الطربيزة</p>
-              
-              {/* Customer Name Input */}
-              <label className="block text-right text-sm font-semibold mb-2 text-muted-foreground">اسمك</label>
-              <Input
-                value={pendingCustomerName}
-                onChange={(e) => { setPendingCustomerName(e.target.value); setTableModalError('') }}
-                onKeyDown={(e) => e.key === 'Enter' && handleConfirmTableAndSubmit()}
-                placeholder="مثال: أحمد"
-                className="h-12 text-center text-lg font-bold border-2 border-amber-500/40 bg-background focus:ring-2 focus:ring-amber-500 rounded-xl mb-4"
-              />
-              
-              {/* Table Number Input */}
-              <label className="block text-right text-sm font-semibold mb-2 text-muted-foreground">رقم الطربيزة</label>
-              <Input
-                value={pendingTableNumber}
-                onChange={(e) => { setPendingTableNumber(e.target.value); setTableModalError('') }}
-                onKeyDown={(e) => e.key === 'Enter' && handleConfirmTableAndSubmit()}
-                placeholder="مثال: 5"
-                className="h-12 text-center text-lg font-bold border-2 border-amber-500/40 bg-background focus:ring-2 focus:ring-amber-500 rounded-xl mb-4"
-              />
+              <p className="mb-5 text-sm text-muted-foreground">
+                {currentPlace?.place_type === 'company' ? 'حدد الإدارة التابع لها' : 'أدخل اسمك ورقم الطربيزة'}
+              </p>
+
+              {currentPlace?.place_type === 'company' ? (
+                <>
+                  {/* Company: show employee name as readonly + department input */}
+                  {currentEmployee && (
+                    <div className="mb-4 rounded-xl bg-blue-500/10 border border-blue-500/20 px-4 py-2 text-right">
+                      <p className="text-xs text-blue-400 font-medium">{currentEmployee.name}</p>
+                      <p className="text-[11px] text-muted-foreground">{currentEmployee.email}</p>
+                    </div>
+                  )}
+                  <label className="block text-right text-sm font-semibold mb-2 text-muted-foreground">الإدارة التابع لها</label>
+                  <Input
+                    value={pendingTableNumber}
+                    onChange={(e) => { setPendingTableNumber(e.target.value); setTableModalError('') }}
+                    onKeyDown={(e) => e.key === 'Enter' && handleConfirmTableAndSubmit()}
+                    placeholder="مثال: الموارد البشرية"
+                    className="h-12 text-center text-lg font-bold border-2 border-blue-500/40 bg-background focus:ring-2 focus:ring-blue-500 rounded-xl mb-4"
+                    autoFocus
+                  />
+                </>
+              ) : (
+                <>
+                  {/* Cafe: show name + table */}
+                  <label className="block text-right text-sm font-semibold mb-2 text-muted-foreground">اسمك</label>
+                  <Input
+                    value={pendingCustomerName}
+                    onChange={(e) => { setPendingCustomerName(e.target.value); setTableModalError('') }}
+                    onKeyDown={(e) => e.key === 'Enter' && handleConfirmTableAndSubmit()}
+                    placeholder="مثال: أحمد"
+                    className="h-12 text-center text-lg font-bold border-2 border-amber-500/40 bg-background focus:ring-2 focus:ring-amber-500 rounded-xl mb-4"
+                  />
+                  <label className="block text-right text-sm font-semibold mb-2 text-muted-foreground">رقم الطربيزة</label>
+                  <Input
+                    value={pendingTableNumber}
+                    onChange={(e) => { setPendingTableNumber(e.target.value); setTableModalError('') }}
+                    onKeyDown={(e) => e.key === 'Enter' && handleConfirmTableAndSubmit()}
+                    placeholder="مثال: 5"
+                    className="h-12 text-center text-lg font-bold border-2 border-amber-500/40 bg-background focus:ring-2 focus:ring-amber-500 rounded-xl mb-4"
+                  />
+                </>
+              )}
 
               {tableModalError && (
                 <p className="text-sm text-red-400 mb-3">{tableModalError}</p>
               )}
               <div className="flex gap-3">
                 <Button
-                  className="flex-1 h-12 bg-amber-500 hover:bg-amber-600 text-black font-bold rounded-xl text-base"
+                  className={`flex-1 h-12 font-bold rounded-xl text-base ${currentPlace?.place_type === 'company' ? 'bg-blue-500 hover:bg-blue-600 text-white' : 'bg-amber-500 hover:bg-amber-600 text-black'}`}
                   onClick={() => handleConfirmTableAndSubmit()}
                   disabled={isSubmittingOrder}
                 >

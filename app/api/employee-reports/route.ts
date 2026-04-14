@@ -5,10 +5,41 @@ export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url)
     const placeId = searchParams.get('place_id')
-    const month = searchParams.get('month') // format: YYYY-MM
-    if (!placeId || !month) {
-      return NextResponse.json({ error: 'place_id and month are required' }, { status: 400 })
+    const month = searchParams.get('month')
+    const date = searchParams.get('date')
+
+    if (!placeId) {
+      return NextResponse.json({ error: 'place_id is required' }, { status: 400 })
     }
+
+    if (date) {
+      const rows = await db.getEmployeeDailyReport(placeId, date)
+      const report = await Promise.all(
+        rows.map(async (row: any) => {
+          const breakdown = await db.getEmployeeDailyDrinksBreakdown(row.employee_id, date)
+          return {
+            employee_id: row.employee_id,
+            employee_name: row.employee_name,
+            employee_email: row.employee_email,
+            date,
+            total_orders: parseInt(row.total_orders || '0'),
+            total_drinks: parseInt(row.total_drinks || '0'),
+            total_amount: parseFloat(row.total_amount || '0'),
+            drinks_breakdown: breakdown.map((b: any) => ({
+              drink_name: b.drink_name,
+              quantity: parseInt(b.quantity || '0'),
+              total: parseFloat(b.total || '0')
+            }))
+          }
+        })
+      )
+      return NextResponse.json(report)
+    }
+
+    if (!month) {
+      return NextResponse.json({ error: 'month or date is required' }, { status: 400 })
+    }
+
     const rows = await db.getEmployeeMonthlyReport(placeId, month)
     const report = await Promise.all(
       rows.map(async (row: any) => {

@@ -60,10 +60,11 @@ export const db = {
     return result[0] || null
   },
 
-  async createPlace(data: { name: string; code: string; description?: string; place_type?: string }) {
+  async createPlace(data: { name: string; code: string; description?: string; place_type?: string; free_drinks_count?: number }) {
+    await sql`ALTER TABLE places ADD COLUMN IF NOT EXISTS free_drinks_count INTEGER DEFAULT 0`.catch(() => {})
     const result = await sql`
-      INSERT INTO places (name, code, description, is_active, place_type)
-      VALUES (${data.name}, ${data.code}, ${data.description || null}, true, ${data.place_type || 'cafe'})
+      INSERT INTO places (name, code, description, is_active, place_type, free_drinks_count)
+      VALUES (${data.name}, ${data.code}, ${data.description || null}, true, ${data.place_type || 'cafe'}, ${data.free_drinks_count ?? 0})
       RETURNING *
     `
     return result[0]
@@ -690,6 +691,38 @@ export const db = {
       FROM orders o
       JOIN drinks d ON o.drink_id = d.id
       WHERE o.employee_id = ${employeeId} AND TO_CHAR(o.created_at, 'YYYY-MM') = ${month}
+      GROUP BY d.name
+      ORDER BY quantity DESC
+    `
+  },
+
+  async getEmployeeDailyReport(placeId: string, date: string) {
+    await this.setupCompanyEmployees()
+    return await sql`
+      SELECT
+        ce.id AS employee_id,
+        ce.name AS employee_name,
+        ce.email AS employee_email,
+        COUNT(DISTINCT o.id) AS total_orders,
+        COALESCE(SUM(o.quantity), 0) AS total_drinks,
+        COALESCE(SUM(o.total_price), 0) AS total_amount
+      FROM company_employees ce
+      LEFT JOIN orders o ON o.employee_id = ce.id AND DATE(o.created_at) = ${date}::date
+      WHERE ce.place_id = ${placeId} AND ce.is_active = true
+      GROUP BY ce.id, ce.name, ce.email
+      ORDER BY ce.name
+    `
+  },
+
+  async getEmployeeDailyDrinksBreakdown(employeeId: string, date: string) {
+    return await sql`
+      SELECT
+        d.name AS drink_name,
+        SUM(o.quantity) AS quantity,
+        SUM(o.total_price) AS total
+      FROM orders o
+      JOIN drinks d ON o.drink_id = d.id
+      WHERE o.employee_id = ${employeeId} AND DATE(o.created_at) = ${date}::date
       GROUP BY d.name
       ORDER BY quantity DESC
     `

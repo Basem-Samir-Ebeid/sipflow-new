@@ -1164,6 +1164,7 @@ const handleSaveSettings = async () => {
   const [newPlaceCode, setNewPlaceCode] = useState('')
   const [newPlaceDesc, setNewPlaceDesc] = useState('')
   const [newPlaceType, setNewPlaceType] = useState<'cafe' | 'company'>('cafe')
+  const [newPlaceFreeCount, setNewPlaceFreeCount] = useState(0)
   const [placesError, setPlacesError] = useState('')
   const [isAddingPlace, setIsAddingPlace] = useState(false)
 
@@ -1180,9 +1181,14 @@ const handleSaveSettings = async () => {
 
   // ─── Employee Reports state ───────────────────────────
   const [reportsPlace, setReportsPlace] = useState<string | null>(null)
+  const [reportsMode, setReportsMode] = useState<'month' | 'day'>('month')
   const [reportsMonth, setReportsMonth] = useState(() => {
     const now = new Date()
     return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
+  })
+  const [reportsDate, setReportsDate] = useState(() => {
+    const now = new Date()
+    return now.toISOString().slice(0, 10)
   })
   const [employeeReports, setEmployeeReports] = useState<any[]>([])
   const [isFetchingReports, setIsFetchingReports] = useState(false)
@@ -1233,10 +1239,13 @@ const handleSaveSettings = async () => {
     fetchCompanyEmployees(companyEmpPlace)
   }
 
-  const fetchEmployeeReports = async (placeId: string, month: string) => {
+  const fetchEmployeeReports = async (placeId: string, month: string, date?: string) => {
     setIsFetchingReports(true)
     try {
-      const res = await fetch(`/api/employee-reports?place_id=${placeId}&month=${month}`)
+      const url = date
+        ? `/api/employee-reports?place_id=${placeId}&date=${date}`
+        : `/api/employee-reports?place_id=${placeId}&month=${month}`
+      const res = await fetch(url)
       if (res.ok) setEmployeeReports(await res.json())
     } finally { setIsFetchingReports(false) }
   }
@@ -1375,11 +1384,11 @@ const handleSaveSettings = async () => {
       const res = await fetch('/api/places', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: newPlaceName.trim(), code: newPlaceName.trim(), description: newPlaceDesc.trim() || undefined, place_type: newPlaceType })
+        body: JSON.stringify({ name: newPlaceName.trim(), code: newPlaceName.trim(), description: newPlaceDesc.trim() || undefined, place_type: newPlaceType, free_drinks_count: newPlaceType === 'company' ? newPlaceFreeCount : 0 })
       })
       const data = await res.json()
       if (!res.ok) { setPlacesError(data.error || 'حدث خطأ'); return }
-      setNewPlaceName(''); setNewPlaceDesc(''); setNewPlaceType('cafe')
+      setNewPlaceName(''); setNewPlaceDesc(''); setNewPlaceType('cafe'); setNewPlaceFreeCount(0)
       fetchPlaces()
     } catch { setPlacesError('حدث خطأ') } finally { setIsAddingPlace(false) }
   }
@@ -4584,7 +4593,25 @@ const handleSaveSettings = async () => {
                   </button>
                 </div>
                 {newPlaceType === 'company' && (
-                  <p className="text-xs text-blue-400/80 mt-1.5">الشركات لها موظفون بإيميل وباسورد — يُخصم إجمالي مشاريبهم من مرتباتهم شهرياً</p>
+                  <div className="space-y-2 mt-2">
+                    <p className="text-xs text-blue-400/80">الشركات لها موظفون بإيميل وباسورد — يُخصم إجمالي مشاريبهم من مرتباتهم شهرياً</p>
+                    <div>
+                      <Label className="text-xs text-muted-foreground">عدد المشاريب المجانية لكل موظف يومياً</Label>
+                      <div className="flex items-center gap-2 mt-1">
+                        <Input
+                          type="number"
+                          min={0}
+                          value={newPlaceFreeCount}
+                          onChange={e => setNewPlaceFreeCount(Math.max(0, parseInt(e.target.value) || 0))}
+                          className="h-9 w-24 text-center border-border bg-muted text-foreground"
+                        />
+                        <span className="text-xs text-muted-foreground">مشروب مجاني — بعدها يُحسب السعر عادي</span>
+                      </div>
+                      {newPlaceFreeCount === 0 && (
+                        <p className="text-[11px] text-muted-foreground/60 mt-1">0 = كل المشاريب بسعرها العادي</p>
+                      )}
+                    </div>
+                  </div>
                 )}
               </div>
               {placesError && <p className="text-sm text-destructive">{placesError}</p>}
@@ -4943,23 +4970,46 @@ const handleSaveSettings = async () => {
                         <p className="text-xs font-semibold text-green-400 flex items-center gap-2">
                           <BarChart3 className="h-3.5 w-3.5" /> تقارير موظفي {place.name}
                         </p>
-                        <div className="flex items-center gap-2">
-                          <input
-                            type="month"
-                            value={reportsMonth}
-                            onChange={e => { setReportsMonth(e.target.value); fetchEmployeeReports(place.id, e.target.value) }}
-                            className="rounded border border-border bg-muted text-foreground text-xs px-2 py-1"
-                          />
-                          <button onClick={() => fetchEmployeeReports(place.id, reportsMonth)}
-                            className="text-muted-foreground hover:text-foreground transition-colors">
-                            <RefreshCw className="h-3.5 w-3.5" />
-                          </button>
-                        </div>
+                        <button onClick={() => fetchEmployeeReports(place.id, reportsMonth, reportsMode === 'day' ? reportsDate : undefined)}
+                          className="text-muted-foreground hover:text-foreground transition-colors">
+                          <RefreshCw className="h-3.5 w-3.5" />
+                        </button>
                       </div>
+                      {/* Mode toggle */}
+                      <div className="flex gap-1.5">
+                        <button
+                          onClick={() => { setReportsMode('month'); fetchEmployeeReports(place.id, reportsMonth) }}
+                          className={`flex-1 rounded-lg border py-1 text-xs font-medium transition-colors ${reportsMode === 'month' ? 'border-green-500/50 bg-green-500/10 text-green-400' : 'border-border bg-muted text-muted-foreground'}`}
+                        >
+                          📅 شهري
+                        </button>
+                        <button
+                          onClick={() => { setReportsMode('day'); fetchEmployeeReports(place.id, reportsMonth, reportsDate) }}
+                          className={`flex-1 rounded-lg border py-1 text-xs font-medium transition-colors ${reportsMode === 'day' ? 'border-blue-500/50 bg-blue-500/10 text-blue-400' : 'border-border bg-muted text-muted-foreground'}`}
+                        >
+                          🗓️ يومي
+                        </button>
+                      </div>
+                      {/* Date/Month picker */}
+                      {reportsMode === 'month' ? (
+                        <input
+                          type="month"
+                          value={reportsMonth}
+                          onChange={e => { setReportsMonth(e.target.value); fetchEmployeeReports(place.id, e.target.value) }}
+                          className="w-full rounded border border-border bg-muted text-foreground text-xs px-2 py-1.5"
+                        />
+                      ) : (
+                        <input
+                          type="date"
+                          value={reportsDate}
+                          onChange={e => { setReportsDate(e.target.value); fetchEmployeeReports(place.id, reportsMonth, e.target.value) }}
+                          className="w-full rounded border border-border bg-muted text-foreground text-xs px-2 py-1.5"
+                        />
+                      )}
                       {isFetchingReports ? (
                         <p className="text-xs text-muted-foreground text-center py-4">جاري التحميل...</p>
                       ) : employeeReports.length === 0 ? (
-                        <p className="text-xs text-muted-foreground text-center py-4">لا توجد تقارير لهذا الشهر</p>
+                        <p className="text-xs text-muted-foreground text-center py-4">لا توجد تقارير لهذه الفترة</p>
                       ) : (
                         <div className="space-y-2">
                           {employeeReports.map((rep: any) => (
@@ -4998,7 +5048,9 @@ const handleSaveSettings = async () => {
                           ))}
                           {/* Summary */}
                           <div className="rounded-lg border border-green-500/20 bg-green-500/5 px-3 py-2 flex items-center justify-between">
-                            <span className="text-xs text-muted-foreground">إجمالي الشهر (كل الموظفين)</span>
+                            <span className="text-xs text-muted-foreground">
+                              {reportsMode === 'day' ? `إجمالي ${reportsDate}` : 'إجمالي الشهر'} (كل الموظفين)
+                            </span>
                             <span className="text-sm font-bold text-green-400">
                               {employeeReports.reduce((sum: number, r: any) => sum + Number(r.total_amount), 0).toFixed(2)} ج.م
                             </span>
