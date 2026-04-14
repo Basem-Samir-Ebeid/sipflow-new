@@ -8,6 +8,7 @@ PostgreSQL returns DECIMAL/NUMERIC columns as strings (e.g., `'15.00'`). All `dr
 
 ## Recent Features (v2.4 — Live Command Center)
 - **مركز التحكم (Command Center):** Dev admin's default tab — real-time overview of all active places. Shows global stats (total places, orders, revenue, active tables), per-place health indicators (green/yellow/red pulse), order counts by status, revenue, waiter calls. Auto-refreshes every 5 seconds. Violet/indigo theme. Recent activity feed with live notifications. API: `GET /api/command-center` (auth-protected via `x-admin-secret` header).
+- **ويدجت شاشة البداية للمطور:** Replaced the old numeric system-status block on the landing screen with a private "لوحة التشغيل الهادئ" panel. It no longer displays places, order counts, pending orders, or revenue on the public landing view.
 
 ## Recent Features (v2.3 — Admin UI Refresh)
 - **شاشة ترحيب المطور:** Violet/indigo command-center aesthetic — animated spinning ring, "secure session" badge, "ACCESS GRANTED" glow, 2×2 status cards, terminal-style log line.

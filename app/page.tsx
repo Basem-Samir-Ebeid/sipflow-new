@@ -1907,98 +1907,68 @@ export default function HomePage() {
             </div>
           </div>
 
-          {/* ── System Status Widget ── */}
           <div className="w-full mt-1" dir="rtl">
-            {/* Header */}
-            <div className="flex items-center gap-2 mb-2 px-1">
-              <div className="h-px flex-1" style={{ background: 'linear-gradient(90deg, transparent, rgba(212,160,23,0.15))' }} />
-              <div className="flex items-center gap-1.5">
-                <div className="relative flex h-1.5 w-1.5">
-                  <span className={`absolute inline-flex h-full w-full rounded-full opacity-75 ${sysOnline === false ? 'bg-red-500' : 'bg-emerald-400 animate-ping'}`} />
-                  <span className={`relative inline-flex h-1.5 w-1.5 rounded-full ${sysOnline === false ? 'bg-red-500' : 'bg-emerald-400'}`} />
-                </div>
-                <span className="font-mono text-[9px] tracking-[0.18em] uppercase" style={{ color: 'rgba(255,255,255,0.2)' }}>
-                  {sysOnline === null ? 'جاري الاتصال...' : sysOnline ? 'النظام متصل' : 'غير متصل'}
-                </span>
-              </div>
-              <div className="h-px flex-1" style={{ background: 'linear-gradient(90deg, rgba(212,160,23,0.15), transparent)' }} />
-            </div>
-
-            {/* Stats Row */}
-            <div className="grid grid-cols-3 gap-2 mb-2">
-              {[
-                {
-                  icon: '🏪',
-                  label: 'أماكن نشطة',
-                  value: sysStatus ? `${sysStatus.activePlaces}/${sysStatus.places}` : '—',
-                  color: '#a78bfa',
-                  bg: 'rgba(139,92,246,0.06)',
-                  border: 'rgba(139,92,246,0.15)',
-                },
-                {
-                  icon: '☕',
-                  label: 'طلبات اليوم',
-                  value: sysStatus ? String(sysStatus.totalOrders) : '—',
-                  color: '#60a5fa',
-                  bg: 'rgba(59,130,246,0.06)',
-                  border: 'rgba(59,130,246,0.15)',
-                },
-                {
-                  icon: '⏳',
-                  label: 'معلقة الآن',
-                  value: sysStatus ? String(sysStatus.totalPending) : '—',
-                  color: sysStatus && sysStatus.totalPending > 5 ? '#f87171' : '#fbbf24',
-                  bg: sysStatus && sysStatus.totalPending > 5 ? 'rgba(239,68,68,0.06)' : 'rgba(251,191,36,0.06)',
-                  border: sysStatus && sysStatus.totalPending > 5 ? 'rgba(239,68,68,0.15)' : 'rgba(251,191,36,0.15)',
-                },
-              ].map((card, i) => (
-                <div
-                  key={i}
-                  className="flex flex-col items-center justify-center rounded-xl py-2.5 px-1"
-                  style={{ background: card.bg, border: `1px solid ${card.border}` }}
-                >
-                  <span className="text-base leading-none mb-1">{card.icon}</span>
-                  <span className="text-base font-bold tabular-nums leading-none" style={{ color: card.color }}>
-                    {card.value}
-                  </span>
-                  <span className="text-[9px] mt-1 text-center leading-tight" style={{ color: 'rgba(255,255,255,0.3)' }}>
-                    {card.label}
-                  </span>
-                </div>
-              ))}
-            </div>
-
-            {/* Revenue Bar */}
-            {sysStatus && sysStatus.totalRevenue > 0 && (
-              <div
-                className="flex items-center justify-between rounded-xl px-3.5 py-2.5 mb-2"
-                style={{ background: 'rgba(16,185,129,0.05)', border: '1px solid rgba(16,185,129,0.12)' }}
-              >
-                <div className="flex items-center gap-2">
-                  <span className="text-sm">💰</span>
-                  <span className="text-xs font-medium" style={{ color: 'rgba(255,255,255,0.4)' }}>إيراد اليوم</span>
-                </div>
-                <span className="text-sm font-bold tabular-nums" style={{ color: '#34d399' }}>
-                  {sysStatus.totalRevenue.toFixed(0)} ج.م
-                </span>
-              </div>
-            )}
-
-            {/* Tech Stack Pills */}
-            <div className="flex items-center justify-between px-1">
-              <div className="flex items-center gap-2">
-                {['Auth', 'API', 'PostgreSQL'].map((tech, i) => (
-                  <div key={i} className="flex items-center gap-1 rounded-full px-2 py-0.5" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}>
-                    <span className="h-1.5 w-1.5 rounded-full" style={{ background: sysOnline ? '#34d399' : '#6b7280', boxShadow: sysOnline ? '0 0 4px #34d399' : 'none' }} />
-                    <span className="text-[9px] font-mono" style={{ color: 'rgba(255,255,255,0.25)' }}>{tech}</span>
+            <div className="relative overflow-hidden rounded-2xl p-3.5" style={{ background: 'linear-gradient(135deg, rgba(15,23,42,0.72), rgba(24,10,38,0.58))', border: '1px solid rgba(212,160,23,0.14)', boxShadow: '0 18px 50px rgba(0,0,0,0.26), inset 0 1px 0 rgba(255,255,255,0.04)' }}>
+              <div className="pointer-events-none absolute inset-0 opacity-35" style={{ background: 'radial-gradient(circle at 18% 15%, rgba(212,160,23,0.20), transparent 34%), radial-gradient(circle at 88% 78%, rgba(124,58,237,0.20), transparent 38%)' }} />
+              <div className="relative">
+                <div className="flex items-center justify-between gap-3 mb-3">
+                  <div className="flex items-center gap-2">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-xl" style={{ background: 'rgba(212,160,23,0.10)', border: '1px solid rgba(212,160,23,0.20)' }}>
+                      <span className="text-base">🛡️</span>
+                    </div>
+                    <div>
+                      <p className="text-xs font-bold" style={{ color: 'rgba(255,255,255,0.82)' }}>لوحة التشغيل الهادئ</p>
+                      <p className="text-[9px] tracking-[0.22em] uppercase" style={{ color: 'rgba(212,160,23,0.42)' }}>CONTROL MODE</p>
+                    </div>
                   </div>
-                ))}
+                  <div className="flex items-center gap-1.5 rounded-full px-2.5 py-1" style={{ background: sysOnline === false ? 'rgba(239,68,68,0.08)' : 'rgba(16,185,129,0.08)', border: sysOnline === false ? '1px solid rgba(239,68,68,0.18)' : '1px solid rgba(16,185,129,0.18)' }}>
+                    <span className={`h-1.5 w-1.5 rounded-full ${sysOnline === false ? 'bg-red-400' : 'bg-emerald-400'}`} style={{ boxShadow: sysOnline === false ? '0 0 8px rgba(248,113,113,0.8)' : '0 0 8px rgba(52,211,153,0.8)' }} />
+                    <span className="text-[9px] font-bold" style={{ color: sysOnline === false ? '#f87171' : '#34d399' }}>
+                      {sysOnline === null ? 'فحص الاتصال' : sysOnline ? 'جاهز للعمل' : 'يحتاج متابعة'}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-3 gap-2 mb-3">
+                  {[
+                    { icon: '🧭', title: 'توجيه ذكي', text: 'اختيار المسار', color: '#fbbf24', bg: 'rgba(251,191,36,0.06)', border: 'rgba(251,191,36,0.16)' },
+                    { icon: '🔐', title: 'دخول آمن', text: 'جلسة محمية', color: '#a78bfa', bg: 'rgba(139,92,246,0.07)', border: 'rgba(139,92,246,0.18)' },
+                    { icon: '⚡', title: 'تشغيل فوري', text: 'واجهة جاهزة', color: '#60a5fa', bg: 'rgba(59,130,246,0.07)', border: 'rgba(59,130,246,0.16)' },
+                  ].map((card, i) => (
+                    <div key={i} className="rounded-xl p-2.5 text-center" style={{ background: card.bg, border: `1px solid ${card.border}` }}>
+                      <span className="block text-lg leading-none mb-1.5">{card.icon}</span>
+                      <span className="block text-[10px] font-bold leading-tight" style={{ color: card.color }}>{card.title}</span>
+                      <span className="block text-[8px] mt-1 leading-tight" style={{ color: 'rgba(255,255,255,0.28)' }}>{card.text}</span>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="rounded-xl px-3 py-2.5 mb-2" style={{ background: 'rgba(0,0,0,0.18)', border: '1px solid rgba(255,255,255,0.06)' }}>
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm">✨</span>
+                      <div>
+                        <p className="text-[11px] font-semibold" style={{ color: 'rgba(255,255,255,0.72)' }}>نظام دخول منظم للفريق</p>
+                        <p className="text-[9px] mt-0.5" style={{ color: 'rgba(255,255,255,0.26)' }}>اختر الدور المطلوب وابدأ بدون عرض بيانات التشغيل</p>
+                      </div>
+                    </div>
+                    <span className="rounded-full px-2 py-0.5 text-[9px] font-bold" style={{ background: 'rgba(212,160,23,0.10)', color: '#d4a017', border: '1px solid rgba(212,160,23,0.18)' }}>PRIVATE</span>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between px-0.5">
+                  <div className="flex items-center gap-1.5">
+                    {['بوابة الموظفين', 'وضع خاص', 'مراقبة هادئة'].map((label, i) => (
+                      <span key={i} className="rounded-full px-2 py-0.5 text-[8px]" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.24)' }}>{label}</span>
+                    ))}
+                  </div>
+                  {sysLastUpdate && (
+                    <span className="text-[9px] font-mono" style={{ color: 'rgba(255,255,255,0.15)' }}>
+                      {sysLastUpdate.toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' })}
+                    </span>
+                  )}
+                </div>
               </div>
-              {sysLastUpdate && (
-                <span className="text-[9px] font-mono" style={{ color: 'rgba(255,255,255,0.15)' }}>
-                  {sysLastUpdate.toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' })}
-                </span>
-              )}
             </div>
           </div>
         </div>
