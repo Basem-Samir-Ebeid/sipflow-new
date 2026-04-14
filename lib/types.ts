@@ -12,6 +12,7 @@ export interface Place {
   order_tracking_enabled: boolean | null
   place_type: 'cafe' | 'company'
   free_drinks_count: number | null
+  free_drink_id: string | null
   created_at: string
   updated_at: string
 }

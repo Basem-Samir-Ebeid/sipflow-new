@@ -1093,10 +1093,11 @@ export default function HomePage() {
 
       // Free drinks logic for company places
       const freeDrinksLimit = Number(currentPlace?.free_drinks_count) || 0
+      const freeDrinkId = currentPlace?.free_drink_id || null
       let freeDrinksLeft = 0
-      if (currentEmployee && freeDrinksLimit > 0) {
+      if (currentEmployee && freeDrinksLimit > 0 && freeDrinkId) {
         const usedCount = orders
-          .filter((o: any) => o.employee_id === currentEmployee.id)
+          .filter((o: any) => o.employee_id === currentEmployee.id && o.drink_id === freeDrinkId)
           .reduce((sum, o) => sum + o.quantity, 0)
         freeDrinksLeft = Math.max(0, freeDrinksLimit - usedCount)
       }
@@ -1107,9 +1108,9 @@ export default function HomePage() {
           ? [cartNotes[drinkId]?.trim(), `طاولة ${tableNum}`, 'مطور'].filter(Boolean).join(' | ')
           : cartNotes[drinkId]?.trim() || null
 
-        // Calculate price considering free drinks
+        // Calculate price considering free drinks (only for the designated free drink)
         let totalPrice: number
-        if (currentEmployee && freeDrinksLeft > 0) {
+        if (currentEmployee && freeDrinksLeft > 0 && drinkId === freeDrinkId) {
           const freeQty = Math.min(quantity, freeDrinksLeft)
           const paidQty = quantity - freeQty
           totalPrice = (Number(drink?.price) || 0) * paidQty

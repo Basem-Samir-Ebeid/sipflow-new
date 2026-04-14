@@ -1167,6 +1167,8 @@ const handleSaveSettings = async () => {
   const [newPlaceFreeCount, setNewPlaceFreeCount] = useState(0)
   const [placesError, setPlacesError] = useState('')
   const [isAddingPlace, setIsAddingPlace] = useState(false)
+  const [freeDrinkEditingPlace, setFreeDrinkEditingPlace] = useState<string | null>(null)
+  const [isSavingFreeDrink, setIsSavingFreeDrink] = useState(false)
 
   // ─── Company Employees state ──────────────────────────
   const [companyEmpPlace, setCompanyEmpPlace] = useState<string | null>(null)
@@ -1396,6 +1398,21 @@ const handleSaveSettings = async () => {
   const handleDeletePlace = async (id: string) => {
     await fetch(`/api/places/${id}`, { method: 'DELETE' })
     fetchPlaces()
+  }
+
+  const handleSetFreeDrink = async (placeId: string, drinkId: string | null, freeCount: number) => {
+    setIsSavingFreeDrink(true)
+    try {
+      const res = await fetch(`/api/places/${placeId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ free_drink_id: drinkId, free_drinks_count: freeCount })
+      })
+      if (res.ok) {
+        await fetchPlaces()
+        toast.success('تم حفظ إعدادات المشروب المجاني ✅')
+      }
+    } catch { toast.error('حدث خطأ') } finally { setIsSavingFreeDrink(false) }
   }
 
   const handleTogglePlace = async (id: string, is_active: boolean) => {
@@ -4771,9 +4788,23 @@ const handleSaveSettings = async () => {
                           if (companyEmpPlace === place.id) { setCompanyEmpPlace(null); setCompanyEmployees([]); return }
                           setCompanyEmpPlace(place.id)
                           setReportsPlace(null)
+                          setFreeDrinkEditingPlace(null)
                           fetchCompanyEmployees(place.id)
                         }}>
                         <Users className="h-3 w-3 ml-1" /> موظفي الشركة
+                      </Button>
+                    )}
+                    {/* Free drink button */}
+                    {place.place_type === 'company' && (
+                      <Button size="sm" variant="outline"
+                        className={`text-xs ${freeDrinkEditingPlace === place.id ? 'border-amber-500/60 text-amber-400 bg-amber-500/10' : ''}`}
+                        onClick={() => {
+                          if (freeDrinkEditingPlace === place.id) { setFreeDrinkEditingPlace(null); return }
+                          setFreeDrinkEditingPlace(place.id)
+                          setCompanyEmpPlace(null)
+                          setReportsPlace(null)
+                        }}>
+                        🎁 مشروب مجاني
                       </Button>
                     )}
                     {/* Employee reports button */}
@@ -4893,6 +4924,68 @@ const handleSaveSettings = async () => {
                       </div>
                     </div>
                   )}
+
+                  {/* Free Drink Panel */}
+                  {freeDrinkEditingPlace === place.id && (() => {
+                    const placeDrinks = drinks.filter(d => d.place_id === place.id)
+                    const currentFreeDrink = placeDrinks.find(d => d.id === place.free_drink_id)
+                    return (
+                      <div className="rounded-lg border border-amber-500/30 bg-amber-500/5 p-3 space-y-3">
+                        <p className="text-xs font-semibold text-amber-400 flex items-center gap-2">
+                          🎁 إعدادات المشروب المجاني — {place.name}
+                        </p>
+                        {placeDrinks.length === 0 ? (
+                          <p className="text-xs text-muted-foreground text-center py-2">لا توجد مشاريب مضافة لهذا المكان بعد</p>
+                        ) : (
+                          <>
+                            <div>
+                              <Label className="text-xs text-muted-foreground mb-1 block">اختر المشروب المجاني</Label>
+                              <select
+                                defaultValue={place.free_drink_id || ''}
+                                id={`free-drink-select-${place.id}`}
+                                className="w-full rounded-lg border border-border bg-muted px-3 py-2 text-sm text-foreground"
+                              >
+                                <option value="">— بدون مشروب مجاني —</option>
+                                {placeDrinks.map(d => (
+                                  <option key={d.id} value={d.id}>
+                                    {d.name} ({Number(d.price).toFixed(2)} ج.م)
+                                  </option>
+                                ))}
+                              </select>
+                            </div>
+                            <div>
+                              <Label className="text-xs text-muted-foreground mb-1 block">عدد مرات المجانية لكل موظف يومياً</Label>
+                              <Input
+                                type="number"
+                                min={0}
+                                id={`free-drink-count-${place.id}`}
+                                defaultValue={place.free_drinks_count || 0}
+                                className="h-9 w-24 text-center border-border bg-muted text-foreground"
+                              />
+                            </div>
+                            {currentFreeDrink && (
+                              <div className="rounded-lg bg-amber-500/10 border border-amber-500/20 px-3 py-2 text-xs text-amber-400">
+                                المشروب المجاني الحالي: <span className="font-bold">{currentFreeDrink.name}</span>
+                                {(place.free_drinks_count || 0) > 0 && <span className="mr-2">× {place.free_drinks_count} مرة يومياً</span>}
+                              </div>
+                            )}
+                            <Button
+                              size="sm"
+                              className="w-full bg-amber-500 hover:bg-amber-600 text-black"
+                              disabled={isSavingFreeDrink}
+                              onClick={() => {
+                                const sel = (document.getElementById(`free-drink-select-${place.id}`) as HTMLSelectElement)?.value || null
+                                const cnt = parseInt((document.getElementById(`free-drink-count-${place.id}`) as HTMLInputElement)?.value || '0') || 0
+                                handleSetFreeDrink(place.id, sel || null, cnt)
+                              }}
+                            >
+                              {isSavingFreeDrink ? 'جاري الحفظ...' : 'حفظ الإعدادات'}
+                            </Button>
+                          </>
+                        )}
+                      </div>
+                    )
+                  })()}
 
                   {/* Assign / Edit admin inline form */}
                   {/* Company Employees Panel */}
