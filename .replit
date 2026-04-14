@@ -43,4 +43,3 @@ build = ["pnpm", "run", "build"]
 
 [userenv.shared]
 ADMIN_SECRET = "Basem.s.ebeid#@55!"
-NEXT_PUBLIC_ADMIN_SECRET = "Basem.s.ebeid#@55!"

@@ -339,7 +339,7 @@ export function AdminPanel({
     try {
       const res = await fetch('/api/reset-data', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'x-admin-secret': process.env.NEXT_PUBLIC_ADMIN_SECRET || '' },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'delete_old', months: parseInt(bulkDeleteMonths, 10) })
       })
       const data = await res.json()
@@ -998,7 +998,7 @@ export function AdminPanel({
     try {
       await fetch('/api/reset-data', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'x-admin-secret': process.env.NEXT_PUBLIC_ADMIN_SECRET || '' },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ place_id: effectivePlaceId })
       })
       setShowFullResetConfirm(false)
@@ -2866,7 +2866,7 @@ const handleSaveSettings = async () => {
               {showDevAdminReset && (
                 <div className="mt-4 rounded-xl p-4 space-y-3" style={{ background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(220,38,38,0.3)' }}>
                   <p className="text-sm font-semibold text-red-300">تعيين باسورد جديد للمطور</p>
-                  <p className="text-[10px] text-muted-foreground">ملاحظة: يجب تحديث متغير البيئة NEXT_PUBLIC_ADMIN_SECRET في Vercel بعد التغيير</p>
+                  <p className="text-[10px] text-muted-foreground">ملاحظة: يتم حفظ باسورد المطور داخل إعدادات قاعدة البيانات بعد التغيير</p>
                   <div>
                     <label className="text-xs text-muted-foreground block mb-1">الباسورد الجديد</label>
                     <div className="relative">
@@ -2894,13 +2894,13 @@ const handleSaveSettings = async () => {
                       setIsResettingDevAdmin(true)
                       setDevAdminResetError('')
                       try {
-                        // Save to settings table for reference
-                        await fetch('/api/settings', {
+                        const res = await fetch('/api/dev-admin-password', {
                           method: 'POST',
                           headers: { 'Content-Type': 'application/json' },
-                          body: JSON.stringify({ key: 'dev_admin_password_updated', value: new Date().toISOString() })
+                          body: JSON.stringify({ password: devAdminNewPassword })
                         })
-                        toast.success('تم تسجيل طلب تغيير الباسورد. يرجى تحديث NEXT_PUBLIC_ADMIN_SECRET في Vercel Environment Variables إلى: ' + devAdminNewPassword, { duration: 15000 })
+                        if (!res.ok) { setDevAdminResetError('فشل في حفظ التغيير'); return }
+                        toast.success('تم تسجيل طلب تغيير الباسورد الجديد: ' + devAdminNewPassword, { duration: 15000 })
                         // Copy to clipboard
                         navigator.clipboard.writeText(devAdminNewPassword).then(() => {
                           toast.info('تم نسخ الباسورد الجديد إلى الحافظة')
@@ -2917,7 +2917,7 @@ const handleSaveSettings = async () => {
                   </div>
                   <div className="pt-2 border-t border-red-500/20 mt-2">
                     <p className="text-[10px] text-red-300/70 text-center">
-                      خطوات التحديث: Settings في Vercel → Environment Variables → NEXT_PUBLIC_ADMIN_SECRET → Edit → Save → Redeploy
+                      سيتم استخدام الباسورد المحفوظ من إعدادات قاعدة البيانات عند تسجيل الدخول القادم
                     </p>
                   </div>
                 </div>

@@ -55,7 +55,7 @@ PostgreSQL returns DECIMAL/NUMERIC columns as strings (e.g., `'15.00'`). All `dr
 4. Developer admin logs in via 🔧 Admin VIP link using name + hardcoded password → sees all places, can manage them via "الأماكن" tab
 
 ## Authentication
-- **Developer admin:** name (any) + password `Basem.s.ebeid#@55!` — sets `isDevAdmin=true`, bypasses place selection, auto-navigates to admin panel
+- **Developer admin:** name (any) + password from Replit secret `ADMIN_SECRET`, or the `dev_admin_password` value stored in `app_settings` after an admin password change. Successful login sets a server-managed HTTP-only session cookie for protected admin actions.
 - **Place admin (role=admin):** normal login within a place, sees ⚙️ Settings button (asks username+password to verify)
 - **Staff (role=order_receiver):** normal login, sees receipt tab only
 - **Default dev DB credentials:** admin `admin`/`admin123`, staff `staff`/`staff123`
@@ -81,6 +81,7 @@ Uses Replit's built-in PostgreSQL. Schema managed via migrations in `scripts/`.
 All managed as Replit secrets:
 - `DATABASE_URL` — PostgreSQL connection string (auto-managed by Replit)
 - `PGHOST`, `PGPORT`, `PGUSER`, `PGPASSWORD`, `PGDATABASE` — Also auto-managed
+- `ADMIN_SECRET` — Server-side developer admin fallback password. Do not expose this as a `NEXT_PUBLIC_*` variable.
 
 ## Development
 The workflow runs `pnpm run dev` which starts Next.js on port 5000 at `0.0.0.0`.

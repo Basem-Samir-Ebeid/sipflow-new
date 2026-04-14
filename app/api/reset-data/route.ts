@@ -1,18 +1,20 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { db, getSql } from '@/lib/db'
+import { DEV_ADMIN_SESSION_COOKIE, adminSessionValue, getDevAdminSecret } from '@/lib/admin-auth'
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   try {
+    const sql = getSql()
     const secret = request.headers.get('x-admin-secret')
-    const expectedSecret = process.env.ADMIN_SECRET
+    const expectedSecret = await getDevAdminSecret(sql)
+    const sessionToken = request.cookies.get(DEV_ADMIN_SESSION_COOKIE)?.value
 
-    if (!expectedSecret || secret !== expectedSecret) {
+    if (!expectedSecret || (secret !== expectedSecret && sessionToken !== adminSessionValue(expectedSecret))) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     const body = await request.json()
     const { place_id, action, months } = body
-    const sql = getSql()
 
     // ── Bulk delete old sessions (dev admin) ──
     if (action === 'delete_old') {
