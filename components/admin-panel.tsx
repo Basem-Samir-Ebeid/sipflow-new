@@ -3937,7 +3937,7 @@ const handleSaveSettings = async () => {
                 <div className="flex items-center gap-2">
                   <span className="text-lg">📢</span>
                   <div>
-                    <h3 className="text-sm font-bold text-foreground">الب��ر العالمي</h3>
+                    <h3 className="text-sm font-bold text-foreground">البنر العالمي</h3>
                     <p className="text-xs text-muted-foreground">يظهر لكل الزبائن في كل الأماكن</p>
                   </div>
                 </div>
