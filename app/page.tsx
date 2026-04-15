@@ -1072,6 +1072,7 @@ export default function HomePage() {
         const today = new Date().toISOString().slice(0, 10)
         localStorage.setItem('qa3da_table_date', today)
         localStorage.setItem('qa3da_table_today', tableNum)
+        setTableNumber(tableNum)
 
         activeSessionId = session?.id || null
         if (!activeSessionId) {
@@ -4349,9 +4350,14 @@ export default function HomePage() {
               // Admins (place admin or dev admin) see ALL orders; regular customers see only their table
               const isPlaceAdmin = !isDevAdmin && currentUser?.role === 'admin'
               const isAnyAdmin = isDevAdmin || isPlaceAdmin
-              const tableNum = !isAnyAdmin ? currentUser?.table_number : null
-              const filteredBo = tableNum
-                ? bo.filter(o => o.user?.table_number === tableNum)
+              const effectiveTable = !isAnyAdmin
+                ? (tableNumber || (typeof window !== 'undefined' ? localStorage.getItem('qa3da_table_today') : null) || currentUser?.table_number || '')
+                : ''
+              const filteredBo = effectiveTable
+                ? bo.filter(o => {
+                    const orderTable = o.table_number || o.user?.table_number || ''
+                    return orderTable === effectiveTable
+                  })
                 : bo
               const boTotal = filteredBo.reduce((t, o) => t + (Number(o.drink?.price) || 0) * o.quantity, 0)
               const boUsers = [...new Set(filteredBo.map(o => o.user_id))].length
@@ -4410,14 +4416,14 @@ export default function HomePage() {
                   </div>
 
                   {/* Table badge */}
-                  {!isAnyAdmin && tableNum && (
+                  {!isAnyAdmin && effectiveTable && (
                     <div className="flex items-center justify-center gap-2">
                       <span className="rounded-full px-4 py-1.5 text-sm font-semibold" style={{ background: 'rgba(212,160,23,0.1)', border: '1px solid rgba(212,160,23,0.2)', color: '#D4A017' }}>
-                        🪑 طربيزة {tableNum}
+                        🪑 طربيزة {effectiveTable}
                       </span>
                     </div>
                   )}
-                  {!isAnyAdmin && !tableNum && (
+                  {!isAnyAdmin && !effectiveTable && (
                     <div className="rounded-xl px-4 py-3 text-center text-xs" style={{ background: 'rgba(212,160,23,0.06)', border: '1px solid rgba(212,160,23,0.15)', color: 'rgba(212,160,23,0.7)' }}>
                       اطلب مشروب وحدد رقم طربيزتك عشان تشوف قعدتك هنا
                     </div>
