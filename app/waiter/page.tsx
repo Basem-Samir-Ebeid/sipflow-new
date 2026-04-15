@@ -108,42 +108,47 @@ export default function WaiterPage() {
   const seenCallIds = useRef<Set<string>>(new Set())
   const isFirstCallsFetch = useRef(true)
 
-  const activeAlarmRef = useRef<{ stop: () => void } | null>(null)
+  const [alarmActive, setAlarmActive] = useState(false)
+  const alarmLoopRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
-  const playSound = () => {
-    if (activeAlarmRef.current) activeAlarmRef.current.stop()
+  const playBeepOnce = () => {
     try {
       const ctx = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)()
-      const totalDuration = 20
-      const t = ctx.currentTime
       const pattern = [
         { freq: 880, dur: 0.15 },
         { freq: 1100, dur: 0.15 },
         { freq: 1320, dur: 0.2 },
       ]
-      const cycleLen = 0.8
-      const cycles = Math.floor(totalDuration / cycleLen)
-      for (let c = 0; c < cycles; c++) {
-        let offset = 0
-        for (const note of pattern) {
-          const osc = ctx.createOscillator()
-          const g = ctx.createGain()
-          osc.connect(g); g.connect(ctx.destination)
-          osc.type = 'sine'
-          const st = t + c * cycleLen + offset
-          osc.frequency.setValueAtTime(note.freq, st)
-          g.gain.setValueAtTime(0, st)
-          g.gain.linearRampToValueAtTime(0.7, st + 0.01)
-          g.gain.exponentialRampToValueAtTime(0.001, st + note.dur)
-          osc.start(st)
-          osc.stop(st + note.dur)
-          offset += note.dur + 0.05
-        }
+      let offset = 0
+      const t = ctx.currentTime
+      for (const note of pattern) {
+        const osc = ctx.createOscillator()
+        const g = ctx.createGain()
+        osc.connect(g); g.connect(ctx.destination)
+        osc.type = 'sine'
+        const st = t + offset
+        osc.frequency.setValueAtTime(note.freq, st)
+        g.gain.setValueAtTime(0, st)
+        g.gain.linearRampToValueAtTime(0.8, st + 0.01)
+        g.gain.exponentialRampToValueAtTime(0.001, st + note.dur)
+        osc.start(st)
+        osc.stop(st + note.dur)
+        offset += note.dur + 0.05
       }
-      const stopFn = () => { try { ctx.close() } catch {} }
-      activeAlarmRef.current = { stop: stopFn }
-      setTimeout(() => { stopFn(); activeAlarmRef.current = null }, totalDuration * 1000)
+      setTimeout(() => { try { ctx.close() } catch {} }, 900)
     } catch {}
+  }
+
+  const triggerAlarm = () => {
+    if (alarmLoopRef.current) return
+    setAlarmActive(true)
+    playBeepOnce()
+    alarmLoopRef.current = setInterval(() => playBeepOnce(), 2500)
+  }
+
+  const stopAlarm = () => {
+    if (alarmLoopRef.current) { clearInterval(alarmLoopRef.current); alarmLoopRef.current = null }
+    setAlarmActive(false)
   }
 
   const fetchWaiterCalls = useCallback(async () => {
@@ -165,7 +170,7 @@ export default function WaiterPage() {
         }
       }
       isFirstCallsFetch.current = false
-      if (hasNew) playSound()
+      if (hasNew) triggerAlarm()
       setWaiterCalls(calls)
     } catch {}
   }, [staffUser])
@@ -234,7 +239,7 @@ export default function WaiterPage() {
 
       const pendingNew = result.filter(g => !g.allReady && !deliveredIds.has(g.userId))
       if (pendingNew.length > previousGroupCount.current && previousGroupCount.current > 0) {
-        playSound()
+        triggerAlarm()
         toast.success('طلب جديد وصل!')
       }
       previousGroupCount.current = pendingNew.length
@@ -319,7 +324,7 @@ export default function WaiterPage() {
         const isFirstLoad = seenReservationIds.current.size === 0
         newOnes.forEach(r => seenReservationIds.current.add(r.id))
         if (!isFirstLoad) {
-          playSound()
+          triggerAlarm()
           newOnes.forEach(r => {
             toast(`✅ حجز مؤكد — ${r.customer_name}${r.table_number ? ` | طاولة ${r.table_number}` : ''}`, { duration: 8000 })
           })
@@ -499,10 +504,31 @@ export default function WaiterPage() {
   return (
     <div className="min-h-screen bg-background" dir="rtl">
       <Toaster position="top-center" richColors />
+
+      {/* Persistent Alarm Banner */}
+      {alarmActive && (
+        <div className="fixed top-0 left-0 right-0 z-[9999] flex items-center justify-between gap-3 px-4 py-3"
+          style={{ background: 'linear-gradient(90deg, #7f1d1d, #b91c1c, #7f1d1d)', borderBottom: '3px solid #ef4444', boxShadow: '0 4px 20px rgba(239,68,68,0.5)' }}>
+          <div className="flex items-center gap-2">
+            <span className="text-2xl animate-bounce">🔔</span>
+            <div>
+              <p className="font-black text-white text-sm">طلب جديد وصل!</p>
+              <p className="text-red-200 text-xs">اضغط لإيقاف التنبيه</p>
+            </div>
+          </div>
+          <button onClick={stopAlarm}
+            className="flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-bold text-white transition-all active:scale-95"
+            style={{ background: 'rgba(255,255,255,0.2)', border: '1px solid rgba(255,255,255,0.4)' }}>
+            <X className="h-4 w-4" />
+            إيقاف التنبيه
+          </button>
+        </div>
+      )}
+
       <DevBar />
 
       {/* Header */}
-      <div className="sticky top-0 z-30 border-b border-border bg-background/95 backdrop-blur-sm">
+      <div className={`sticky z-30 border-b border-border bg-background/95 backdrop-blur-sm ${alarmActive ? 'top-14' : 'top-0'}`}>
         <div className="flex items-center justify-between px-4 py-3 max-w-2xl mx-auto">
           <div>
             <div className="flex items-center gap-2">

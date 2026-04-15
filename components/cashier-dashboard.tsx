@@ -69,6 +69,49 @@ export function CashierDashboard({ currentUser, currentPlace, onLogout }: Cashie
   const [cancellingId, setCancellingId] = useState<string | null>(null)
   const [tableInputs, setTableInputs] = useState<Record<string, string>>({})
   const prevPendingCountRef = useRef<number>(-1)
+  const prevOrderCountRef = useRef<number>(-1)
+  const [alarmActive, setAlarmActive] = useState(false)
+  const alarmLoopRef = useRef<ReturnType<typeof setInterval> | null>(null)
+
+  const playBeepOnce = () => {
+    try {
+      const ctx = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)()
+      const pattern = [
+        { freq: 880, dur: 0.15 },
+        { freq: 1100, dur: 0.15 },
+        { freq: 1320, dur: 0.2 },
+      ]
+      let offset = 0
+      const t = ctx.currentTime
+      for (const note of pattern) {
+        const osc = ctx.createOscillator()
+        const g = ctx.createGain()
+        osc.connect(g); g.connect(ctx.destination)
+        osc.type = 'sine'
+        const st = t + offset
+        osc.frequency.setValueAtTime(note.freq, st)
+        g.gain.setValueAtTime(0, st)
+        g.gain.linearRampToValueAtTime(0.8, st + 0.01)
+        g.gain.exponentialRampToValueAtTime(0.001, st + note.dur)
+        osc.start(st)
+        osc.stop(st + note.dur)
+        offset += note.dur + 0.05
+      }
+      setTimeout(() => { try { ctx.close() } catch {} }, 900)
+    } catch {}
+  }
+
+  const triggerAlarm = () => {
+    if (alarmLoopRef.current) return
+    setAlarmActive(true)
+    playBeepOnce()
+    alarmLoopRef.current = setInterval(() => playBeepOnce(), 2500)
+  }
+
+  const stopAlarm = () => {
+    if (alarmLoopRef.current) { clearInterval(alarmLoopRef.current); alarmLoopRef.current = null }
+    setAlarmActive(false)
+  }
 
   const tableCount = currentPlace.table_count ?? 10
   const sequentialTables = Array.from({ length: tableCount }, (_, i) => String(i + 1))
@@ -104,7 +147,7 @@ export function CashierDashboard({ currentUser, currentPlace, onLogout }: Cashie
             description: 'اضغط على زرار الحجوزات لمراجعتها',
             duration: 6000,
           })
-          try { new Audio('/sounds/notify.mp3').play().catch(() => {}) } catch { /* silent */ }
+          triggerAlarm()
         }
         prevPendingCountRef.current = pendingCount
       }
@@ -153,7 +196,14 @@ export function CashierDashboard({ currentUser, currentPlace, onLogout }: Cashie
       if (!sess?.id) { setOrders([]); return }
       const ordRes = await fetch(`/api/orders?session_id=${sess.id}`)
       const data = await ordRes.json()
-      setOrders(Array.isArray(data) ? data : [])
+      const fetched = Array.isArray(data) ? data : []
+      const pendingCount = fetched.filter((o: { status: string }) => o.status === 'pending').length
+      if (prevOrderCountRef.current >= 0 && pendingCount > prevOrderCountRef.current) {
+        toast.success('طلب جديد وصل!')
+        triggerAlarm()
+      }
+      prevOrderCountRef.current = pendingCount
+      setOrders(fetched)
       setSecondsAgo(0)
     } catch { setOrders([]) }
     finally { setIsFetching(false) }
@@ -346,8 +396,29 @@ export function CashierDashboard({ currentUser, currentPlace, onLogout }: Cashie
 
   return (
     <div className="min-h-screen bg-black" dir="rtl">
+
+      {/* Persistent Alarm Banner */}
+      {alarmActive && (
+        <div className="fixed top-0 left-0 right-0 z-[9999] flex items-center justify-between gap-3 px-4 py-3"
+          style={{ background: 'linear-gradient(90deg, #7f1d1d, #b91c1c, #7f1d1d)', borderBottom: '3px solid #ef4444', boxShadow: '0 4px 20px rgba(239,68,68,0.5)' }}>
+          <div className="flex items-center gap-2">
+            <span className="text-2xl animate-bounce">🔔</span>
+            <div>
+              <p className="font-black text-white text-sm">تنبيه جديد وصل!</p>
+              <p className="text-red-200 text-xs">اضغط لإيقاف التنبيه</p>
+            </div>
+          </div>
+          <button onClick={stopAlarm}
+            className="flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-bold text-white transition-all active:scale-95"
+            style={{ background: 'rgba(255,255,255,0.2)', border: '1px solid rgba(255,255,255,0.4)' }}>
+            <X className="h-4 w-4" />
+            إيقاف التنبيه
+          </button>
+        </div>
+      )}
+
       {/* Header */}
-      <header className="sticky top-0 z-40 border-b border-zinc-700/60 bg-zinc-900/95 backdrop-blur-sm">
+      <header className={`sticky z-40 border-b border-zinc-700/60 bg-zinc-900/95 backdrop-blur-sm ${alarmActive ? 'top-14' : 'top-0'}`}>
         <div className="relative overflow-hidden py-[5px]" style={{ background: 'linear-gradient(90deg, #1a0a00, #3d1f00, #6b3a00, #D4A017, #6b3a00, #3d1f00, #1a0a00)' }}>
           <div className="flex items-center justify-center gap-2">
             <span className="text-[10px] tracking-widest uppercase text-amber-200/60">✦</span>

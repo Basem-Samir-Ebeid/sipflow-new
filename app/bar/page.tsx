@@ -5,7 +5,7 @@ import { OrderWithDetails } from '@/lib/types'
 import useSWR from 'swr'
 import {
   LogOut, Clock, CheckCircle, Loader2, RefreshCw,
-  ClipboardList, MessageSquare, BarChart3, FileText, TrendingUp, ArrowRight, Coffee, Flame, Timer, ClipboardCheck
+  ClipboardList, MessageSquare, BarChart3, FileText, TrendingUp, ArrowRight, Coffee, Flame, Timer, ClipboardCheck, X
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -59,52 +59,47 @@ export default function BarPage() {
   const [completingUserId, setCompletingUserId] = useState<string | null>(null)
   const [staffTab, setStaffTab] = useState<StaffTab>('pending')
   const previousOrderCount = useRef<number>(0)
+  const [alarmActive, setAlarmActive] = useState(false)
+  const alarmLoopRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
-  const activeAlarmRef = useRef<{ stop: () => void } | null>(null)
-
-  const playOrderSound = () => {
-    if (activeAlarmRef.current) activeAlarmRef.current.stop()
+  const playBeepOnce = () => {
     try {
       const ctx = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)()
-      const totalDuration = 20
-      const t = ctx.currentTime
       const pattern = [
         { freq: 880, dur: 0.15 },
         { freq: 1100, dur: 0.15 },
         { freq: 1320, dur: 0.2 },
       ]
-      const cycleLen = 0.8
-      const cycles = Math.floor(totalDuration / cycleLen)
-      for (let c = 0; c < cycles; c++) {
-        let offset = 0
-        for (const note of pattern) {
-          const osc = ctx.createOscillator()
-          const gainNode = ctx.createGain()
-          osc.connect(gainNode)
-          gainNode.connect(ctx.destination)
-          osc.type = 'sine'
-          const st = t + c * cycleLen + offset
-          osc.frequency.setValueAtTime(note.freq, st)
-          gainNode.gain.setValueAtTime(0, st)
-          gainNode.gain.linearRampToValueAtTime(0.8, st + 0.01)
-          gainNode.gain.exponentialRampToValueAtTime(0.001, st + note.dur)
-          osc.start(st)
-          osc.stop(st + note.dur)
-          offset += note.dur + 0.05
-        }
+      let offset = 0
+      const t = ctx.currentTime
+      for (const note of pattern) {
+        const osc = ctx.createOscillator()
+        const g = ctx.createGain()
+        osc.connect(g); g.connect(ctx.destination)
+        osc.type = 'sine'
+        const st = t + offset
+        osc.frequency.setValueAtTime(note.freq, st)
+        g.gain.setValueAtTime(0, st)
+        g.gain.linearRampToValueAtTime(0.8, st + 0.01)
+        g.gain.exponentialRampToValueAtTime(0.001, st + note.dur)
+        osc.start(st)
+        osc.stop(st + note.dur)
+        offset += note.dur + 0.05
       }
-      const stopFn = () => { try { ctx.close() } catch {} }
-      activeAlarmRef.current = { stop: stopFn }
-      setTimeout(() => { stopFn(); activeAlarmRef.current = null }, totalDuration * 1000)
-    } catch {
-      const audio = new Audio('/sounds/order.wav')
-      audio.volume = 1.0
-      audio.loop = true
-      audio.play().catch(() => {})
-      const stopFn = () => { audio.pause(); audio.currentTime = 0 }
-      activeAlarmRef.current = { stop: stopFn }
-      setTimeout(stopFn, 20000)
-    }
+      setTimeout(() => { try { ctx.close() } catch {} }, 900)
+    } catch {}
+  }
+
+  const triggerAlarm = () => {
+    if (alarmLoopRef.current) return
+    setAlarmActive(true)
+    playBeepOnce()
+    alarmLoopRef.current = setInterval(() => playBeepOnce(), 2500)
+  }
+
+  const stopAlarm = () => {
+    if (alarmLoopRef.current) { clearInterval(alarmLoopRef.current); alarmLoopRef.current = null }
+    setAlarmActive(false)
   }
 
   useEffect(() => {
@@ -200,7 +195,7 @@ export default function BarPage() {
 
   useEffect(() => {
     if (pendingOrders.length > previousOrderCount.current && previousOrderCount.current > 0) {
-      playOrderSound()
+      triggerAlarm()
       toast.success('طلب جديد وصل!')
     }
     previousOrderCount.current = pendingOrders.length
@@ -426,7 +421,27 @@ export default function BarPage() {
   return (
     <div className="min-h-screen bg-background">
 
-      <header className="sticky top-0 z-50 bg-card border-b border-border">
+      {/* Persistent Alarm Banner */}
+      {alarmActive && (
+        <div className="fixed top-0 left-0 right-0 z-[9999] flex items-center justify-between gap-3 px-4 py-3"
+          style={{ background: 'linear-gradient(90deg, #7f1d1d, #b91c1c, #7f1d1d)', borderBottom: '3px solid #ef4444', boxShadow: '0 4px 20px rgba(239,68,68,0.5)' }}>
+          <div className="flex items-center gap-2">
+            <span className="text-2xl animate-bounce">🔔</span>
+            <div>
+              <p className="font-black text-white text-sm">طلب جديد وصل!</p>
+              <p className="text-red-200 text-xs">اضغط لإيقاف التنبيه</p>
+            </div>
+          </div>
+          <button onClick={stopAlarm}
+            className="flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-bold text-white transition-all active:scale-95"
+            style={{ background: 'rgba(255,255,255,0.2)', border: '1px solid rgba(255,255,255,0.4)' }}>
+            <X className="h-4 w-4" />
+            إيقاف التنبيه
+          </button>
+        </div>
+      )}
+
+      <header className={`sticky z-50 bg-card border-b border-border ${alarmActive ? 'top-14' : 'top-0'}`}>
         <DevBar />
         <div className="px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-1">
