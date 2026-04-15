@@ -60,45 +60,28 @@ export default function BarPage() {
   const [staffTab, setStaffTab] = useState<StaffTab>('pending')
   const previousOrderCount = useRef<number>(0)
   const [alarmActive, setAlarmActive] = useState(false)
-  const alarmLoopRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const audioRef = useRef<HTMLAudioElement | null>(null)
 
-  const playBeepOnce = () => {
+  const triggerAlarm = () => {
+    if (alarmActive) return
+    setAlarmActive(true)
     try {
-      const ctx = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)()
-      const pattern = [
-        { freq: 880, dur: 0.15 },
-        { freq: 1100, dur: 0.15 },
-        { freq: 1320, dur: 0.2 },
-      ]
-      let offset = 0
-      const t = ctx.currentTime
-      for (const note of pattern) {
-        const osc = ctx.createOscillator()
-        const g = ctx.createGain()
-        osc.connect(g); g.connect(ctx.destination)
-        osc.type = 'sine'
-        const st = t + offset
-        osc.frequency.setValueAtTime(note.freq, st)
-        g.gain.setValueAtTime(0, st)
-        g.gain.linearRampToValueAtTime(0.8, st + 0.01)
-        g.gain.exponentialRampToValueAtTime(0.001, st + note.dur)
-        osc.start(st)
-        osc.stop(st + note.dur)
-        offset += note.dur + 0.05
+      if (!audioRef.current) {
+        audioRef.current = new Audio('/sounds/order.wav')
+        audioRef.current.loop = true
       }
-      setTimeout(() => { try { ctx.close() } catch {} }, 900)
+      audioRef.current.currentTime = 0
+      audioRef.current.play().catch(() => {})
     } catch {}
   }
 
-  const triggerAlarm = () => {
-    if (alarmLoopRef.current) return
-    setAlarmActive(true)
-    playBeepOnce()
-    alarmLoopRef.current = setInterval(() => playBeepOnce(), 2500)
-  }
-
   const stopAlarm = () => {
-    if (alarmLoopRef.current) { clearInterval(alarmLoopRef.current); alarmLoopRef.current = null }
+    try {
+      if (audioRef.current) {
+        audioRef.current.pause()
+        audioRef.current.currentTime = 0
+      }
+    } catch {}
     setAlarmActive(false)
   }
 
