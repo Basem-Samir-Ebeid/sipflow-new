@@ -110,19 +110,22 @@ export default function WaiterPage() {
 
   const [alarmActive, setAlarmActive] = useState(false)
   const audioRef = useRef<HTMLAudioElement | null>(null)
+  const hasPlayedOpenAlarm = useRef(false)
 
-  const triggerAlarm = () => {
-    if (alarmActive) return
-    setAlarmActive(true)
-    try {
-      if (!audioRef.current) {
-        audioRef.current = new Audio('/sounds/order.wav')
-        audioRef.current.loop = true
-      }
-      audioRef.current.currentTime = 0
-      audioRef.current.play().catch(() => {})
-    } catch {}
-  }
+  const triggerAlarm = useCallback(() => {
+    setAlarmActive(prev => {
+      if (prev) return prev
+      try {
+        if (!audioRef.current) {
+          audioRef.current = new Audio('/sounds/order.wav')
+          audioRef.current.loop = true
+        }
+        audioRef.current.currentTime = 0
+        audioRef.current.play().catch(() => {})
+      } catch {}
+      return true
+    })
+  }, [])
 
   const stopAlarm = () => {
     try {
@@ -324,6 +327,13 @@ export default function WaiterPage() {
   }, [])
 
   useEffect(() => {
+    if (staffUser && !hasPlayedOpenAlarm.current) {
+      hasPlayedOpenAlarm.current = true
+      triggerAlarm()
+    }
+  }, [staffUser, triggerAlarm])
+
+  useEffect(() => {
     if (!staffUser) return
     fetchOrders()
     fetchReservationNotifs()
@@ -344,6 +354,7 @@ export default function WaiterPage() {
       setStaffUser(data)
       localStorage.setItem('waiter_user', JSON.stringify(data))
       toast.success(`أهلاً ${data.name}!`)
+      triggerAlarm()
     } catch { toast.error('حدث خطأ، حاول تاني') }
     finally { setIsLoggingIn(false) }
   }

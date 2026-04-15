@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { OrderWithDetails } from '@/lib/types'
 import useSWR from 'swr'
 import {
@@ -61,19 +61,22 @@ export default function BarPage() {
   const previousOrderCount = useRef<number>(0)
   const [alarmActive, setAlarmActive] = useState(false)
   const audioRef = useRef<HTMLAudioElement | null>(null)
+  const hasPlayedOpenAlarm = useRef(false)
 
-  const triggerAlarm = () => {
-    if (alarmActive) return
-    setAlarmActive(true)
-    try {
-      if (!audioRef.current) {
-        audioRef.current = new Audio('/sounds/order.wav')
-        audioRef.current.loop = true
-      }
-      audioRef.current.currentTime = 0
-      audioRef.current.play().catch(() => {})
-    } catch {}
-  }
+  const triggerAlarm = useCallback(() => {
+    setAlarmActive(prev => {
+      if (prev) return prev
+      try {
+        if (!audioRef.current) {
+          audioRef.current = new Audio('/sounds/order.wav')
+          audioRef.current.loop = true
+        }
+        audioRef.current.currentTime = 0
+        audioRef.current.play().catch(() => {})
+      } catch {}
+      return true
+    })
+  }, [])
 
   const stopAlarm = () => {
     try {
@@ -92,6 +95,13 @@ export default function BarPage() {
     }
     setMounted(true)
   }, [])
+
+  useEffect(() => {
+    if (staffUser && !hasPlayedOpenAlarm.current) {
+      hasPlayedOpenAlarm.current = true
+      triggerAlarm()
+    }
+  }, [staffUser, triggerAlarm])
 
   const { data: allOrders = [], mutate: mutateOrders, isLoading } = useSWR<OrderWithDetails[]>(
     staffUser ? `bar-all-orders-${staffUser.place_id || 'global'}` : null,
@@ -182,6 +192,7 @@ export default function BarPage() {
       toast.success('طلب جديد وصل!')
     }
     previousOrderCount.current = pendingOrders.length
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pendingOrders.length])
 
   const handleLogin = async () => {
@@ -198,6 +209,7 @@ export default function BarPage() {
       setStaffUser(data)
       localStorage.setItem('bar_user', JSON.stringify(data))
       toast.success(`أهلاً ${data.name}!`)
+      triggerAlarm()
     } catch { toast.error('حدث خطأ، حاول مرة أخرى') }
     finally { setIsLoggingIn(false) }
   }
