@@ -10,6 +10,7 @@ DROP TABLE IF EXISTS clients CASCADE;
 DROP TABLE IF EXISTS app_settings CASCADE;
 DROP TABLE IF EXISTS admin_messages CASCADE;
 DROP TABLE IF EXISTS orders CASCADE;
+DROP TABLE IF EXISTS company_employees CASCADE;
 DROP TABLE IF EXISTS sessions CASCADE;
 DROP TABLE IF EXISTS staff_users CASCADE;
 DROP TABLE IF EXISTS users CASCADE;
@@ -32,6 +33,9 @@ CREATE TABLE places (
   tax_rate NUMERIC(5,2) DEFAULT 0,
   reservations_enabled BOOLEAN DEFAULT false,
   order_tracking_enabled BOOLEAN DEFAULT true,
+  place_type TEXT DEFAULT 'cafe',
+  free_drinks_count INTEGER DEFAULT 0,
+  free_drink_id TEXT DEFAULT NULL,
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
@@ -105,6 +109,19 @@ CREATE TABLE sessions (
 );
 
 -- =============================================
+-- CREATE COMPANY EMPLOYEES TABLE
+-- =============================================
+CREATE TABLE company_employees (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  place_id UUID REFERENCES places(id) ON DELETE CASCADE,
+  name TEXT NOT NULL,
+  phone TEXT,
+  department TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- =============================================
 -- CREATE ORDERS TABLE
 -- =============================================
 CREATE TABLE orders (
@@ -119,6 +136,8 @@ CREATE TABLE orders (
   notes TEXT,
   customer_name TEXT,
   table_number TEXT,
+  customer_phone TEXT,
+  employee_id UUID REFERENCES company_employees(id) ON DELETE SET NULL,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
