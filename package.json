@@ -40,7 +40,7 @@
     "@radix-ui/react-tooltip": "^1.2.8",
     "@replit/connectors-sdk": "^0.3.0",
     "@supabase/ssr": "^0.10.2",
-    "@supabase/supabase-js": "^2.103.0",
+    "@supabase/supabase-js": "^2.103.1",
     "@types/pg": "^8.20.0",
     "@vercel/analytics": "^1.6.1",
     "@vercel/blob": "^2.3.3",
