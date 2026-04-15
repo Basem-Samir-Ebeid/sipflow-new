@@ -224,7 +224,8 @@ export default function HomePage() {
   const trackingIntervalRef = useRef<NodeJS.Timeout | null>(null)
   const processedMessageIds = useRef<Set<string>>(new Set())
   
-  const unreadMessages = messages
+  const WAITER_MSG_TITLES = ['🔔 نداء نادل', '🚶 رد النادل']
+  const unreadMessages = messages.filter((m: AdminMessage) => !WAITER_MSG_TITLES.includes(m.title))
 
   // Restore user session from localStorage on page load/refresh
   useEffect(() => {
@@ -419,7 +420,7 @@ export default function HomePage() {
   // Show floating message when new admin message arrives
   useEffect(() => {
     if (messages.length > 0 && currentUser && !floatingMessage) {
-      const newMessage = messages.find(msg => !processedMessageIds.current.has(msg.id))
+      const newMessage = messages.find((msg: AdminMessage) => !processedMessageIds.current.has(msg.id) && !WAITER_MSG_TITLES.includes(msg.title))
       if (newMessage) {
         processedMessageIds.current.add(newMessage.id)
         setFloatingMessage(newMessage)
