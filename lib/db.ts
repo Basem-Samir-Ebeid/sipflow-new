@@ -61,7 +61,15 @@ export const db = {
   },
 
   async createPlace(data: { name: string; code: string; description?: string; place_type?: string; free_drinks_count?: number }) {
+    await sql`ALTER TABLE places ADD COLUMN IF NOT EXISTS place_type TEXT DEFAULT 'cafe'`.catch(() => {})
     await sql`ALTER TABLE places ADD COLUMN IF NOT EXISTS free_drinks_count INTEGER DEFAULT 0`.catch(() => {})
+    await sql`ALTER TABLE places ADD COLUMN IF NOT EXISTS free_drink_id TEXT DEFAULT NULL`.catch(() => {})
+    await sql`ALTER TABLE places ADD COLUMN IF NOT EXISTS table_count INTEGER DEFAULT 10`.catch(() => {})
+    await sql`ALTER TABLE places ADD COLUMN IF NOT EXISTS logo_url TEXT`.catch(() => {})
+    await sql`ALTER TABLE places ADD COLUMN IF NOT EXISTS service_charge NUMERIC(5,2) DEFAULT 0`.catch(() => {})
+    await sql`ALTER TABLE places ADD COLUMN IF NOT EXISTS tax_rate NUMERIC(5,2) DEFAULT 0`.catch(() => {})
+    await sql`ALTER TABLE places ADD COLUMN IF NOT EXISTS reservations_enabled BOOLEAN DEFAULT false`.catch(() => {})
+    await sql`ALTER TABLE places ADD COLUMN IF NOT EXISTS order_tracking_enabled BOOLEAN DEFAULT true`.catch(() => {})
     const result = await sql`
       INSERT INTO places (name, code, description, is_active, place_type, free_drinks_count)
       VALUES (${data.name}, ${data.code}, ${data.description || null}, true, ${data.place_type || 'cafe'}, ${data.free_drinks_count ?? 0})
