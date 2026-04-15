@@ -2689,7 +2689,7 @@ const handleSaveSettings = async () => {
           <div className="flex items-center gap-3">
             <div className="flex flex-1 items-center gap-2 rounded-xl px-3 py-2" style={{ background: 'rgba(251,191,36,0.06)', border: '1px solid rgba(251,191,36,0.2)' }}>
               <Package className="h-4 w-4 text-amber-400 shrink-0" />
-              <span className="text-xs text-muted-foreground whitespace-nowrap">حد الإنذ��ر</span>
+              <span className="text-xs text-muted-foreground whitespace-nowrap">حد الإنذار</span>
               <input
                 type="number" min="0" value={lowStockThreshold}
                 onChange={e => setLowStockThreshold(Math.max(0, parseInt(e.target.value) || 0))}
