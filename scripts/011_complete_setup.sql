@@ -105,6 +105,10 @@ CREATE TABLE IF NOT EXISTS orders (
   notes TEXT,
   customer_name TEXT,
   table_number TEXT,
+  customer_phone TEXT,
+  employee_id UUID,
+  rating INTEGER,
+  rating_comment TEXT,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
