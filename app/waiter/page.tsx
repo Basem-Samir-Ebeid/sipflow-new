@@ -108,6 +108,7 @@ export default function WaiterPage() {
   interface WaiterCall { id: string; message: string; created_at: string }
   const [waiterCalls, setWaiterCalls] = useState<WaiterCall[]>([])
   const [dismissedCallIds, setDismissedCallIds] = useState<Set<string>>(new Set())
+  const [respondingCallIds, setRespondingCallIds] = useState<Set<string>>(new Set())
   const seenCallIds = useRef<Set<string>>(new Set())
   const isFirstCallsFetch = useRef(true)
 
@@ -182,6 +183,30 @@ export default function WaiterPage() {
       if (hasNew) triggerAlarm()
       setWaiterCalls(calls)
     } catch {}
+  }, [staffUser])
+
+  const respondToCall = useCallback(async (call: WaiterCall) => {
+    setRespondingCallIds(prev => new Set([...prev, call.id]))
+    try {
+      // Extract table number from message like "طلب مساعدة من طاولة 5"
+      const tableMatch = call.message.match(/طاولة\s*(\S+)/)
+      const tableNum = tableMatch ? tableMatch[1] : ''
+      await fetch('/api/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: '🚶 رد النادل',
+          message: `في الطريق إليك - طاولة ${tableNum}`,
+          place_id: staffUser?.place_id || null
+        })
+      })
+      setDismissedCallIds(prev => new Set([...prev, call.id]))
+      toast.success('تم إرسال الرد للزبون ✓')
+    } catch {
+      toast.error('فشل إرسال الرد')
+    } finally {
+      setRespondingCallIds(prev => { const n = new Set(prev); n.delete(call.id); return n })
+    }
   }, [staffUser])
 
   const fetchOrders = useCallback(async () => {
@@ -931,10 +956,10 @@ export default function WaiterPage() {
 
         {/* ── Waiter Call Notifications ── */}
         {waiterCalls.filter(c => !dismissedCallIds.has(c.id)).map(c => (
-          <div key={c.id} className="rounded-2xl p-4 space-y-2 relative animate-pulse-once" style={{
-            background: 'linear-gradient(135deg, rgba(99,102,241,0.14), rgba(67,56,202,0.08))',
-            border: '1.5px solid rgba(99,102,241,0.5)',
-            boxShadow: '0 0 18px rgba(99,102,241,0.15)'
+          <div key={c.id} className="rounded-2xl p-4 space-y-3 relative" style={{
+            background: 'linear-gradient(135deg, rgba(99,102,241,0.18), rgba(67,56,202,0.10))',
+            border: '1.5px solid rgba(99,102,241,0.6)',
+            boxShadow: '0 0 22px rgba(99,102,241,0.2)'
           }}>
             <button
               onClick={() => setDismissedCallIds(prev => new Set([...prev, c.id]))}
@@ -943,11 +968,23 @@ export default function WaiterPage() {
               <X className="h-4 w-4" />
             </button>
             <div className="flex items-center gap-2">
-              <span className="text-xl">🔔</span>
+              <span className="text-xl animate-bounce">🔔</span>
               <p className="font-bold text-indigo-300 text-sm">نداء نادل</p>
             </div>
-            <p className="text-xs text-indigo-200/80">{c.message}</p>
+            <p className="text-sm font-semibold text-indigo-100">{c.message}</p>
             <p className="text-xs text-muted-foreground">{new Date(c.created_at).toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' })}</p>
+            <button
+              onClick={() => respondToCall(c)}
+              disabled={respondingCallIds.has(c.id)}
+              className="w-full flex items-center justify-center gap-2 rounded-xl py-2.5 text-sm font-bold transition-all active:scale-95"
+              style={{
+                background: respondingCallIds.has(c.id) ? 'rgba(99,102,241,0.1)' : 'rgba(99,102,241,0.3)',
+                border: '1px solid rgba(99,102,241,0.5)',
+                color: respondingCallIds.has(c.id) ? '#818cf8' : '#c7d2fe'
+              }}
+            >
+              {respondingCallIds.has(c.id) ? '...' : '🚶 في الطريق إليك'}
+            </button>
           </div>
         ))}
 

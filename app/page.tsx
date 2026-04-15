@@ -107,6 +107,9 @@ export default function HomePage() {
 
   // Waiter call state
   const [waiterCallCooldown, setWaiterCallCooldown] = useState(0)
+  const [waiterOnTheWay, setWaiterOnTheWay] = useState(false)
+  const lastWaiterCallTimeRef = useRef<number>(0)
+  const waiterResponseShownRef = useRef(false)
 
   // Place closed state
   const [isPlaceCurrentlyClosed, setIsPlaceCurrentlyClosed] = useState(false)
@@ -976,6 +979,9 @@ export default function HomePage() {
         })
       })
       toast.success('تم إرسال نداء النادل ✓')
+      lastWaiterCallTimeRef.current = Date.now()
+      waiterResponseShownRef.current = false
+      setWaiterOnTheWay(false)
       setWaiterCallCooldown(60)
       let remaining = 60
       const interval = setInterval(() => {
@@ -985,6 +991,33 @@ export default function HomePage() {
       }, 1000)
     } catch { toast.error('فشل إرسال النداء') }
   }
+
+  // Poll for waiter response after calling
+  useEffect(() => {
+    if (!tableNumber || !currentPlace?.id) return
+    const pollResponse = async () => {
+      if (waiterResponseShownRef.current) return
+      if (!lastWaiterCallTimeRef.current) return
+      try {
+        const res = await fetch(`/api/messages?place_id=${currentPlace.id}&limit=20`)
+        if (!res.ok) return
+        const msgs = await res.json()
+        if (!Array.isArray(msgs)) return
+        const responses = msgs.filter((m: { title: string; message: string; created_at: string }) =>
+          m.title === '🚶 رد النادل' &&
+          m.message.includes(`طاولة ${tableNumber}`) &&
+          new Date(m.created_at).getTime() > lastWaiterCallTimeRef.current
+        )
+        if (responses.length > 0 && !waiterResponseShownRef.current) {
+          waiterResponseShownRef.current = true
+          setWaiterOnTheWay(true)
+          toast.success('🚶 النادل في الطريق إليك!', { duration: 6000 })
+        }
+      } catch {}
+    }
+    const interval = setInterval(pollResponse, 5000)
+    return () => clearInterval(interval)
+  }, [tableNumber, currentPlace?.id])
 
   const handleConfirmTableAndSubmit = async (tableOverride?: string) => {
     const isCompanyPlace = currentPlace?.place_type === 'company'
@@ -3389,18 +3422,20 @@ export default function HomePage() {
                     <div className="px-4 py-2.5 border-t flex gap-2" style={{ borderColor: 'rgba(212,160,23,0.08)' }}>
                       {/* Call Waiter — shown when not all done and table is known */}
                       {!allDone && tableNumber && (
-                        <button
-                          onClick={handleCallWaiter}
-                          disabled={waiterCallCooldown > 0}
-                          className="flex-1 flex items-center justify-center gap-1.5 rounded-xl py-2 text-xs font-bold transition-all"
-                          style={{
-                            background: waiterCallCooldown > 0 ? 'rgba(255,255,255,0.04)' : 'rgba(99,102,241,0.12)',
-                            border: `1px solid ${waiterCallCooldown > 0 ? 'rgba(255,255,255,0.06)' : 'rgba(99,102,241,0.3)'}`,
-                            color: waiterCallCooldown > 0 ? '#6b7280' : '#a5b4fc'
-                          }}
-                        >
-                          🔔 {waiterCallCooldown > 0 ? `اتصبر ${waiterCallCooldown}ث` : 'اطلب النادل'}
-                        </button>
+                        <div className="flex-1 flex flex-col gap-1.5">
+                          <button
+                            onClick={handleCallWaiter}
+                            disabled={waiterCallCooldown > 0 || waiterOnTheWay}
+                            className="w-full flex items-center justify-center gap-1.5 rounded-xl py-2 text-xs font-bold transition-all"
+                            style={{
+                              background: waiterOnTheWay ? 'rgba(34,197,94,0.10)' : waiterCallCooldown > 0 ? 'rgba(255,255,255,0.04)' : 'rgba(99,102,241,0.12)',
+                              border: `1px solid ${waiterOnTheWay ? 'rgba(34,197,94,0.3)' : waiterCallCooldown > 0 ? 'rgba(255,255,255,0.06)' : 'rgba(99,102,241,0.3)'}`,
+                              color: waiterOnTheWay ? '#4ade80' : waiterCallCooldown > 0 ? '#6b7280' : '#a5b4fc'
+                            }}
+                          >
+                            {waiterOnTheWay ? '🚶 النادل في الطريق إليك' : `🔔 ${waiterCallCooldown > 0 ? `اتصبر ${waiterCallCooldown}ث` : 'اطلب النادل'}`}
+                          </button>
+                        </div>
                       )}
                       {/* Print Receipt — shown when all done */}
                       {allDone && (
