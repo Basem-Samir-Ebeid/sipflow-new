@@ -58,35 +58,55 @@ export default function BarPage() {
   const [isLoggingIn, setIsLoggingIn] = useState(false)
   const [completingUserId, setCompletingUserId] = useState<string | null>(null)
   const [staffTab, setStaffTab] = useState<StaffTab>('pending')
-  const previousOrderCount = useRef<number>(0)
+  const previousOrderCount = useRef<number>(-1)
   const [alarmActive, setAlarmActive] = useState(false)
   const audioRef = useRef<HTMLAudioElement | null>(null)
-  const hasPlayedOpenAlarm = useRef(false)
+  const alarmActiveRef = useRef(false)
 
-  const triggerAlarm = useCallback(() => {
-    setAlarmActive(prev => {
-      if (prev) return prev
-      try {
-        if (!audioRef.current) {
-          audioRef.current = new Audio('/sounds/order.wav')
-          audioRef.current.loop = true
-        }
-        audioRef.current.currentTime = 0
-        audioRef.current.play().catch(() => {})
-      } catch {}
-      return true
-    })
+  const getAudio = useCallback(() => {
+    if (!audioRef.current) {
+      audioRef.current = new Audio('/sounds/order.wav')
+      audioRef.current.loop = true
+    }
+    return audioRef.current
   }, [])
 
-  const stopAlarm = () => {
+  const triggerAlarm = useCallback(() => {
+    alarmActiveRef.current = true
+    setAlarmActive(true)
+    try {
+      const audio = getAudio()
+      if (audio.paused) {
+        audio.currentTime = 0
+        audio.play().catch(() => {})
+      }
+    } catch {}
+  }, [getAudio])
+
+  const stopAlarm = useCallback(() => {
+    alarmActiveRef.current = false
+    setAlarmActive(false)
     try {
       if (audioRef.current) {
         audioRef.current.pause()
         audioRef.current.currentTime = 0
       }
     } catch {}
-    setAlarmActive(false)
-  }
+  }, [])
+
+  useEffect(() => {
+    const unlock = () => {
+      if (alarmActiveRef.current && audioRef.current && audioRef.current.paused) {
+        audioRef.current.play().catch(() => {})
+      }
+    }
+    document.addEventListener('click', unlock)
+    document.addEventListener('touchstart', unlock)
+    return () => {
+      document.removeEventListener('click', unlock)
+      document.removeEventListener('touchstart', unlock)
+    }
+  }, [])
 
   useEffect(() => {
     const savedStaff = localStorage.getItem('bar_user')
@@ -97,11 +117,11 @@ export default function BarPage() {
   }, [])
 
   useEffect(() => {
-    if (staffUser && !hasPlayedOpenAlarm.current) {
-      hasPlayedOpenAlarm.current = true
+    if (staffUser) {
       triggerAlarm()
     }
-  }, [staffUser, triggerAlarm])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [staffUser?.id])
 
   const { data: allOrders = [], mutate: mutateOrders, isLoading } = useSWR<OrderWithDetails[]>(
     staffUser ? `bar-all-orders-${staffUser.place_id || 'global'}` : null,
@@ -187,7 +207,11 @@ export default function BarPage() {
   const todayDate = new Date().toLocaleDateString('ar-EG', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
 
   useEffect(() => {
-    if (pendingOrders.length > previousOrderCount.current && previousOrderCount.current > 0) {
+    if (previousOrderCount.current === -1) {
+      previousOrderCount.current = pendingOrders.length
+      return
+    }
+    if (pendingOrders.length > previousOrderCount.current) {
       triggerAlarm()
       toast.success('طلب جديد وصل!')
     }

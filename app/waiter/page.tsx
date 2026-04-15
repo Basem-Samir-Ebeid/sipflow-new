@@ -99,7 +99,7 @@ export default function WaiterPage() {
   const [reservationNotifs, setReservationNotifs] = useState<ReservationNotif[]>([])
   const [dismissedReservIds, setDismissedReservIds] = useState<Set<string>>(new Set())
   const seenReservationIds = useRef<Set<string>>(new Set())
-  const previousGroupCount = useRef<number>(0)
+  const previousGroupCount = useRef<number>(-1)
 
   // Waiter call notifications state
   interface WaiterCall { id: string; message: string; created_at: string }
@@ -110,32 +110,52 @@ export default function WaiterPage() {
 
   const [alarmActive, setAlarmActive] = useState(false)
   const audioRef = useRef<HTMLAudioElement | null>(null)
-  const hasPlayedOpenAlarm = useRef(false)
+  const alarmActiveRef = useRef(false)
 
-  const triggerAlarm = useCallback(() => {
-    setAlarmActive(prev => {
-      if (prev) return prev
-      try {
-        if (!audioRef.current) {
-          audioRef.current = new Audio('/sounds/order.wav')
-          audioRef.current.loop = true
-        }
-        audioRef.current.currentTime = 0
-        audioRef.current.play().catch(() => {})
-      } catch {}
-      return true
-    })
+  const getAudio = useCallback(() => {
+    if (!audioRef.current) {
+      audioRef.current = new Audio('/sounds/order.wav')
+      audioRef.current.loop = true
+    }
+    return audioRef.current
   }, [])
 
-  const stopAlarm = () => {
+  const triggerAlarm = useCallback(() => {
+    alarmActiveRef.current = true
+    setAlarmActive(true)
+    try {
+      const audio = getAudio()
+      if (audio.paused) {
+        audio.currentTime = 0
+        audio.play().catch(() => {})
+      }
+    } catch {}
+  }, [getAudio])
+
+  const stopAlarm = useCallback(() => {
+    alarmActiveRef.current = false
+    setAlarmActive(false)
     try {
       if (audioRef.current) {
         audioRef.current.pause()
         audioRef.current.currentTime = 0
       }
     } catch {}
-    setAlarmActive(false)
-  }
+  }, [])
+
+  useEffect(() => {
+    const unlock = () => {
+      if (alarmActiveRef.current && audioRef.current && audioRef.current.paused) {
+        audioRef.current.play().catch(() => {})
+      }
+    }
+    document.addEventListener('click', unlock)
+    document.addEventListener('touchstart', unlock)
+    return () => {
+      document.removeEventListener('click', unlock)
+      document.removeEventListener('touchstart', unlock)
+    }
+  }, [])
 
   const fetchWaiterCalls = useCallback(async () => {
     if (!staffUser?.place_id) return
@@ -224,11 +244,15 @@ export default function WaiterPage() {
         })
 
       const pendingNew = result.filter(g => !g.allReady && !deliveredIds.has(g.userId))
-      if (pendingNew.length > previousGroupCount.current && previousGroupCount.current > 0) {
+      if (previousGroupCount.current === -1) {
+        previousGroupCount.current = pendingNew.length
+      } else if (pendingNew.length > previousGroupCount.current) {
         triggerAlarm()
         toast.success('طلب جديد وصل!')
+        previousGroupCount.current = pendingNew.length
+      } else {
+        previousGroupCount.current = pendingNew.length
       }
-      previousGroupCount.current = pendingNew.length
 
       setTableGroups(result)
       setLastRefresh(new Date())
@@ -327,11 +351,11 @@ export default function WaiterPage() {
   }, [])
 
   useEffect(() => {
-    if (staffUser && !hasPlayedOpenAlarm.current) {
-      hasPlayedOpenAlarm.current = true
+    if (staffUser) {
       triggerAlarm()
     }
-  }, [staffUser, triggerAlarm])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [staffUser?.id])
 
   useEffect(() => {
     if (!staffUser) return
