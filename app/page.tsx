@@ -1804,6 +1804,27 @@ export default function HomePage() {
               )}
             </>
           )}
+          {/* Call Waiter button — shown when customer is logged in with a table */}
+          {currentUser && tableNumber && !isDevAdmin && (
+            <button
+              onClick={handleCallWaiter}
+              disabled={waiterCallCooldown > 0 || waiterOnTheWay}
+              className="flex h-11 items-center justify-center gap-1.5 rounded-full px-3 text-xs font-bold transition-all active:scale-95"
+              style={{
+                background: waiterOnTheWay
+                  ? 'rgba(34,197,94,0.12)'
+                  : waiterCallCooldown > 0
+                    ? 'rgba(255,255,255,0.04)'
+                    : 'rgba(99,102,241,0.18)',
+                border: `1px solid ${waiterOnTheWay ? 'rgba(34,197,94,0.35)' : waiterCallCooldown > 0 ? 'rgba(255,255,255,0.08)' : 'rgba(99,102,241,0.45)'}`,
+                color: waiterOnTheWay ? '#4ade80' : waiterCallCooldown > 0 ? '#6b7280' : '#a5b4fc'
+              }}
+              title="اطلب النادل"
+            >
+              <span>{waiterOnTheWay ? '🚶' : '🔔'}</span>
+              <span>{waiterOnTheWay ? 'في الطريق' : waiterCallCooldown > 0 ? `${waiterCallCooldown}ث` : 'النادل'}</span>
+            </button>
+          )}
           <button
             onClick={handleLogoClick}
             className="flex items-center gap-2 cursor-pointer select-none active:scale-95 transition-transform"
@@ -3421,23 +3442,6 @@ export default function HomePage() {
 
                     {/* ── Call Waiter + Print Receipt row ── */}
                     <div className="px-4 py-2.5 border-t flex gap-2" style={{ borderColor: 'rgba(212,160,23,0.08)' }}>
-                      {/* Call Waiter — shown when not all done and table is known */}
-                      {!allDone && tableNumber && (
-                        <div className="flex-1 flex flex-col gap-1.5">
-                          <button
-                            onClick={handleCallWaiter}
-                            disabled={waiterCallCooldown > 0 || waiterOnTheWay}
-                            className="w-full flex items-center justify-center gap-1.5 rounded-xl py-2 text-xs font-bold transition-all"
-                            style={{
-                              background: waiterOnTheWay ? 'rgba(34,197,94,0.10)' : waiterCallCooldown > 0 ? 'rgba(255,255,255,0.04)' : 'rgba(99,102,241,0.12)',
-                              border: `1px solid ${waiterOnTheWay ? 'rgba(34,197,94,0.3)' : waiterCallCooldown > 0 ? 'rgba(255,255,255,0.06)' : 'rgba(99,102,241,0.3)'}`,
-                              color: waiterOnTheWay ? '#4ade80' : waiterCallCooldown > 0 ? '#6b7280' : '#a5b4fc'
-                            }}
-                          >
-                            {waiterOnTheWay ? '🚶 النادل في الطريق إليك' : `🔔 ${waiterCallCooldown > 0 ? `اتصبر ${waiterCallCooldown}ث` : 'اطلب النادل'}`}
-                          </button>
-                        </div>
-                      )}
                       {/* Print Receipt — shown when all done */}
                       {allDone && (
                         <button
