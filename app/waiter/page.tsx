@@ -99,7 +99,10 @@ export default function WaiterPage() {
   const [reservationNotifs, setReservationNotifs] = useState<ReservationNotif[]>([])
   const [dismissedReservIds, setDismissedReservIds] = useState<Set<string>>(new Set())
   const seenReservationIds = useRef<Set<string>>(new Set())
-  const previousGroupCount = useRef<number>(-1)
+  const seenOrderIds = useRef<Set<string>>(new Set())
+  const seenReadyOrderIds = useRef<Set<string>>(new Set())
+  const isFirstOrdersFetch = useRef(true)
+  const cachedSession = useRef<{ id: string; ts: number } | null>(null)
 
   // Waiter call notifications state
   interface WaiterCall { id: string; message: string; created_at: string }
@@ -186,13 +189,50 @@ export default function WaiterPage() {
     setIsLoading(true)
     try {
       const placeParam = staffUser.place_id ? `&place_id=${staffUser.place_id}` : ''
-      const sessRes = await fetch(`/api/sessions?readonly=true${placeParam}`)
-      const sess = await sessRes.json()
-      if (!sess?.id) { setTableGroups([]); return }
 
-      const res = await fetch(`/api/orders?session_id=${sess.id}`)
+      // Cache session ID for 30s to avoid extra API call every poll
+      let sessionId: string | null = null
+      if (cachedSession.current && Date.now() - cachedSession.current.ts < 30000) {
+        sessionId = cachedSession.current.id
+      } else {
+        const sessRes = await fetch(`/api/sessions?readonly=true${placeParam}`)
+        const sess = await sessRes.json()
+        if (!sess?.id) { setTableGroups([]); return }
+        sessionId = sess.id
+        cachedSession.current = { id: sess.id, ts: Date.now() }
+      }
+
+      const res = await fetch(`/api/orders?session_id=${sessionId}`)
       const orders = await res.json()
       if (!Array.isArray(orders)) return
+
+      // ── Alarm detection ────────────────────────────────
+      if (!isFirstOrdersFetch.current) {
+        // New orders (any status except cancelled)
+        const brandNew = orders.filter((o: { id: string; status: string }) =>
+          !seenOrderIds.current.has(o.id) && o.status !== 'cancelled'
+        )
+        // Orders newly turned ready (bar finished)
+        const newlyReady = orders.filter((o: { id: string; status: string }) =>
+          o.status === 'ready' && !seenReadyOrderIds.current.has(o.id)
+        )
+
+        if (brandNew.length > 0) {
+          triggerAlarm()
+          toast.success('طلب جديد وصل!')
+        } else if (newlyReady.length > 0) {
+          triggerAlarm()
+          toast.success('طلبات جاهزة للتسليم! 🛎️')
+        }
+
+        newlyReady.forEach((o: { id: string }) => seenReadyOrderIds.current.add(o.id))
+      }
+
+      orders.forEach((o: { id: string; status: string }) => {
+        if (o.status !== 'cancelled') seenOrderIds.current.add(o.id)
+      })
+      isFirstOrdersFetch.current = false
+      // ───────────────────────────────────────────────────
 
       // Only show active orders (not cancelled, not already delivered)
       const active = orders.filter((o: { status: string }) => o.status !== 'cancelled' && o.status !== 'completed')
@@ -203,9 +243,8 @@ export default function WaiterPage() {
         const uid  = o.user_id || 'unknown'
         const rawTableNum = o.user?.table_number
         const tableNum = rawTableNum != null && rawTableNum !== '' ? String(rawTableNum) : null
-        if (!tableNum) continue // skip orders with no table
+        if (!tableNum) continue
 
-        // Group by table_number (not user_id) so shared-user tables stay separate
         const groupKey = `table_${tableNum}`
         if (!grouped[groupKey]) {
           grouped[groupKey] = {
@@ -243,22 +282,11 @@ export default function WaiterPage() {
           return new Date(a.earliestTime).getTime() - new Date(b.earliestTime).getTime()
         })
 
-      const pendingNew = result.filter(g => !g.allReady && !deliveredIds.has(g.userId))
-      if (previousGroupCount.current === -1) {
-        previousGroupCount.current = pendingNew.length
-      } else if (pendingNew.length > previousGroupCount.current) {
-        triggerAlarm()
-        toast.success('طلب جديد وصل!')
-        previousGroupCount.current = pendingNew.length
-      } else {
-        previousGroupCount.current = pendingNew.length
-      }
-
       setTableGroups(result)
       setLastRefresh(new Date())
     } catch { toast.error('خطأ في تحديث الطلبات') }
     finally { setIsLoading(false) }
-  }, [staffUser, deliveredIds])
+  }, [staffUser, triggerAlarm])
 
   const fetchDeliveryHistory = useCallback(async () => {
     if (!staffUser) return
@@ -362,9 +390,9 @@ export default function WaiterPage() {
     fetchOrders()
     fetchReservationNotifs()
     fetchWaiterCalls()
-    const id = setInterval(fetchOrders, 4000)
+    const id = setInterval(fetchOrders, 2000)
     const rid = setInterval(fetchReservationNotifs, 15000)
-    const cid = setInterval(fetchWaiterCalls, 10000)
+    const cid = setInterval(fetchWaiterCalls, 8000)
     return () => { clearInterval(id); clearInterval(rid); clearInterval(cid) }
   }, [staffUser, fetchOrders, fetchReservationNotifs, fetchWaiterCalls])
 

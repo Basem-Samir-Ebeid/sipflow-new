@@ -134,7 +134,7 @@ export default function BarPage() {
       const data = await res.json()
       return Array.isArray(data) ? data : []
     },
-    { refreshInterval: 3000 }
+    { refreshInterval: 2000 }
   )
 
   const pendingOrders = allOrders.filter(o => o.status === 'pending' || o.status === 'preparing' || !o.status)
