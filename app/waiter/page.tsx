@@ -1015,7 +1015,7 @@ export default function WaiterPage() {
           <div className="rounded-2xl border border-border bg-gradient-to-br from-card to-muted/30 p-4">
             <div className="flex items-center gap-2 mb-3">
               <TrendingUp className="h-4 w-4 text-primary" />
-              <h3 className="font-bold text-foreground text-sm">ملخص أدائ�� اليوم</h3>
+              <h3 className="font-bold text-foreground text-sm">ملخص أدائي اليوم</h3>
             </div>
             <div className="grid grid-cols-3 gap-3">
               <div className="text-center p-3 rounded-xl bg-green-500/10 border border-green-500/20">
