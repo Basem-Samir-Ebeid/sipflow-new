@@ -76,6 +76,7 @@ export default function HomePage() {
   const [welcomePhotoUploading, setWelcomePhotoUploading] = useState(false)
   const [welcomePhotoHover, setWelcomePhotoHover] = useState(false)
   const welcomePhotoInputRef = useRef<HTMLInputElement>(null)
+  const loginPhotoInputRef = useRef<HTMLInputElement>(null)
   const [adminPassword, setAdminPassword] = useState('')
   const [adminError, setAdminError] = useState('')
   const [isAdmin, setIsAdmin] = useState(false)
@@ -2177,6 +2178,7 @@ export default function HomePage() {
         {showAdminLogin && (
           <div className="fixed inset-0 z-50 overflow-auto" dir="rtl" style={{ background: '#050508' }}>
             <style>{`@keyframes devSpin { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }`}</style>
+            <input ref={loginPhotoInputRef} type="file" accept="image/jpeg,image/png,image/webp,image/gif" className="hidden" onChange={handleWelcomePhotoUpload} />
             {/* Animated background grid */}
             <div className="pointer-events-none absolute inset-0" style={{
               backgroundImage: 'linear-gradient(rgba(244,63,94,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(244,63,94,0.04) 1px, transparent 1px)',
@@ -2208,7 +2210,7 @@ export default function HomePage() {
                 <div
                   className="relative mx-auto cursor-pointer group"
                   style={{ width: 96, height: 96 }}
-                  onClick={() => !welcomePhotoUploading && welcomePhotoInputRef.current?.click()}
+                  onClick={() => !welcomePhotoUploading && loginPhotoInputRef.current?.click()}
                   onMouseEnter={() => setWelcomePhotoHover(true)}
                   onMouseLeave={() => setWelcomePhotoHover(false)}
                 >
@@ -2241,7 +2243,7 @@ export default function HomePage() {
                   </div>
                 </div>
                 {/* Upload hint */}
-                <p className="text-[10px] font-mono" style={{ color: welcomePhotoUrl ? 'rgba(244,63,94,0.35)' : 'rgba(244,63,94,0.55)' }}>
+                <p className="text-[10px] font-mono cursor-pointer" onClick={() => !welcomePhotoUploading && loginPhotoInputRef.current?.click()} style={{ color: welcomePhotoUrl ? 'rgba(244,63,94,0.35)' : 'rgba(244,63,94,0.55)' }}>
                   {welcomePhotoUploading ? 'جارٍ الرفع...' : welcomePhotoUrl ? '✎ اضغط لتغيير الصورة' : '↑ اضغط لإضافة صورة شخصية'}
                 </p>
                 <div>
