@@ -9,7 +9,7 @@ import { AdminPanel } from '@/components/admin-panel'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Coffee, Grid3x2 as Grid3X3, Settings, ChevronLeft, ChevronRight, DollarSign, Users, Calendar, Bell, X, Printer, CircleCheck as CheckCircle2, LogOut, Eye, EyeOff, Loader2, Sparkles, ShieldCheck, ClipboardList, MapPin, Archive, Lock, Clock, Trash2, Plus } from 'lucide-react'
+import { Coffee, Grid3x2 as Grid3X3, Settings, ChevronLeft, ChevronRight, ArrowRight, DollarSign, Users, Calendar, Bell, X, Printer, CircleCheck as CheckCircle2, LogOut, Eye, EyeOff, Loader2, Sparkles, ShieldCheck, ClipboardList, MapPin, Archive, Lock, Clock, Trash2, Plus } from 'lucide-react'
 import { toast, Toaster } from 'sonner'
 import { ReceiptModal } from '@/components/receipt-modal'
 import { CashierDashboard } from '@/components/cashier-dashboard'
@@ -2135,61 +2135,120 @@ export default function HomePage() {
         )}
 
         {showAdminLogin && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4" dir="rtl">
-            <div className="w-full max-w-xs rounded-2xl p-5 shadow-2xl" style={{ background: '#141414', border: '1px solid rgba(244,63,94,0.2)' }}>
-              <div className="flex justify-end mb-2">
-                <button onClick={() => { setShowResetModal(true); setResetError(''); setResetSuccess('') }}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all hover:opacity-80"
-                  style={{ background: 'rgba(234,179,8,0.1)', border: '1px solid rgba(234,179,8,0.25)', color: '#fbbf24' }}>
-                  <span>🔑</span> ريسيت
+          <div className="fixed inset-0 z-50 overflow-auto" dir="rtl" style={{ background: '#050508' }}>
+            {/* Animated background grid */}
+            <div className="pointer-events-none absolute inset-0" style={{
+              backgroundImage: 'linear-gradient(rgba(244,63,94,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(244,63,94,0.04) 1px, transparent 1px)',
+              backgroundSize: '40px 40px'
+            }} />
+            {/* Glow blobs */}
+            <div className="pointer-events-none absolute top-[-120px] left-1/2 -translate-x-1/2 h-[340px] w-[340px] rounded-full opacity-20" style={{ background: 'radial-gradient(circle, #f43f5e 0%, transparent 70%)', filter: 'blur(60px)' }} />
+            <div className="pointer-events-none absolute bottom-0 right-[-80px] h-[240px] w-[240px] rounded-full opacity-10" style={{ background: 'radial-gradient(circle, #7c3aed 0%, transparent 70%)', filter: 'blur(50px)' }} />
+
+            {/* Top bar */}
+            <div className="flex items-center justify-between px-5 py-3" style={{ borderBottom: '1px solid rgba(244,63,94,0.12)' }}>
+              <div className="flex items-center gap-2">
+                <div className="h-2 w-2 rounded-full bg-rose-500 animate-pulse" />
+                <span className="text-xs font-mono text-rose-400/70 tracking-widest uppercase">SîpFlõw · Dev Portal</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <span className="text-[10px] font-mono text-zinc-600">V{APP_VERSION}</span>
+                <button onClick={() => { setShowAdminLogin(false); setDevAdminName(''); setAdminPassword(''); setAdminError('') }}
+                  className="flex h-7 w-7 items-center justify-center rounded-full text-zinc-500 hover:text-zinc-200 transition-colors"
+                  style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)' }}>
+                  <X className="h-3.5 w-3.5" />
                 </button>
               </div>
-              <div className="text-center mb-7">
-                <div className="relative mx-auto mb-5 h-20 w-20">
-                  <div className="h-20 w-20 rounded-2xl overflow-hidden border border-rose-500/30 shadow-lg shadow-rose-500/15">
-                    <Image src="/images/sipflow-logo.jpg" alt="SîpFlõw" width={80} height={80} className="object-cover w-full h-full" />
+            </div>
+
+            <div className="flex min-h-[calc(100vh-48px)] flex-col items-center justify-center p-4 gap-6">
+              {/* Header */}
+              <div className="text-center space-y-3">
+                <div className="relative mx-auto" style={{ width: 88, height: 88 }}>
+                  <div className="absolute inset-0 rounded-2xl animate-pulse" style={{ background: 'rgba(244,63,94,0.2)', filter: 'blur(16px)' }} />
+                  <div className="relative h-full w-full rounded-2xl overflow-hidden" style={{ border: '1.5px solid rgba(244,63,94,0.4)', boxShadow: '0 0 30px rgba(244,63,94,0.25)' }}>
+                    <Image src="/images/sipflow-logo.jpg" alt="SîpFlõw" width={88} height={88} className="object-cover w-full h-full" />
                   </div>
-                  <div className="absolute -bottom-2 -left-2 flex h-7 w-7 items-center justify-center rounded-full"
-                    style={{ background: 'linear-gradient(135deg, #f43f5e, #e11d48)', boxShadow: '0 0 10px rgba(244,63,94,0.5)' }}>
+                  <div className="absolute -bottom-2 -left-2 flex h-7 w-7 items-center justify-center rounded-full" style={{ background: 'linear-gradient(135deg, #f43f5e, #be123c)', boxShadow: '0 0 14px rgba(244,63,94,0.6)' }}>
                     <ShieldCheck className="h-3.5 w-3.5 text-white" />
                   </div>
                 </div>
-                <div className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 mb-2 text-xs font-semibold"
-                  style={{ background: 'rgba(244,63,94,0.12)', border: '1px solid rgba(244,63,94,0.3)', color: '#fb7185' }}>
-                  <span className="h-1.5 w-1.5 rounded-full bg-rose-400 animate-pulse" />
-                  بوابة المطور
-                </div>
-                <h1 className="text-xl font-bold text-white">SîpFlõw · Dev Admin</h1>
-                <p className="text-xs text-zinc-500 mt-1">الوصول الكامل للنظام</p>
-              </div>
-              <div className="space-y-4">
                 <div>
-                  <label className="text-xs font-medium text-zinc-400 mb-1.5 block">الاسم</label>
+                  <h1 className="text-2xl font-black tracking-tight" style={{ color: '#fff', textShadow: '0 0 30px rgba(244,63,94,0.5)' }}>Developer Admin</h1>
+                  <p className="text-xs text-zinc-500 mt-1 tracking-widest uppercase font-mono">Full System Access · SîpFlõw</p>
+                </div>
+              </div>
+
+              {/* Status cards */}
+              <div className="grid grid-cols-3 gap-2 w-full max-w-sm">
+                {[
+                  { icon: '🛡️', label: 'الوصول', value: 'كامل', color: '#f43f5e' },
+                  { icon: '⚡', label: 'النظام', value: 'نشط', color: '#22c55e' },
+                  { icon: '🗄️', label: 'قاعدة البيانات', value: 'متصل', color: '#38bdf8' },
+                ].map(card => (
+                  <div key={card.label} className="rounded-xl p-3 text-center" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}>
+                    <div className="text-lg mb-1">{card.icon}</div>
+                    <div className="text-[10px] text-zinc-500 mb-0.5">{card.label}</div>
+                    <div className="text-xs font-bold" style={{ color: card.color }}>{card.value}</div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Login card */}
+              <div className="w-full max-w-sm rounded-2xl p-6 space-y-4" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(244,63,94,0.2)', boxShadow: '0 0 40px rgba(244,63,94,0.08)' }}>
+                <div className="flex items-center gap-2 mb-1">
+                  <Lock className="h-4 w-4 text-rose-400" />
+                  <span className="text-sm font-bold text-zinc-200">تسجيل الدخول</span>
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-zinc-500 mb-1.5 block">الاسم</label>
                   <Input value={devAdminName} onChange={e => { setDevAdminName(e.target.value); setAdminError('') }}
                     onKeyDown={e => e.key === 'Enter' && handleAdminLogin()}
-                    placeholder="اسمك..." dir="rtl"
-                    className="bg-zinc-900 border-zinc-700 text-white placeholder:text-zinc-600 focus-visible:ring-rose-500/40 focus-visible:border-rose-500/50" />
+                    placeholder="اسم المطور..." dir="rtl"
+                    className="h-11 bg-zinc-900/80 border-zinc-700/60 text-white placeholder:text-zinc-600 focus-visible:ring-rose-500/40 focus-visible:border-rose-500/60" />
                 </div>
                 <div>
-                  <label className="text-xs font-medium text-zinc-400 mb-1.5 block">كلمة المرور</label>
+                  <label className="text-xs font-medium text-zinc-500 mb-1.5 block">كلمة المرور</label>
                   <Input type="password" value={adminPassword} onChange={e => { setAdminPassword(e.target.value); setAdminError('') }}
                     onKeyDown={e => e.key === 'Enter' && handleAdminLogin()}
                     placeholder="••••••••" dir="ltr"
-                    className="bg-zinc-900 border-zinc-700 text-white placeholder:text-zinc-600 focus-visible:ring-rose-500/40 focus-visible:border-rose-500/50" />
+                    className="h-11 bg-zinc-900/80 border-zinc-700/60 text-white placeholder:text-zinc-600 focus-visible:ring-rose-500/40 focus-visible:border-rose-500/60" />
                 </div>
-{adminError && <p className="text-center text-sm text-rose-400">{adminError}</p>}
-  <button onClick={handleAdminLogin}
-  disabled={isVerifyingDevAdmin}
-  className="w-full h-11 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-all active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed"
-  style={{ background: 'linear-gradient(135deg, #f43f5e, #e11d48)', color: '#fff', boxShadow: '0 2px 14px rgba(244,63,94,0.3)' }}>
-  {isVerifyingDevAdmin ? <Loader2 className="h-4 w-4 animate-spin" /> : <ShieldCheck className="h-4 w-4" />}
-  {isVerifyingDevAdmin ? 'جاري التحقق...' : 'دخول المطور'}
-  </button>
-                <button onClick={() => { setShowAdminLogin(false); setDevAdminName(''); setAdminPassword(''); setAdminError('') }}
-                  className="w-full h-9 rounded-xl text-sm text-zinc-500 hover:text-zinc-300 transition-colors">
-                  إلغاء
+                {adminError && (
+                  <div className="flex items-center gap-2 rounded-xl px-3 py-2" style={{ background: 'rgba(244,63,94,0.08)', border: '1px solid rgba(244,63,94,0.2)' }}>
+                    <span className="text-rose-400 text-sm">⚠</span>
+                    <p className="text-sm text-rose-400">{adminError}</p>
+                  </div>
+                )}
+                <button onClick={handleAdminLogin} disabled={isVerifyingDevAdmin}
+                  className="w-full h-12 rounded-xl font-black text-sm flex items-center justify-center gap-2 transition-all active:scale-95 disabled:opacity-50"
+                  style={{ background: 'linear-gradient(135deg, #f43f5e, #be123c)', color: '#fff', boxShadow: '0 4px 20px rgba(244,63,94,0.4)', letterSpacing: '0.03em' }}>
+                  {isVerifyingDevAdmin ? <Loader2 className="h-4 w-4 animate-spin" /> : <ShieldCheck className="h-4 w-4" />}
+                  {isVerifyingDevAdmin ? 'جاري التحقق...' : 'دخول بوابة المطور'}
                 </button>
               </div>
+
+              {/* Tools quick-access row */}
+              <div className="w-full max-w-sm space-y-2">
+                <p className="text-[10px] text-zinc-600 uppercase tracking-widest text-center font-mono">أدوات سريعة</p>
+                <div className="grid grid-cols-2 gap-2">
+                  <button onClick={() => { setShowResetModal(true); setResetError(''); setResetSuccess('') }}
+                    className="flex items-center gap-2 rounded-xl px-4 py-3 text-xs font-semibold transition-all hover:opacity-90 active:scale-95"
+                    style={{ background: 'rgba(234,179,8,0.08)', border: '1px solid rgba(234,179,8,0.2)', color: '#fbbf24' }}>
+                    <span>🔑</span> إعادة تعيين كلمة المرور
+                  </button>
+                  <button onClick={() => { setShowAdminLogin(false); setDevAdminName(''); setAdminPassword(''); setAdminError('') }}
+                    className="flex items-center gap-2 rounded-xl px-4 py-3 text-xs font-semibold transition-all hover:opacity-90 active:scale-95"
+                    style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: '#71717a' }}>
+                    <ArrowRight className="h-3.5 w-3.5" /> رجوع للرئيسية
+                  </button>
+                </div>
+              </div>
+
+              {/* Footer */}
+              <p className="text-[10px] text-zinc-700 font-mono text-center pb-2">
+                Developed by Basem Samir Ebeid · SîpFlõw &copy; {new Date().getFullYear()}
+              </p>
             </div>
           </div>
         )}
