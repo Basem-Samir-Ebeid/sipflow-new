@@ -25,10 +25,11 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Plus, Trash2, Pencil, Upload, RefreshCw, Users, Coffee, Key, BarChart3, TrendingUp, Award, Clock, Send, MessageSquare, Settings2, Hash, UserPlus, UserCog, Minus, Package, Banknote, CheckCircle2, Hourglass, TableProperties, Copy, ExternalLink, Link2, Eye, EyeOff, QrCode, CalendarDays, CalendarCheck, CalendarX, Download, Loader2, Activity, ShieldCheck, ChevronLeft } from 'lucide-react'
+import { Plus, Trash2, Pencil, Upload, RefreshCw, Users, Coffee, Key, BarChart3, TrendingUp, Award, Clock, Send, MessageSquare, Settings2, Hash, UserPlus, UserCog, Minus, Package, Banknote, CheckCircle2, Hourglass, TableProperties, Copy, ExternalLink, Link2, Eye, EyeOff, QrCode, CalendarDays, CalendarCheck, CalendarX, Download, Loader2, Activity, ShieldCheck, ChevronLeft, Radio } from 'lucide-react'
 import { Checkbox } from '@/components/ui/checkbox'
 import Image from 'next/image'
 import { CommandCenter } from '@/components/command-center'
+import { LivePlacesHub } from '@/components/LivePlacesHub'
 
 
 
@@ -1688,6 +1689,22 @@ const handleSaveSettings = async () => {
                 </span>
               </button>
 
+              {/* Live Places Hub — full width */}
+              <button onClick={() => handleTabChange('live')}
+                className="w-full flex items-center gap-2.5 rounded-xl px-3.5 py-2.5 transition-all duration-150 hover:scale-[1.01] active:scale-[0.99]"
+                style={{
+                  background: activeAdminTab === 'live' ? 'linear-gradient(135deg, rgba(16,185,129,0.35), rgba(5,150,105,0.25))' : 'rgba(16,185,129,0.06)',
+                  border: `1px solid ${activeAdminTab === 'live' ? 'rgba(16,185,129,0.6)' : 'rgba(16,185,129,0.15)'}`,
+                  boxShadow: activeAdminTab === 'live' ? '0 0 14px rgba(16,185,129,0.2)' : 'none'
+                }}>
+                <Radio className="h-4 w-4" style={{ color: activeAdminTab === 'live' ? '#6ee7b7' : '#3d6b56' }} />
+                <span className="text-xs font-bold" style={{ color: activeAdminTab === 'live' ? '#6ee7b7' : '#3d6b56' }}>Live Places Hub</span>
+                <span className="ml-auto flex h-2 w-2">
+                  <span className="absolute inline-flex h-2 w-2 rounded-full bg-emerald-400 opacity-60 animate-ping" />
+                  <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-400" />
+                </span>
+              </button>
+
               {/* Analytics group */}
               <div>
                 <p className="text-[9px] font-semibold uppercase tracking-widest px-1 mb-1" style={{ color: '#7c3aed' }}>تحليلات</p>
@@ -1876,6 +1893,7 @@ const handleSaveSettings = async () => {
             <TabsTrigger value="messages">الرسائل</TabsTrigger>
             <TabsTrigger value="settings">الإعدادات</TabsTrigger>
             <TabsTrigger value="danger">الخطرة</TabsTrigger>
+            <TabsTrigger value="live">Live</TabsTrigger>
           </TabsList>
         ) : (
           /* ── Place Admin: scrollable tab bar ── */
@@ -1950,6 +1968,11 @@ const handleSaveSettings = async () => {
         {/* ── Command Center Tab ── */}
         <TabsContent value="command-center" className="space-y-4">
           <CommandCenter />
+        </TabsContent>
+
+        {/* ── Live Places Hub Tab ── */}
+        <TabsContent value="live" className="space-y-4">
+          <LivePlacesHub />
         </TabsContent>
 
         <TabsContent value="stats" className="space-y-4">
