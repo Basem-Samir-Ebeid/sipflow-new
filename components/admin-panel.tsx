@@ -1541,117 +1541,260 @@ const handleSaveSettings = async () => {
     } catch { setAdminError('حدث خطأ') } finally { setIsSavingAdmin(false) }
   }
 
+  const handleTabChange = (v: string) => {
+    setActiveAdminTab(v)
+    if (v === 'stats' && isDevAdmin) fetchPlaces().then(list => { if (list.length > 0) setStatsPlaceId(prev => { const chosen = prev || list[0].id; fetchStatsForPlace(chosen); return chosen }) })
+    if (v === 'staff') fetchStaffUsers()
+    if (v === 'inventory') { fetchInventory(); if (isDevAdmin) fetchPlaces().then(list => { if (list.length > 0) setInventoryDevPlaceId(prev => prev || list[0].id) }) }
+    if (v === 'places') fetchPlaces().then(list => { const m: Record<string, boolean> = {}; list.forEach((p: Place) => { m[p.id] = p.order_tracking_enabled !== false }); setOrderTrackingMap(m) })
+    if (v === 'drinks' && isDevAdmin) fetchPlaces().then(list => { if (list.length > 0) setDevDrinkPlaceId(prev => prev || list[0].id) })
+    if (v === 'messages' && isDevAdmin) {
+      fetchPlaces().then(list => { if (list.length > 0) setMsgDevPlaceIds(prev => prev.length > 0 ? prev : list.map((p: Place) => p.id)) })
+      if (devNotifsUnread > 0) {
+        fetch('/api/dev-notifications', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'mark_read' }) }).then(() => fetchDevNotifs())
+      }
+    }
+    if (v === 'users' && isDevAdmin) fetchPlaces()
+    if (v === 'staff' && isDevAdmin) fetchPlaces()
+    if (v === 'danger' && isDevAdmin) fetchPlaces().then(list => { if (list.length > 0) setResetPlaceId(prev => prev || list[0].id) })
+    if (v === 'clients' && isDevAdmin) fetchClients()
+    if (v === 'tables' && !isDevAdmin) { fetchPlaceTableCount(); fetchInventory() }
+    if (v === 'settings' && !isDevAdmin && placeId) { fetchClosedStatus() }
+    if (v === 'settings' && !isDevAdmin && placeId) { fetchPlaces().then(list => { const p = list.find((pl: Place) => pl.id === placeId); if (p) { setReservationsEnabledMap(prev => ({ ...prev, [placeId]: !!p.reservations_enabled })); setOrderTrackingMap(prev => ({ ...prev, [placeId]: p.order_tracking_enabled !== false })) } }) }
+    if (v === 'settings' && isDevAdmin) { fetchGlobalBanner(); fetchPlaces().then(list => { const m: Record<string, boolean> = {}; list.forEach((p: Place) => { m[p.id] = p.order_tracking_enabled !== false }); setOrderTrackingMap(m) }) }
+    if (v === 'cashier') { if (isDevAdmin) { fetchPlaces().then(list => { if (list.length > 0) setCashierPlaceId(prev => { const chosen = prev || list[0].id; fetchCashierOrders(chosen); return chosen }) }); fetchCashierUsers() } else if (placeId) { setCashierPlaceId(placeId); setCashierUserPlaceId(placeId); setTableNewPlaceId(placeId); setTablesPlaceId(placeId); setFeeSettingsPlaceId(placeId); fetchCashierOrders(placeId); fetchCashierUsers(placeId); fetchTableUsers(placeId); fetchPlaces().then(list => { const p = list.find((pl: Place) => pl.id === placeId); if (p) { setFeeServiceCharge(p.service_charge != null ? String(p.service_charge) : '0'); setFeeTaxRate(p.tax_rate != null ? String(p.tax_rate) : '0') } }) } }
+    if (v === 'reservations') { if (!isDevAdmin && placeId) { setReservationsPlaceId(placeId); fetchReservations(placeId) } fetchPlaces().then(list => { if (list.length > 0) { const pid = isDevAdmin ? (reservationsPlaceId || list[0].id) : (placeId || list[0].id); if (isDevAdmin) { setReservationsPlaceId(pid); fetchReservations(pid) } const p = list.find((pl: Place) => pl.id === pid); if (p) setReservationsEnabledMap(prev => ({ ...prev, [pid]: !!p.reservations_enabled })) } }) }
+    if (v === 'analytics') {
+      if (isDevAdmin) { fetchAnalytics({ global: true }) }
+      else if (placeId) { setAnalyticsPlaceId(placeId); fetchAnalytics({ placeId }) }
+    }
+    if (v === 'count' && isDevAdmin) fetchPlaces().then(list => { if (list.length > 0) setCountPlaceId(prev => { const chosen = prev || list[0].id; fetchCountForPlace(chosen); return chosen }) })
+  }
+
   return (
     <div className="space-y-4">
 
       {/* ── Dev Admin Premium Header ── */}
       {isDevAdmin ? (
-        <div className="relative rounded-2xl overflow-hidden" style={{
-          background: 'linear-gradient(135deg, #06000e 0%, #0e001a 40%, #180030 75%, #1c003a 100%)',
-          boxShadow: '0 0 0 1px rgba(147,51,234,0.3), 0 0 40px rgba(147,51,234,0.07), inset 0 1px 0 rgba(255,255,255,0.05)'
-        }}>
-          {/* Animated top-border sweep */}
-          <div className="pointer-events-none absolute inset-x-0 top-0 h-px overflow-hidden">
-            <div className="h-full w-[200%]" style={{ background: 'linear-gradient(90deg, transparent 0%, rgba(147,51,234,0.8) 15%, rgba(99,102,241,1) 25%, rgba(147,51,234,0.8) 35%, transparent 50%, transparent 100%)', animation: 'sweep 3s linear infinite' }} />
-          </div>
-          <style>{`@keyframes sweep { 0% { transform: translateX(-50%); } 100% { transform: translateX(0%); } }`}</style>
+        <div className="space-y-3">
+          {/* ── Main Identity Card ── */}
+          <div className="relative rounded-2xl overflow-hidden" style={{
+            background: 'linear-gradient(140deg, #04000d 0%, #0a0020 35%, #120038 65%, #0d001f 100%)',
+            boxShadow: '0 0 0 1px rgba(139,92,246,0.35), 0 8px 40px rgba(109,40,217,0.15), inset 0 1px 0 rgba(255,255,255,0.04)'
+          }}>
+            {/* Animated sweep border */}
+            <div className="pointer-events-none absolute inset-x-0 top-0 h-[2px] overflow-hidden">
+              <div className="h-full w-[200%]" style={{ background: 'linear-gradient(90deg, transparent 0%, rgba(139,92,246,0) 10%, rgba(167,139,250,0.9) 25%, rgba(99,102,241,1) 35%, rgba(167,139,250,0.9) 45%, rgba(139,92,246,0) 60%, transparent 100%)', animation: 'sweep 2.5s linear infinite' }} />
+            </div>
+            <style>{`@keyframes sweep { 0%{transform:translateX(-50%)} 100%{transform:translateX(0%)} } @keyframes devpulse { 0%,100%{opacity:0.6;transform:scale(1)} 50%{opacity:1;transform:scale(1.08)} }`}</style>
 
-          {/* Glow orbs */}
-          <div className="pointer-events-none absolute -top-12 -right-12 h-56 w-56 rounded-full opacity-20"
-            style={{ background: 'radial-gradient(circle, #7c3aed, transparent 70%)', filter: 'blur(24px)' }} />
-          <div className="pointer-events-none absolute -bottom-8 -left-8 h-44 w-44 rounded-full"
-            style={{ background: 'radial-gradient(circle, #4f46e5, transparent 70%)', filter: 'blur(20px)', opacity: 0.12 }} />
-          {/* Grid pattern overlay */}
-          <div className="pointer-events-none absolute inset-0 opacity-[0.03]"
-            style={{ backgroundImage: 'linear-gradient(rgba(255,255,255,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.5) 1px, transparent 1px)', backgroundSize: '24px 24px' }} />
+            {/* Glow orbs */}
+            <div className="pointer-events-none absolute -top-16 -right-16 h-64 w-64 rounded-full" style={{ background: 'radial-gradient(circle, rgba(139,92,246,0.18), transparent 70%)', filter: 'blur(28px)' }} />
+            <div className="pointer-events-none absolute -bottom-10 -left-10 h-48 w-48 rounded-full" style={{ background: 'radial-gradient(circle, rgba(79,70,229,0.14), transparent 70%)', filter: 'blur(22px)' }} />
+            {/* Circuit grid */}
+            <div className="pointer-events-none absolute inset-0" style={{ backgroundImage: 'linear-gradient(rgba(139,92,246,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(139,92,246,0.04) 1px, transparent 1px)', backgroundSize: '28px 28px' }} />
 
-          <div className="relative p-5 space-y-4">
-            {/* Top row */}
-            <div className="flex items-start justify-between gap-3">
-              <div className="flex items-center gap-3">
-                <div className="relative flex h-12 w-12 shrink-0 items-center justify-center rounded-xl text-2xl"
-                  style={{ background: 'linear-gradient(135deg, rgba(147,51,234,0.25), rgba(99,102,241,0.15))', border: '1px solid rgba(147,51,234,0.4)', boxShadow: '0 0 16px rgba(147,51,234,0.2)' }}>
-                  ⚡
-                  <span className="absolute -bottom-1 -right-1 h-3 w-3 rounded-full border-2 border-background bg-emerald-400 animate-pulse" />
+            <div className="relative p-5 space-y-4">
+              {/* ── Row 1: Identity ── */}
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-3.5">
+                  {/* Avatar */}
+                  <div className="relative flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl"
+                    style={{ background: 'linear-gradient(135deg, rgba(139,92,246,0.3), rgba(79,70,229,0.2))', border: '1.5px solid rgba(139,92,246,0.5)', boxShadow: '0 0 20px rgba(139,92,246,0.3)' }}>
+                    <ShieldCheck className="h-7 w-7" style={{ color: '#c4b5fd' }} />
+                    <span className="absolute -bottom-1.5 -right-1.5 h-4 w-4 rounded-full border-2" style={{ background: '#10b981', borderColor: '#04000d', boxShadow: '0 0 8px rgba(16,185,129,0.7)' }} />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2 mb-0.5">
+                      <h1 className="text-lg font-black tracking-tight text-white" style={{ textShadow: '0 0 24px rgba(167,139,250,0.6)' }}>Developer Admin</h1>
+                    </div>
+                    <p className="text-[11px] font-mono" style={{ color: '#7c6e9e' }}>root@sipflow · <span style={{ color: '#a78bfa' }}>full access</span></p>
+                  </div>
                 </div>
-                <div>
-                  <h1 className="text-lg font-bold tracking-wide text-white" style={{ textShadow: '0 0 20px rgba(147,51,234,0.5)' }}>Dev Control Center</h1>
-                  <p className="mt-0.5 text-[11px]" style={{ color: '#a78bfa' }}>SîpFlõw · الوصول الكامل للنظام</p>
+                {/* Right side: badge + clock */}
+                <div className="flex shrink-0 flex-col items-end gap-1.5">
+                  <div className="flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[10px] font-black tracking-[0.2em] uppercase"
+                    style={{ background: 'linear-gradient(135deg, rgba(139,92,246,0.25), rgba(79,70,229,0.2))', border: '1px solid rgba(139,92,246,0.5)', color: '#c4b5fd', boxShadow: '0 0 12px rgba(139,92,246,0.25)' }}>
+                    <span className="h-1.5 w-1.5 rounded-full bg-violet-400 animate-pulse" />MASTER
+                  </div>
+                  <p className="font-mono text-base font-black tabular-nums" style={{ color: '#e9d5ff', letterSpacing: '0.06em', textShadow: '0 0 14px rgba(167,139,250,0.5)' }}>{currentTime}</p>
+                  <p className="text-[10px] font-mono" style={{ color: '#4c3d72' }}>{currentDate}</p>
                 </div>
               </div>
-              {/* Live clock */}
-              <div className="flex shrink-0 flex-col items-end gap-1.5">
-                <span className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-bold tracking-widest"
-                  style={{ background: 'rgba(147,51,234,0.2)', border: '1px solid rgba(147,51,234,0.5)', color: '#c4b5fd' }}>
-                  <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-violet-400" />
-                  MASTER
-                </span>
-                <div className="text-right">
-                  <p className="font-mono text-sm font-bold tabular-nums" style={{ color: '#e2d9f3', letterSpacing: '0.05em', textShadow: '0 0 10px rgba(167,139,250,0.4)' }}>{currentTime}</p>
-                  <p className="text-[10px]" style={{ color: '#6b5e8a' }}>{currentDate}</p>
-                </div>
-              </div>
-            </div>
 
-            {/* Stats row — 4 cards */}
-            <div className="grid grid-cols-4 gap-2">
-              {[
-                { label: 'الأماكن',   value: places.length,                           icon: '🏠', color: '#c4b5fd', bg: 'rgba(147,51,234,0.12)', border: 'rgba(147,51,234,0.28)' },
-                { label: 'الموظفون', value: staffUsers.length,                        icon: '👥', color: '#6ee7b7', bg: 'rgba(16,185,129,0.08)',  border: 'rgba(16,185,129,0.22)' },
-                { label: 'العملاء',  value: clients.length,                           icon: '⭐', color: '#fcd34d', bg: 'rgba(245,158,11,0.08)',  border: 'rgba(245,158,11,0.22)' },
-                { label: 'الأصناف',  value: allDrinksStats?.total ?? '—',             icon: '☕', color: '#f9a8d4', bg: 'rgba(236,72,153,0.08)',  border: 'rgba(236,72,153,0.22)' },
-              ].map(s => (
-                <div key={s.label} className="rounded-xl px-1.5 py-2.5 text-center transition-transform hover:scale-105"
-                  style={{ background: s.bg, border: `1px solid ${s.border}` }}>
-                  <p className="text-base">{s.icon}</p>
-                  <p className="text-sm font-bold text-white tabular-nums">{s.value}</p>
-                  <p className="mt-0.5 text-[10px]" style={{ color: s.color }}>{s.label}</p>
-                </div>
-              ))}
-            </div>
-
-            {/* Quick Actions strip */}
-            <div className="flex items-center gap-1.5 overflow-x-auto pb-0.5" style={{ scrollbarWidth: 'none' }}>
-              <span className="shrink-0 text-[10px] font-semibold uppercase tracking-widest" style={{ color: '#6b5e8a' }}>وصول سريع:</span>
-              {[
-                { label: '📊 إحصائيات', tab: 'stats' },
-                { label: '🏠 الأماكن',  tab: 'places' },
-                { label: '📣 رسائل',    tab: 'messages' },
-                { label: '⚙️ إعدادات',  tab: 'settings' },
-                { label: '☕ أصناف',    tab: 'drinks' },
-                { label: '🗑️ الخطرة',  tab: 'danger' },
-              ].map(q => (
-                <button key={q.tab}
-                  onClick={() => setActiveAdminTab(q.tab)}
-                  className="shrink-0 rounded-lg px-2.5 py-1 text-[11px] font-medium transition-all hover:scale-105"
-                  style={{
-                    background: activeAdminTab === q.tab ? 'rgba(147,51,234,0.35)' : 'rgba(255,255,255,0.05)',
-                    border: `1px solid ${activeAdminTab === q.tab ? 'rgba(147,51,234,0.6)' : 'rgba(255,255,255,0.08)'}`,
-                    color: activeAdminTab === q.tab ? '#e2d9f3' : '#7c6e99',
-                    boxShadow: activeAdminTab === q.tab ? '0 0 8px rgba(147,51,234,0.3)' : 'none'
-                  }}>
-                  {q.label}
-                </button>
-              ))}
-            </div>
-
-            {/* System status bar */}
-            <div className="flex items-center justify-between rounded-xl px-3 py-2"
-              style={{ background: 'rgba(0,0,0,0.35)', border: '1px solid rgba(255,255,255,0.05)' }}>
-              <div className="flex items-center gap-2">
-                <span className="relative flex h-2 w-2">
-                  <span className="absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75 animate-ping" />
-                  <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
-                </span>
-                <span className="text-[11px] font-medium text-emerald-400">النظام يعمل</span>
-              </div>
-              <div className="flex items-center gap-2">
-                {['PostgreSQL', 'API', 'Auth'].map(s => (
-                  <span key={s} className="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[10px]"
-                    style={{ background: 'rgba(16,185,129,0.08)', border: '1px solid rgba(16,185,129,0.2)', color: '#6ee7b7' }}>
-                    <span className="h-1 w-1 rounded-full bg-emerald-400" />{s}
-                  </span>
+              {/* ── Row 2: KPI Cards ── */}
+              <div className="grid grid-cols-4 gap-2">
+                {[
+                  { label: 'الأماكن',   value: places.length,               icon: '🏠', color: '#c4b5fd', bg: 'rgba(139,92,246,0.1)',  border: 'rgba(139,92,246,0.25)', glow: 'rgba(139,92,246,0.15)' },
+                  { label: 'الموظفون', value: staffUsers.length,             icon: '👥', color: '#6ee7b7', bg: 'rgba(16,185,129,0.08)', border: 'rgba(16,185,129,0.22)', glow: 'rgba(16,185,129,0.1)' },
+                  { label: 'العملاء',  value: clients.length,               icon: '⭐', color: '#fcd34d', bg: 'rgba(245,158,11,0.08)', border: 'rgba(245,158,11,0.22)', glow: 'rgba(245,158,11,0.1)' },
+                  { label: 'الأصناف',  value: allDrinksStats?.total ?? '—', icon: '☕', color: '#f9a8d4', bg: 'rgba(236,72,153,0.08)', border: 'rgba(236,72,153,0.22)', glow: 'rgba(236,72,153,0.1)' },
+                ].map(s => (
+                  <div key={s.label} className="rounded-xl p-2.5 text-center transition-all duration-200 hover:scale-105 cursor-default"
+                    style={{ background: s.bg, border: `1px solid ${s.border}`, boxShadow: `0 0 12px ${s.glow}` }}>
+                    <p className="text-lg leading-none mb-1">{s.icon}</p>
+                    <p className="text-lg font-black text-white tabular-nums leading-none">{s.value}</p>
+                    <p className="mt-1 text-[9px] font-semibold uppercase tracking-wide" style={{ color: s.color }}>{s.label}</p>
+                  </div>
                 ))}
+              </div>
+
+              {/* ── Row 3: System health ── */}
+              <div className="flex items-center justify-between rounded-xl px-4 py-2.5"
+                style={{ background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.05)' }}>
+                <div className="flex items-center gap-2">
+                  <span className="relative flex h-2.5 w-2.5">
+                    <span className="absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-60 animate-ping" />
+                    <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-emerald-400" />
+                  </span>
+                  <span className="text-xs font-bold text-emerald-400">All Systems Operational</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  {[{ label: 'DB', color: '#6ee7b7' }, { label: 'API', color: '#6ee7b7' }, { label: 'Auth', color: '#6ee7b7' }, { label: 'CDN', color: '#6ee7b7' }].map(s => (
+                    <span key={s.label} className="inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-[10px] font-bold"
+                      style={{ background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.22)', color: s.color }}>
+                      <span className="h-1 w-1 rounded-full bg-emerald-400" />{s.label}
+                    </span>
+                  ))}
+                </div>
+              </div>
+
+              {/* ── Row 4: Developer signature ── */}
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-mono" style={{ color: '#3d2d60' }}>Basem Samir Ebeid · SîpFlõw v2.0</span>
+                <span className="text-[10px] font-mono" style={{ color: '#3d2d60' }}>ENV: production · region: auto</span>
+              </div>
+            </div>
+          </div>
+
+          {/* ── Nav Grid (replaces quick-access strip) ── */}
+          <div className="rounded-xl p-3 space-y-2" style={{ background: 'rgba(139,92,246,0.04)', border: '1px solid rgba(139,92,246,0.12)' }}>
+            <p className="text-[9px] font-bold uppercase tracking-[0.2em] px-1" style={{ color: '#5b4a8a' }}>Navigation</p>
+            {/* Group: Core */}
+            <div className="space-y-1.5">
+              {/* Command center — full width highlight */}
+              <button onClick={() => handleTabChange('command-center')}
+                className="w-full flex items-center gap-2.5 rounded-xl px-3.5 py-2.5 transition-all duration-150 hover:scale-[1.01] active:scale-[0.99]"
+                style={{
+                  background: activeAdminTab === 'command-center' ? 'linear-gradient(135deg, rgba(139,92,246,0.45), rgba(79,70,229,0.35))' : 'rgba(139,92,246,0.08)',
+                  border: `1px solid ${activeAdminTab === 'command-center' ? 'rgba(139,92,246,0.7)' : 'rgba(139,92,246,0.15)'}`,
+                  boxShadow: activeAdminTab === 'command-center' ? '0 0 16px rgba(139,92,246,0.25)' : 'none'
+                }}>
+                <Activity className="h-4 w-4" style={{ color: activeAdminTab === 'command-center' ? '#e9d5ff' : '#7c6e9e' }} />
+                <span className="text-xs font-bold" style={{ color: activeAdminTab === 'command-center' ? '#e9d5ff' : '#7c6e9e' }}>مركز التحكم الرئيسي</span>
+                <span className="ml-auto flex h-2 w-2">
+                  <span className="absolute inline-flex h-2 w-2 rounded-full bg-emerald-400 opacity-60 animate-ping" />
+                  <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-400" />
+                </span>
+              </button>
+
+              {/* Analytics group */}
+              <div>
+                <p className="text-[9px] font-semibold uppercase tracking-widest px-1 mb-1" style={{ color: '#7c3aed' }}>تحليلات</p>
+                <div className="grid grid-cols-3 gap-1.5">
+                  {[
+                    { tab: 'stats',     icon: <BarChart3 className="h-3.5 w-3.5" />,   label: 'الإحصائيات', ac: '#7c3aed' },
+                    { tab: 'analytics', icon: <TrendingUp className="h-3.5 w-3.5" />,  label: 'التقارير',    ac: '#7c3aed' },
+                    { tab: 'count',     icon: <CheckCircle2 className="h-3.5 w-3.5" />,label: 'المُسلَّم',   ac: '#7c3aed' },
+                  ].map(item => (
+                    <button key={item.tab} onClick={() => handleTabChange(item.tab)}
+                      className="flex flex-col items-center gap-1 rounded-xl py-2.5 px-1 transition-all duration-150 hover:scale-105 active:scale-95"
+                      style={{
+                        background: activeAdminTab === item.tab ? `rgba(124,58,237,0.3)` : 'rgba(255,255,255,0.03)',
+                        border: `1px solid ${activeAdminTab === item.tab ? 'rgba(124,58,237,0.6)' : 'rgba(255,255,255,0.06)'}`,
+                        boxShadow: activeAdminTab === item.tab ? '0 0 10px rgba(124,58,237,0.2)' : 'none',
+                        color: activeAdminTab === item.tab ? '#ddd6fe' : '#5b4a8a'
+                      }}>
+                      {item.icon}
+                      <span className="text-[10px] font-semibold">{item.label}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Content group */}
+              <div>
+                <p className="text-[9px] font-semibold uppercase tracking-widest px-1 mb-1" style={{ color: '#b45309' }}>المحتوى</p>
+                <div className="grid grid-cols-4 gap-1.5">
+                  {[
+                    { tab: 'drinks',       icon: <Coffee className="h-3.5 w-3.5" />,      label: 'الأصناف',   ac: '#d97706' },
+                    { tab: 'inventory',    icon: <Package className="h-3.5 w-3.5" />,     label: 'المخزون',   ac: '#d97706' },
+                    { tab: 'cashier',      icon: <Banknote className="h-3.5 w-3.5" />,    label: 'الكاشير',   ac: '#d97706' },
+                    { tab: 'reservations', icon: <CalendarDays className="h-3.5 w-3.5" />,label: 'الحجوزات',  ac: '#d97706' },
+                  ].map(item => (
+                    <button key={item.tab} onClick={() => handleTabChange(item.tab)}
+                      className="flex flex-col items-center gap-1 rounded-xl py-2.5 px-1 transition-all duration-150 hover:scale-105 active:scale-95"
+                      style={{
+                        background: activeAdminTab === item.tab ? 'rgba(217,119,6,0.25)' : 'rgba(255,255,255,0.03)',
+                        border: `1px solid ${activeAdminTab === item.tab ? 'rgba(217,119,6,0.55)' : 'rgba(255,255,255,0.06)'}`,
+                        boxShadow: activeAdminTab === item.tab ? '0 0 10px rgba(217,119,6,0.18)' : 'none',
+                        color: activeAdminTab === item.tab ? '#fde68a' : '#5b4a8a'
+                      }}>
+                      {item.icon}
+                      <span className="text-[10px] font-semibold">{item.label}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* People group */}
+              <div>
+                <p className="text-[9px] font-semibold uppercase tracking-widest px-1 mb-1" style={{ color: '#047857' }}>الأشخاص</p>
+                <div className="grid grid-cols-4 gap-1.5">
+                  {[
+                    { tab: 'place-admins', icon: <UserCog className="h-3.5 w-3.5" />,   label: 'الأدمنز',   ac: '#059669' },
+                    { tab: 'staff',        icon: <Users className="h-3.5 w-3.5" />,      label: 'Staff',     ac: '#059669' },
+                    { tab: 'places',       icon: <Link2 className="h-3.5 w-3.5" />,      label: 'الأماكن',  ac: '#059669' },
+                    { tab: 'clients',      icon: <UserPlus className="h-3.5 w-3.5" />,   label: 'العملاء',  ac: '#059669' },
+                  ].map(item => (
+                    <button key={item.tab} onClick={() => handleTabChange(item.tab)}
+                      className="flex flex-col items-center gap-1 rounded-xl py-2.5 px-1 transition-all duration-150 hover:scale-105 active:scale-95"
+                      style={{
+                        background: activeAdminTab === item.tab ? 'rgba(5,150,105,0.25)' : 'rgba(255,255,255,0.03)',
+                        border: `1px solid ${activeAdminTab === item.tab ? 'rgba(5,150,105,0.55)' : 'rgba(255,255,255,0.06)'}`,
+                        boxShadow: activeAdminTab === item.tab ? '0 0 10px rgba(5,150,105,0.18)' : 'none',
+                        color: activeAdminTab === item.tab ? '#6ee7b7' : '#5b4a8a'
+                      }}>
+                      {item.icon}
+                      <span className="text-[10px] font-semibold">{item.label}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* System group */}
+              <div>
+                <p className="text-[9px] font-semibold uppercase tracking-widest px-1 mb-1" style={{ color: '#0369a1' }}>النظام</p>
+                <div className="grid grid-cols-3 gap-1.5">
+                  {[
+                    { tab: 'messages', icon: <MessageSquare className="h-3.5 w-3.5" />, label: 'الرسائل',   ac: '#0284c7', badge: devNotifsUnread > 0 ? devNotifsUnread : 0 },
+                    { tab: 'settings', icon: <Settings2 className="h-3.5 w-3.5" />,     label: 'الإعدادات', ac: '#0284c7', badge: 0 },
+                    { tab: 'danger',   icon: <Trash2 className="h-3.5 w-3.5" />,        label: 'الخطرة',    ac: '#dc2626', badge: 0 },
+                  ].map(item => (
+                    <button key={item.tab} onClick={() => handleTabChange(item.tab)}
+                      className="relative flex flex-col items-center gap-1 rounded-xl py-2.5 px-1 transition-all duration-150 hover:scale-105 active:scale-95"
+                      style={{
+                        background: activeAdminTab === item.tab
+                          ? item.tab === 'danger' ? 'rgba(220,38,38,0.25)' : 'rgba(2,132,199,0.25)'
+                          : 'rgba(255,255,255,0.03)',
+                        border: `1px solid ${activeAdminTab === item.tab
+                          ? item.tab === 'danger' ? 'rgba(220,38,38,0.55)' : 'rgba(2,132,199,0.55)'
+                          : 'rgba(255,255,255,0.06)'}`,
+                        boxShadow: activeAdminTab === item.tab ? `0 0 10px ${item.tab === 'danger' ? 'rgba(220,38,38,0.18)' : 'rgba(2,132,199,0.18)'}` : 'none',
+                        color: activeAdminTab === item.tab
+                          ? item.tab === 'danger' ? '#fca5a5' : '#7dd3fc'
+                          : '#5b4a8a'
+                      }}>
+                      {item.icon}
+                      <span className="text-[10px] font-semibold">{item.label}</span>
+                      {item.badge > 0 && (
+                        <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-amber-500 text-[8px] font-black text-black animate-bounce">
+                          {item.badge > 9 ? '9+' : item.badge}
+                        </span>
+                      )}
+                    </button>
+                  ))}
+                </div>
               </div>
             </div>
           </div>
@@ -1714,127 +1857,25 @@ const handleSaveSettings = async () => {
         </div>
       )}
 
-      <Tabs value={activeAdminTab} onValueChange={(v) => {
-        setActiveAdminTab(v)
-        if (v === 'stats' && isDevAdmin) fetchPlaces().then(list => { if (list.length > 0) setStatsPlaceId(prev => { const chosen = prev || list[0].id; fetchStatsForPlace(chosen); return chosen }) })
-        if (v === 'staff') fetchStaffUsers()
-        if (v === 'inventory') { fetchInventory(); if (isDevAdmin) fetchPlaces().then(list => { if (list.length > 0) setInventoryDevPlaceId(prev => prev || list[0].id) }) }
-        if (v === 'places') fetchPlaces().then(list => { const m: Record<string, boolean> = {}; list.forEach((p: Place) => { m[p.id] = p.order_tracking_enabled !== false }); setOrderTrackingMap(m) })
-        if (v === 'drinks' && isDevAdmin) fetchPlaces().then(list => { if (list.length > 0) setDevDrinkPlaceId(prev => prev || list[0].id) })
-        if (v === 'messages' && isDevAdmin) {
-          fetchPlaces().then(list => { if (list.length > 0) setMsgDevPlaceIds(prev => prev.length > 0 ? prev : list.map((p: Place) => p.id)) })
-          if (devNotifsUnread > 0) {
-            fetch('/api/dev-notifications', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'mark_read' }) }).then(() => fetchDevNotifs())
-          }
-        }
-        if (v === 'users' && isDevAdmin) fetchPlaces()
-        if (v === 'staff' && isDevAdmin) fetchPlaces()
-        if (v === 'danger' && isDevAdmin) fetchPlaces().then(list => { if (list.length > 0) setResetPlaceId(prev => prev || list[0].id) })
-        if (v === 'clients' && isDevAdmin) fetchClients()
-        if (v === 'tables' && !isDevAdmin) { fetchPlaceTableCount(); fetchInventory() }
-        if (v === 'settings' && !isDevAdmin && placeId) { fetchClosedStatus() }
-        if (v === 'settings' && !isDevAdmin && placeId) { fetchPlaces().then(list => { const p = list.find((pl: Place) => pl.id === placeId); if (p) { setReservationsEnabledMap(prev => ({ ...prev, [placeId]: !!p.reservations_enabled })); setOrderTrackingMap(prev => ({ ...prev, [placeId]: p.order_tracking_enabled !== false })) } }) }
-        if (v === 'settings' && isDevAdmin) { fetchGlobalBanner(); fetchPlaces().then(list => { const m: Record<string, boolean> = {}; list.forEach((p: Place) => { m[p.id] = p.order_tracking_enabled !== false }); setOrderTrackingMap(m) }) }
-        if (v === 'cashier') { if (isDevAdmin) { fetchPlaces().then(list => { if (list.length > 0) setCashierPlaceId(prev => { const chosen = prev || list[0].id; fetchCashierOrders(chosen); return chosen }) }); fetchCashierUsers() } else if (placeId) { setCashierPlaceId(placeId); setCashierUserPlaceId(placeId); setTableNewPlaceId(placeId); setTablesPlaceId(placeId); setFeeSettingsPlaceId(placeId); fetchCashierOrders(placeId); fetchCashierUsers(placeId); fetchTableUsers(placeId); fetchPlaces().then(list => { const p = list.find((pl: Place) => pl.id === placeId); if (p) { setFeeServiceCharge(p.service_charge != null ? String(p.service_charge) : '0'); setFeeTaxRate(p.tax_rate != null ? String(p.tax_rate) : '0') } }) } }
-        if (v === 'reservations') { if (!isDevAdmin && placeId) { setReservationsPlaceId(placeId); fetchReservations(placeId) } fetchPlaces().then(list => { if (list.length > 0) { const pid = isDevAdmin ? (reservationsPlaceId || list[0].id) : (placeId || list[0].id); if (isDevAdmin) { setReservationsPlaceId(pid); fetchReservations(pid) } const p = list.find((pl: Place) => pl.id === pid); if (p) setReservationsEnabledMap(prev => ({ ...prev, [pid]: !!p.reservations_enabled })) } }) }
-        if (v === 'analytics') {
-          if (isDevAdmin) {
-            fetchAnalytics({ global: true })
-          } else if (placeId) {
-            setAnalyticsPlaceId(placeId)
-            fetchAnalytics({ placeId })
-          }
-        }
-        if (v === 'count' && isDevAdmin) fetchPlaces().then(list => { if (list.length > 0) setCountPlaceId(prev => { const chosen = prev || list[0].id; fetchCountForPlace(chosen); return chosen }) })
-      }} className="w-full">
-        {/* ── Dev Admin: horizontal scroll tab bar ── */}
+      <Tabs value={activeAdminTab} onValueChange={handleTabChange} className="w-full">
+        {/* ── Dev Admin: hidden TabsList (nav handled by grid above) ── */}
         {isDevAdmin ? (
-          <TabsList className="mb-3 flex w-full overflow-x-auto gap-0.5 rounded-xl p-1.5 h-auto [&>*]:shrink-0 [&>*]:whitespace-nowrap" style={{ scrollbarWidth: 'none', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}>
-            {/* ── Command Center ── */}
-            <TabsTrigger value="command-center"
-              className="relative flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-medium data-[state=active]:text-white data-[state=active]:shadow-lg"
-              style={{ background: activeAdminTab === 'command-center' ? 'linear-gradient(135deg, #7c3aed, #4f46e5)' : undefined }}>
-              <Activity className="h-3.5 w-3.5" /><span>مركز التحكم</span>
-              <span className="absolute -top-0.5 -left-0.5 flex h-2 w-2">
-                <span className="absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75 animate-ping" />
-                <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-400" />
-              </span>
-            </TabsTrigger>
-            <div className="mx-1.5 h-6 w-px self-center rounded-full" style={{ background: 'rgba(255,255,255,0.08)' }} />
-            {/* ── Group 1: Analytics (violet) ── */}
-            <span className="shrink-0 self-center px-1 text-[9px] font-bold uppercase tracking-widest" style={{ color: '#7c3aed' }}>تحليلات</span>
-            <TabsTrigger value="stats"
-              className="flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-medium data-[state=active]:bg-violet-600 data-[state=active]:text-white data-[state=active]:shadow-lg">
-              <BarChart3 className="h-3.5 w-3.5" /><span>الإحصائيات</span>
-            </TabsTrigger>
-            <TabsTrigger value="analytics"
-              className="flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-medium data-[state=active]:bg-violet-600 data-[state=active]:text-white data-[state=active]:shadow-lg">
-              <TrendingUp className="h-3.5 w-3.5" /><span>التقارير</span>
-            </TabsTrigger>
-            <TabsTrigger value="count"
-              className="flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-medium data-[state=active]:bg-violet-600 data-[state=active]:text-white data-[state=active]:shadow-lg">
-              <CheckCircle2 className="h-3.5 w-3.5" /><span>حصر المسلّم</span>
-            </TabsTrigger>
-            {/* styled separators will be applied via group class — simple divider */}
-            <div className="mx-1.5 h-6 w-px self-center rounded-full" style={{ background: 'rgba(255,255,255,0.08)' }} />
-
-            {/* ── Group 2: Content (amber) ── */}
-            <span className="shrink-0 self-center px-1 text-[9px] font-bold uppercase tracking-widest" style={{ color: '#d97706' }}>المحتوى</span>
-            <TabsTrigger value="drinks"
-              className="flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-medium data-[state=active]:bg-amber-600 data-[state=active]:text-white data-[state=active]:shadow-md">
-              <Coffee className="h-3.5 w-3.5" /><span>الأصناف</span>
-            </TabsTrigger>
-            <TabsTrigger value="inventory"
-              className="flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-medium data-[state=active]:bg-amber-600 data-[state=active]:text-white data-[state=active]:shadow-md">
-              <Package className="h-3.5 w-3.5" /><span>المخزون</span>
-            </TabsTrigger>
-            <TabsTrigger value="cashier"
-              className="flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-medium data-[state=active]:bg-amber-600 data-[state=active]:text-white data-[state=active]:shadow-md">
-              <Banknote className="h-3.5 w-3.5" /><span>الكاشير</span>
-            </TabsTrigger>
-            <TabsTrigger value="reservations"
-              className="flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-medium data-[state=active]:bg-amber-600 data-[state=active]:text-white data-[state=active]:shadow-md">
-              <CalendarDays className="h-3.5 w-3.5" /><span>الحجوزات</span>
-            </TabsTrigger>
-            <div className="mx-1.5 h-6 w-px self-center rounded-full" style={{ background: 'rgba(255,255,255,0.08)' }} />
-
-            {/* ── Group 3: People (emerald) ── */}
-            <span className="shrink-0 self-center px-1 text-[9px] font-bold uppercase tracking-widest" style={{ color: '#059669' }}>الأشخاص</span>
-            <TabsTrigger value="place-admins"
-              className="flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-medium data-[state=active]:bg-emerald-700 data-[state=active]:text-white data-[state=active]:shadow-md">
-              <UserCog className="h-3.5 w-3.5" /><span>أدمنز الأماكن</span>
-            </TabsTrigger>
-            <TabsTrigger value="staff"
-              className="flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-medium data-[state=active]:bg-emerald-700 data-[state=active]:text-white data-[state=active]:shadow-md">
-              <UserCog className="h-3.5 w-3.5" /><span>Staff</span>
-            </TabsTrigger>
-            <TabsTrigger value="places"
-              className="flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-medium data-[state=active]:bg-emerald-700 data-[state=active]:text-white data-[state=active]:shadow-md">
-              <Link2 className="h-3.5 w-3.5" /><span>الأماكن</span>
-            </TabsTrigger>
-            <TabsTrigger value="clients"
-              className="flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-medium data-[state=active]:bg-emerald-700 data-[state=active]:text-white data-[state=active]:shadow-md">
-              <UserPlus className="h-3.5 w-3.5" /><span>العملاء</span>
-            </TabsTrigger>
-            <div className="mx-1.5 h-6 w-px self-center rounded-full" style={{ background: 'rgba(255,255,255,0.08)' }} />
-
-            {/* ── Group 4: System (sky + rose) ── */}
-            <span className="shrink-0 self-center px-1 text-[9px] font-bold uppercase tracking-widest" style={{ color: '#0284c7' }}>النظام</span>
-            <TabsTrigger value="messages" className="relative flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-medium data-[state=active]:bg-sky-700 data-[state=active]:text-white data-[state=active]:shadow-md">
-              <MessageSquare className="h-3.5 w-3.5" />
-              <span>الرسائل</span>
-              {devNotifsUnread > 0 && (
-                <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-amber-500 text-[9px] font-bold text-black animate-bounce">{devNotifsUnread > 9 ? '9+' : devNotifsUnread}</span>
-              )}
-            </TabsTrigger>
-            <TabsTrigger value="settings"
-              className="flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-medium data-[state=active]:bg-sky-700 data-[state=active]:text-white data-[state=active]:shadow-md">
-              <Settings2 className="h-3.5 w-3.5" /><span>الإعدادات</span>
-            </TabsTrigger>
-            <TabsTrigger value="danger"
-              className="flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-medium data-[state=active]:bg-rose-700 data-[state=active]:text-white data-[state=active]:shadow-md">
-              <Trash2 className="h-3.5 w-3.5" /><span>الخطرة</span>
-            </TabsTrigger>
+          <TabsList className="hidden">
+            <TabsTrigger value="command-center">مركز التحكم</TabsTrigger>
+            <TabsTrigger value="stats">الإحصائيات</TabsTrigger>
+            <TabsTrigger value="analytics">التقارير</TabsTrigger>
+            <TabsTrigger value="count">المسلم</TabsTrigger>
+            <TabsTrigger value="drinks">الأصناف</TabsTrigger>
+            <TabsTrigger value="inventory">المخزون</TabsTrigger>
+            <TabsTrigger value="cashier">الكاشير</TabsTrigger>
+            <TabsTrigger value="reservations">الحجوزات</TabsTrigger>
+            <TabsTrigger value="place-admins">أدمنز الأماكن</TabsTrigger>
+            <TabsTrigger value="staff">Staff</TabsTrigger>
+            <TabsTrigger value="places">الأماكن</TabsTrigger>
+            <TabsTrigger value="clients">العملاء</TabsTrigger>
+            <TabsTrigger value="messages">الرسائل</TabsTrigger>
+            <TabsTrigger value="settings">الإعدادات</TabsTrigger>
+            <TabsTrigger value="danger">الخطرة</TabsTrigger>
           </TabsList>
         ) : (
           /* ── Place Admin: scrollable tab bar ── */
