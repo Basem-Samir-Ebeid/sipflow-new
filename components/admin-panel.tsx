@@ -25,7 +25,7 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Plus, Trash2, Pencil, Upload, RefreshCw, Users, Coffee, Key, BarChart3, TrendingUp, Award, Clock, Send, MessageSquare, Settings2, Hash, UserPlus, UserCog, Minus, Package, Banknote, CheckCircle2, Hourglass, TableProperties, Copy, ExternalLink, Link2, Eye, EyeOff, QrCode, CalendarDays, CalendarCheck, CalendarX, Download, Loader2, Activity, ShieldCheck, ChevronLeft, Radio } from 'lucide-react'
+import { Plus, Trash2, Pencil, Upload, RefreshCw, Users, Coffee, Key, BarChart3, TrendingUp, Award, Clock, Send, MessageSquare, Settings2, Hash, UserPlus, UserCog, Minus, Package, Banknote, CheckCircle2, Hourglass, TableProperties, Copy, ExternalLink, Link2, Eye, EyeOff, QrCode, CalendarDays, CalendarCheck, CalendarX, Download, Loader2, Activity, ShieldCheck, ChevronLeft, Radio, Camera, UserCircle } from 'lucide-react'
 import { Checkbox } from '@/components/ui/checkbox'
 import Image from 'next/image'
 import { CommandCenter } from '@/components/command-center'
@@ -495,6 +495,47 @@ export function AdminPanel({
     const id = setInterval(tick, 1000)
     return () => clearInterval(id)
   }, [])
+
+  // Dev Admin Avatar state
+  const [adminPhotoUrl, setAdminPhotoUrl] = useState<string | null>(null)
+  const [adminPhotoUploading, setAdminPhotoUploading] = useState(false)
+  const [adminPhotoHover, setAdminPhotoHover] = useState(false)
+  const adminPhotoInputRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    fetch('/api/settings?key=dev_admin_photo_url')
+      .then(r => r.json())
+      .then(d => { if (d.value) setAdminPhotoUrl(d.value) })
+      .catch(() => {})
+  }, [])
+
+  const handleAdminPhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setAdminPhotoUploading(true)
+    try {
+      const form = new FormData()
+      form.append('file', file)
+      const res = await fetch('/api/upload', { method: 'POST', body: form })
+      const data = await res.json()
+      if (data.url) {
+        await fetch('/api/settings', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ key: 'dev_admin_photo_url', value: data.url }),
+        })
+        setAdminPhotoUrl(data.url)
+        toast.success('تم رفع الصورة الشخصية بنجاح')
+      } else {
+        toast.error(data.error || 'فشل رفع الصورة')
+      }
+    } catch {
+      toast.error('حدث خطأ أثناء رفع الصورة')
+    } finally {
+      setAdminPhotoUploading(false)
+      if (adminPhotoInputRef.current) adminPhotoInputRef.current.value = ''
+    }
+  }
 
   // Settings state
   const [isSavingSettings, setIsSavingSettings] = useState(false)
@@ -1600,16 +1641,73 @@ const handleSaveSettings = async () => {
               <div className="flex items-center justify-between gap-3">
                 <div className="flex items-center gap-3.5">
                   {/* Avatar */}
-                  <div className="relative flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl"
-                    style={{ background: 'linear-gradient(135deg, rgba(139,92,246,0.3), rgba(79,70,229,0.2))', border: '1.5px solid rgba(139,92,246,0.5)', boxShadow: '0 0 20px rgba(139,92,246,0.3)' }}>
-                    <ShieldCheck className="h-7 w-7" style={{ color: '#c4b5fd' }} />
-                    <span className="absolute -bottom-1.5 -right-1.5 h-4 w-4 rounded-full border-2" style={{ background: '#10b981', borderColor: '#04000d', boxShadow: '0 0 8px rgba(16,185,129,0.7)' }} />
+                  <style>{`
+                    @keyframes spinRing { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+                  `}</style>
+                  <input
+                    ref={adminPhotoInputRef}
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp,image/gif"
+                    className="hidden"
+                    onChange={handleAdminPhotoUpload}
+                  />
+                  <div
+                    className="relative shrink-0 cursor-pointer"
+                    style={{ width: 72, height: 72 }}
+                    onClick={() => !adminPhotoUploading && adminPhotoInputRef.current?.click()}
+                    onMouseEnter={() => setAdminPhotoHover(true)}
+                    onMouseLeave={() => setAdminPhotoHover(false)}
+                  >
+                    {/* Spinning gradient ring */}
+                    <div
+                      className="absolute inset-0 rounded-full"
+                      style={{
+                        padding: 3,
+                        background: 'conic-gradient(from 0deg, #7c3aed, #4f46e5, #818cf8, #c4b5fd, #7c3aed)',
+                        animation: 'spinRing 3s linear infinite',
+                        borderRadius: '50%',
+                      }}
+                    >
+                      <div className="w-full h-full rounded-full" style={{ background: '#04000d' }} />
+                    </div>
+                    {/* Photo or placeholder */}
+                    <div
+                      className="absolute rounded-full overflow-hidden flex items-center justify-center"
+                      style={{ inset: 3, background: 'linear-gradient(135deg, rgba(139,92,246,0.25), rgba(79,70,229,0.18))' }}
+                    >
+                      {adminPhotoUploading ? (
+                        <Loader2 className="h-7 w-7 animate-spin" style={{ color: '#c4b5fd' }} />
+                      ) : adminPhotoUrl ? (
+                        <img src={adminPhotoUrl} alt="Admin" className="w-full h-full object-cover" />
+                      ) : (
+                        <UserCircle className="h-9 w-9" style={{ color: '#a78bfa' }} />
+                      )}
+                      {/* Hover overlay */}
+                      {adminPhotoHover && !adminPhotoUploading && (
+                        <div
+                          className="absolute inset-0 flex flex-col items-center justify-center gap-0.5 rounded-full"
+                          style={{ background: 'rgba(4,0,13,0.65)', backdropFilter: 'blur(2px)' }}
+                        >
+                          <Camera className="h-4 w-4" style={{ color: '#e9d5ff' }} />
+                          <span className="text-[9px] font-bold" style={{ color: '#e9d5ff' }}>تغيير</span>
+                        </div>
+                      )}
+                    </div>
+                    {/* Online dot */}
+                    <span className="absolute bottom-0.5 right-0.5 h-3.5 w-3.5 rounded-full border-2" style={{ background: '#10b981', borderColor: '#04000d', boxShadow: '0 0 8px rgba(16,185,129,0.7)', zIndex: 10 }} />
                   </div>
                   <div>
                     <div className="flex items-center gap-2 mb-0.5">
                       <h1 className="text-lg font-black tracking-tight text-white" style={{ textShadow: '0 0 24px rgba(167,139,250,0.6)' }}>Developer Admin</h1>
                     </div>
                     <p className="text-[11px] font-mono" style={{ color: '#7c6e9e' }}>root@sipflow · <span style={{ color: '#a78bfa' }}>full access</span></p>
+                    <button
+                      onClick={() => !adminPhotoUploading && adminPhotoInputRef.current?.click()}
+                      className="mt-1 text-[10px] font-semibold transition-colors duration-200"
+                      style={{ color: adminPhotoUrl ? '#6d5a9e' : '#a78bfa', background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}
+                    >
+                      {adminPhotoUploading ? 'جارٍ الرفع...' : adminPhotoUrl ? '✎ تغيير الصورة الشخصية' : '+ اضغط للصورة الشخصية'}
+                    </button>
                   </div>
                 </div>
                 {/* Right side: badge + clock */}
