@@ -2176,6 +2176,7 @@ export default function HomePage() {
 
         {showAdminLogin && (
           <div className="fixed inset-0 z-50 overflow-auto" dir="rtl" style={{ background: '#050508' }}>
+            <style>{`@keyframes devSpin { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }`}</style>
             {/* Animated background grid */}
             <div className="pointer-events-none absolute inset-0" style={{
               backgroundImage: 'linear-gradient(rgba(244,63,94,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(244,63,94,0.04) 1px, transparent 1px)',
@@ -2204,15 +2205,45 @@ export default function HomePage() {
             <div className="flex min-h-[calc(100vh-48px)] flex-col items-center justify-center p-4 gap-6">
               {/* Header */}
               <div className="text-center space-y-3">
-                <div className="relative mx-auto" style={{ width: 88, height: 88 }}>
-                  <div className="absolute inset-0 rounded-2xl animate-pulse" style={{ background: 'rgba(244,63,94,0.2)', filter: 'blur(16px)' }} />
-                  <div className="relative h-full w-full rounded-2xl overflow-hidden" style={{ border: '1.5px solid rgba(244,63,94,0.4)', boxShadow: '0 0 30px rgba(244,63,94,0.25)' }}>
-                    <Image src="/images/sipflow-logo.jpg" alt="SîpFlõw" width={88} height={88} className="object-cover w-full h-full" />
+                <div
+                  className="relative mx-auto cursor-pointer group"
+                  style={{ width: 96, height: 96 }}
+                  onClick={() => !welcomePhotoUploading && welcomePhotoInputRef.current?.click()}
+                  onMouseEnter={() => setWelcomePhotoHover(true)}
+                  onMouseLeave={() => setWelcomePhotoHover(false)}
+                >
+                  {/* Glow pulse behind */}
+                  <div className="absolute inset-0 rounded-full animate-pulse" style={{ background: 'rgba(244,63,94,0.25)', filter: 'blur(18px)', transform: 'scale(1.1)' }} />
+                  {/* Spinning ring */}
+                  <div className="absolute inset-[-4px] rounded-full" style={{ background: 'conic-gradient(from 0deg,#f43f5e,#be123c,#7c3aed,#f43f5e)', animation: 'devSpin 4s linear infinite', padding: 2, borderRadius: '50%' }}>
+                    <div className="w-full h-full rounded-full" style={{ background: '#0c0010' }} />
                   </div>
-                  <div className="absolute -bottom-2 -left-2 flex h-7 w-7 items-center justify-center rounded-full" style={{ background: 'linear-gradient(135deg, #f43f5e, #be123c)', boxShadow: '0 0 14px rgba(244,63,94,0.6)' }}>
+                  {/* Photo / placeholder */}
+                  <div className="absolute inset-0 rounded-full overflow-hidden flex items-center justify-center" style={{ background: 'linear-gradient(135deg,rgba(244,63,94,0.15),rgba(124,58,237,0.15))' }}>
+                    {welcomePhotoUploading ? (
+                      <Loader2 className="h-8 w-8 animate-spin text-rose-400" />
+                    ) : welcomePhotoUrl ? (
+                      <img src={welcomePhotoUrl} alt="Admin" className="w-full h-full object-cover" />
+                    ) : (
+                      <UserCircle className="h-12 w-12" style={{ color: 'rgba(244,63,94,0.5)' }} />
+                    )}
+                    {/* Hover overlay */}
+                    {welcomePhotoHover && !welcomePhotoUploading && (
+                      <div className="absolute inset-0 rounded-full flex flex-col items-center justify-center gap-1" style={{ background: 'rgba(12,0,16,0.72)', backdropFilter: 'blur(3px)' }}>
+                        <Camera className="h-5 w-5 text-rose-300" />
+                        <span className="text-[10px] font-bold text-rose-300">تغيير</span>
+                      </div>
+                    )}
+                  </div>
+                  {/* Shield badge */}
+                  <div className="absolute -bottom-1 -left-1 flex h-7 w-7 items-center justify-center rounded-full z-10" style={{ background: 'linear-gradient(135deg, #f43f5e, #be123c)', boxShadow: '0 0 14px rgba(244,63,94,0.6)' }}>
                     <ShieldCheck className="h-3.5 w-3.5 text-white" />
                   </div>
                 </div>
+                {/* Upload hint */}
+                <p className="text-[10px] font-mono" style={{ color: welcomePhotoUrl ? 'rgba(244,63,94,0.35)' : 'rgba(244,63,94,0.55)' }}>
+                  {welcomePhotoUploading ? 'جارٍ الرفع...' : welcomePhotoUrl ? '✎ اضغط لتغيير الصورة' : '↑ اضغط لإضافة صورة شخصية'}
+                </p>
                 <div>
                   <h1 className="text-2xl font-black tracking-tight" style={{ color: '#fff', textShadow: '0 0 30px rgba(244,63,94,0.5)' }}>Developer Admin</h1>
                   <p className="text-xs text-zinc-500 mt-1 tracking-widest uppercase font-mono">Full System Access · SîpFlõw</p>
