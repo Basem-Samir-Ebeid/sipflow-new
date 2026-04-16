@@ -9,7 +9,7 @@ import { AdminPanel } from '@/components/admin-panel'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Coffee, Grid3x2 as Grid3X3, Settings, ChevronLeft, ChevronRight, ArrowRight, DollarSign, Users, Calendar, Bell, X, Printer, CircleCheck as CheckCircle2, LogOut, Eye, EyeOff, Loader2, Sparkles, ShieldCheck, ClipboardList, MapPin, Archive, Lock, Clock, Trash2, Plus } from 'lucide-react'
+import { Coffee, Grid3x2 as Grid3X3, Settings, ChevronLeft, ChevronRight, ArrowRight, DollarSign, Users, Calendar, Bell, X, Printer, CircleCheck as CheckCircle2, LogOut, Eye, EyeOff, Loader2, Sparkles, ShieldCheck, ClipboardList, MapPin, Archive, Lock, Clock, Trash2, Plus, Camera, UserCircle } from 'lucide-react'
 import { toast, Toaster } from 'sonner'
 import { ReceiptModal } from '@/components/receipt-modal'
 import { CashierDashboard } from '@/components/cashier-dashboard'
@@ -72,6 +72,10 @@ export default function HomePage() {
   const [showNewSessionConfirm, setShowNewSessionConfirm] = useState(false)
   const [isCreatingNewSession, setIsCreatingNewSession] = useState(false)
   const [savedDevName, setSavedDevName] = useState('')
+  const [welcomePhotoUrl, setWelcomePhotoUrl] = useState<string | null>(null)
+  const [welcomePhotoUploading, setWelcomePhotoUploading] = useState(false)
+  const [welcomePhotoHover, setWelcomePhotoHover] = useState(false)
+  const welcomePhotoInputRef = useRef<HTMLInputElement>(null)
   const [adminPassword, setAdminPassword] = useState('')
   const [adminError, setAdminError] = useState('')
   const [isAdmin, setIsAdmin] = useState(false)
@@ -320,6 +324,42 @@ export default function HomePage() {
     }
     setMounted(true)
   }, [])
+
+  // Fetch dev admin profile photo
+  useEffect(() => {
+    fetch('/api/settings?key=dev_admin_photo_url')
+      .then(r => r.json())
+      .then(d => { if (d.value) setWelcomePhotoUrl(d.value) })
+      .catch(() => {})
+  }, [])
+
+  const handleWelcomePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setWelcomePhotoUploading(true)
+    try {
+      const form = new FormData()
+      form.append('file', file)
+      const res = await fetch('/api/upload', { method: 'POST', body: form })
+      const data = await res.json()
+      if (data.url) {
+        await fetch('/api/settings', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ key: 'dev_admin_photo_url', value: data.url }),
+        })
+        setWelcomePhotoUrl(data.url)
+        toast.success('تم رفع الصورة الشخصية')
+      } else {
+        toast.error(data.error || 'فشل رفع الصورة')
+      }
+    } catch {
+      toast.error('حدث خطأ أثناء الرفع')
+    } finally {
+      setWelcomePhotoUploading(false)
+      if (welcomePhotoInputRef.current) welcomePhotoInputRef.current.value = ''
+    }
+  }
 
   // Fetch global banner on mount
   useEffect(() => {
@@ -2974,100 +3014,155 @@ export default function HomePage() {
 
       {/* Dev Admin special welcome */}
       {showDevWelcome && (
-        <div className="fixed inset-0 z-[999] flex items-center justify-center overflow-hidden" style={{ background: 'linear-gradient(160deg, #03000a 0%, #0a0018 35%, #0e0025 65%, #060012 100%)' }} dir="rtl">
-          {/* Subtle grid */}
-          <div className="absolute inset-0 opacity-[0.025]" style={{ backgroundImage: 'linear-gradient(rgba(147,51,234,0.8) 1px, transparent 1px), linear-gradient(90deg, rgba(147,51,234,0.8) 1px, transparent 1px)', backgroundSize: '32px 32px' }} />
-          {/* Central glow */}
-          <div className="absolute inset-0" style={{ background: 'radial-gradient(ellipse 55% 45% at 50% 45%, rgba(124,58,237,0.12) 0%, transparent 70%)' }} />
-          {/* Top-right glow orb */}
-          <div className="absolute -top-20 -right-20 h-80 w-80 rounded-full" style={{ background: 'radial-gradient(circle, #7c3aed, transparent 60%)', filter: 'blur(40px)', opacity: 0.15 }} />
-          {/* Bottom-left glow orb */}
-          <div className="absolute -bottom-16 -left-16 h-60 w-60 rounded-full" style={{ background: 'radial-gradient(circle, #4f46e5, transparent 60%)', filter: 'blur(30px)', opacity: 0.1 }} />
-          {/* Animated scan line */}
-          <div className="pointer-events-none absolute inset-x-0 h-px opacity-20" style={{ background: 'linear-gradient(90deg, transparent, rgba(147,51,234,0.8), rgba(99,102,241,1), rgba(147,51,234,0.8), transparent)', top: '50%', animation: 'pulse 3s ease-in-out infinite' }} />
+        <div className="fixed inset-0 z-[999] flex items-center justify-center overflow-hidden" style={{ background: 'radial-gradient(ellipse 120% 120% at 50% 0%, #0d0025 0%, #060015 40%, #02000a 100%)' }} dir="rtl">
+          <style>{`
+            @keyframes devSpin { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
+            @keyframes devScanY { 0%{top:-2px;opacity:0} 10%{opacity:1} 90%{opacity:1} 100%{top:100%;opacity:0} }
+            @keyframes devPulseGlow { 0%,100%{opacity:0.5} 50%{opacity:1} }
+            @keyframes devFlicker { 0%,100%{opacity:1} 92%{opacity:1} 93%{opacity:0.6} 94%{opacity:1} 96%{opacity:0.8} 97%{opacity:1} }
+            @keyframes devTypewriter { from{width:0} to{width:100%} }
+          `}</style>
 
-          <div className="relative w-full max-w-sm px-8 text-center animate-in fade-in zoom-in-95 duration-700">
-            {/* Outer frame */}
-            <div className="absolute -top-4 -left-4 w-12 h-12 border-t-2 border-l-2 rounded-tl-lg" style={{ borderColor: 'rgba(147,51,234,0.5)' }} />
-            <div className="absolute -top-4 -right-4 w-12 h-12 border-t-2 border-r-2 rounded-tr-lg" style={{ borderColor: 'rgba(147,51,234,0.5)' }} />
-            <div className="absolute -bottom-4 -left-4 w-12 h-12 border-b-2 border-l-2 rounded-bl-lg" style={{ borderColor: 'rgba(147,51,234,0.5)' }} />
-            <div className="absolute -bottom-4 -right-4 w-12 h-12 border-b-2 border-r-2 rounded-br-lg" style={{ borderColor: 'rgba(147,51,234,0.5)' }} />
+          {/* Deep grid */}
+          <div className="pointer-events-none absolute inset-0" style={{ backgroundImage: 'linear-gradient(rgba(139,92,246,0.04) 1px,transparent 1px),linear-gradient(90deg,rgba(139,92,246,0.04) 1px,transparent 1px)', backgroundSize: '40px 40px' }} />
+          {/* Radial glows */}
+          <div className="pointer-events-none absolute inset-0" style={{ background: 'radial-gradient(ellipse 70% 50% at 50% 30%, rgba(109,40,217,0.18) 0%, transparent 65%)' }} />
+          <div className="pointer-events-none absolute -top-32 left-1/2 -translate-x-1/2 h-64 w-64 rounded-full" style={{ background: 'radial-gradient(circle, rgba(139,92,246,0.3), transparent 60%)', filter: 'blur(50px)' }} />
+          <div className="pointer-events-none absolute bottom-0 left-0 h-48 w-48 rounded-full" style={{ background: 'radial-gradient(circle, rgba(79,70,229,0.2), transparent 60%)', filter: 'blur(40px)' }} />
+          <div className="pointer-events-none absolute bottom-0 right-0 h-48 w-48 rounded-full" style={{ background: 'radial-gradient(circle, rgba(124,58,237,0.2), transparent 60%)', filter: 'blur(40px)' }} />
+          {/* Horizontal scan line */}
+          <div className="pointer-events-none absolute inset-x-0 h-[1px]" style={{ background: 'linear-gradient(90deg,transparent,rgba(167,139,250,0.6),transparent)', animation: 'devScanY 4s ease-in-out infinite', opacity: 0.5 }} />
 
-            {/* Top badge */}
-            <div className="mb-6 flex items-center justify-center">
-              <span className="inline-flex items-center gap-2 rounded-full px-4 py-1.5 font-mono text-[10px] font-bold uppercase tracking-[0.4em]"
-                style={{ background: 'rgba(147,51,234,0.15)', border: '1px solid rgba(147,51,234,0.4)', color: '#c4b5fd', boxShadow: '0 0 20px rgba(147,51,234,0.15)' }}>
-                <span className="relative flex h-2 w-2">
-                  <span className="absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75 animate-ping" />
-                  <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-400" />
+          <div className="relative w-full max-w-[320px] px-5 text-center" style={{ animation: 'fadeIn 0.6s ease-out' }}>
+
+            {/* HUD corner brackets */}
+            {[['top-0 left-0','border-t-2 border-l-2 rounded-tl-xl'],['top-0 right-0','border-t-2 border-r-2 rounded-tr-xl'],['bottom-0 left-0','border-b-2 border-l-2 rounded-bl-xl'],['bottom-0 right-0','border-b-2 border-r-2 rounded-br-xl']].map(([pos,cls],i) => (
+              <div key={i} className={`absolute ${pos} w-8 h-8 ${cls}`} style={{ borderColor: 'rgba(139,92,246,0.55)', margin: '-2px' }} />
+            ))}
+
+            {/* ── SECURE SESSION badge ── */}
+            <div className="mb-7 flex items-center justify-center">
+              <div className="relative inline-flex items-center gap-2.5 rounded-full px-5 py-2 font-mono text-[10px] font-bold uppercase tracking-[0.45em]"
+                style={{ background: 'linear-gradient(135deg,rgba(109,40,217,0.2),rgba(79,70,229,0.15))', border: '1px solid rgba(139,92,246,0.45)', color: '#c4b5fd', boxShadow: '0 0 24px rgba(109,40,217,0.2), inset 0 1px 0 rgba(255,255,255,0.06)' }}>
+                <span className="relative flex h-2 w-2 shrink-0">
+                  <span className="absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-70 animate-ping" />
+                  <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-400" style={{ boxShadow: '0 0 6px #34d399' }} />
                 </span>
                 secure session
-              </span>
-            </div>
-
-            {/* Logo with animated ring */}
-            <div className="relative mx-auto mb-5 flex h-24 w-24 items-center justify-center">
-              <div className="absolute inset-[-6px] rounded-full animate-spin" style={{ background: 'conic-gradient(from 0deg, transparent 0%, rgba(147,51,234,0.5) 25%, transparent 50%, rgba(99,102,241,0.5) 75%, transparent 100%)', animationDuration: '4s' }} />
-              <div className="absolute inset-[-5px] rounded-full" style={{ background: '#0a0018' }} />
-              <div className="h-24 w-24 rounded-full overflow-hidden" style={{ border: '2px solid rgba(147,51,234,0.5)', boxShadow: '0 0 30px rgba(147,51,234,0.25), inset 0 0 20px rgba(147,51,234,0.1)' }}>
-                <img src="/images/sipflow-logo.jpg" alt="SîpFlõw" className="h-full w-full object-cover" />
               </div>
             </div>
 
-            {/* ACCESS GRANTED */}
-            <div className="mb-4">
-              <p className="font-mono text-[11px] font-bold tracking-[0.5em] uppercase" style={{ color: '#a78bfa', textShadow: '0 0 12px rgba(147,51,234,0.6)' }}>access granted</p>
+            {/* ── Profile photo ── */}
+            <input ref={welcomePhotoInputRef} type="file" accept="image/jpeg,image/png,image/webp,image/gif" className="hidden" onChange={handleWelcomePhotoUpload} />
+            <div className="relative mx-auto mb-3 flex items-center justify-center" style={{ width: 120, height: 120 }}>
+              {/* Triple ring system */}
+              <div className="absolute inset-0 rounded-full" style={{ background: 'conic-gradient(from 0deg,#7c3aed,#4f46e5,#818cf8,#c4b5fd,#7c3aed)', animation: 'devSpin 3s linear infinite', padding: 3, borderRadius: '50%' }}>
+                <div className="w-full h-full rounded-full" style={{ background: '#060015' }} />
+              </div>
+              <div className="absolute rounded-full" style={{ inset: 6, background: 'conic-gradient(from 180deg,rgba(99,102,241,0.4),transparent,rgba(139,92,246,0.4),transparent)', animation: 'devSpin 6s linear infinite reverse', padding: 1.5, borderRadius: '50%' }}>
+                <div className="w-full h-full rounded-full" style={{ background: '#060015' }} />
+              </div>
+              {/* Photo area */}
+              <div
+                className="absolute rounded-full overflow-hidden cursor-pointer flex items-center justify-center"
+                style={{ inset: 10, background: 'linear-gradient(135deg,rgba(109,40,217,0.3),rgba(79,70,229,0.2))', boxShadow: '0 0 30px rgba(109,40,217,0.3), inset 0 0 20px rgba(139,92,246,0.1)' }}
+                onClick={() => !welcomePhotoUploading && welcomePhotoInputRef.current?.click()}
+                onMouseEnter={() => setWelcomePhotoHover(true)}
+                onMouseLeave={() => setWelcomePhotoHover(false)}
+              >
+                {welcomePhotoUploading ? (
+                  <Loader2 className="h-8 w-8 animate-spin" style={{ color: '#c4b5fd' }} />
+                ) : welcomePhotoUrl ? (
+                  <img src={welcomePhotoUrl} alt="profile" className="w-full h-full object-cover" />
+                ) : (
+                  <UserCircle className="h-12 w-12" style={{ color: 'rgba(167,139,250,0.5)' }} />
+                )}
+                {/* Hover overlay */}
+                {welcomePhotoHover && !welcomePhotoUploading && (
+                  <div className="absolute inset-0 rounded-full flex flex-col items-center justify-center gap-1" style={{ background: 'rgba(6,0,21,0.75)', backdropFilter: 'blur(3px)' }}>
+                    <Camera className="h-5 w-5" style={{ color: '#e9d5ff' }} />
+                    <span className="text-[10px] font-bold" style={{ color: '#e9d5ff' }}>تغيير</span>
+                  </div>
+                )}
+              </div>
+              {/* Online indicator */}
+              <div className="absolute bottom-2 right-2 h-4 w-4 rounded-full border-2 z-10" style={{ background: '#10b981', borderColor: '#060015', boxShadow: '0 0 10px rgba(16,185,129,0.8)' }} />
             </div>
 
-            {/* Personal greeting */}
-            <p className="text-sm font-medium mb-2" style={{ color: 'rgba(196,181,253,0.7)' }}>مرحباً بك في مركز التحكم</p>
-            <h2 className="text-[2.5rem] font-black tracking-tight mb-2 leading-none" style={{ background: 'linear-gradient(135deg, #e2d9f3 0%, #c4b5fd 30%, #a78bfa 60%, #7c3aed 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', filter: 'drop-shadow(0 0 8px rgba(147,51,234,0.4))' }}>
+            {/* Upload hint */}
+            <button onClick={() => !welcomePhotoUploading && welcomePhotoInputRef.current?.click()} className="mb-6 text-[10px] font-mono transition-opacity hover:opacity-100" style={{ color: welcomePhotoUrl ? 'rgba(167,139,250,0.4)' : 'rgba(167,139,250,0.65)', background: 'none', border: 'none', cursor: 'pointer', opacity: welcomePhotoUrl ? 0.6 : 1 }}>
+              {welcomePhotoUploading ? '⟳ جارٍ الرفع...' : welcomePhotoUrl ? '✎ تغيير الصورة' : '↑ اضغط لإضافة صورة شخصية'}
+            </button>
+
+            {/* ── ACCESS GRANTED ── */}
+            <div className="mb-1 flex items-center justify-center gap-2">
+              <div className="h-px w-6" style={{ background: 'linear-gradient(90deg,transparent,rgba(52,211,153,0.5))' }} />
+              <p className="font-mono text-[10px] font-bold tracking-[0.5em] uppercase" style={{ color: '#34d399', textShadow: '0 0 12px rgba(52,211,153,0.5)', animation: 'devFlicker 5s infinite' }}>access granted</p>
+              <div className="h-px w-6" style={{ background: 'linear-gradient(90deg,rgba(52,211,153,0.5),transparent)' }} />
+            </div>
+
+            {/* Greeting */}
+            <p className="mb-1.5 text-xs font-medium" style={{ color: 'rgba(196,181,253,0.55)', letterSpacing: '0.05em' }}>مرحباً بك في مركز التحكم</p>
+            <h2 className="mb-1 text-[2.6rem] font-black leading-none tracking-tight" style={{ background: 'linear-gradient(160deg,#f5f3ff 0%,#ddd6fe 30%,#a78bfa 65%,#7c3aed 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', filter: 'drop-shadow(0 0 20px rgba(139,92,246,0.5))' }}>
               {savedDevName}
             </h2>
-            <p className="font-mono text-[10px] tracking-[0.3em] uppercase mb-6" style={{ color: 'rgba(167,139,250,0.4)' }}>system architect · root access</p>
+            <p className="mb-6 font-mono text-[10px] tracking-[0.35em] uppercase" style={{ color: 'rgba(139,92,246,0.45)' }}>system architect · root access</p>
 
             {/* Divider */}
-            <div className="flex items-center gap-3 mb-5">
-              <div className="h-px flex-1" style={{ background: 'linear-gradient(90deg, transparent, rgba(147,51,234,0.5))' }} />
-              <div className="h-1.5 w-1.5 rotate-45 rounded-sm" style={{ background: '#7c3aed', boxShadow: '0 0 6px rgba(147,51,234,0.8)' }} />
-              <div className="h-px flex-1" style={{ background: 'linear-gradient(90deg, rgba(147,51,234,0.5), transparent)' }} />
+            <div className="mb-5 flex items-center gap-3">
+              <div className="h-px flex-1" style={{ background: 'linear-gradient(90deg,transparent,rgba(109,40,217,0.6))' }} />
+              <div className="h-2 w-2 rotate-45" style={{ background: 'linear-gradient(135deg,#7c3aed,#4f46e5)', boxShadow: '0 0 8px rgba(124,58,237,0.8)' }} />
+              <div className="h-px flex-1" style={{ background: 'linear-gradient(90deg,rgba(109,40,217,0.6),transparent)' }} />
             </div>
 
-            {/* System status cards */}
-            <div className="grid grid-cols-2 gap-2 mb-5">
+            {/* ── Permission cards ── */}
+            <div className="mb-5 grid grid-cols-2 gap-2">
               {[
-                { icon: '🏠', label: 'الأماكن', status: 'UNLOCKED', color: '#34d399', bg: 'rgba(16,185,129,0.06)', border: 'rgba(16,185,129,0.2)' },
-                { icon: '📊', label: 'الإحصائيات', status: 'FULL ACCESS', color: '#34d399', bg: 'rgba(16,185,129,0.06)', border: 'rgba(16,185,129,0.2)' },
-                { icon: '👥', label: 'المستخدمين', status: 'FULL ACCESS', color: '#34d399', bg: 'rgba(16,185,129,0.06)', border: 'rgba(16,185,129,0.2)' },
-                { icon: '⚡', label: 'صلاحية النظام', status: 'SUPERADMIN', color: '#c4b5fd', bg: 'rgba(147,51,234,0.08)', border: 'rgba(147,51,234,0.3)' },
-              ].map((item, i) => (
-                <div key={i} className="flex items-center gap-2 rounded-xl px-3 py-2.5 text-right"
-                  style={{ background: item.bg, border: `1px solid ${item.border}` }}>
-                  <span className="text-base shrink-0">{item.icon}</span>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-[11px] font-medium truncate" style={{ color: 'rgba(255,255,255,0.7)' }}>{item.label}</p>
-                    <p className="font-mono text-[9px] tracking-wider" style={{ color: item.color }}>{item.status}</p>
+                { icon: '🏠', label: 'الأماكن',       sub: 'UNLOCKED',    dot: '#34d399', bg: 'rgba(16,185,129,0.07)',  border: 'rgba(16,185,129,0.22)' },
+                { icon: '📊', label: 'الإحصائيات',    sub: 'FULL ACCESS', dot: '#34d399', bg: 'rgba(16,185,129,0.07)',  border: 'rgba(16,185,129,0.22)' },
+                { icon: '👥', label: 'المستخدمين',    sub: 'FULL ACCESS', dot: '#34d399', bg: 'rgba(16,185,129,0.07)',  border: 'rgba(16,185,129,0.22)' },
+                { icon: '⚡', label: 'صلاحية النظام', sub: 'SUPERADMIN',  dot: '#c4b5fd', bg: 'rgba(109,40,217,0.1)',   border: 'rgba(109,40,217,0.35)' },
+              ].map((c, i) => (
+                <div key={i} className="relative flex items-center gap-2.5 overflow-hidden rounded-xl px-3 py-3 text-right"
+                  style={{ background: c.bg, border: `1px solid ${c.border}`, boxShadow: `0 0 12px ${c.bg}` }}>
+                  <div className="absolute inset-0 opacity-30" style={{ backgroundImage: 'linear-gradient(135deg,rgba(255,255,255,0.03) 25%,transparent 25%,transparent 50%,rgba(255,255,255,0.03) 50%,rgba(255,255,255,0.03) 75%,transparent 75%)', backgroundSize: '4px 4px' }} />
+                  <span className="relative text-lg shrink-0">{c.icon}</span>
+                  <div className="relative flex-1 min-w-0 text-right">
+                    <p className="text-[11px] font-semibold truncate" style={{ color: 'rgba(255,255,255,0.8)' }}>{c.label}</p>
+                    <div className="flex items-center justify-end gap-1 mt-0.5">
+                      <p className="font-mono text-[9px] tracking-wider font-bold" style={{ color: c.dot }}>{c.sub}</p>
+                      <span className="h-1.5 w-1.5 rounded-full shrink-0" style={{ background: c.dot, boxShadow: `0 0 4px ${c.dot}` }} />
+                    </div>
                   </div>
                 </div>
               ))}
             </div>
 
-            {/* Terminal-style log line */}
-            <div className="rounded-lg px-3 py-2 mb-5 text-left font-mono text-[10px]"
-              style={{ background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(147,51,234,0.15)' }}>
-              <span style={{ color: '#34d399' }}>$</span>{' '}
-              <span style={{ color: 'rgba(167,139,250,0.6)' }}>sipflow</span>{' '}
-              <span style={{ color: 'rgba(255,255,255,0.4)' }}>--mode</span>{' '}
-              <span style={{ color: '#c4b5fd' }}>developer</span>{' '}
-              <span style={{ color: 'rgba(255,255,255,0.4)' }}>--auth</span>{' '}
-              <span style={{ color: '#34d399' }}>verified ✓</span>
+            {/* ── Terminal line ── */}
+            <div className="mb-5 overflow-hidden rounded-xl px-4 py-3 text-left"
+              style={{ background: 'rgba(0,0,0,0.55)', border: '1px solid rgba(109,40,217,0.2)', boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.03)' }}>
+              <div className="mb-1.5 flex items-center gap-1.5">
+                <div className="h-2 w-2 rounded-full" style={{ background: '#ef4444' }} />
+                <div className="h-2 w-2 rounded-full" style={{ background: '#f59e0b' }} />
+                <div className="h-2 w-2 rounded-full" style={{ background: '#22c55e' }} />
+                <span className="ml-1 font-mono text-[9px]" style={{ color: 'rgba(167,139,250,0.3)' }}>sipflow ~ terminal</span>
+              </div>
+              <p className="font-mono text-[11px]">
+                <span style={{ color: '#34d399' }}>✓</span>{' '}
+                <span style={{ color: 'rgba(167,139,250,0.55)' }}>sipflow</span>{' '}
+                <span style={{ color: 'rgba(255,255,255,0.3)' }}>--mode</span>{' '}
+                <span style={{ color: '#c4b5fd' }}>developer</span>{' '}
+                <span style={{ color: 'rgba(255,255,255,0.3)' }}>--auth</span>{' '}
+                <span style={{ color: '#34d399' }}>verified</span>
+                <span className="inline-block ml-1 h-3.5 w-0.5 align-middle animate-pulse" style={{ background: '#c4b5fd' }} />
+              </p>
             </div>
 
-            {/* Footer */}
-            <div className="flex items-center justify-center gap-2">
-              <div className="h-px w-8" style={{ background: 'rgba(147,51,234,0.3)' }} />
-              <p className="font-mono text-[9px] tracking-[0.3em] uppercase" style={{ color: 'rgba(147,51,234,0.3)' }}>SipFlow Control</p>
-              <div className="h-px w-8" style={{ background: 'rgba(147,51,234,0.3)' }} />
+            {/* ── Footer ── */}
+            <div className="flex items-center justify-center gap-3">
+              <div className="h-px flex-1" style={{ background: 'linear-gradient(90deg,transparent,rgba(109,40,217,0.3))' }} />
+              <p className="font-mono text-[9px] tracking-[0.35em] uppercase" style={{ color: 'rgba(109,40,217,0.4)' }}>SIPFLOW · CONTROL</p>
+              <div className="h-px flex-1" style={{ background: 'linear-gradient(90deg,rgba(109,40,217,0.3),transparent)' }} />
             </div>
           </div>
         </div>
