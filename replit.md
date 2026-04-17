@@ -6,6 +6,10 @@ A Next.js multi-tenant café/social space drink ordering and management system. 
 ## Known Fix — Price Type Coercion
 PostgreSQL returns DECIMAL/NUMERIC columns as strings (e.g., `'15.00'`). All `drink.price` references across the codebase use `Number()` conversion before arithmetic, comparisons, and `.toFixed()` calls. This prevents `TypeError` crashes in DrinkCard and other components.
 
+## Recent Features (v2.5 — Developer Permissions)
+- **Advanced Developer Permissions:** Developer admin login now supports roles: Super Developer (full access), Support Admin (support/live/messages overview), Sales Admin (clients/places/reservations), and Finance Admin (revenue/analytics/cashier/count). Existing `ADMIN_SECRET` / `dev_admin_password` login remains Super Developer.
+- **Dev Admin Accounts:** Super Developer can manage additional developer admin accounts from the new "الصلاحيات" tab. Accounts are stored in `app_settings.dev_admin_accounts` with hashed passwords and role metadata.
+
 ## Recent Features (v2.4 — Live Command Center)
 - **مركز التحكم (Command Center):** Dev admin's default tab — real-time overview of all active places. Shows global stats (total places, orders, revenue, active tables), per-place health indicators (green/yellow/red pulse), order counts by status, revenue, waiter calls. Auto-refreshes every 5 seconds. Violet/indigo theme. Recent activity feed with live notifications. API: `GET /api/command-center` (auth-protected via `x-admin-secret` header).
 - **ويدجت شاشة البداية للمطور:** Replaced the old numeric system-status block on the landing screen with a private "لوحة التشغيل الهادئ" panel. It no longer displays places, order counts, pending orders, or revenue on the public landing view.
@@ -53,10 +57,10 @@ PostgreSQL returns DECIMAL/NUMERIC columns as strings (e.g., `'15.00'`). All `dr
 1. User opens app → Place Selection screen (enter place name/code)
 2. Place looked up via `/api/places/lookup?code=XXX` → stored in `localStorage` as `qa3da_place`
 3. Normal login → all data is filtered by `place_id`
-4. Developer admin logs in via 🔧 Admin VIP link using name + hardcoded password → sees all places, can manage them via "الأماكن" tab
+4. Developer admin logs in via 🔧 Admin VIP link using name + password → receives role-based access to the allowed developer tabs
 
 ## Authentication
-- **Developer admin:** name (any) + password from Replit secret `ADMIN_SECRET`, or the `dev_admin_password` value stored in `app_settings` after an admin password change. Successful login sets a server-managed HTTP-only session cookie for protected admin actions.
+- **Developer admin:** name + password. Existing `ADMIN_SECRET` or `app_settings.dev_admin_password` grants Super Developer. Additional named accounts are stored in `app_settings.dev_admin_accounts` with hashed passwords and roles (`super_developer`, `support_admin`, `sales_admin`, `finance_admin`). Successful login sets a server-managed HTTP-only session cookie for protected admin actions.
 - **Place admin (role=admin):** normal login within a place, sees ⚙️ Settings button (asks username+password to verify)
 - **Staff (role=order_receiver):** normal login, sees receipt tab only
 - **Default dev DB credentials:** admin `admin`/`admin123`, staff `staff`/`staff123`

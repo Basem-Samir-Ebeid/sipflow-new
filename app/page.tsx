@@ -32,6 +32,7 @@ interface AdminMessage {
 }
 
 type TabType = 'menu' | 'board' | 'admin'
+type DevAdminRole = 'super_developer' | 'support_admin' | 'sales_admin' | 'finance_admin'
 
 export default function HomePage() {
   const [mounted, setMounted] = useState(false)
@@ -72,6 +73,7 @@ export default function HomePage() {
   const [showNewSessionConfirm, setShowNewSessionConfirm] = useState(false)
   const [isCreatingNewSession, setIsCreatingNewSession] = useState(false)
   const [savedDevName, setSavedDevName] = useState('')
+  const [savedDevRole, setSavedDevRole] = useState<DevAdminRole>('super_developer')
   const [welcomePhotoUrl, setWelcomePhotoUrl] = useState<string | null>(null)
   const [welcomePhotoUploading, setWelcomePhotoUploading] = useState(false)
   const [welcomePhotoHover, setWelcomePhotoHover] = useState(false)
@@ -292,8 +294,9 @@ export default function HomePage() {
     try {
       const devAdmin = localStorage.getItem('qa3da_devadmin')
       if (devAdmin) {
-        const { name } = JSON.parse(devAdmin)
+        const { name, role } = JSON.parse(devAdmin)
         setSavedDevName(name || '')
+        setSavedDevRole(role || 'super_developer')
         setIsDevAdmin(true)
         setIsAdmin(true)
       }
@@ -885,6 +888,7 @@ export default function HomePage() {
     setLoginError('')
     setIsAdmin(false)
     setIsDevAdmin(false)
+    setSavedDevRole('super_developer')
     setActiveTab('menu')
     setShowAdminLogin(false)
     setShowPlaceAdminConfirm(false)
@@ -1330,13 +1334,14 @@ export default function HomePage() {
       const res = await fetch('/api/dev-verify', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ password: adminPassword })
+        body: JSON.stringify({ name: devAdminName.trim(), password: adminPassword })
       })
       const data = await res.json()
       
       if (data.success) {
         const name = devAdminName.trim()
         setSavedDevName(name)
+        setSavedDevRole(data.role || 'super_developer')
         setIsAdmin(true)
         setIsDevAdmin(true)
         setShowAdminLogin(false)
@@ -1344,7 +1349,7 @@ export default function HomePage() {
         setAdminPassword('')
         setAdminError('')
         setActiveTab('admin')
-        localStorage.setItem('qa3da_devadmin', JSON.stringify({ name }))
+        localStorage.setItem('qa3da_devadmin', JSON.stringify({ name: data.name || name, role: data.role || 'super_developer', roleLabel: data.roleLabel || 'Super Developer' }))
         localStorage.setItem('qa3da_tab', 'admin')
         setShowDevWelcome(true)
         setTimeout(() => setShowDevWelcome(false), 4000)
@@ -4699,6 +4704,7 @@ export default function HomePage() {
             onRefreshUsers={() => mutateUsers()}
             isInline={true}
             isDevAdmin={isDevAdmin}
+            devAdminRole={savedDevRole}
             currentPlace={currentPlace}
             placeId={currentUser?.place_id || currentPlace?.id || null}
           />

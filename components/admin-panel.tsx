@@ -31,6 +31,16 @@ import Image from 'next/image'
 import { CommandCenter } from '@/components/command-center'
 import { LivePlacesHub } from '@/components/LivePlacesHub'
 
+type DevAdminRole = 'super_developer' | 'support_admin' | 'sales_admin' | 'finance_admin'
+
+type DevAdminAccount = {
+  id: string
+  name: string
+  role: DevAdminRole
+  active: boolean
+  createdAt?: string | null
+}
+
 
 
 interface AdminPanelProps {
@@ -47,6 +57,7 @@ interface AdminPanelProps {
   onRefreshUsers?: () => void
   isInline?: boolean
   isDevAdmin?: boolean
+  devAdminRole?: DevAdminRole
   currentPlace?: { id: string; name: string; code: string } | null
   placeId?: string | null
 }
@@ -71,9 +82,37 @@ export function AdminPanel({
   onRefreshUsers,
   isInline = false,
   isDevAdmin = false,
+  devAdminRole = 'super_developer',
   currentPlace = null,
   placeId = null
 }: AdminPanelProps) {
+  const devRoleMeta: Record<DevAdminRole, { label: string; description: string; homeTab: string; tabs: string[] }> = {
+    super_developer: {
+      label: 'Super Developer',
+      description: 'صلاحية كاملة لكل أجزاء النظام',
+      homeTab: 'command-center',
+      tabs: ['command-center', 'stats', 'analytics', 'count', 'drinks', 'inventory', 'cashier', 'reservations', 'place-admins', 'staff', 'places', 'clients', 'messages', 'settings', 'danger', 'live', 'permissions'],
+    },
+    support_admin: {
+      label: 'Support Admin',
+      description: 'متابعة المشاكل والرسائل والبث المباشر بدون أدوات الإدارة الخطرة',
+      homeTab: 'command-center',
+      tabs: ['command-center', 'live', 'messages', 'stats'],
+    },
+    sales_admin: {
+      label: 'Sales Admin',
+      description: 'إدارة العملاء والأماكن والاشتراكات والحجوزات',
+      homeTab: 'clients',
+      tabs: ['clients', 'places', 'reservations', 'stats'],
+    },
+    finance_admin: {
+      label: 'Finance Admin',
+      description: 'متابعة الإيرادات والتقارير والفواتير',
+      homeTab: 'analytics',
+      tabs: ['stats', 'analytics', 'cashier', 'count'],
+    },
+  }
+  const canAccessDevTab = (tab: string) => !isDevAdmin || devRoleMeta[devAdminRole].tabs.includes(tab)
   // Add drink state
   const [newDrinkName, setNewDrinkName] = useState('')
   const [newDrinkPrice, setNewDrinkPrice] = useState('')
@@ -195,7 +234,13 @@ export function AdminPanel({
   const [showDevAdminNewPass, setShowDevAdminNewPass] = useState(false)
 
   // Admin tabs controlled state
-  const [activeAdminTab, setActiveAdminTab] = useState(isDevAdmin ? 'command-center' : 'stats')
+  const [activeAdminTab, setActiveAdminTab] = useState(isDevAdmin ? devRoleMeta[devAdminRole].homeTab : 'stats')
+  const [devAdminAccounts, setDevAdminAccounts] = useState<DevAdminAccount[]>([])
+  const [devAdminAccountName, setDevAdminAccountName] = useState('')
+  const [devAdminAccountPassword, setDevAdminAccountPassword] = useState('')
+  const [devAdminAccountRole, setDevAdminAccountRole] = useState<DevAdminRole>('support_admin')
+  const [editingDevAdminAccount, setEditingDevAdminAccount] = useState<DevAdminAccount | null>(null)
+  const [isSavingDevAdminAccount, setIsSavingDevAdminAccount] = useState(false)
   const [staffUrlCopied, setStaffUrlCopied] = useState(false)
   const [staffOrigin, setStaffOrigin] = useState('')
 
@@ -204,12 +249,81 @@ export function AdminPanel({
     fetchStaffUsers()
   }, [])
 
+  useEffect(() => {
+    if (!isDevAdmin) return
+    if (!canAccessDevTab(activeAdminTab)) {
+      setActiveAdminTab(devRoleMeta[devAdminRole].homeTab)
+    }
+  }, [isDevAdmin, devAdminRole])
+
+  const loadDevAdminAccounts = async () => {
+    if (!isDevAdmin || devAdminRole !== 'super_developer') return
+    const res = await fetch('/api/dev-admins')
+    if (res.ok) {
+      const data = await res.json()
+      setDevAdminAccounts(data.accounts || [])
+    }
+  }
+
+  useEffect(() => {
+    loadDevAdminAccounts().catch(() => {})
+  }, [isDevAdmin, devAdminRole])
+
   const handleCopyStaffUrl = () => {
     const url = `${window.location.origin}/staff`
     navigator.clipboard.writeText(url).then(() => {
       setStaffUrlCopied(true)
       setTimeout(() => setStaffUrlCopied(false), 2500)
     })
+  }
+
+  const handleSaveDevAdminAccount = async () => {
+    if (!devAdminAccountName.trim()) { toast.error('أدخل اسم الأدمن'); return }
+    if (!editingDevAdminAccount && !devAdminAccountPassword.trim()) { toast.error('أدخل كلمة المرور'); return }
+    setIsSavingDevAdminAccount(true)
+    try {
+      const res = await fetch('/api/dev-admins', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: editingDevAdminAccount?.id,
+          name: devAdminAccountName.trim(),
+          password: devAdminAccountPassword.trim(),
+          role: devAdminAccountRole,
+          active: true,
+        }),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        toast.error(data.error || 'تعذر حفظ الأدمن')
+        return
+      }
+      setDevAdminAccounts(data.accounts || [])
+      setDevAdminAccountName('')
+      setDevAdminAccountPassword('')
+      setDevAdminAccountRole('support_admin')
+      setEditingDevAdminAccount(null)
+      toast.success('تم حفظ صلاحيات الأدمن')
+    } catch {
+      toast.error('تعذر الاتصال بالخادم')
+    } finally {
+      setIsSavingDevAdminAccount(false)
+    }
+  }
+
+  const handleDeleteDevAdminAccount = async (id: string) => {
+    const res = await fetch('/api/dev-admins', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'delete', id }),
+    })
+    const data = await res.json()
+    if (res.ok) {
+      setDevAdminAccounts(data.accounts || [])
+      toast.success('تم حذف أدمن المطور')
+    } else {
+      toast.error(data.error || 'تعذر الحذف')
+    }
   }
 
   // Edit drink state
@@ -1584,6 +1698,7 @@ const handleSaveSettings = async () => {
   }
 
   const handleTabChange = (v: string) => {
+    if (isDevAdmin && !canAccessDevTab(v)) return
     setActiveAdminTab(v)
     if (v === 'stats' && isDevAdmin) fetchPlaces().then(list => { if (list.length > 0) setStatsPlaceId(prev => { const chosen = prev || list[0].id; fetchStatsForPlace(chosen); return chosen }) })
     if (v === 'staff') fetchStaffUsers()
@@ -1772,7 +1887,7 @@ const handleSaveSettings = async () => {
             {/* Group: Core */}
             <div className="space-y-1.5">
               {/* Command center — full width highlight */}
-              <button onClick={() => handleTabChange('command-center')}
+              {canAccessDevTab('command-center') && <button onClick={() => handleTabChange('command-center')}
                 className="w-full flex items-center gap-2.5 rounded-xl px-3.5 py-2.5 transition-all duration-150 hover:scale-[1.01] active:scale-[0.99]"
                 style={{
                   background: activeAdminTab === 'command-center' ? 'linear-gradient(135deg, rgba(139,92,246,0.45), rgba(79,70,229,0.35))' : 'rgba(139,92,246,0.08)',
@@ -1785,10 +1900,10 @@ const handleSaveSettings = async () => {
                   <span className="absolute inline-flex h-2 w-2 rounded-full bg-emerald-400 opacity-60 animate-ping" />
                   <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-400" />
                 </span>
-              </button>
+              </button>}
 
               {/* Live Places Hub — full width */}
-              <button onClick={() => handleTabChange('live')}
+              {canAccessDevTab('live') && <button onClick={() => handleTabChange('live')}
                 className="w-full flex items-center gap-2.5 rounded-xl px-3.5 py-2.5 transition-all duration-150 hover:scale-[1.01] active:scale-[0.99]"
                 style={{
                   background: activeAdminTab === 'live' ? 'linear-gradient(135deg, rgba(16,185,129,0.35), rgba(5,150,105,0.25))' : 'rgba(16,185,129,0.06)',
@@ -1801,7 +1916,7 @@ const handleSaveSettings = async () => {
                   <span className="absolute inline-flex h-2 w-2 rounded-full bg-emerald-400 opacity-60 animate-ping" />
                   <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-400" />
                 </span>
-              </button>
+              </button>}
 
               {/* Analytics group */}
               <div>
@@ -1811,7 +1926,7 @@ const handleSaveSettings = async () => {
                     { tab: 'stats',     icon: <BarChart3 className="h-3.5 w-3.5" />,   label: 'الإحصائيات', ac: '#7c3aed' },
                     { tab: 'analytics', icon: <TrendingUp className="h-3.5 w-3.5" />,  label: 'التقارير',    ac: '#7c3aed' },
                     { tab: 'count',     icon: <CheckCircle2 className="h-3.5 w-3.5" />,label: 'المُسلَّم',   ac: '#7c3aed' },
-                  ].map(item => (
+                  ].filter(item => canAccessDevTab(item.tab)).map(item => (
                     <button key={item.tab} onClick={() => handleTabChange(item.tab)}
                       className="flex flex-col items-center gap-1 rounded-xl py-2.5 px-1 transition-all duration-150 hover:scale-105 active:scale-95"
                       style={{
@@ -1836,7 +1951,7 @@ const handleSaveSettings = async () => {
                     { tab: 'inventory',    icon: <Package className="h-3.5 w-3.5" />,     label: 'المخزون',   ac: '#d97706' },
                     { tab: 'cashier',      icon: <Banknote className="h-3.5 w-3.5" />,    label: 'الكاشير',   ac: '#d97706' },
                     { tab: 'reservations', icon: <CalendarDays className="h-3.5 w-3.5" />,label: 'الحجوزات',  ac: '#d97706' },
-                  ].map(item => (
+                  ].filter(item => canAccessDevTab(item.tab)).map(item => (
                     <button key={item.tab} onClick={() => handleTabChange(item.tab)}
                       className="flex flex-col items-center gap-1 rounded-xl py-2.5 px-1 transition-all duration-150 hover:scale-105 active:scale-95"
                       style={{
@@ -1861,7 +1976,7 @@ const handleSaveSettings = async () => {
                     { tab: 'staff',        icon: <Users className="h-3.5 w-3.5" />,      label: 'Staff',     ac: '#059669' },
                     { tab: 'places',       icon: <Link2 className="h-3.5 w-3.5" />,      label: 'الأماكن',  ac: '#059669' },
                     { tab: 'clients',      icon: <UserPlus className="h-3.5 w-3.5" />,   label: 'العملاء',  ac: '#059669' },
-                  ].map(item => (
+                  ].filter(item => canAccessDevTab(item.tab)).map(item => (
                     <button key={item.tab} onClick={() => handleTabChange(item.tab)}
                       className="flex flex-col items-center gap-1 rounded-xl py-2.5 px-1 transition-all duration-150 hover:scale-105 active:scale-95"
                       style={{
@@ -1884,8 +1999,9 @@ const handleSaveSettings = async () => {
                   {[
                     { tab: 'messages', icon: <MessageSquare className="h-3.5 w-3.5" />, label: 'الرسائل',   ac: '#0284c7', badge: devNotifsUnread > 0 ? devNotifsUnread : 0 },
                     { tab: 'settings', icon: <Settings2 className="h-3.5 w-3.5" />,     label: 'الإعدادات', ac: '#0284c7', badge: 0 },
+                    { tab: 'permissions', icon: <ShieldCheck className="h-3.5 w-3.5" />, label: 'الصلاحيات', ac: '#0284c7', badge: 0 },
                     { tab: 'danger',   icon: <Trash2 className="h-3.5 w-3.5" />,        label: 'الخطرة',    ac: '#dc2626', badge: 0 },
-                  ].map(item => (
+                  ].filter(item => canAccessDevTab(item.tab)).map(item => (
                     <button key={item.tab} onClick={() => handleTabChange(item.tab)}
                       className="relative flex flex-col items-center gap-1 rounded-xl py-2.5 px-1 transition-all duration-150 hover:scale-105 active:scale-95"
                       style={{
@@ -1976,22 +2092,27 @@ const handleSaveSettings = async () => {
         {/* ── Dev Admin: hidden TabsList (nav handled by grid above) ── */}
         {isDevAdmin ? (
           <TabsList className="hidden">
-            <TabsTrigger value="command-center">مركز التحكم</TabsTrigger>
-            <TabsTrigger value="stats">الإحصائيات</TabsTrigger>
-            <TabsTrigger value="analytics">التقارير</TabsTrigger>
-            <TabsTrigger value="count">المسلم</TabsTrigger>
-            <TabsTrigger value="drinks">الأصناف</TabsTrigger>
-            <TabsTrigger value="inventory">المخزون</TabsTrigger>
-            <TabsTrigger value="cashier">الكاشير</TabsTrigger>
-            <TabsTrigger value="reservations">الحجوزات</TabsTrigger>
-            <TabsTrigger value="place-admins">أدمنز الأماكن</TabsTrigger>
-            <TabsTrigger value="staff">Staff</TabsTrigger>
-            <TabsTrigger value="places">الأماكن</TabsTrigger>
-            <TabsTrigger value="clients">العملاء</TabsTrigger>
-            <TabsTrigger value="messages">الرسائل</TabsTrigger>
-            <TabsTrigger value="settings">الإعدادات</TabsTrigger>
-            <TabsTrigger value="danger">الخطرة</TabsTrigger>
-            <TabsTrigger value="live">Live</TabsTrigger>
+            {[
+              ['command-center', 'مركز التحكم'],
+              ['stats', 'الإحصائيات'],
+              ['analytics', 'التقارير'],
+              ['count', 'المسلم'],
+              ['drinks', 'الأصناف'],
+              ['inventory', 'المخزون'],
+              ['cashier', 'الكاشير'],
+              ['reservations', 'الحجوزات'],
+              ['place-admins', 'أدمنز الأماكن'],
+              ['staff', 'Staff'],
+              ['places', 'الأماكن'],
+              ['clients', 'العملاء'],
+              ['messages', 'الرسائل'],
+              ['settings', 'الإعدادات'],
+              ['permissions', 'الصلاحيات'],
+              ['danger', 'الخطرة'],
+              ['live', 'Live'],
+            ].filter(([value]) => canAccessDevTab(value)).map(([value, label]) => (
+              <TabsTrigger key={value} value={value}>{label}</TabsTrigger>
+            ))}
           </TabsList>
         ) : (
           /* ── Place Admin: scrollable tab bar ── */
@@ -2071,6 +2192,77 @@ const handleSaveSettings = async () => {
         {/* ── Live Places Hub Tab ── */}
         <TabsContent value="live" className="space-y-4">
           <LivePlacesHub />
+        </TabsContent>
+
+        <TabsContent value="permissions" className="space-y-4">
+          {devAdminRole === 'super_developer' ? (
+            <div className="space-y-4">
+              <div className="rounded-2xl p-4" style={{ background: 'rgba(139,92,246,0.08)', border: '1px solid rgba(139,92,246,0.22)' }}>
+                <div className="mb-4 flex items-center justify-between gap-3">
+                  <div>
+                    <h3 className="text-sm font-bold text-violet-100">صلاحيات أدمن المطور</h3>
+                    <p className="text-[11px] text-violet-300/70">أنشئ حسابات Developer Admin محدودة حسب الوظيفة: دعم، مبيعات، مالية، أو صلاحية كاملة.</p>
+                  </div>
+                  <span className="rounded-full px-2.5 py-1 text-[10px] font-bold text-emerald-200" style={{ background: 'rgba(16,185,129,0.12)', border: '1px solid rgba(16,185,129,0.25)' }}>Super فقط</span>
+                </div>
+
+                <div className="grid gap-3 md:grid-cols-4">
+                  <div>
+                    <Label className="text-xs text-zinc-300">اسم الأدمن</Label>
+                    <Input value={devAdminAccountName} onChange={e => setDevAdminAccountName(e.target.value)} placeholder="مثال: support1" className="mt-1 bg-black/40 border-violet-900/50 text-white" />
+                  </div>
+                  <div>
+                    <Label className="text-xs text-zinc-300">{editingDevAdminAccount ? 'كلمة مرور جديدة (اختياري)' : 'كلمة المرور'}</Label>
+                    <Input type="password" value={devAdminAccountPassword} onChange={e => setDevAdminAccountPassword(e.target.value)} placeholder={editingDevAdminAccount ? 'اتركها كما هي' : '••••••••'} className="mt-1 bg-black/40 border-violet-900/50 text-white" />
+                  </div>
+                  <div>
+                    <Label className="text-xs text-zinc-300">الدور</Label>
+                    <select value={devAdminAccountRole} onChange={e => setDevAdminAccountRole(e.target.value as DevAdminRole)} className="mt-1 h-10 w-full rounded-md border border-violet-900/50 bg-black/40 px-3 text-sm text-white">
+                      <option value="support_admin">Support Admin — دعم</option>
+                      <option value="sales_admin">Sales Admin — مبيعات</option>
+                      <option value="finance_admin">Finance Admin — مالية</option>
+                      <option value="super_developer">Super Developer — كامل</option>
+                    </select>
+                  </div>
+                  <div className="flex items-end gap-2">
+                    <Button onClick={handleSaveDevAdminAccount} disabled={isSavingDevAdminAccount} className="flex-1 bg-violet-700 hover:bg-violet-600">
+                      {isSavingDevAdminAccount ? <Loader2 className="ml-2 h-4 w-4 animate-spin" /> : <ShieldCheck className="ml-2 h-4 w-4" />}
+                      {editingDevAdminAccount ? 'تحديث' : 'إضافة'}
+                    </Button>
+                    {editingDevAdminAccount && (
+                      <Button variant="outline" onClick={() => { setEditingDevAdminAccount(null); setDevAdminAccountName(''); setDevAdminAccountPassword(''); setDevAdminAccountRole('support_admin') }} className="border-zinc-700 text-zinc-300">إلغاء</Button>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid gap-3 md:grid-cols-2">
+                {devAdminAccounts.length === 0 ? (
+                  <div className="rounded-xl border border-dashed border-violet-800/50 p-6 text-center text-sm text-zinc-400 md:col-span-2">لا توجد حسابات محدودة بعد. كلمة سر المطوّر الحالية ما زالت تعمل كـ Super Developer.</div>
+                ) : devAdminAccounts.map(account => (
+                  <div key={account.id} className="rounded-xl p-4" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)' }}>
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <p className="font-bold text-white">{account.name}</p>
+                        <p className="text-[11px] text-zinc-400">{devRoleMeta[account.role].label} — {devRoleMeta[account.role].description}</p>
+                      </div>
+                      <span className="rounded-full px-2 py-0.5 text-[10px] font-bold text-emerald-200" style={{ background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.2)' }}>{account.active ? 'نشط' : 'موقوف'}</span>
+                    </div>
+                    <div className="mt-3 flex gap-2">
+                      <Button size="sm" variant="outline" onClick={() => { setEditingDevAdminAccount(account); setDevAdminAccountName(account.name); setDevAdminAccountPassword(''); setDevAdminAccountRole(account.role) }} className="border-violet-800/60 text-violet-200">
+                        <Pencil className="ml-1.5 h-3.5 w-3.5" /> تعديل
+                      </Button>
+                      <Button size="sm" variant="outline" onClick={() => handleDeleteDevAdminAccount(account.id)} className="border-red-900/60 text-red-300">
+                        <Trash2 className="ml-1.5 h-3.5 w-3.5" /> حذف
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : (
+            <div className="rounded-xl border border-red-900/40 bg-red-950/20 p-4 text-sm text-red-200">هذه الصفحة متاحة فقط لصلاحية Super Developer.</div>
+          )}
         </TabsContent>
 
         <TabsContent value="stats" className="space-y-4">

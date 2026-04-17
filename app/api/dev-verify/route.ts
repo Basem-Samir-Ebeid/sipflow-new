@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSql } from '@/lib/db'
-import { ADMIN_SESSION_MAX_AGE, DEV_ADMIN_SESSION_COOKIE, adminSessionValue, getDevAdminSecret } from '@/lib/admin-auth'
+import { ADMIN_SESSION_MAX_AGE, DEV_ADMIN_ROLE_LABELS, DEV_ADMIN_SESSION_COOKIE, adminSessionValue, devAdminSessionValue, findDevAdminByCredentials, getDevAdminSecret } from '@/lib/admin-auth'
 
 export async function POST(request: NextRequest) {
   try {
-    const { password } = await request.json()
+    const { name, password } = await request.json()
 
     const sql = getSql()
 
@@ -14,8 +14,32 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, error: 'Admin secret not configured' }, { status: 500 })
     }
 
+    const configuredAccount = name ? await findDevAdminByCredentials(sql, name, password) : null
+
+    if (configuredAccount) {
+      const response = NextResponse.json({
+        success: true,
+        role: configuredAccount.role,
+        roleLabel: DEV_ADMIN_ROLE_LABELS[configuredAccount.role],
+        name: configuredAccount.name,
+      })
+      response.cookies.set(DEV_ADMIN_SESSION_COOKIE, devAdminSessionValue(configuredAccount, adminSecret), {
+        httpOnly: true,
+        sameSite: 'lax',
+        secure: process.env.NODE_ENV === 'production',
+        path: '/',
+        maxAge: ADMIN_SESSION_MAX_AGE,
+      })
+      return response
+    }
+
     if (password === adminSecret) {
-      const response = NextResponse.json({ success: true })
+      const response = NextResponse.json({
+        success: true,
+        role: 'super_developer',
+        roleLabel: DEV_ADMIN_ROLE_LABELS.super_developer,
+        name: name || 'Developer',
+      })
       response.cookies.set(DEV_ADMIN_SESSION_COOKIE, adminSessionValue(adminSecret), {
         httpOnly: true,
         sameSite: 'lax',
