@@ -2020,7 +2020,7 @@ export default function HomePage() {
           </div>
 
           <div
-            className="relative overflow-hidden rounded-[1.7rem] p-4 shadow-2xl"
+            className="relative overflow-hidden rounded-[1.35rem] p-3 shadow-2xl"
             style={{
               background: 'linear-gradient(145deg, rgba(10,12,28,0.96), rgba(21,16,44,0.98) 58%, rgba(33,18,62,0.96))',
               border: '1px solid rgba(124,58,237,0.22)',
@@ -2037,10 +2037,10 @@ export default function HomePage() {
             <div className="pointer-events-none absolute -left-12 -top-10 h-36 w-36 rounded-full bg-violet-500/15 blur-3xl" />
             <div className="pointer-events-none absolute -bottom-16 right-8 h-40 w-40 rounded-full bg-indigo-500/12 blur-3xl" />
 
-            <div className="relative space-y-4">
+            <div className="relative space-y-3">
               <div className="flex items-start justify-between gap-3">
                 <div
-                  className="inline-flex items-center gap-2 rounded-full px-4 py-2 text-[11px] font-bold"
+                  className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[10px] font-bold"
                   style={{
                     background: sysOnline === false ? 'rgba(244,63,94,0.12)' : 'rgba(16,185,129,0.13)',
                     color: sysOnline === false ? '#fb7185' : '#6ee7b7',
@@ -2048,22 +2048,22 @@ export default function HomePage() {
                   }}
                 >
                   <span>{sysOnline === null ? 'جار الفحص' : sysOnline ? 'جاهز للعمل' : 'يحتاج مراجعة'}</span>
-                  <span className={`h-2 w-2 rounded-full ${sysOnline === false ? 'bg-rose-400' : 'bg-emerald-400'}`} />
+                  <span className={`h-1.5 w-1.5 rounded-full ${sysOnline === false ? 'bg-rose-400' : 'bg-emerald-400'}`} />
                 </div>
 
                 <div className="text-center">
-                  <h3 className="text-lg font-semibold tracking-wide text-slate-100">لوحة التشغيل الهادئ</h3>
-                  <p className="mt-1 text-[10px] font-semibold tracking-[0.42em] text-amber-200/55" dir="ltr">CONTROL MODE</p>
+                  <h3 className="text-base font-semibold tracking-wide text-slate-100">لوحة التشغيل الهادئ</h3>
+                  <p className="mt-0.5 text-[9px] font-semibold tracking-[0.36em] text-amber-200/55" dir="ltr">CONTROL MODE</p>
                 </div>
 
                 <div
-                  className="flex h-12 w-12 items-center justify-center rounded-2xl"
+                  className="flex h-10 w-10 items-center justify-center rounded-xl"
                   style={{
                     background: 'linear-gradient(145deg, rgba(245,158,11,0.14), rgba(99,102,241,0.10))',
                     border: '1px solid rgba(245,158,11,0.18)'
                   }}
                 >
-                  <ShieldCheck className="h-6 w-6 text-slate-200/80" />
+                  <ShieldCheck className="h-5 w-5 text-slate-200/80" />
                 </div>
               </div>
 
@@ -2075,31 +2075,31 @@ export default function HomePage() {
                 ].map((item) => (
                   <div
                     key={item.title}
-                    className="rounded-2xl px-2 py-3 text-center"
+                    className="rounded-xl px-2 py-2.5 text-center"
                     style={{ background: item.bg, border: `1px solid ${item.border}` }}
                   >
-                    <div className="text-2xl leading-none">{item.icon}</div>
-                    <p className="mt-2 text-[12px] font-bold" style={{ color: item.color }}>{item.title}</p>
-                    <p className="mt-1 text-[9px] text-slate-400/65">{item.sub}</p>
+                    <div className="text-xl leading-none">{item.icon}</div>
+                    <p className="mt-1.5 text-[11px] font-bold" style={{ color: item.color }}>{item.title}</p>
+                    <p className="mt-0.5 text-[8px] text-slate-400/65">{item.sub}</p>
                   </div>
                 ))}
               </div>
 
               <div
-                className="rounded-2xl px-4 py-3"
+                className="rounded-xl px-3 py-2.5"
                 style={{
                   background: 'rgba(0,0,0,0.18)',
                   border: '1px solid rgba(255,255,255,0.06)'
                 }}
               >
                 <div className="flex items-center justify-between gap-3">
-                  <span className="text-xl text-amber-200">✦</span>
+                  <span className="text-lg text-amber-200">✦</span>
                   <div className="text-right">
-                    <p className="text-sm font-semibold text-slate-100">نظام دخول منظم للفريق</p>
-                    <p className="mt-1 text-[11px] text-slate-400/70">اختر الدور المطلوب وابدأ بدون عرض بيانات التشغيل</p>
+                    <p className="text-xs font-semibold text-slate-100">نظام دخول منظم للفريق</p>
+                    <p className="mt-0.5 text-[10px] text-slate-400/70">اختر الدور المطلوب وابدأ بدون عرض بيانات التشغيل</p>
                   </div>
                   <span
-                    className="rounded-full px-3 py-1 text-[10px] font-black tracking-wide"
+                    className="rounded-full px-2.5 py-0.5 text-[9px] font-black tracking-wide"
                     style={{
                       background: 'rgba(245,158,11,0.10)',
                       color: '#facc15',
@@ -2115,7 +2115,7 @@ export default function HomePage() {
                 {['بوابة الموظف', 'وضع خاص', 'مراقبة هادئة'].map((label) => (
                   <span
                     key={label}
-                    className="rounded-full px-3 py-1.5 text-[10px] font-medium text-slate-300/65"
+                    className="rounded-full px-2.5 py-1 text-[9px] font-medium text-slate-300/65"
                     style={{ background: 'rgba(255,255,255,0.035)', border: '1px solid rgba(255,255,255,0.055)' }}
                   >
                     {label}
