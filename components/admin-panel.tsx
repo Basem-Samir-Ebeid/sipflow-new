@@ -581,6 +581,22 @@ export function AdminPanel({
   const [isSavingSub, setIsSavingSub] = useState(false)
   const [subFilter, setSubFilter] = useState<'all' | 'expiring' | 'expired'>('all')
 
+  // Plan configs editor state
+  type PlanConfigEdit = {
+    maxTables: string; maxStaff: string; maxProducts: string
+    reservationsEnabled: boolean; reportsEnabled: boolean; durationDays: string
+  }
+  const DEFAULT_PLAN_EDITS: Record<string, PlanConfigEdit> = {
+    free:    { maxTables: '10',  maxStaff: '3',  maxProducts: '30',  reservationsEnabled: false, reportsEnabled: false, durationDays: '' },
+    monthly: { maxTables: '20',  maxStaff: '10', maxProducts: '100', reservationsEnabled: true,  reportsEnabled: true,  durationDays: '30' },
+    yearly:  { maxTables: '30',  maxStaff: '15', maxProducts: '200', reservationsEnabled: true,  reportsEnabled: true,  durationDays: '365' },
+    premium: { maxTables: '',    maxStaff: '',   maxProducts: '',    reservationsEnabled: true,  reportsEnabled: true,  durationDays: '' },
+  }
+  const [planEdits, setPlanEdits] = useState<Record<string, PlanConfigEdit>>(DEFAULT_PLAN_EDITS)
+  const [showPlanEditor, setShowPlanEditor] = useState(false)
+  const [isSavingPlans, setIsSavingPlans] = useState(false)
+  const [planSaveMsg, setPlanSaveMsg] = useState('')
+
   // Analytics state
   type AnalyticsData = {
     global: boolean
@@ -1437,10 +1453,58 @@ const handleSaveSettings = async () => {
     setIsFetchingSubs(true)
     try {
       const res = await fetch('/api/subscriptions')
-      if (res.ok) setSubPlaces(await res.json())
+      if (res.ok) {
+        const data = await res.json()
+        setSubPlaces(data.places || [])
+        if (data.planConfigs) {
+          const edits: Record<string, any> = {}
+          for (const [key, cfg] of Object.entries(data.planConfigs as Record<string, any>)) {
+            edits[key] = {
+              maxTables:           cfg.maxTables == null   ? '' : String(cfg.maxTables),
+              maxStaff:            cfg.maxStaff == null    ? '' : String(cfg.maxStaff),
+              maxProducts:         cfg.maxProducts == null ? '' : String(cfg.maxProducts),
+              reservationsEnabled: Boolean(cfg.reservationsEnabled),
+              reportsEnabled:      Boolean(cfg.reportsEnabled),
+              durationDays:        cfg.durationDays == null ? '' : String(cfg.durationDays),
+            }
+          }
+          setPlanEdits(edits)
+        }
+      }
     } finally {
       setIsFetchingSubs(false)
     }
+  }
+
+  const handleSavePlans = async () => {
+    setIsSavingPlans(true)
+    setPlanSaveMsg('')
+    try {
+      const body: Record<string, any> = {}
+      for (const [key, edit] of Object.entries(planEdits)) {
+        body[key] = {
+          maxTables:           edit.maxTables === '' ? null : Number(edit.maxTables),
+          maxStaff:            edit.maxStaff === ''  ? null : Number(edit.maxStaff),
+          maxProducts:         edit.maxProducts === '' ? null : Number(edit.maxProducts),
+          reservationsEnabled: edit.reservationsEnabled,
+          reportsEnabled:      edit.reportsEnabled,
+          durationDays:        edit.durationDays === '' ? null : Number(edit.durationDays),
+        }
+      }
+      const res = await fetch('/api/subscription-plans', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      })
+      if (res.ok) {
+        setPlanSaveMsg('✅ تم الحفظ بنجاح')
+        fetchSubscriptions()
+        setTimeout(() => setPlanSaveMsg(''), 3000)
+      } else {
+        setPlanSaveMsg('❌ فشل الحفظ')
+      }
+    } catch { setPlanSaveMsg('❌ حدث خطأ') }
+    finally { setIsSavingPlans(false) }
   }
 
   const handleSaveSubscription = async (placeId: string) => {
@@ -5702,22 +5766,142 @@ const handleSaveSettings = async () => {
                   </button>
                 </div>
 
-                {/* Plan Legend */}
-                <div className="grid grid-cols-2 gap-2 mt-4">
-                  {[
-                    { plan: 'free',    emoji: '🎁', label: 'مجانية',   color: '#6b7280', desc: '10 طاولة · 3 موظفين · 30 منتج' },
-                    { plan: 'monthly', emoji: '📅', label: 'شهرية',    color: '#3b82f6', desc: '20 طاولة · 10 موظفين · 100 منتج' },
-                    { plan: 'yearly',  emoji: '📆', label: 'سنوية',    color: '#8b5cf6', desc: '30 طاولة · 15 موظفين · 200 منتج' },
-                    { plan: 'premium', emoji: '👑', label: 'بريميوم',  color: '#f59e0b', desc: 'غير محدود · كل المميزات' },
-                  ].map(p => (
-                    <div key={p.plan} className="rounded-xl p-2.5 flex items-center gap-2" style={{ background: `rgba(${p.color === '#6b7280' ? '107,114,128' : p.color === '#3b82f6' ? '59,130,246' : p.color === '#8b5cf6' ? '139,92,246' : '245,158,11'},0.08)`, border: `1px solid rgba(${p.color === '#6b7280' ? '107,114,128' : p.color === '#3b82f6' ? '59,130,246' : p.color === '#8b5cf6' ? '139,92,246' : '245,158,11'},0.2)` }}>
-                      <span className="text-lg">{p.emoji}</span>
-                      <div>
-                        <p className="text-[11px] font-bold" style={{ color: p.color }}>{p.label}</p>
-                        <p className="text-[9px]" style={{ color: 'rgba(255,255,255,0.35)' }}>{p.desc}</p>
+                {/* Plans overview + edit toggle */}
+                <div className="mt-4 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <p className="text-[11px] font-semibold" style={{ color: 'rgba(251,191,36,0.7)' }}>الباقات المتاحة</p>
+                    <button
+                      onClick={() => setShowPlanEditor(v => !v)}
+                      className="flex items-center gap-1.5 rounded-lg px-3 py-1 text-[11px] font-medium transition-all"
+                      style={showPlanEditor
+                        ? { background: 'rgba(217,119,6,0.2)', border: '1px solid rgba(217,119,6,0.45)', color: '#fbbf24' }
+                        : { background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.5)' }}>
+                      <Pencil className="h-3 w-3" />
+                      {showPlanEditor ? 'إخفاء المحرر' : 'تعديل الحدود'}
+                    </button>
+                  </div>
+
+                  {/* Summary cards (always visible) */}
+                  <div className="grid grid-cols-2 gap-2">
+                    {[
+                      { key: 'free',    emoji: '🎁', label: 'مجانية',   color: '#6b7280' },
+                      { key: 'monthly', emoji: '📅', label: 'شهرية',    color: '#3b82f6' },
+                      { key: 'yearly',  emoji: '📆', label: 'سنوية',    color: '#8b5cf6' },
+                      { key: 'premium', emoji: '👑', label: 'بريميوم',  color: '#f59e0b' },
+                    ].map(p => {
+                      const e = planEdits[p.key]
+                      const rgbMap: Record<string, string> = { '#6b7280': '107,114,128', '#3b82f6': '59,130,246', '#8b5cf6': '139,92,246', '#f59e0b': '245,158,11' }
+                      const rgb = rgbMap[p.color]
+                      return (
+                        <div key={p.key} className="rounded-xl p-2.5 flex items-center gap-2"
+                          style={{ background: `rgba(${rgb},0.08)`, border: `1px solid rgba(${rgb},0.2)` }}>
+                          <span className="text-base shrink-0">{p.emoji}</span>
+                          <div className="min-w-0">
+                            <p className="text-[11px] font-bold" style={{ color: p.color }}>{p.label}</p>
+                            <p className="text-[9px] truncate" style={{ color: 'rgba(255,255,255,0.35)' }}>
+                              {e ? `${e.maxTables || '∞'} ط · ${e.maxStaff || '∞'} م · ${e.maxProducts || '∞'} منتج` : '...'}
+                            </p>
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+
+                  {/* Editable plan configs */}
+                  {showPlanEditor && (
+                    <div className="rounded-2xl overflow-hidden mt-3" style={{ border: '1px solid rgba(217,119,6,0.2)', background: 'rgba(0,0,0,0.3)' }}>
+                      <div className="px-4 py-3" style={{ borderBottom: '1px solid rgba(217,119,6,0.12)', background: 'rgba(217,119,6,0.06)' }}>
+                        <p className="text-xs font-bold text-amber-400">✏️ تعديل حدود الباقات</p>
+                        <p className="text-[10px] mt-0.5" style={{ color: 'rgba(255,255,255,0.35)' }}>اترك الخانة فارغة = غير محدود</p>
+                      </div>
+                      <div className="p-4 space-y-5">
+                        {[
+                          { key: 'free',    emoji: '🎁', label: 'مجانية',   color: '#6b7280', rgb: '107,114,128' },
+                          { key: 'monthly', emoji: '📅', label: 'شهرية',    color: '#3b82f6', rgb: '59,130,246' },
+                          { key: 'yearly',  emoji: '📆', label: 'سنوية',    color: '#8b5cf6', rgb: '139,92,246' },
+                          { key: 'premium', emoji: '👑', label: 'بريميوم',  color: '#f59e0b', rgb: '245,158,11' },
+                        ].map(p => {
+                          const e = planEdits[p.key] || {}
+                          const setField = (field: string, val: any) =>
+                            setPlanEdits(prev => ({ ...prev, [p.key]: { ...prev[p.key], [field]: val } }))
+                          return (
+                            <div key={p.key} className="space-y-2.5">
+                              <div className="flex items-center gap-2">
+                                <span className="text-base">{p.emoji}</span>
+                                <span className="text-xs font-bold" style={{ color: p.color }}>{p.label}</span>
+                                <div className="flex-1 h-px" style={{ background: `rgba(${p.rgb},0.15)` }} />
+                              </div>
+                              <div className="grid grid-cols-3 gap-2">
+                                {[
+                                  { field: 'maxTables',   label: 'طاولات' },
+                                  { field: 'maxStaff',    label: 'موظفين' },
+                                  { field: 'maxProducts', label: 'منتجات' },
+                                ].map(f => (
+                                  <div key={f.field}>
+                                    <Label className="text-[10px] mb-1 block" style={{ color: 'rgba(255,255,255,0.4)' }}>{f.label}</Label>
+                                    <Input
+                                      type="number" min="0"
+                                      value={(e as any)[f.field] ?? ''}
+                                      onChange={ev => setField(f.field, ev.target.value)}
+                                      placeholder="∞"
+                                      className="h-8 text-xs rounded-lg text-white text-center"
+                                      style={{ background: `rgba(${p.rgb},0.06)`, border: `1px solid rgba(${p.rgb},0.2)` }}
+                                    />
+                                  </div>
+                                ))}
+                              </div>
+                              <div className="grid grid-cols-3 gap-2">
+                                <div>
+                                  <Label className="text-[10px] mb-1 block" style={{ color: 'rgba(255,255,255,0.4)' }}>مدة (يوم)</Label>
+                                  <Input
+                                    type="number" min="0"
+                                    value={(e as any).durationDays ?? ''}
+                                    onChange={ev => setField('durationDays', ev.target.value)}
+                                    placeholder="دائم"
+                                    className="h-8 text-xs rounded-lg text-white text-center"
+                                    style={{ background: `rgba(${p.rgb},0.06)`, border: `1px solid rgba(${p.rgb},0.2)` }}
+                                  />
+                                </div>
+                                <div className="flex flex-col justify-end gap-1.5">
+                                  <button
+                                    onClick={() => setField('reservationsEnabled', !(e as any).reservationsEnabled)}
+                                    className="h-8 rounded-lg text-[10px] font-medium transition-all px-1"
+                                    style={(e as any).reservationsEnabled
+                                      ? { background: 'rgba(16,185,129,0.15)', border: '1px solid rgba(16,185,129,0.4)', color: '#6ee7b7' }
+                                      : { background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.3)' }}>
+                                    {(e as any).reservationsEnabled ? '✓' : '✗'} حجوزات
+                                  </button>
+                                </div>
+                                <div className="flex flex-col justify-end gap-1.5">
+                                  <button
+                                    onClick={() => setField('reportsEnabled', !(e as any).reportsEnabled)}
+                                    className="h-8 rounded-lg text-[10px] font-medium transition-all px-1"
+                                    style={(e as any).reportsEnabled
+                                      ? { background: 'rgba(16,185,129,0.15)', border: '1px solid rgba(16,185,129,0.4)', color: '#6ee7b7' }
+                                      : { background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.3)' }}>
+                                    {(e as any).reportsEnabled ? '✓' : '✗'} تقارير
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+                          )
+                        })}
+
+                        {planSaveMsg && (
+                          <p className="text-center text-sm font-medium" style={{ color: planSaveMsg.startsWith('✅') ? '#6ee7b7' : '#fca5a5' }}>{planSaveMsg}</p>
+                        )}
+
+                        <button
+                          onClick={handleSavePlans}
+                          disabled={isSavingPlans}
+                          className="w-full h-10 rounded-xl text-sm font-bold flex items-center justify-center gap-2 disabled:opacity-50 transition-all"
+                          style={{ background: 'linear-gradient(135deg, #d97706, #92400e)', color: '#fff', boxShadow: '0 4px 12px rgba(217,119,6,0.3)' }}>
+                          {isSavingPlans ? <RefreshCw className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
+                          {isSavingPlans ? 'جاري الحفظ...' : 'حفظ إعدادات الباقات'}
+                        </button>
                       </div>
                     </div>
-                  ))}
+                  )}
                 </div>
               </div>
             </div>
