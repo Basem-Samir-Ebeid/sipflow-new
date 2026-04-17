@@ -28,7 +28,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Plus, Trash2, Pencil, Upload, RefreshCw, Users, Coffee, Key, BarChart3, TrendingUp, Award, Clock, Send, MessageSquare, Settings2, Hash, UserPlus, UserCog, Minus, Package, Banknote, CheckCircle2, Hourglass, TableProperties, Copy, ExternalLink, Link2, Eye, EyeOff, QrCode, CalendarDays, CalendarCheck, CalendarX, Download, Loader2, Activity, ShieldCheck, ChevronLeft, Radio, Camera, UserCircle } from 'lucide-react'
 import { Checkbox } from '@/components/ui/checkbox'
 import Image from 'next/image'
-import { CommandCenter } from '@/components/command-center'
 import { LivePlacesHub } from '@/components/LivePlacesHub'
 
 type DevAdminRole = 'super_developer' | 'support_admin' | 'sales_admin' | 'finance_admin'
@@ -90,14 +89,14 @@ export function AdminPanel({
     super_developer: {
       label: 'Super Developer',
       description: 'صلاحية كاملة لكل أجزاء النظام',
-      homeTab: 'command-center',
-      tabs: ['command-center', 'stats', 'analytics', 'count', 'drinks', 'inventory', 'cashier', 'reservations', 'place-admins', 'staff', 'places', 'clients', 'messages', 'settings', 'danger', 'live', 'permissions'],
+      homeTab: 'stats',
+      tabs: ['stats', 'analytics', 'count', 'drinks', 'inventory', 'cashier', 'reservations', 'place-admins', 'staff', 'places', 'clients', 'messages', 'settings', 'danger', 'live', 'permissions'],
     },
     support_admin: {
       label: 'Support Admin',
       description: 'متابعة المشاكل والرسائل والبث المباشر بدون أدوات الإدارة الخطرة',
-      homeTab: 'command-center',
-      tabs: ['command-center', 'live', 'messages', 'stats'],
+      homeTab: 'live',
+      tabs: ['live', 'messages', 'stats'],
     },
     sales_admin: {
       label: 'Sales Admin',
@@ -1886,22 +1885,6 @@ const handleSaveSettings = async () => {
             <p className="text-[9px] font-bold uppercase tracking-[0.2em] px-1" style={{ color: '#5b4a8a' }}>Navigation</p>
             {/* Group: Core */}
             <div className="space-y-1.5">
-              {/* Command center — full width highlight */}
-              {canAccessDevTab('command-center') && <button onClick={() => handleTabChange('command-center')}
-                className="w-full flex items-center gap-2.5 rounded-xl px-3.5 py-2.5 transition-all duration-150 hover:scale-[1.01] active:scale-[0.99]"
-                style={{
-                  background: activeAdminTab === 'command-center' ? 'linear-gradient(135deg, rgba(139,92,246,0.45), rgba(79,70,229,0.35))' : 'rgba(139,92,246,0.08)',
-                  border: `1px solid ${activeAdminTab === 'command-center' ? 'rgba(139,92,246,0.7)' : 'rgba(139,92,246,0.15)'}`,
-                  boxShadow: activeAdminTab === 'command-center' ? '0 0 16px rgba(139,92,246,0.25)' : 'none'
-                }}>
-                <Activity className="h-4 w-4" style={{ color: activeAdminTab === 'command-center' ? '#e9d5ff' : '#7c6e9e' }} />
-                <span className="text-xs font-bold" style={{ color: activeAdminTab === 'command-center' ? '#e9d5ff' : '#7c6e9e' }}>مركز التحكم الرئيسي</span>
-                <span className="ml-auto flex h-2 w-2">
-                  <span className="absolute inline-flex h-2 w-2 rounded-full bg-emerald-400 opacity-60 animate-ping" />
-                  <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-400" />
-                </span>
-              </button>}
-
               {/* Live Places Hub — full width */}
               {canAccessDevTab('live') && <button onClick={() => handleTabChange('live')}
                 className="w-full flex items-center gap-2.5 rounded-xl px-3.5 py-2.5 transition-all duration-150 hover:scale-[1.01] active:scale-[0.99]"
@@ -2093,7 +2076,6 @@ const handleSaveSettings = async () => {
         {isDevAdmin ? (
           <TabsList className="hidden">
             {[
-              ['command-center', 'مركز التحكم'],
               ['stats', 'الإحصائيات'],
               ['analytics', 'التقارير'],
               ['count', 'المسلم'],
@@ -2183,11 +2165,6 @@ const handleSaveSettings = async () => {
             </TabsTrigger>
           </TabsList>
         )}
-
-        {/* ── Command Center Tab ── */}
-        <TabsContent value="command-center" className="space-y-4">
-          <CommandCenter />
-        </TabsContent>
 
         {/* ── Live Places Hub Tab ── */}
         <TabsContent value="live" className="space-y-4">
