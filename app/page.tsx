@@ -1900,223 +1900,149 @@ export default function HomePage() {
   // Place Selection Screen
   if (!currentPlace && !isAdmin) {
     return (
-      <main className="relative min-h-screen bg-black overflow-x-hidden overflow-y-auto flex flex-col items-center p-0" dir="rtl" onClick={handleGlobalClick} suppressHydrationWarning>
-        {/* Background effects */}
-        <div className="pointer-events-none absolute inset-0 opacity-[0.015]" style={{ backgroundImage: 'linear-gradient(rgba(212,160,23,0.8) 1px, transparent 1px), linear-gradient(90deg, rgba(212,160,23,0.8) 1px, transparent 1px)', backgroundSize: '40px 40px' }} />
-        <div className="pointer-events-none absolute top-0 left-1/2 -translate-x-1/2 h-[500px] w-[500px] rounded-full" style={{ background: 'radial-gradient(circle, rgba(212,160,23,0.06) 0%, transparent 60%)', filter: 'blur(40px)' }} />
+      <main className="relative min-h-screen overflow-x-hidden overflow-y-auto flex flex-col items-center p-0" dir="rtl" onClick={handleGlobalClick} suppressHydrationWarning style={{ background: 'linear-gradient(160deg, #0f1117 0%, #13151e 60%, #0f1117 100%)' }}>
+        {/* Subtle background texture */}
+        <div className="pointer-events-none absolute inset-0" style={{ backgroundImage: 'radial-gradient(circle at 30% 20%, rgba(99,102,241,0.04) 0%, transparent 50%), radial-gradient(circle at 70% 80%, rgba(148,163,184,0.03) 0%, transparent 50%)' }} />
 
         {/* Developer bar */}
-        <div className="relative w-full py-1.5" style={{ background: 'linear-gradient(90deg, #0a0500, #1a0d00, #3d1f00, #D4A017, #3d1f00, #1a0d00, #0a0500)' }}>
+        <div className="relative w-full py-1.5" style={{ background: 'rgba(255,255,255,0.025)', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
           <div className="flex items-center justify-center gap-2">
-            <span className="text-[10px] tracking-widest uppercase" style={{ color: 'rgba(255,232,160,0.5)' }}>✦</span>
-            <span className="text-[11px] font-semibold tracking-[0.18em] uppercase" style={{ color: '#ffe8a0' }}>Developed by Basem Samir Ebeid</span>
-            <span className="text-[10px] tracking-widest uppercase" style={{ color: 'rgba(255,232,160,0.5)' }}>✦</span>
+            <div className="h-px w-8" style={{ background: 'rgba(148,163,184,0.2)' }} />
+            <span className="text-[10px] tracking-[0.22em] uppercase font-medium" style={{ color: 'rgba(148,163,184,0.45)' }}>
+              Developed by Basem Samir Ebeid
+            </span>
+            <div className="h-px w-8" style={{ background: 'rgba(148,163,184,0.2)' }} />
           </div>
         </div>
 
-        <div className="w-full max-w-sm space-y-5 px-5 pt-6 pb-8">
-          {/* Welcome Banner */}
-          <div className="relative overflow-hidden rounded-2xl px-5 py-4 text-center"
-            style={{
-              background: 'linear-gradient(135deg, #0a0600 0%, #1a0d00 50%, #0f0800 100%)',
-              border: '1px solid rgba(212,160,23,0.2)',
-              boxShadow: '0 4px 20px rgba(212,160,23,0.06), inset 0 1px 0 rgba(255,255,255,0.03)'
-            }}>
-            <div className="pointer-events-none absolute inset-x-0 top-0 h-px" style={{ background: 'linear-gradient(90deg, transparent, rgba(212,160,23,0.5), transparent)' }} />
-            <p className="font-mono text-[10px] tracking-[0.25em] uppercase font-semibold mb-1.5" style={{ color: 'rgba(212,160,23,0.7)' }}>
-              welcome · أهلاً وسهلاً
-            </p>
-            <p className="text-sm font-bold leading-relaxed" style={{ color: '#e8c76a', fontFamily: 'Georgia, serif' }}>
-              نتمنى لكم يوماً جميلاً وممتعاً معنا في{' '}
-              <span style={{ color: '#fbbf24' }}>SîpFlõw</span> ☕
-            </p>
-            <div className="mt-2.5 mx-auto h-px w-16 rounded-full" style={{ background: 'linear-gradient(90deg, transparent, rgba(212,160,23,0.4), transparent)' }} />
-          </div>
-
-          {/* Logo */}
-          <div className="flex flex-col items-center space-y-2 py-1">
-            <div className="relative flex items-center justify-center" style={{ width: 148, height: 148 }}>
-              <svg
-                viewBox="0 0 180 180"
-                className="animate-zigzag-ring"
-                style={{ position: 'absolute', top: -16, left: -16, width: 180, height: 180, zIndex: 0 }}
-              >
-                <defs>
-                  <linearGradient id="zigStrokeGoldA" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%"   stopColor="#FFF3A3" />
-                    <stop offset="35%"  stopColor="#D4A017" />
-                    <stop offset="65%"  stopColor="#F5D060" />
-                    <stop offset="100%" stopColor="#A07010" />
-                  </linearGradient>
-                </defs>
-                <polygon
-                  fill="none"
-                  stroke="url(#zigStrokeGoldA)"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  className="animate-zigzag-dash"
-                  points="90,2 110.7,12.73 134,13.79 146.57,33.43 166.21,46 167.27,69.3 178,90 167.27,110.7 166.21,134 146.57,146.57 134,166.21 110.7,167.27 90,178 69.3,167.27 46,166.21 33.43,146.57 13.79,134 12.73,110.7 2,90 12.73,69.3 13.79,46 33.43,33.43 46,13.79 69.3,12.73"
-                />
-              </svg>
-              <div className="absolute rounded-full overflow-hidden" style={{ width: 112, height: 112, zIndex: 1, boxShadow: '0 0 30px rgba(212,160,23,0.15)' }}>
-                <Image src="/images/sipflow-logo.jpg" alt="SîpFlõw" fill sizes="112px" loading="eager" style={{ objectFit: 'cover', objectPosition: 'center' }} />
+        <div className="w-full max-w-sm space-y-4 px-5 pt-8 pb-10">
+          {/* Logo + Branding */}
+          <div className="flex flex-col items-center space-y-4 pb-2">
+            <div className="relative">
+              <div className="relative rounded-2xl overflow-hidden" style={{ width: 88, height: 88, border: '1px solid rgba(255,255,255,0.08)', boxShadow: '0 8px 32px rgba(0,0,0,0.4)' }}>
+                <Image src="/images/sipflow-logo.jpg" alt="SîpFlõw" fill sizes="88px" loading="eager" style={{ objectFit: 'cover', objectPosition: 'center' }} />
+              </div>
+              <div className="absolute -bottom-1.5 -right-1.5 flex h-6 w-6 items-center justify-center rounded-lg" style={{ background: 'rgba(99,102,241,0.9)', border: '2px solid rgba(15,17,23,1)', boxShadow: '0 2px 8px rgba(99,102,241,0.4)' }}>
+                <Coffee className="h-3 w-3 text-white" />
               </div>
             </div>
-            <div className="text-center">
-              <p className="text-3xl font-bold tracking-tight" style={{ background: 'linear-gradient(135deg, #f0c040 0%, #D4A017 40%, #C17A3A 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', fontFamily: 'Georgia, serif' }}>SîpFlõw</p>
-              <p className="font-mono text-[11px] tracking-[0.2em] uppercase mt-1" style={{ color: 'rgba(255,255,255,0.35)' }}>Order Management System</p>
+            <div className="text-center space-y-1">
+              <h1 className="text-2xl font-bold tracking-tight text-white">SîpFlõw</h1>
+              <p className="text-[11px] tracking-[0.18em] uppercase font-medium" style={{ color: 'rgba(148,163,184,0.5)' }}>Order Management System</p>
             </div>
+          </div>
+
+          {/* Welcome Banner */}
+          <div className="rounded-xl px-4 py-3 text-center" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
+            <p className="text-sm leading-relaxed" style={{ color: 'rgba(226,232,240,0.7)' }}>
+              أهلاً وسهلاً · نتمنى لكم يوماً رائعاً في{' '}
+              <span className="font-semibold text-indigo-400">SîpFlõw</span> ☕
+            </p>
           </div>
 
           {/* Place Picker Button */}
           <button
             onClick={handleOpenPlacesPicker}
             disabled={isLoadingPlaces}
-            className="w-full rounded-2xl flex items-center justify-between px-4 py-3.5 transition-all hover:brightness-110 active:scale-[0.98] disabled:opacity-50 group focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
+            className="w-full rounded-xl flex items-center justify-between px-4 py-3.5 transition-all active:scale-[0.98] disabled:opacity-50 group focus-visible:ring-2 focus-visible:ring-indigo-500/50 focus-visible:outline-none"
             style={{
-              background: 'linear-gradient(135deg, #0f0a00, #1c1200, #0f0a00)',
-              border: '1px solid rgba(212,160,23,0.2)',
-              boxShadow: '0 2px 12px rgba(212,160,23,0.06)'
+              background: 'rgba(99,102,241,0.1)',
+              border: '1px solid rgba(99,102,241,0.25)',
             }}
           >
             <div className="flex items-center gap-3">
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl shrink-0" style={{ background: 'rgba(212,160,23,0.08)', border: '1px solid rgba(212,160,23,0.18)' }}>
+              <div className="flex h-9 w-9 items-center justify-center rounded-lg shrink-0" style={{ background: 'rgba(99,102,241,0.15)' }}>
                 {isLoadingPlaces
-                  ? <Loader2 className="h-4 w-4 animate-spin" style={{ color: '#D4A017' }} />
-                  : <MapPin className="h-4 w-4" style={{ color: '#D4A017' }} />}
+                  ? <Loader2 className="h-4 w-4 animate-spin text-indigo-400" />
+                  : <MapPin className="h-4 w-4 text-indigo-400" />}
               </div>
               <div className="text-right">
-                <p className="text-sm font-bold leading-tight" style={{ color: '#e8c76a' }}>
+                <p className="text-sm font-semibold text-white leading-tight">
                   {isLoadingPlaces ? 'جاري التحميل...' : 'اختار مكانك'}
                 </p>
                 {!isLoadingPlaces && (
-                  <p className="text-[11px] leading-tight mt-0.5" style={{ color: 'rgba(212,160,23,0.55)' }}>لتقديم طلبك</p>
+                  <p className="text-[11px] leading-tight mt-0.5" style={{ color: 'rgba(148,163,184,0.5)' }}>اضغط لعرض الأماكن المتاحة</p>
                 )}
               </div>
             </div>
-            <ChevronLeft className="h-4 w-4 shrink-0 transition-transform group-hover:-translate-x-0.5" style={{ color: 'rgba(212,160,23,0.3)' }} />
+            <ChevronLeft className="h-4 w-4 shrink-0 text-indigo-400/50 transition-transform group-hover:-translate-x-0.5" />
           </button>
 
           {/* Separator */}
-          <div className="flex items-center gap-3 py-1">
-            <div className="h-px flex-1" style={{ background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.08))' }} />
-            <p className="font-mono text-[10px] tracking-[0.2em] uppercase" style={{ color: 'rgba(255,255,255,0.25)' }}>الموظفين والإدارة</p>
-            <div className="h-px flex-1" style={{ background: 'linear-gradient(90deg, rgba(255,255,255,0.08), transparent)' }} />
+          <div className="flex items-center gap-3">
+            <div className="h-px flex-1" style={{ background: 'rgba(255,255,255,0.06)' }} />
+            <p className="text-[10px] tracking-[0.18em] uppercase font-medium" style={{ color: 'rgba(148,163,184,0.3)' }}>الموظفون والإدارة</p>
+            <div className="h-px flex-1" style={{ background: 'rgba(255,255,255,0.06)' }} />
           </div>
 
           {/* Admin Buttons */}
-          <div className="flex flex-col gap-2.5 w-full">
+          <div className="flex flex-col gap-2 w-full">
             {/* Dev Admin */}
             <button
               onClick={() => setShowAdminLogin(true)}
-              className="relative w-full overflow-hidden rounded-2xl py-3.5 px-4 flex items-center justify-between transition-all hover:scale-[1.01] active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-violet-500/50 focus-visible:outline-none"
+              className="w-full rounded-xl py-3 px-4 flex items-center justify-between transition-all hover:bg-[rgba(99,102,241,0.12)] active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-violet-500/40 focus-visible:outline-none"
               style={{
-                background: 'linear-gradient(135deg, #0d0520 0%, #1a0a3d 50%, #0d0520 100%)',
-                border: '1px solid rgba(139,92,246,0.3)',
-                boxShadow: '0 2px 16px rgba(124,58,237,0.12)'
+                background: 'rgba(99,102,241,0.07)',
+                border: '1px solid rgba(99,102,241,0.18)',
               }}
             >
-              <div className="absolute inset-x-0 top-0 h-px" style={{ background: 'linear-gradient(90deg, transparent, rgba(139,92,246,0.5), transparent)' }} />
-              <div className="relative flex items-center gap-3">
-                <div className="flex h-9 w-9 items-center justify-center rounded-xl text-xl shrink-0" style={{ background: 'rgba(139,92,246,0.12)', border: '1px solid rgba(139,92,246,0.2)' }}>
+              <div className="flex items-center gap-3">
+                <div className="flex h-9 w-9 items-center justify-center rounded-lg shrink-0 text-base" style={{ background: 'rgba(99,102,241,0.12)' }}>
                   👑
                 </div>
                 <div className="text-right">
-                  <p className="text-xs font-bold tracking-[0.12em] uppercase" style={{ color: '#c4b5fd' }}>Developer Admin</p>
-                  <p className="text-[11px] mt-0.5" style={{ color: 'rgba(167,139,250,0.6)' }}>System Control Panel</p>
+                  <p className="text-sm font-semibold text-white leading-tight">Developer Admin</p>
+                  <p className="text-[11px] mt-0.5" style={{ color: 'rgba(148,163,184,0.4)' }}>لوحة التحكم الرئيسية</p>
                 </div>
               </div>
-              <div className="relative flex items-center gap-1.5">
-                <div className="h-1.5 w-1.5 rounded-full animate-pulse" style={{ background: '#a78bfa' }} />
-                <span className="font-mono text-[10px] font-bold tracking-wider" style={{ color: '#a78bfa' }}>VIP</span>
-              </div>
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded-md" style={{ background: 'rgba(99,102,241,0.15)', color: '#818cf8', border: '1px solid rgba(99,102,241,0.2)' }}>VIP</span>
             </button>
 
             {/* Role buttons 2x2 */}
             <div className="grid grid-cols-2 gap-2">
               {[
-                { label: 'Place Admin', icon: '⚙️', onClick: () => { setShowPlaceAdminLanding(true); setPlaceAdminConfirmError('') }, color: '#D4A017', bg: 'rgba(212,160,23,0.06)', border: 'rgba(212,160,23,0.18)' },
-                { label: 'Cashier', icon: '🧾', onClick: () => { setShowCashierLogin(true); setCashierLoginError('') }, color: '#22c55e', bg: 'rgba(22,163,74,0.06)', border: 'rgba(22,163,74,0.18)' },
-                { label: 'Waiter', icon: '🛎️', onClick: () => { window.location.href = '/waiter' }, color: '#f59e0b', bg: 'rgba(245,158,11,0.06)', border: 'rgba(245,158,11,0.18)' },
-                { label: 'Bar', icon: '☕', onClick: () => { window.location.href = '/bar' }, color: '#38bdf8', bg: 'rgba(56,189,248,0.06)', border: 'rgba(56,189,248,0.18)' },
+                { label: 'Place Admin', icon: <Settings className="h-4 w-4" />, onClick: () => { setShowPlaceAdminLanding(true); setPlaceAdminConfirmError('') }, color: '#94a3b8', iconColor: 'rgba(148,163,184,0.15)' },
+                { label: 'Cashier', icon: <ClipboardList className="h-4 w-4" />, onClick: () => { setShowCashierLogin(true); setCashierLoginError('') }, color: '#6ee7b7', iconColor: 'rgba(110,231,183,0.12)' },
+                { label: 'Waiter', icon: <Bell className="h-4 w-4" />, onClick: () => { window.location.href = '/waiter' }, color: '#fcd34d', iconColor: 'rgba(252,211,77,0.1)' },
+                { label: 'Bar', icon: <Coffee className="h-4 w-4" />, onClick: () => { window.location.href = '/bar' }, color: '#7dd3fc', iconColor: 'rgba(125,211,252,0.1)' },
               ].map((btn, i) => (
                 <button
                   key={i}
                   onClick={btn.onClick}
-                  className="flex items-center gap-2.5 py-3 px-3 rounded-xl transition-all hover:brightness-125 active:scale-[0.97] focus-visible:ring-2 focus-visible:ring-white/20 focus-visible:outline-none"
-                  style={{ background: btn.bg, border: `1px solid ${btn.border}` }}
+                  className="flex items-center gap-2.5 py-3 px-3.5 rounded-xl transition-all hover:brightness-110 active:scale-[0.97] focus-visible:ring-2 focus-visible:ring-white/10 focus-visible:outline-none"
+                  style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}
                 >
-                  <span className="text-lg shrink-0">{btn.icon}</span>
-                  <span className="text-xs font-semibold tracking-wide" style={{ color: btn.color }}>{btn.label}</span>
+                  <span className="flex h-8 w-8 items-center justify-center rounded-lg shrink-0" style={{ background: btn.iconColor, color: btn.color }}>{btn.icon}</span>
+                  <span className="text-sm font-medium" style={{ color: btn.color }}>{btn.label}</span>
                 </button>
               ))}
             </div>
           </div>
 
-          <div className="w-full mt-1" dir="rtl">
-            <div className="relative overflow-hidden rounded-2xl p-3.5" style={{ background: 'linear-gradient(135deg, rgba(15,23,42,0.72), rgba(24,10,38,0.58))', border: '1px solid rgba(212,160,23,0.14)', boxShadow: '0 18px 50px rgba(0,0,0,0.26), inset 0 1px 0 rgba(255,255,255,0.04)' }}>
-              <div className="pointer-events-none absolute inset-0 opacity-35" style={{ background: 'radial-gradient(circle at 18% 15%, rgba(212,160,23,0.20), transparent 34%), radial-gradient(circle at 88% 78%, rgba(124,58,237,0.20), transparent 38%)' }} />
-              <div className="relative">
-                <div className="flex items-center justify-between gap-3 mb-3">
-                  <div className="flex items-center gap-2">
-                    <div className="flex h-8 w-8 items-center justify-center rounded-xl" style={{ background: 'rgba(212,160,23,0.10)', border: '1px solid rgba(212,160,23,0.20)' }}>
-                      <span className="text-base">🛡️</span>
-                    </div>
-                    <div>
-                      <p className="text-xs font-bold" style={{ color: 'rgba(255,255,255,0.82)' }}>لوحة التشغيل الهادئ</p>
-                      <p className="text-[9px] tracking-[0.22em] uppercase" style={{ color: 'rgba(212,160,23,0.42)' }}>CONTROL MODE</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-1.5 rounded-full px-2.5 py-1" style={{ background: sysOnline === false ? 'rgba(239,68,68,0.08)' : 'rgba(16,185,129,0.08)', border: sysOnline === false ? '1px solid rgba(239,68,68,0.18)' : '1px solid rgba(16,185,129,0.18)' }}>
-                    <span className={`h-1.5 w-1.5 rounded-full ${sysOnline === false ? 'bg-red-400' : 'bg-emerald-400'}`} style={{ boxShadow: sysOnline === false ? '0 0 8px rgba(248,113,113,0.8)' : '0 0 8px rgba(52,211,153,0.8)' }} />
-                    <span className="text-[9px] font-bold" style={{ color: sysOnline === false ? '#f87171' : '#34d399' }}>
-                      {sysOnline === null ? 'فحص الاتصال' : sysOnline ? 'جاهز للعمل' : 'يحتاج متابعة'}
-                    </span>
-                  </div>
+          {/* System Status Card */}
+          <div className="rounded-xl p-3.5" style={{ background: 'rgba(255,255,255,0.025)', border: '1px solid rgba(255,255,255,0.06)' }}>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <div className="flex h-7 w-7 items-center justify-center rounded-lg" style={{ background: 'rgba(255,255,255,0.05)' }}>
+                  <ShieldCheck className="h-3.5 w-3.5" style={{ color: 'rgba(148,163,184,0.6)' }} />
                 </div>
-
-                <div className="grid grid-cols-3 gap-2 mb-3">
-                  {[
-                    { icon: '🧭', title: 'توجيه ذكي', text: 'اختيار المسار', color: '#fbbf24', bg: 'rgba(251,191,36,0.06)', border: 'rgba(251,191,36,0.16)' },
-                    { icon: '🔐', title: 'دخول آمن', text: 'جلسة محمية', color: '#a78bfa', bg: 'rgba(139,92,246,0.07)', border: 'rgba(139,92,246,0.18)' },
-                    { icon: '⚡', title: 'تشغيل فوري', text: 'واجهة جاهزة', color: '#60a5fa', bg: 'rgba(59,130,246,0.07)', border: 'rgba(59,130,246,0.16)' },
-                  ].map((card, i) => (
-                    <div key={i} className="rounded-xl p-2.5 text-center" style={{ background: card.bg, border: `1px solid ${card.border}` }}>
-                      <span className="block text-lg leading-none mb-1.5">{card.icon}</span>
-                      <span className="block text-[10px] font-bold leading-tight" style={{ color: card.color }}>{card.title}</span>
-                      <span className="block text-[8px] mt-1 leading-tight" style={{ color: 'rgba(255,255,255,0.28)' }}>{card.text}</span>
-                    </div>
-                  ))}
-                </div>
-
-                <div className="rounded-xl px-3 py-2.5 mb-2" style={{ background: 'rgba(0,0,0,0.18)', border: '1px solid rgba(255,255,255,0.06)' }}>
-                  <div className="flex items-center justify-between gap-3">
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm">✨</span>
-                      <div>
-                        <p className="text-[11px] font-semibold" style={{ color: 'rgba(255,255,255,0.72)' }}>نظام دخول منظم للفريق</p>
-                        <p className="text-[9px] mt-0.5" style={{ color: 'rgba(255,255,255,0.26)' }}>اختر الدور المطلوب وابدأ بدون عرض بيانات التشغيل</p>
-                      </div>
-                    </div>
-                    <span className="rounded-full px-2 py-0.5 text-[9px] font-bold" style={{ background: 'rgba(212,160,23,0.10)', color: '#d4a017', border: '1px solid rgba(212,160,23,0.18)' }}>PRIVATE</span>
-                  </div>
-                </div>
-
-                <div className="flex items-center justify-between px-0.5">
-                  <div className="flex items-center gap-1.5">
-                    {['بوابة الموظفين', 'وضع خاص', 'مراقبة هادئة'].map((label, i) => (
-                      <span key={i} className="rounded-full px-2 py-0.5 text-[8px]" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.24)' }}>{label}</span>
-                    ))}
-                  </div>
-                  {sysLastUpdate && (
-                    <span className="text-[9px] font-mono" style={{ color: 'rgba(255,255,255,0.15)' }}>
-                      {sysLastUpdate.toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' })}
-                    </span>
-                  )}
+                <div>
+                  <p className="text-xs font-medium text-slate-300">حالة النظام</p>
+                  <p className="text-[10px] mt-0.5" style={{ color: 'rgba(148,163,184,0.4)' }}>نظام دخول موحد للفريق</p>
                 </div>
               </div>
+              <div className="flex items-center gap-1.5">
+                <span className={`h-1.5 w-1.5 rounded-full ${sysOnline === false ? 'bg-red-400' : 'bg-emerald-400'}`} />
+                <span className="text-[10px] font-medium" style={{ color: sysOnline === false ? '#f87171' : '#6ee7b7' }}>
+                  {sysOnline === null ? 'يتحقق...' : sysOnline ? 'متصل' : 'غير متصل'}
+                </span>
+              </div>
             </div>
+            {sysLastUpdate && (
+              <p className="text-[9px] font-mono mt-2.5 text-right" style={{ color: 'rgba(148,163,184,0.2)' }}>
+                آخر تحديث: {sysLastUpdate.toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' })}
+              </p>
+            )}
           </div>
         </div>
 
