@@ -13,6 +13,11 @@ export interface Place {
   place_type: 'cafe' | 'company'
   free_drinks_count: number | null
   free_drink_id: string | null
+  owner_name: string | null
+  owner_phone: string | null
+  subscription_amount: string | number | null
+  subscription_plan: string | null
+  subscription_expires_at: string | null
   created_at: string
   updated_at: string
 }

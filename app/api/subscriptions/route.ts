@@ -7,12 +7,18 @@ export async function GET() {
     const sql = getSql()
     await sql`ALTER TABLE places ADD COLUMN IF NOT EXISTS subscription_plan TEXT DEFAULT 'free'`.catch(() => {})
     await sql`ALTER TABLE places ADD COLUMN IF NOT EXISTS subscription_expires_at TIMESTAMPTZ`.catch(() => {})
+    await sql`ALTER TABLE places ADD COLUMN IF NOT EXISTS owner_name TEXT`.catch(() => {})
+    await sql`ALTER TABLE places ADD COLUMN IF NOT EXISTS owner_phone TEXT`.catch(() => {})
+    await sql`ALTER TABLE places ADD COLUMN IF NOT EXISTS subscription_amount NUMERIC(12, 2)`.catch(() => {})
 
     const [places, planConfigs] = await Promise.all([
       sql`
         SELECT id, name, code, is_active,
                subscription_plan,
                subscription_expires_at,
+               owner_name,
+               owner_phone,
+               subscription_amount,
                created_at
         FROM places
         ORDER BY created_at DESC
@@ -56,13 +62,18 @@ export async function GET() {
 export async function PATCH(request: Request) {
   try {
     const body = await request.json()
-    const { place_id, subscription_plan, subscription_expires_at } = body
+    const { place_id, subscription_plan, subscription_expires_at, owner_name, owner_phone, subscription_amount } = body
 
     if (!place_id) {
       return NextResponse.json({ error: 'place_id is required' }, { status: 400 })
     }
 
     const sql = getSql()
+    await sql`ALTER TABLE places ADD COLUMN IF NOT EXISTS subscription_plan TEXT DEFAULT 'free'`.catch(() => {})
+    await sql`ALTER TABLE places ADD COLUMN IF NOT EXISTS subscription_expires_at TIMESTAMPTZ`.catch(() => {})
+    await sql`ALTER TABLE places ADD COLUMN IF NOT EXISTS owner_name TEXT`.catch(() => {})
+    await sql`ALTER TABLE places ADD COLUMN IF NOT EXISTS owner_phone TEXT`.catch(() => {})
+    await sql`ALTER TABLE places ADD COLUMN IF NOT EXISTS subscription_amount NUMERIC(12, 2)`.catch(() => {})
     const planConfigs = await getPlansFromDb()
 
     if (subscription_plan && !planConfigs[subscription_plan]) {
@@ -83,12 +94,25 @@ export async function PATCH(request: Request) {
 
     const plan = subscription_plan || 'free'
     const planConfig = planConfigs[plan]
+    const normalizedOwnerName = typeof owner_name === 'string' && owner_name.trim() ? owner_name.trim() : null
+    const normalizedOwnerPhone = typeof owner_phone === 'string' && owner_phone.trim() ? owner_phone.trim() : null
+    let normalizedAmount: number | null = null
+
+    if (subscription_amount !== undefined && subscription_amount !== null && String(subscription_amount).trim() !== '') {
+      normalizedAmount = Number(subscription_amount)
+      if (!Number.isFinite(normalizedAmount) || normalizedAmount < 0) {
+        return NextResponse.json({ error: 'Invalid subscription amount' }, { status: 400 })
+      }
+    }
 
     if (expiresAt) {
       await sql`
         UPDATE places SET
           subscription_plan = ${plan},
           subscription_expires_at = ${expiresAt},
+          owner_name = ${normalizedOwnerName},
+          owner_phone = ${normalizedOwnerPhone},
+          subscription_amount = ${normalizedAmount},
           reservations_enabled = ${planConfig.reservationsEnabled},
           updated_at = NOW()
         WHERE id = ${place_id}
@@ -98,6 +122,9 @@ export async function PATCH(request: Request) {
         UPDATE places SET
           subscription_plan = ${plan},
           subscription_expires_at = NULL,
+          owner_name = ${normalizedOwnerName},
+          owner_phone = ${normalizedOwnerPhone},
+          subscription_amount = ${normalizedAmount},
           reservations_enabled = ${planConfig.reservationsEnabled},
           updated_at = NOW()
         WHERE id = ${place_id}

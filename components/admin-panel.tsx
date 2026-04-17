@@ -90,7 +90,7 @@ export function AdminPanel({
       label: 'Super Developer',
       description: 'صلاحية كاملة لكل أجزاء النظام',
       homeTab: 'stats',
-      tabs: ['stats', 'analytics', 'count', 'drinks', 'inventory', 'cashier', 'reservations', 'place-admins', 'staff', 'places', 'clients', 'subscriptions', 'messages', 'settings', 'danger', 'live', 'permissions'],
+      tabs: ['stats', 'analytics', 'count', 'drinks', 'inventory', 'cashier', 'reservations', 'place-admins', 'staff', 'places', 'subscriptions', 'messages', 'settings', 'danger', 'live', 'permissions'],
     },
     support_admin: {
       label: 'Support Admin',
@@ -100,9 +100,9 @@ export function AdminPanel({
     },
     sales_admin: {
       label: 'Sales Admin',
-      description: 'إدارة العملاء والأماكن والاشتراكات والحجوزات',
-      homeTab: 'clients',
-      tabs: ['clients', 'places', 'subscriptions', 'reservations', 'stats'],
+      description: 'إدارة الأماكن والاشتراكات والحجوزات',
+      homeTab: 'subscriptions',
+      tabs: ['places', 'subscriptions', 'reservations', 'stats'],
     },
     finance_admin: {
       label: 'Finance Admin',
@@ -569,6 +569,7 @@ export function AdminPanel({
   type SubPlace = {
     id: string; name: string; code: string; is_active: boolean
     subscription_plan: string; subscription_expires_at: string | null
+    owner_name: string | null; owner_phone: string | null; subscription_amount: string | number | null
     days_left: number | null; is_expired: boolean; expiring_soon: boolean
     plan_config: { label: string; maxTables: number | null; maxStaff: number | null; maxProducts: number | null; reservationsEnabled: boolean; reportsEnabled: boolean; color: string; emoji: string }
     created_at: string
@@ -578,6 +579,9 @@ export function AdminPanel({
   const [editSubId, setEditSubId] = useState<string | null>(null)
   const [editSubPlan, setEditSubPlan] = useState<string>('free')
   const [editSubExpiry, setEditSubExpiry] = useState<string>('')
+  const [editSubOwnerName, setEditSubOwnerName] = useState<string>('')
+  const [editSubOwnerPhone, setEditSubOwnerPhone] = useState<string>('')
+  const [editSubAmount, setEditSubAmount] = useState<string>('')
   const [isSavingSub, setIsSavingSub] = useState(false)
   const [subFilter, setSubFilter] = useState<'all' | 'expiring' | 'expired'>('all')
 
@@ -1510,7 +1514,13 @@ const handleSaveSettings = async () => {
   const handleSaveSubscription = async (placeId: string) => {
     setIsSavingSub(true)
     try {
-      const body: Record<string, string> = { place_id: placeId, subscription_plan: editSubPlan }
+      const body: Record<string, string | null> = {
+        place_id: placeId,
+        subscription_plan: editSubPlan,
+        owner_name: editSubOwnerName.trim() || null,
+        owner_phone: editSubOwnerPhone.trim() || null,
+        subscription_amount: editSubAmount.trim() || null,
+      }
       if (editSubExpiry) body.subscription_expires_at = new Date(editSubExpiry).toISOString()
       const res = await fetch('/api/subscriptions', {
         method: 'PATCH',
@@ -2070,7 +2080,6 @@ const handleSaveSettings = async () => {
                     { tab: 'place-admins', icon: <UserCog className="h-3.5 w-3.5" />,   label: 'الأدمنز',   ac: '#059669' },
                     { tab: 'staff',        icon: <Users className="h-3.5 w-3.5" />,      label: 'Staff',     ac: '#059669' },
                     { tab: 'places',       icon: <Link2 className="h-3.5 w-3.5" />,      label: 'الأماكن',  ac: '#059669' },
-                    { tab: 'clients',      icon: <UserPlus className="h-3.5 w-3.5" />,   label: 'العملاء',  ac: '#059669' },
                   ].filter(item => canAccessDevTab(item.tab)).map(item => (
                     <button key={item.tab} onClick={() => handleTabChange(item.tab)}
                       className="flex flex-col items-center gap-1 rounded-xl py-2.5 px-1 transition-all duration-150 hover:scale-105 active:scale-95"
@@ -2227,7 +2236,6 @@ const handleSaveSettings = async () => {
               ['place-admins', 'أدمنز الأماكن'],
               ['staff', 'Staff'],
               ['places', 'الأماكن'],
-              ['clients', 'العملاء'],
               ['subscriptions', 'الاشتراكات'],
               ['messages', 'الرسائل'],
               ['settings', 'الإعدادات'],
@@ -5980,6 +5988,19 @@ const handleSaveSettings = async () => {
                                   <span className="text-[10px] text-white/30">♾️ دائمة</span>
                                 )}
                               </div>
+                              <div className="flex items-center gap-2 mt-1 flex-wrap">
+                                {p.owner_name && (
+                                  <span className="text-[10px] text-white/45">👤 {p.owner_name}</span>
+                                )}
+                                {p.owner_phone && (
+                                  <span className="text-[10px] text-white/45" dir="ltr">📞 {p.owner_phone}</span>
+                                )}
+                                {p.subscription_amount != null && Number(p.subscription_amount) > 0 && (
+                                  <span className="text-[10px] text-emerald-300 font-medium">
+                                    💰 {Number(p.subscription_amount).toLocaleString('ar-EG')} ج.م
+                                  </span>
+                                )}
+                              </div>
                             </div>
                           </div>
                           <button
@@ -5990,6 +6011,9 @@ const handleSaveSettings = async () => {
                                 setEditSubPlan(p.subscription_plan)
                                 const exp = p.subscription_expires_at ? new Date(p.subscription_expires_at).toISOString().split('T')[0] : ''
                                 setEditSubExpiry(exp)
+                                setEditSubOwnerName(p.owner_name || '')
+                                setEditSubOwnerPhone(p.owner_phone || '')
+                                setEditSubAmount(p.subscription_amount == null ? '' : String(p.subscription_amount))
                               }
                             }}
                             className="shrink-0 rounded-lg px-3 py-1.5 text-xs font-medium transition-all"
@@ -6036,6 +6060,49 @@ const handleSaveSettings = async () => {
                                   {opt.emoji} {opt.label}
                                 </button>
                               ))}
+                            </div>
+
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                              <div>
+                                <Label className="text-[11px] font-medium mb-1.5 block" style={{ color: 'rgba(251,191,36,0.7)' }}>
+                                  اسم مالك المكان
+                                </Label>
+                                <Input
+                                  value={editSubOwnerName}
+                                  onChange={e => setEditSubOwnerName(e.target.value)}
+                                  placeholder="مثال: أحمد محمد"
+                                  className="h-9 text-sm rounded-xl text-white"
+                                  style={{ background: 'rgba(217,119,6,0.06)', border: '1px solid rgba(217,119,6,0.2)' }}
+                                />
+                              </div>
+                              <div>
+                                <Label className="text-[11px] font-medium mb-1.5 block" style={{ color: 'rgba(251,191,36,0.7)' }}>
+                                  رقم تليفون المالك
+                                </Label>
+                                <Input
+                                  value={editSubOwnerPhone}
+                                  onChange={e => setEditSubOwnerPhone(e.target.value)}
+                                  placeholder="01000000000"
+                                  dir="ltr"
+                                  className="h-9 text-sm rounded-xl text-white"
+                                  style={{ background: 'rgba(217,119,6,0.06)', border: '1px solid rgba(217,119,6,0.2)' }}
+                                />
+                              </div>
+                              <div>
+                                <Label className="text-[11px] font-medium mb-1.5 block" style={{ color: 'rgba(251,191,36,0.7)' }}>
+                                  قيمة الاشتراك بالجنيه
+                                </Label>
+                                <Input
+                                  type="number"
+                                  min="0"
+                                  step="0.01"
+                                  value={editSubAmount}
+                                  onChange={e => setEditSubAmount(e.target.value)}
+                                  placeholder="مثال: 500"
+                                  className="h-9 text-sm rounded-xl text-white"
+                                  style={{ background: 'rgba(217,119,6,0.06)', border: '1px solid rgba(217,119,6,0.2)' }}
+                                />
+                              </div>
                             </div>
 
                             {/* Expiry date */}

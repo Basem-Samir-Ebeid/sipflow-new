@@ -8,8 +8,9 @@ PostgreSQL returns DECIMAL/NUMERIC columns as strings (e.g., `'15.00'`). All `dr
 
 ## Recent Features (v2.6 — Subscriptions System)
 - **نظام الباقات والاشتراكات:** تبويب جديد "الاشتراكات" في لوحة الأدمن المطور (وسيلز أدمن). كل مكان له باقة: مجانية / شهرية / سنوية / بريميوم. كل باقة تحدد: عدد الطاولات، الموظفين، المنتجات، تفعيل الحجوزات، تفعيل التقارير. مع تاريخ انتهاء قابل للتخصيص وتنبيه قبل 7 أيام من الانتهاء.
-- **Database:** أعمدة جديدة في جدول `places`: `subscription_plan` (free/monthly/yearly/premium)، `subscription_expires_at`.
-- **API:** `GET /api/subscriptions` و `PATCH /api/subscriptions` لقراءة وتحديث اشتراكات الأماكن.
+- **بيانات الاشتراك:** يمكن حفظ اسم مالك المكان، رقم تليفونه، وقيمة الاشتراك بالجنيه المصري داخل تبويب الاشتراكات.
+- **Database:** أعمدة جديدة في جدول `places`: `subscription_plan` (free/monthly/yearly/premium)، `subscription_expires_at`, `owner_name`, `owner_phone`, `subscription_amount`.
+- **API:** `GET /api/subscriptions` و `PATCH /api/subscriptions` لقراءة وتحديث اشتراكات الأماكن وبيانات المالك والمبلغ.
 - **الصلاحيات:** `super_developer` و `sales_admin` لهم وصول لتبويب الاشتراكات.
 
 ## Recent Features (v2.5 — Developer Permissions)
