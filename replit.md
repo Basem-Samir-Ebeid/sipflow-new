@@ -101,6 +101,9 @@ The workflow runs `npm run dev` which starts Next.js on port 5000 at `0.0.0.0`.
 - Dependencies have been installed from the existing `package.json`/`package-lock.json` setup.
 - The Replit PostgreSQL database has been initialized using the existing project migration scripts, including the multi-tenant, reservations, company employee, subscription, and app settings tables.
 
+## Recent UI Update
+- The entrance screen system status card was redesigned into a dark "لوحة التشغيل الهادئ / CONTROL MODE" panel with private mode, readiness status, secure entry, smart routing, and instant operation indicators.
+
 ## Key Features
 - **Multi-tenant:** Each café is isolated by `place_id` throughout entire stack
 - **Shisha tab:** Shows any drink with "شيشة" in its name OR category='shisha'

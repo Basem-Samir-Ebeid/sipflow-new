@@ -2019,30 +2019,116 @@ export default function HomePage() {
             </div>
           </div>
 
-          {/* System Status Card */}
-          <div className="rounded-xl p-3.5" style={{ background: 'rgba(255,255,255,0.025)', border: '1px solid rgba(255,255,255,0.06)' }}>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2.5">
-                <div className="flex h-7 w-7 items-center justify-center rounded-lg" style={{ background: 'rgba(255,255,255,0.05)' }}>
-                  <ShieldCheck className="h-3.5 w-3.5" style={{ color: 'rgba(148,163,184,0.6)' }} />
+          <div
+            className="relative overflow-hidden rounded-[1.7rem] p-4 shadow-2xl"
+            style={{
+              background: 'linear-gradient(145deg, rgba(10,12,28,0.96), rgba(21,16,44,0.98) 58%, rgba(33,18,62,0.96))',
+              border: '1px solid rgba(124,58,237,0.22)',
+              boxShadow: '0 24px 70px rgba(0,0,0,0.38), inset 0 1px 0 rgba(255,255,255,0.05)'
+            }}
+          >
+            <div
+              className="pointer-events-none absolute inset-0 opacity-40"
+              style={{
+                backgroundImage: 'linear-gradient(rgba(255,255,255,0.035) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.035) 1px, transparent 1px)',
+                backgroundSize: '34px 34px'
+              }}
+            />
+            <div className="pointer-events-none absolute -left-12 -top-10 h-36 w-36 rounded-full bg-violet-500/15 blur-3xl" />
+            <div className="pointer-events-none absolute -bottom-16 right-8 h-40 w-40 rounded-full bg-indigo-500/12 blur-3xl" />
+
+            <div className="relative space-y-4">
+              <div className="flex items-start justify-between gap-3">
+                <div
+                  className="inline-flex items-center gap-2 rounded-full px-4 py-2 text-[11px] font-bold"
+                  style={{
+                    background: sysOnline === false ? 'rgba(244,63,94,0.12)' : 'rgba(16,185,129,0.13)',
+                    color: sysOnline === false ? '#fb7185' : '#6ee7b7',
+                    border: `1px solid ${sysOnline === false ? 'rgba(244,63,94,0.22)' : 'rgba(16,185,129,0.24)'}`
+                  }}
+                >
+                  <span>{sysOnline === null ? 'جار الفحص' : sysOnline ? 'جاهز للعمل' : 'يحتاج مراجعة'}</span>
+                  <span className={`h-2 w-2 rounded-full ${sysOnline === false ? 'bg-rose-400' : 'bg-emerald-400'}`} />
                 </div>
-                <div>
-                  <p className="text-xs font-medium text-slate-300">حالة النظام</p>
-                  <p className="text-[10px] mt-0.5" style={{ color: 'rgba(148,163,184,0.4)' }}>نظام دخول موحد للفريق</p>
+
+                <div className="text-center">
+                  <h3 className="text-lg font-semibold tracking-wide text-slate-100">لوحة التشغيل الهادئ</h3>
+                  <p className="mt-1 text-[10px] font-semibold tracking-[0.42em] text-amber-200/55" dir="ltr">CONTROL MODE</p>
+                </div>
+
+                <div
+                  className="flex h-12 w-12 items-center justify-center rounded-2xl"
+                  style={{
+                    background: 'linear-gradient(145deg, rgba(245,158,11,0.14), rgba(99,102,241,0.10))',
+                    border: '1px solid rgba(245,158,11,0.18)'
+                  }}
+                >
+                  <ShieldCheck className="h-6 w-6 text-slate-200/80" />
                 </div>
               </div>
-              <div className="flex items-center gap-1.5">
-                <span className={`h-1.5 w-1.5 rounded-full ${sysOnline === false ? 'bg-red-400' : 'bg-emerald-400'}`} />
-                <span className="text-[10px] font-medium" style={{ color: sysOnline === false ? '#f87171' : '#6ee7b7' }}>
-                  {sysOnline === null ? 'يتحقق...' : sysOnline ? 'متصل' : 'غير متصل'}
-                </span>
+
+              <div className="grid grid-cols-3 gap-2">
+                {[
+                  { icon: '🧭', title: 'توجيه ذكي', sub: 'اختيار المسار', color: '#facc15', bg: 'rgba(245,158,11,0.08)', border: 'rgba(245,158,11,0.16)' },
+                  { icon: '🔐', title: 'دخول آمن', sub: 'جلسة محمية', color: '#c4b5fd', bg: 'rgba(124,58,237,0.10)', border: 'rgba(124,58,237,0.18)' },
+                  { icon: '⚡', title: 'تشغيل فوري', sub: 'واجهة جاهزة', color: '#93c5fd', bg: 'rgba(59,130,246,0.09)', border: 'rgba(59,130,246,0.16)' },
+                ].map((item) => (
+                  <div
+                    key={item.title}
+                    className="rounded-2xl px-2 py-3 text-center"
+                    style={{ background: item.bg, border: `1px solid ${item.border}` }}
+                  >
+                    <div className="text-2xl leading-none">{item.icon}</div>
+                    <p className="mt-2 text-[12px] font-bold" style={{ color: item.color }}>{item.title}</p>
+                    <p className="mt-1 text-[9px] text-slate-400/65">{item.sub}</p>
+                  </div>
+                ))}
               </div>
+
+              <div
+                className="rounded-2xl px-4 py-3"
+                style={{
+                  background: 'rgba(0,0,0,0.18)',
+                  border: '1px solid rgba(255,255,255,0.06)'
+                }}
+              >
+                <div className="flex items-center justify-between gap-3">
+                  <span className="text-xl text-amber-200">✦</span>
+                  <div className="text-right">
+                    <p className="text-sm font-semibold text-slate-100">نظام دخول منظم للفريق</p>
+                    <p className="mt-1 text-[11px] text-slate-400/70">اختر الدور المطلوب وابدأ بدون عرض بيانات التشغيل</p>
+                  </div>
+                  <span
+                    className="rounded-full px-3 py-1 text-[10px] font-black tracking-wide"
+                    style={{
+                      background: 'rgba(245,158,11,0.10)',
+                      color: '#facc15',
+                      border: '1px solid rgba(245,158,11,0.18)'
+                    }}
+                  >
+                    PRIVATE
+                  </span>
+                </div>
+              </div>
+
+              <div className="flex flex-wrap items-center justify-center gap-2">
+                {['بوابة الموظف', 'وضع خاص', 'مراقبة هادئة'].map((label) => (
+                  <span
+                    key={label}
+                    className="rounded-full px-3 py-1.5 text-[10px] font-medium text-slate-300/65"
+                    style={{ background: 'rgba(255,255,255,0.035)', border: '1px solid rgba(255,255,255,0.055)' }}
+                  >
+                    {label}
+                  </span>
+                ))}
+              </div>
+
+              {sysLastUpdate && (
+                <p className="text-[9px] font-mono text-right" style={{ color: 'rgba(148,163,184,0.24)' }}>
+                  {sysLastUpdate.toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' })}
+                </p>
+              )}
             </div>
-            {sysLastUpdate && (
-              <p className="text-[9px] font-mono mt-2.5 text-right" style={{ color: 'rgba(148,163,184,0.2)' }}>
-                آخر تحديث: {sysLastUpdate.toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' })}
-              </p>
-            )}
           </div>
         </div>
 
