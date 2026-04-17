@@ -6,6 +6,12 @@ A Next.js multi-tenant café/social space drink ordering and management system. 
 ## Known Fix — Price Type Coercion
 PostgreSQL returns DECIMAL/NUMERIC columns as strings (e.g., `'15.00'`). All `drink.price` references across the codebase use `Number()` conversion before arithmetic, comparisons, and `.toFixed()` calls. This prevents `TypeError` crashes in DrinkCard and other components.
 
+## Recent Features (v2.6 — Subscriptions System)
+- **نظام الباقات والاشتراكات:** تبويب جديد "الاشتراكات" في لوحة الأدمن المطور (وسيلز أدمن). كل مكان له باقة: مجانية / شهرية / سنوية / بريميوم. كل باقة تحدد: عدد الطاولات، الموظفين، المنتجات، تفعيل الحجوزات، تفعيل التقارير. مع تاريخ انتهاء قابل للتخصيص وتنبيه قبل 7 أيام من الانتهاء.
+- **Database:** أعمدة جديدة في جدول `places`: `subscription_plan` (free/monthly/yearly/premium)، `subscription_expires_at`.
+- **API:** `GET /api/subscriptions` و `PATCH /api/subscriptions` لقراءة وتحديث اشتراكات الأماكن.
+- **الصلاحيات:** `super_developer` و `sales_admin` لهم وصول لتبويب الاشتراكات.
+
 ## Recent Features (v2.5 — Developer Permissions)
 - **Advanced Developer Permissions:** Developer admin login now supports roles: Super Developer (full access), Support Admin (support/live/messages overview), Sales Admin (clients/places/reservations), and Finance Admin (revenue/analytics/cashier/count). Existing `ADMIN_SECRET` / `dev_admin_password` login remains Super Developer. The developer admin panel no longer shows the main Command Center tab.
 - **Dev Admin Accounts:** Super Developer can manage additional developer admin accounts from the new "الصلاحيات" tab. Accounts are stored in `app_settings.dev_admin_accounts` with hashed passwords and role metadata.

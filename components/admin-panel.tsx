@@ -90,7 +90,7 @@ export function AdminPanel({
       label: 'Super Developer',
       description: 'صلاحية كاملة لكل أجزاء النظام',
       homeTab: 'stats',
-      tabs: ['stats', 'analytics', 'count', 'drinks', 'inventory', 'cashier', 'reservations', 'place-admins', 'staff', 'places', 'clients', 'messages', 'settings', 'danger', 'live', 'permissions'],
+      tabs: ['stats', 'analytics', 'count', 'drinks', 'inventory', 'cashier', 'reservations', 'place-admins', 'staff', 'places', 'clients', 'subscriptions', 'messages', 'settings', 'danger', 'live', 'permissions'],
     },
     support_admin: {
       label: 'Support Admin',
@@ -102,7 +102,7 @@ export function AdminPanel({
       label: 'Sales Admin',
       description: 'إدارة العملاء والأماكن والاشتراكات والحجوزات',
       homeTab: 'clients',
-      tabs: ['clients', 'places', 'reservations', 'stats'],
+      tabs: ['clients', 'places', 'subscriptions', 'reservations', 'stats'],
     },
     finance_admin: {
       label: 'Finance Admin',
@@ -564,6 +564,22 @@ export function AdminPanel({
   const [reservTableNumbers, setReservTableNumbers] = useState<Record<string, string>>({})
   const [orderTrackingMap, setOrderTrackingMap] = useState<Record<string, boolean>>({})
   const [isSavingTracking, setIsSavingTracking] = useState(false)
+
+  // Subscriptions state (dev admin only)
+  type SubPlace = {
+    id: string; name: string; code: string; is_active: boolean
+    subscription_plan: string; subscription_expires_at: string | null
+    days_left: number | null; is_expired: boolean; expiring_soon: boolean
+    plan_config: { label: string; maxTables: number | null; maxStaff: number | null; maxProducts: number | null; reservationsEnabled: boolean; reportsEnabled: boolean; color: string; emoji: string }
+    created_at: string
+  }
+  const [subPlaces, setSubPlaces] = useState<SubPlace[]>([])
+  const [isFetchingSubs, setIsFetchingSubs] = useState(false)
+  const [editSubId, setEditSubId] = useState<string | null>(null)
+  const [editSubPlan, setEditSubPlan] = useState<string>('free')
+  const [editSubExpiry, setEditSubExpiry] = useState<string>('')
+  const [isSavingSub, setIsSavingSub] = useState(false)
+  const [subFilter, setSubFilter] = useState<'all' | 'expiring' | 'expired'>('all')
 
   // Analytics state
   type AnalyticsData = {
@@ -1417,6 +1433,37 @@ const handleSaveSettings = async () => {
     }
   }
 
+  const fetchSubscriptions = async () => {
+    setIsFetchingSubs(true)
+    try {
+      const res = await fetch('/api/subscriptions')
+      if (res.ok) setSubPlaces(await res.json())
+    } finally {
+      setIsFetchingSubs(false)
+    }
+  }
+
+  const handleSaveSubscription = async (placeId: string) => {
+    setIsSavingSub(true)
+    try {
+      const body: Record<string, string> = { place_id: placeId, subscription_plan: editSubPlan }
+      if (editSubExpiry) body.subscription_expires_at = new Date(editSubExpiry).toISOString()
+      const res = await fetch('/api/subscriptions', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      })
+      if (res.ok) {
+        toast.success('تم تحديث الباقة')
+        setEditSubId(null)
+        fetchSubscriptions()
+      } else {
+        toast.error('فشل تحديث الباقة')
+      }
+    } catch { toast.error('حدث خطأ') }
+    finally { setIsSavingSub(false) }
+  }
+
   const handleAddClient = async () => {
     if (!newClientName.trim()) { setClientsError('الاسم مطلوب'); return }
     setIsAddingClient(true)
@@ -1714,6 +1761,7 @@ const handleSaveSettings = async () => {
     if (v === 'staff' && isDevAdmin) fetchPlaces()
     if (v === 'danger' && isDevAdmin) fetchPlaces().then(list => { if (list.length > 0) setResetPlaceId(prev => prev || list[0].id) })
     if (v === 'clients' && isDevAdmin) fetchClients()
+    if (v === 'subscriptions' && isDevAdmin) fetchSubscriptions()
     if (v === 'tables' && !isDevAdmin) { fetchPlaceTableCount(); fetchInventory() }
     if (v === 'settings' && !isDevAdmin && placeId) { fetchClosedStatus() }
     if (v === 'settings' && !isDevAdmin && placeId) { fetchPlaces().then(list => { const p = list.find((pl: Place) => pl.id === placeId); if (p) { setReservationsEnabledMap(prev => ({ ...prev, [placeId]: !!p.reservations_enabled })); setOrderTrackingMap(prev => ({ ...prev, [placeId]: p.order_tracking_enabled !== false })) } }) }
@@ -1975,6 +2023,35 @@ const handleSaveSettings = async () => {
                 </div>
               </div>
 
+              {/* Subscriptions group */}
+              {canAccessDevTab('subscriptions') && (
+                <div>
+                  <p className="text-[9px] font-semibold uppercase tracking-widest px-1 mb-1" style={{ color: '#d97706' }}>الباقات</p>
+                  <div className="grid grid-cols-2 gap-1.5">
+                    {[
+                      { tab: 'subscriptions', icon: <Award className="h-3.5 w-3.5" />, label: 'الاشتراكات', ac: '#d97706' },
+                    ].map(item => (
+                      <button key={item.tab} onClick={() => handleTabChange(item.tab)}
+                        className="relative flex flex-col items-center gap-1 rounded-xl py-2.5 px-1 transition-all duration-150 hover:scale-105 active:scale-95"
+                        style={{
+                          background: activeAdminTab === item.tab ? 'rgba(217,119,6,0.25)' : 'rgba(255,255,255,0.03)',
+                          border: `1px solid ${activeAdminTab === item.tab ? 'rgba(217,119,6,0.55)' : 'rgba(255,255,255,0.06)'}`,
+                          boxShadow: activeAdminTab === item.tab ? '0 0 10px rgba(217,119,6,0.18)' : 'none',
+                          color: activeAdminTab === item.tab ? '#fde68a' : '#5b4a8a'
+                        }}>
+                        {item.icon}
+                        <span className="text-[10px] font-semibold">{item.label}</span>
+                        {subPlaces.filter(p => p.is_expired || p.expiring_soon).length > 0 && (
+                          <span className="absolute -top-1 -right-1 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-red-500 text-[8px] font-black text-white">
+                            {subPlaces.filter(p => p.is_expired || p.expiring_soon).length}
+                          </span>
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               {/* System group */}
               <div>
                 <p className="text-[9px] font-semibold uppercase tracking-widest px-1 mb-1" style={{ color: '#0369a1' }}>النظام</p>
@@ -2087,6 +2164,7 @@ const handleSaveSettings = async () => {
               ['staff', 'Staff'],
               ['places', 'الأماكن'],
               ['clients', 'العملاء'],
+              ['subscriptions', 'الاشتراكات'],
               ['messages', 'الرسائل'],
               ['settings', 'الإعدادات'],
               ['permissions', 'الصلاحيات'],
@@ -5600,6 +5678,226 @@ const handleSaveSettings = async () => {
               )}
             </div>
           </TabsContent>
+
+          {/* ─── Subscriptions Tab (dev admin only) ─── */}
+          <TabsContent value="subscriptions" className="space-y-4">
+            {/* Header */}
+            <div className="relative rounded-2xl overflow-hidden" style={{ background: 'linear-gradient(170deg, rgba(217,119,6,0.1) 0%, rgba(245,158,11,0.05) 50%, rgba(15,15,25,0.95) 100%)', border: '1px solid rgba(217,119,6,0.2)', boxShadow: '0 8px 32px rgba(0,0,0,0.3), inset 0 1px 0 rgba(217,119,6,0.1)' }}>
+              <div className="p-5">
+                <div className="flex items-center justify-between gap-3 pb-4" style={{ borderBottom: '1px solid rgba(217,119,6,0.12)' }}>
+                  <div className="flex items-center gap-3">
+                    <div className="flex items-center justify-center w-10 h-10 rounded-xl" style={{ background: 'linear-gradient(135deg, rgba(217,119,6,0.2), rgba(245,158,11,0.15))', border: '1px solid rgba(217,119,6,0.25)' }}>
+                      <Award className="h-5 w-5" style={{ color: '#fbbf24' }} />
+                    </div>
+                    <div>
+                      <h3 className="font-bold text-white text-sm">إدارة الباقات والاشتراكات</h3>
+                      <p className="text-[10px]" style={{ color: 'rgba(251,191,36,0.6)' }}>تحديد الباقة ومميزاتها لكل مكان</p>
+                    </div>
+                  </div>
+                  <button onClick={fetchSubscriptions} disabled={isFetchingSubs}
+                    className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium transition-all"
+                    style={{ background: 'rgba(217,119,6,0.1)', border: '1px solid rgba(217,119,6,0.25)', color: '#fbbf24' }}>
+                    <RefreshCw className={`h-3.5 w-3.5 ${isFetchingSubs ? 'animate-spin' : ''}`} />
+                    تحديث
+                  </button>
+                </div>
+
+                {/* Plan Legend */}
+                <div className="grid grid-cols-2 gap-2 mt-4">
+                  {[
+                    { plan: 'free',    emoji: '🎁', label: 'مجانية',   color: '#6b7280', desc: '10 طاولة · 3 موظفين · 30 منتج' },
+                    { plan: 'monthly', emoji: '📅', label: 'شهرية',    color: '#3b82f6', desc: '20 طاولة · 10 موظفين · 100 منتج' },
+                    { plan: 'yearly',  emoji: '📆', label: 'سنوية',    color: '#8b5cf6', desc: '30 طاولة · 15 موظفين · 200 منتج' },
+                    { plan: 'premium', emoji: '👑', label: 'بريميوم',  color: '#f59e0b', desc: 'غير محدود · كل المميزات' },
+                  ].map(p => (
+                    <div key={p.plan} className="rounded-xl p-2.5 flex items-center gap-2" style={{ background: `rgba(${p.color === '#6b7280' ? '107,114,128' : p.color === '#3b82f6' ? '59,130,246' : p.color === '#8b5cf6' ? '139,92,246' : '245,158,11'},0.08)`, border: `1px solid rgba(${p.color === '#6b7280' ? '107,114,128' : p.color === '#3b82f6' ? '59,130,246' : p.color === '#8b5cf6' ? '139,92,246' : '245,158,11'},0.2)` }}>
+                      <span className="text-lg">{p.emoji}</span>
+                      <div>
+                        <p className="text-[11px] font-bold" style={{ color: p.color }}>{p.label}</p>
+                        <p className="text-[9px]" style={{ color: 'rgba(255,255,255,0.35)' }}>{p.desc}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Filter Tabs */}
+            <div className="flex gap-2">
+              {[
+                { key: 'all', label: 'الكل' },
+                { key: 'expiring', label: '⚠️ تنتهي قريباً' },
+                { key: 'expired', label: '🔴 منتهية' },
+              ].map(f => (
+                <button key={f.key} onClick={() => setSubFilter(f.key as any)}
+                  className="rounded-full px-3 py-1 text-xs font-medium transition-all"
+                  style={subFilter === f.key
+                    ? { background: 'rgba(217,119,6,0.2)', border: '1px solid rgba(217,119,6,0.5)', color: '#fbbf24' }
+                    : { background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', color: 'rgba(255,255,255,0.4)' }}>
+                  {f.label}
+                  {f.key === 'expiring' && subPlaces.filter(p => p.expiring_soon && !p.is_expired).length > 0 && (
+                    <span className="mr-1 inline-flex items-center justify-center h-4 w-4 rounded-full bg-amber-500 text-[8px] font-black text-black">{subPlaces.filter(p => p.expiring_soon && !p.is_expired).length}</span>
+                  )}
+                  {f.key === 'expired' && subPlaces.filter(p => p.is_expired).length > 0 && (
+                    <span className="mr-1 inline-flex items-center justify-center h-4 w-4 rounded-full bg-red-500 text-[8px] font-black text-white">{subPlaces.filter(p => p.is_expired).length}</span>
+                  )}
+                </button>
+              ))}
+            </div>
+
+            {/* Places list */}
+            {isFetchingSubs ? (
+              <div className="text-center py-12">
+                <RefreshCw className="h-6 w-6 animate-spin mx-auto mb-2 text-amber-500" />
+                <p className="text-sm text-muted-foreground">جاري التحميل...</p>
+              </div>
+            ) : subPlaces.length === 0 ? (
+              <div className="text-center py-12 text-muted-foreground">
+                <p className="text-4xl mb-3">🏪</p>
+                <p>لا توجد أماكن مسجّلة بعد</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {subPlaces
+                  .filter(p => {
+                    if (subFilter === 'expiring') return p.expiring_soon && !p.is_expired
+                    if (subFilter === 'expired') return p.is_expired
+                    return true
+                  })
+                  .map(p => {
+                    const isEditing = editSubId === p.id
+                    const planColors: Record<string, string> = { free: '#6b7280', monthly: '#3b82f6', yearly: '#8b5cf6', premium: '#f59e0b' }
+                    const planColor = planColors[p.subscription_plan] || '#6b7280'
+
+                    return (
+                      <div key={p.id} className="rounded-2xl overflow-hidden" style={{ border: p.is_expired ? '1px solid rgba(239,68,68,0.35)' : p.expiring_soon ? '1px solid rgba(245,158,11,0.35)' : '1px solid rgba(255,255,255,0.07)', background: p.is_expired ? 'rgba(239,68,68,0.04)' : p.expiring_soon ? 'rgba(245,158,11,0.04)' : 'rgba(255,255,255,0.02)' }}>
+                        {/* Place header row */}
+                        <div className="flex items-center justify-between gap-3 px-4 py-3">
+                          <div className="flex items-center gap-3 min-w-0">
+                            <div className="flex items-center justify-center w-8 h-8 rounded-lg shrink-0 text-base"
+                              style={{ background: `rgba(${planColor === '#6b7280' ? '107,114,128' : planColor === '#3b82f6' ? '59,130,246' : planColor === '#8b5cf6' ? '139,92,246' : '245,158,11'},0.15)`, border: `1px solid rgba(${planColor === '#6b7280' ? '107,114,128' : planColor === '#3b82f6' ? '59,130,246' : planColor === '#8b5cf6' ? '139,92,246' : '245,158,11'},0.3)` }}>
+                              {p.plan_config?.emoji || '🏪'}
+                            </div>
+                            <div className="min-w-0">
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <p className="font-semibold text-sm text-white truncate">{p.name}</p>
+                                <span className="text-[10px] px-2 py-0.5 rounded-full font-bold shrink-0" style={{ background: `rgba(${planColor === '#6b7280' ? '107,114,128' : planColor === '#3b82f6' ? '59,130,246' : planColor === '#8b5cf6' ? '139,92,246' : '245,158,11'},0.15)`, color: planColor, border: `1px solid rgba(${planColor === '#6b7280' ? '107,114,128' : planColor === '#3b82f6' ? '59,130,246' : planColor === '#8b5cf6' ? '139,92,246' : '245,158,11'},0.3)` }}>
+                                  {p.plan_config?.label || p.subscription_plan}
+                                </span>
+                              </div>
+                              <div className="flex items-center gap-2 mt-0.5">
+                                {p.subscription_expires_at ? (
+                                  p.is_expired ? (
+                                    <span className="text-[10px] text-red-400 font-medium">🔴 انتهى الاشتراك</span>
+                                  ) : (
+                                    <span className={`text-[10px] font-medium ${p.expiring_soon ? 'text-amber-400' : 'text-white/40'}`}>
+                                      {p.expiring_soon ? '⚠️' : '⏰'} ينتهي خلال {p.days_left} يوم · {new Date(p.subscription_expires_at).toLocaleDateString('ar-EG', { day: '2-digit', month: '2-digit', year: 'numeric' })}
+                                    </span>
+                                  )
+                                ) : p.subscription_plan === 'free' ? (
+                                  <span className="text-[10px] text-white/30">باقة مجانية · بدون انتهاء</span>
+                                ) : (
+                                  <span className="text-[10px] text-white/30">♾️ دائمة</span>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                          <button
+                            onClick={() => {
+                              if (isEditing) { setEditSubId(null) }
+                              else {
+                                setEditSubId(p.id)
+                                setEditSubPlan(p.subscription_plan)
+                                const exp = p.subscription_expires_at ? new Date(p.subscription_expires_at).toISOString().split('T')[0] : ''
+                                setEditSubExpiry(exp)
+                              }
+                            }}
+                            className="shrink-0 rounded-lg px-3 py-1.5 text-xs font-medium transition-all"
+                            style={isEditing
+                              ? { background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.5)' }
+                              : { background: 'rgba(217,119,6,0.1)', border: '1px solid rgba(217,119,6,0.3)', color: '#fbbf24' }}>
+                            {isEditing ? 'إلغاء' : <><Pencil className="inline h-3 w-3 ml-1" />تعديل</>}
+                          </button>
+                        </div>
+
+                        {/* Features row */}
+                        <div className="flex items-center gap-3 px-4 pb-3 flex-wrap">
+                          {[
+                            { label: `${p.plan_config?.maxTables ?? '∞'} طاولة`, ok: true },
+                            { label: `${p.plan_config?.maxStaff ?? '∞'} موظف`, ok: true },
+                            { label: `${p.plan_config?.maxProducts ?? '∞'} منتج`, ok: true },
+                            { label: 'حجوزات', ok: p.plan_config?.reservationsEnabled },
+                            { label: 'تقارير', ok: p.plan_config?.reportsEnabled },
+                          ].map((feat, fi) => (
+                            <span key={fi} className="text-[10px] px-2 py-0.5 rounded-full" style={{ background: feat.ok ? 'rgba(16,185,129,0.08)' : 'rgba(107,114,128,0.08)', color: feat.ok ? '#6ee7b7' : '#4b5563', border: `1px solid rgba(${feat.ok ? '16,185,129' : '107,114,128'},0.15)` }}>
+                              {feat.ok ? '✓' : '✗'} {feat.label}
+                            </span>
+                          ))}
+                        </div>
+
+                        {/* Edit panel */}
+                        {isEditing && (
+                          <div className="px-4 pb-4 space-y-3 border-t" style={{ borderColor: 'rgba(217,119,6,0.15)' }}>
+                            <p className="text-[11px] font-semibold text-amber-400 pt-3">تعديل الباقة</p>
+
+                            {/* Plan selector */}
+                            <div className="grid grid-cols-2 gap-2">
+                              {[
+                                { plan: 'free',    emoji: '🎁', label: 'مجانية',   color: '#6b7280' },
+                                { plan: 'monthly', emoji: '📅', label: 'شهرية',    color: '#3b82f6' },
+                                { plan: 'yearly',  emoji: '📆', label: 'سنوية',    color: '#8b5cf6' },
+                                { plan: 'premium', emoji: '👑', label: 'بريميوم',  color: '#f59e0b' },
+                              ].map(opt => (
+                                <button key={opt.plan} onClick={() => setEditSubPlan(opt.plan)}
+                                  className="h-10 rounded-xl text-sm font-bold transition-all duration-150 flex items-center justify-center gap-2"
+                                  style={editSubPlan === opt.plan
+                                    ? { background: `rgba(${opt.color === '#6b7280' ? '107,114,128' : opt.color === '#3b82f6' ? '59,130,246' : opt.color === '#8b5cf6' ? '139,92,246' : '245,158,11'},0.2)`, border: `1.5px solid rgba(${opt.color === '#6b7280' ? '107,114,128' : opt.color === '#3b82f6' ? '59,130,246' : opt.color === '#8b5cf6' ? '139,92,246' : '245,158,11'},0.6)`, color: opt.color }
+                                    : { background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.35)' }}>
+                                  {opt.emoji} {opt.label}
+                                </button>
+                              ))}
+                            </div>
+
+                            {/* Expiry date */}
+                            {editSubPlan !== 'free' && editSubPlan !== 'premium' && (
+                              <div>
+                                <Label className="text-[11px] font-medium mb-1.5 block" style={{ color: 'rgba(251,191,36,0.7)' }}>
+                                  تاريخ الانتهاء <span className="text-white/30 font-normal">(اتركه فارغ للحساب التلقائي)</span>
+                                </Label>
+                                <Input type="date" value={editSubExpiry} onChange={e => setEditSubExpiry(e.target.value)}
+                                  className="h-9 text-sm rounded-xl text-white"
+                                  style={{ background: 'rgba(217,119,6,0.06)', border: '1px solid rgba(217,119,6,0.2)' }} />
+                              </div>
+                            )}
+
+                            {/* Save */}
+                            <button
+                              onClick={() => handleSaveSubscription(p.id)}
+                              disabled={isSavingSub}
+                              className="w-full h-10 rounded-xl text-sm font-bold transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+                              style={{ background: 'linear-gradient(135deg, #d97706, #b45309)', color: '#fff', boxShadow: '0 4px 12px rgba(217,119,6,0.3)' }}>
+                              {isSavingSub ? <RefreshCw className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
+                              {isSavingSub ? 'جاري الحفظ...' : 'حفظ الباقة'}
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    )
+                  })}
+                {subPlaces.filter(p => {
+                  if (subFilter === 'expiring') return p.expiring_soon && !p.is_expired
+                  if (subFilter === 'expired') return p.is_expired
+                  return true
+                }).length === 0 && (
+                  <div className="text-center py-8 text-muted-foreground">
+                    <p className="text-3xl mb-2">{subFilter === 'expiring' ? '✅' : '✅'}</p>
+                    <p className="text-sm">لا توجد نتائج لهذا الفلتر</p>
+                  </div>
+                )}
+              </div>
+            )}
+          </TabsContent>
+
           </>
         )}
 
