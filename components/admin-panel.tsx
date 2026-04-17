@@ -2284,10 +2284,6 @@ const handleSaveSettings = async () => {
             </TabsTrigger>
             <div className="mx-1 h-5 w-px self-center rounded-full" style={{ background: 'rgba(212,160,23,0.15)' }} />
             {/* People */}
-            <TabsTrigger value="users"
-              className="flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-medium data-[state=active]:bg-emerald-700 data-[state=active]:text-white data-[state=active]:shadow-md">
-              <Users className="h-3.5 w-3.5" /><span>المستخدمين</span>
-            </TabsTrigger>
             <TabsTrigger value="staff"
               className="flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-medium data-[state=active]:bg-emerald-700 data-[state=active]:text-white data-[state=active]:shadow-md">
               <UserCog className="h-3.5 w-3.5" /><span>Staff</span>
