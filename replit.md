@@ -95,7 +95,11 @@ All managed as Replit secrets:
 - `ADMIN_SECRET` — Server-side developer admin fallback password. Do not expose this as a `NEXT_PUBLIC_*` variable.
 
 ## Development
-The workflow runs `pnpm run dev` which starts Next.js on port 5000 at `0.0.0.0`.
+The workflow runs `npm run dev` which starts Next.js on port 5000 at `0.0.0.0`.
+
+## Replit Migration
+- Dependencies have been installed from the existing `package.json`/`package-lock.json` setup.
+- The Replit PostgreSQL database has been initialized using the existing project migration scripts, including the multi-tenant, reservations, company employee, subscription, and app settings tables.
 
 ## Key Features
 - **Multi-tenant:** Each café is isolated by `place_id` throughout entire stack
