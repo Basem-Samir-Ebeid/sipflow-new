@@ -106,6 +106,7 @@ The workflow runs `npm run dev` which starts Next.js on port 5000 at `0.0.0.0`.
 ## Replit Migration
 - Dependencies have been installed from the existing `package.json`/`package-lock.json` setup.
 - The Replit PostgreSQL database has been initialized using the existing project migration scripts, including the multi-tenant, reservations, company employee, subscription, and app settings tables.
+- Migration verification completed: the app starts via the `Start application` workflow on port 5000, `/` returns 200 through the Replit dev domain, and key API endpoints (`/api/settings`, `/api/drinks`, `/api/users`) return 200 without database table errors.
 
 ## Recent UI Update
 - The entrance screen system status card was redesigned into a dark "لوحة التشغيل الهادئ / CONTROL MODE" panel with private mode, readiness status, secure entry, smart routing, and instant operation indicators.
