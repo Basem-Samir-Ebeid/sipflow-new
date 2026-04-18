@@ -580,17 +580,33 @@ export function CashierDashboard({ currentUser, currentPlace, onLogout }: Cashie
   }
 
   const triggerPrint = (r: ReceiptData) => {
-    const win = window.open('', '_blank', 'width=360,height=700')
-    if (!win) return
-    win.document.write(`<!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8"><title>فاتورة ${r.invoiceNum}</title><style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:Arial,sans-serif;font-size:13px;max-width:300px;margin:0 auto;padding:16px 10px}@media print{body{padding:4px}}</style></head><body>${buildReceiptHTML(r)}</body></html>`)
-    win.document.close(); win.focus()
-    setTimeout(() => { win.print(); win.close() }, 600)
+    const win = window.open('', '_blank', 'width=380,height=750')
+    if (!win) { toast.error('يرجى السماح بالنوافذ المنبثقة لطباعة الفاتورة'); return }
+    win.document.write(`<!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8"><title>فاتورة ${r.invoiceNum}</title><style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:Arial,sans-serif;font-size:13px;max-width:300px;margin:0 auto;padding:16px 10px}@media print{body{padding:4px}button{display:none}}</style></head><body>${buildReceiptHTML(r)}<script>
+      var imgs = document.images;
+      var loaded = 0;
+      function tryPrint() {
+        loaded++;
+        if (loaded >= imgs.length) { window.print(); }
+      }
+      if (imgs.length === 0) {
+        window.print();
+      } else {
+        for (var i = 0; i < imgs.length; i++) {
+          if (imgs[i].complete) { tryPrint(); }
+          else { imgs[i].onload = tryPrint; imgs[i].onerror = tryPrint; }
+        }
+      }
+      window.onafterprint = function() { window.close(); };
+    <\/script></body></html>`)
+    win.document.close()
+    win.focus()
   }
 
   const printShiftReport = () => {
     const t = shiftTotals()
-    const win = window.open('', '_blank', 'width=360,height=700')
-    if (!win) return
+    const win = window.open('', '_blank', 'width=380,height=750')
+    if (!win) { toast.error('يرجى السماح بالنوافذ المنبثقة لطباعة التقرير'); return }
     const pmRows = PAYMENT_METHODS.map(pm =>
       t.byMethod[pm.key] > 0 ? `<div style="display:flex;justify-content:space-between;margin:4px 0"><span>${pm.label}:</span><span style="font-weight:700">${t.byMethod[pm.key].toFixed(2)} ج.م</span></div>` : ''
     ).join('')
@@ -606,9 +622,10 @@ export function CashierDashboard({ currentUser, currentPlace, onLogout }: Cashie
       ${pmRows}
       <div style="border-top:1px dashed #aaa;margin:8px 0"></div>
       <div style="display:flex;justify-content:space-between;font-size:14px;font-weight:900;background:#1a1a2e;color:#fff;padding:8px;border-radius:2px"><span>الإجمالي:</span><span>${t.total.toFixed(2)} ج.م</span></div>
+      <script>window.print();window.onafterprint=function(){window.close()};<\/script>
     </body></html>`)
-    win.document.close(); win.focus()
-    setTimeout(() => { win.print(); win.close() }, 600)
+    win.document.close()
+    win.focus()
   }
 
   /* ─────────── Filtered tables ─────────── */
