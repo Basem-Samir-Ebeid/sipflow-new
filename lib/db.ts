@@ -5,43 +5,50 @@ declare global {
   var _pgPool: Pool | undefined
 }
 
+function buildPool(url: string): Pool {
+  const isHeliumOrLocal =
+    url.includes('@helium') ||
+    url.includes('//helium') ||
+    url.includes('localhost') ||
+    url.includes('127.0.0.1') ||
+    url.includes('/var/run')
+
+  if (isHeliumOrLocal) {
+    return new Pool({ connectionString: url, ssl: false })
+  }
+  const withSsl = url.includes('sslmode=') ? url : `${url}${url.includes('?') ? '&' : '?'}sslmode=require`
+  return new Pool({ connectionString: withSsl })
+}
+
 function getPool() {
   if (!global._pgPool) {
-    const dbUrl = process.env.DATABASE_URL || process.env.POSTGRES_URL
+    // Priority order:
+    // 1. PROD_DATABASE_URL  — set this in Replit Secrets for your external production DB (Neon/Supabase)
+    // 2. POSTGRES_URL       — generic external PostgreSQL URL
+    // 3. DATABASE_URL       — Replit internal (helium) — works only in dev container
+    const prodUrl  = process.env.PROD_DATABASE_URL
+    const pgUrl    = process.env.POSTGRES_URL
+    const dbUrl    = process.env.DATABASE_URL
 
-    if (!dbUrl) {
-      throw new Error('DATABASE_URL or POSTGRES_URL environment variable is not set.')
+    const chosenUrl = prodUrl || pgUrl || dbUrl
+
+    if (!chosenUrl) {
+      throw new Error(
+        'لم يتم العثور على متغير قاعدة البيانات. يرجى ضبط PROD_DATABASE_URL في الـ Secrets.'
+      )
     }
 
-    // Replit's internal "helium" PostgreSQL is only reachable inside dev containers.
-    // Detect it and connect without SSL; in production this hostname won't resolve,
-    // so we also try building a connection from the individual PG* env vars.
-    const isHelium = dbUrl.includes('@helium') || dbUrl.includes('//helium')
-    const isLocalDb =
-      isHelium ||
-      dbUrl.includes('localhost') ||
-      dbUrl.includes('127.0.0.1') ||
-      dbUrl.includes('/var/run')
-
-    if (isLocalDb) {
-      // Try the individual PG* vars first if PGHOST is different from 'helium'
-      // (Replit may expose a different external host in PGHOST for production)
-      const pgHost = process.env.PGHOST
-      const pgPort = process.env.PGPORT
-      const pgUser = process.env.PGUSER
-      const pgPassword = process.env.PGPASSWORD
-      const pgDb = process.env.PGDATABASE
-      if (isHelium && pgHost && pgHost !== 'helium' && pgUser && pgPassword && pgDb) {
-        const externalUrl = `postgresql://${pgUser}:${pgPassword}@${pgHost}:${pgPort ?? 5432}/${pgDb}`
-        const withSsl = `${externalUrl}?sslmode=require`
-        global._pgPool = new Pool({ connectionString: withSsl })
-      } else {
-        global._pgPool = new Pool({ connectionString: dbUrl, ssl: false })
-      }
-    } else {
-      const urlWithSsl = dbUrl.includes('sslmode=') ? dbUrl : `${dbUrl}${dbUrl.includes('?') ? '&' : '?'}sslmode=require`
-      global._pgPool = new Pool({ connectionString: urlWithSsl })
+    // If the chosen URL is the helium-only internal URL and we're in production,
+    // throw a clear error instead of silently failing with EAI_AGAIN.
+    const isHelium = chosenUrl.includes('@helium') || chosenUrl.includes('//helium')
+    if (isHelium && process.env.NODE_ENV === 'production') {
+      throw new Error(
+        'قاعدة البيانات الداخلية (helium) غير متاحة في بيئة الإنتاج. ' +
+        'يرجى إضافة PROD_DATABASE_URL في الـ Secrets وتوجيهه إلى قاعدة بيانات خارجية (Neon, Supabase, إلخ).'
+      )
     }
+
+    global._pgPool = buildPool(chosenUrl)
   }
   return global._pgPool
 }
