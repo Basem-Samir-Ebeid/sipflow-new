@@ -18,6 +18,7 @@ export interface Place {
   subscription_amount: string | number | null
   subscription_plan: string | null
   subscription_expires_at: string | null
+  discount_code: string | null
   created_at: string
   updated_at: string
 }

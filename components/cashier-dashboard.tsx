@@ -114,6 +114,9 @@ export function CashierDashboard({ currentUser, currentPlace, onLogout }: Cashie
   /* ── Discount state (inside table modal) ── */
   const [discountType, setDiscountType] = useState<DiscountType>('amount')
   const [discountValue, setDiscountValue] = useState('')
+  const [discountUnlocked, setDiscountUnlocked] = useState(false)
+  const [discountCodeInput, setDiscountCodeInput] = useState('')
+  const [discountCodeError, setDiscountCodeError] = useState('')
 
   /* ── Payment modal ── */
   const [showPayment, setShowPayment] = useState(false)
@@ -195,7 +198,9 @@ export function CashierDashboard({ currentUser, currentPlace, onLogout }: Cashie
 
   const selectedOrders = selectedTable ? (tableMap.get(selectedTable) || []) : []
   const selectedSubtotal = selectedOrders.reduce((s, o) => s + (Number(o.drink?.price) || 0) * o.quantity, 0)
-  const selectedDiscountAmt = calcDiscount(selectedSubtotal, discountType, discountValue)
+  const placeRequiresDiscountCode = !!(currentPlace.discount_code)
+  const discountActive = !placeRequiresDiscountCode || discountUnlocked
+  const selectedDiscountAmt = discountActive ? calcDiscount(selectedSubtotal, discountType, discountValue) : 0
   const selectedTotals = calcTotals(selectedSubtotal, selectedDiscountAmt, serviceChargeRate, taxRateVal)
   const selectedIsPaid = selectedTable ? paidTables.has(selectedTable) : false
 
@@ -425,6 +430,9 @@ export function CashierDashboard({ currentUser, currentPlace, onLogout }: Cashie
     setShowPayment(false)
     setSelectedTable(null)
     setDiscountValue('')
+    setDiscountUnlocked(false)
+    setDiscountCodeInput('')
+    setDiscountCodeError('')
     toast.success(`✓ تم تسوية طاولة ${selectedTable} — فاتورة #${invoiceNum}`)
   }
 
@@ -985,7 +993,7 @@ export function CashierDashboard({ currentUser, currentPlace, onLogout }: Cashie
       {/* ══════════════ TABLE MODAL ══════════════ */}
       {selectedTable && (
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/80 backdrop-blur-sm p-4"
-          onClick={e => { if (e.target === e.currentTarget) { setSelectedTable(null); setDiscountValue('') } }}>
+          onClick={e => { if (e.target === e.currentTarget) { setSelectedTable(null); setDiscountValue(''); setDiscountUnlocked(false); setDiscountCodeInput(''); setDiscountCodeError('') } }}>
           <div className="w-full max-w-md rounded-2xl border border-zinc-700 bg-zinc-900 overflow-hidden">
             {/* Header */}
             <div className="flex items-center justify-between px-5 py-4 border-b border-zinc-700"
@@ -1004,7 +1012,7 @@ export function CashierDashboard({ currentUser, currentPlace, onLogout }: Cashie
                     <ArrowLeftRight className="h-4 w-4" />
                   </button>
                 )}
-                <button onClick={() => { setSelectedTable(null); setDiscountValue('') }}
+                <button onClick={() => { setSelectedTable(null); setDiscountValue(''); setDiscountUnlocked(false); setDiscountCodeInput(''); setDiscountCodeError('') }}
                   className="flex h-8 w-8 items-center justify-center rounded-full text-zinc-400 hover:bg-zinc-700 transition-colors">
                   <X className="h-4 w-4" />
                 </button>
@@ -1068,6 +1076,12 @@ export function CashierDashboard({ currentUser, currentPlace, onLogout }: Cashie
                 <div>
                   <p className="text-xs text-zinc-500 mb-2 flex items-center gap-1">
                     <Percent className="h-3.5 w-3.5" /> خصم (اختياري)
+                    {placeRequiresDiscountCode && (
+                      <span className={`mr-1 flex items-center gap-0.5 text-xs ${discountUnlocked ? 'text-green-400' : 'text-amber-400'}`}>
+                        <Shield className="h-3 w-3" />
+                        {discountUnlocked ? 'مفعّل' : 'يحتاج كود'}
+                      </span>
+                    )}
                   </p>
                   <div className="flex gap-2">
                     <div className="flex rounded-lg border border-zinc-700 overflow-hidden">
@@ -1081,11 +1095,59 @@ export function CashierDashboard({ currentUser, currentPlace, onLogout }: Cashie
                       </button>
                     </div>
                     <input
-                      type="number" min="0" value={discountValue} onChange={e => setDiscountValue(e.target.value)}
+                      type="number" min="0" value={discountValue} onChange={e => { setDiscountValue(e.target.value); if (discountUnlocked) setDiscountCodeError('') }}
                       placeholder={discountType === 'amount' ? 'مبلغ الخصم' : 'نسبة الخصم'}
                       className="flex-1 rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-1.5 text-sm text-white placeholder-zinc-600 focus:outline-none focus:border-amber-500/50"
                     />
                   </div>
+                  {/* Discount code gate */}
+                  {placeRequiresDiscountCode && discountValue && parseFloat(discountValue) > 0 && !discountUnlocked && (
+                    <div className="mt-2 rounded-lg border border-amber-500/30 bg-amber-500/5 p-2.5 space-y-2">
+                      <p className="text-xs text-amber-400 flex items-center gap-1">
+                        <Shield className="h-3 w-3" /> أدخل كود الخصم للمتابعة
+                      </p>
+                      <div className="flex gap-2">
+                        <input
+                          type="text"
+                          value={discountCodeInput}
+                          onChange={e => { setDiscountCodeInput(e.target.value); setDiscountCodeError('') }}
+                          onKeyDown={e => {
+                            if (e.key === 'Enter') {
+                              if (discountCodeInput.trim() === currentPlace.discount_code) {
+                                setDiscountUnlocked(true); setDiscountCodeError('')
+                              } else {
+                                setDiscountCodeError('كود الخصم غلط')
+                              }
+                            }
+                          }}
+                          placeholder="كود الخصم"
+                          className="flex-1 rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-1.5 text-sm text-white placeholder-zinc-600 focus:outline-none focus:border-amber-500/50 font-mono tracking-widest"
+                        />
+                        <button
+                          onClick={() => {
+                            if (discountCodeInput.trim() === currentPlace.discount_code) {
+                              setDiscountUnlocked(true); setDiscountCodeError('')
+                            } else {
+                              setDiscountCodeError('كود الخصم غلط')
+                            }
+                          }}
+                          className="rounded-lg bg-amber-500 hover:bg-amber-600 text-black text-xs font-bold px-3 py-1.5 transition-colors"
+                        >
+                          تأكيد
+                        </button>
+                      </div>
+                      {discountCodeError && (
+                        <p className="text-xs text-red-400 flex items-center gap-1">
+                          <X className="h-3 w-3" /> {discountCodeError}
+                        </p>
+                      )}
+                    </div>
+                  )}
+                  {discountUnlocked && discountValue && parseFloat(discountValue) > 0 && (
+                    <p className="text-xs text-green-400 mt-1 flex items-center gap-1">
+                      <Shield className="h-3 w-3" /> الخصم مفعّل بالكود
+                    </p>
+                  )}
                   {selectedDiscountAmt > LARGE_DISCOUNT_THRESHOLD && (
                     <p className="text-xs text-amber-400 mt-1 flex items-center gap-1">
                       <Shield className="h-3 w-3" /> خصم كبير — يحتاج موافقة أدمن

@@ -569,6 +569,7 @@ export function AdminPanel({
   const [feeSettingsPlaceId, setFeeSettingsPlaceId] = useState('')
   const [feeServiceCharge, setFeeServiceCharge] = useState('')
   const [feeTaxRate, setFeeTaxRate] = useState('')
+  const [feeDiscountCode, setFeeDiscountCode] = useState('')
   const [isSavingFees, setIsSavingFees] = useState(false)
   const [feeSaveSuccess, setFeeSaveSuccess] = useState('')
   const [feeSaveError, setFeeSaveError] = useState('')
@@ -1062,7 +1063,8 @@ export function AdminPanel({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           service_charge: parseFloat(feeServiceCharge) || 0,
-          tax_rate: parseFloat(feeTaxRate) || 0
+          tax_rate: parseFloat(feeTaxRate) || 0,
+          discount_code: feeDiscountCode.trim() || null
         })
       })
       const data = await res.json()
@@ -6569,6 +6571,7 @@ const handleSaveSettings = async () => {
                     if (p) {
                       setFeeServiceCharge(p.service_charge != null ? String(p.service_charge) : '0')
                       setFeeTaxRate(p.tax_rate != null ? String(p.tax_rate) : '0')
+                      setFeeDiscountCode(p.discount_code ?? '')
                     }
                   }}
                   className="mt-1 w-full rounded-md border border-border bg-muted px-3 py-2 text-sm text-foreground"
@@ -6604,6 +6607,16 @@ const handleSaveSettings = async () => {
                     className="mt-1 border-border bg-muted text-foreground"
                   />
                 </div>
+              </div>
+              <div>
+                <Label className="text-xs text-muted-foreground">كود الخصم (مطلوب لتفعيل أي خصم)</Label>
+                <Input
+                  value={feeDiscountCode}
+                  onChange={e => setFeeDiscountCode(e.target.value)}
+                  placeholder="مثال: DISC2024 — اتركه فارغاً لإلغاء الكود"
+                  className="mt-1 border-border bg-muted text-foreground font-mono tracking-widest"
+                />
+                <p className="text-xs text-muted-foreground mt-1">لو محدد، الكاشير لازم يدخل الكود الصح عشان يعمل أي خصم على الطاولة</p>
               </div>
               {feeSaveError && <p className="text-sm text-destructive">{feeSaveError}</p>}
               {feeSaveSuccess && <p className="text-sm text-green-500">{feeSaveSuccess}</p>}

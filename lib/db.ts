@@ -109,13 +109,14 @@ export const db = {
     return result[0]
   },
 
-  async updatePlace(id: string, data: { name?: string; description?: string; is_active?: boolean; logo_url?: string | null; table_count?: number | null; service_charge?: number | null; tax_rate?: number | null; reservations_enabled?: boolean | null; order_tracking_enabled?: boolean | null; free_drinks_count?: number | null; free_drink_id?: string | null }) {
+  async updatePlace(id: string, data: { name?: string; description?: string; is_active?: boolean; logo_url?: string | null; table_count?: number | null; service_charge?: number | null; tax_rate?: number | null; reservations_enabled?: boolean | null; order_tracking_enabled?: boolean | null; free_drinks_count?: number | null; free_drink_id?: string | null; discount_code?: string | null }) {
     await sql`ALTER TABLE places ADD COLUMN IF NOT EXISTS service_charge NUMERIC(5,2) DEFAULT 0`.catch(() => {})
     await sql`ALTER TABLE places ADD COLUMN IF NOT EXISTS tax_rate NUMERIC(5,2) DEFAULT 0`.catch(() => {})
     await sql`ALTER TABLE places ADD COLUMN IF NOT EXISTS reservations_enabled BOOLEAN DEFAULT false`.catch(() => {})
     await sql`ALTER TABLE places ADD COLUMN IF NOT EXISTS order_tracking_enabled BOOLEAN DEFAULT true`.catch(() => {})
     await sql`ALTER TABLE places ADD COLUMN IF NOT EXISTS free_drinks_count INTEGER DEFAULT 0`.catch(() => {})
     await sql`ALTER TABLE places ADD COLUMN IF NOT EXISTS free_drink_id TEXT DEFAULT NULL`.catch(() => {})
+    await sql`ALTER TABLE places ADD COLUMN IF NOT EXISTS discount_code TEXT DEFAULT NULL`.catch(() => {})
     const result = await sql`
       UPDATE places
       SET name = COALESCE(${data.name ?? null}, name),
@@ -129,6 +130,7 @@ export const db = {
           order_tracking_enabled = CASE WHEN ${data.order_tracking_enabled !== undefined} THEN ${data.order_tracking_enabled ?? true} ELSE order_tracking_enabled END,
           free_drinks_count = CASE WHEN ${data.free_drinks_count !== undefined} THEN ${data.free_drinks_count ?? 0} ELSE free_drinks_count END,
           free_drink_id = CASE WHEN ${data.free_drink_id !== undefined} THEN ${data.free_drink_id ?? null} ELSE free_drink_id END,
+          discount_code = CASE WHEN ${data.discount_code !== undefined} THEN ${data.discount_code ?? null} ELSE discount_code END,
           updated_at = NOW()
       WHERE id = ${id}
       RETURNING *
