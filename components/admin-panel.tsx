@@ -29,6 +29,8 @@ import { Plus, Trash2, Pencil, Upload, RefreshCw, Users, Coffee, Key, BarChart3,
 import { Checkbox } from '@/components/ui/checkbox'
 import Image from 'next/image'
 import { LivePlacesHub } from '@/components/LivePlacesHub'
+import { OrderSimulator } from '@/components/order-simulator'
+import { PlaceTemplates } from '@/components/place-templates'
 
 type DevAdminRole = 'super_developer' | 'support_admin' | 'sales_admin' | 'finance_admin'
 
@@ -90,7 +92,7 @@ export function AdminPanel({
       label: 'Super Developer',
       description: 'صلاحية كاملة لكل أجزاء النظام',
       homeTab: 'stats',
-      tabs: ['stats', 'analytics', 'count', 'drinks', 'inventory', 'cashier', 'reservations', 'place-admins', 'staff', 'places', 'subscriptions', 'messages', 'settings', 'danger', 'live', 'permissions'],
+      tabs: ['stats', 'analytics', 'count', 'drinks', 'inventory', 'cashier', 'reservations', 'place-admins', 'staff', 'places', 'subscriptions', 'messages', 'settings', 'danger', 'live', 'permissions', 'simulator', 'templates'],
     },
     support_admin: {
       label: 'Support Admin',
@@ -2119,6 +2121,31 @@ const handleSaveSettings = async () => {
                             {subPlaces.filter(p => p.is_expired || p.expiring_soon).length}
                           </span>
                         )}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Dev Tools group */}
+              {canAccessDevTab('simulator') && (
+                <div>
+                  <p className="text-[9px] font-semibold uppercase tracking-widest px-1 mb-1" style={{ color: '#6366f1' }}>أدوات المطور</p>
+                  <div className="grid grid-cols-2 gap-1.5">
+                    {[
+                      { tab: 'simulator', icon: <span className="text-sm">🎮</span>, label: 'المحاكي', ac: '#6366f1' },
+                      { tab: 'templates', icon: <span className="text-sm">📦</span>, label: 'القوالب', ac: '#a855f7' },
+                    ].map(item => (
+                      <button key={item.tab} onClick={() => handleTabChange(item.tab)}
+                        className="flex flex-col items-center gap-1 rounded-xl py-2.5 px-1 transition-all duration-150 hover:scale-105 active:scale-95"
+                        style={{
+                          background: activeAdminTab === item.tab ? 'rgba(99,102,241,0.25)' : 'rgba(255,255,255,0.03)',
+                          border: `1px solid ${activeAdminTab === item.tab ? 'rgba(99,102,241,0.55)' : 'rgba(255,255,255,0.06)'}`,
+                          boxShadow: activeAdminTab === item.tab ? '0 0 10px rgba(99,102,241,0.18)' : 'none',
+                          color: activeAdminTab === item.tab ? '#c7d2fe' : '#5b4a8a'
+                        }}>
+                        {item.icon}
+                        <span className="text-[10px] font-semibold">{item.label}</span>
                       </button>
                     ))}
                   </div>
@@ -6717,6 +6744,16 @@ const handleSaveSettings = async () => {
               </div>
             )}
           </TabsContent>
+
+        {/* ─── Order Simulator Tab ─────────────────────────── */}
+        <TabsContent value="simulator" className="space-y-4">
+          <OrderSimulator places={places} />
+        </TabsContent>
+
+        {/* ─── Place Templates Tab ─────────────────────────── */}
+        <TabsContent value="templates" className="space-y-4">
+          <PlaceTemplates places={places} />
+        </TabsContent>
 
         {/* ─── Analytics / Reports Tab ─────────────────────────── */}
         <TabsContent value="analytics" className="space-y-5">

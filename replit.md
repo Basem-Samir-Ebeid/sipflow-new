@@ -6,6 +6,11 @@ A Next.js multi-tenant café/social space drink ordering and management system. 
 ## Known Fix — Price Type Coercion
 PostgreSQL returns DECIMAL/NUMERIC columns as strings (e.g., `'15.00'`). All `drink.price` references across the codebase use `Number()` conversion before arithmetic, comparisons, and `.toFixed()` calls. This prevents `TypeError` crashes in DrinkCard and other components.
 
+## Recent Features (v2.7 — Developer Tools)
+- **محاكي الطلبات (Order Simulator):** تبويب جديد "🎮 المحاكي" في لوحة الأدمن المطور (super_developer فقط). يتيح اختيار مكان، عدد الطلبات (1-50)، والتأخير بين كل طلب (0-1000ms). يُنشئ طلبات وهمية حقيقية بأسماء تبدأ بـ [SIM] وتُخزّن في قاعدة البيانات. API: `POST /api/simulate-orders`. Component: `components/order-simulator.tsx`.
+- **قوالب المكان (Place Templates):** تبويب جديد "📦 القوالب" في لوحة الأدمن المطور. يحفظ منيو (مشروبات) أي مكان كقالب قابل لإعادة الاستخدام، ويطبّقه على مكان جديد بضغطة. القوالب تُخزَّن في `app_settings` بمفاتيح `place_template_*` و `place_templates_index`. API: `GET/POST/DELETE /api/place-templates`. Component: `components/place-templates.tsx`.
+- **مجموعة "أدوات المطور":** إضافة قسم جديد في nav grid للوحة الأدمن المطور يحتوي على زرَّي المحاكي والقوالب بلون indigo/purple.
+
 ## Recent Features (v2.6 — Subscriptions System)
 - **نظام الباقات والاشتراكات:** تبويب جديد "الاشتراكات" في لوحة الأدمن المطور (وسيلز أدمن). كل مكان له باقة: مجانية / شهرية / سنوية / بريميوم. كل باقة تحدد: عدد الطاولات، الموظفين، المنتجات، تفعيل الحجوزات، تفعيل التقارير. مع تاريخ انتهاء قابل للتخصيص وتنبيه قبل 7 أيام من الانتهاء.
 - **بيانات الاشتراك:** يمكن حفظ اسم مالك المكان، رقم تليفونه، وقيمة الاشتراك بالجنيه المصري داخل تبويب الاشتراكات.
