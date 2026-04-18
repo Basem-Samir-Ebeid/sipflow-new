@@ -265,8 +265,8 @@ export default function WaiterPage() {
       // Group by table/user
       const grouped: Record<string, TableGroup> = {}
       for (const o of active) {
-        const uid  = o.user_id || 'unknown'
-        const rawTableNum = o.user?.table_number
+        const uid  = o.user_id || ''
+        const rawTableNum = o.table_number || o.user?.table_number
         const tableNum = rawTableNum != null && rawTableNum !== '' ? String(rawTableNum) : null
         if (!tableNum) continue
 
@@ -332,8 +332,8 @@ export default function WaiterPage() {
       // Group by table
       const grouped: Record<string, TableGroup> = {}
       for (const o of completed) {
-        const uid = o.user_id || 'unknown'
-        const rawTableNum = o.user?.table_number
+        const uid = o.user_id || ''
+        const rawTableNum = o.table_number || o.user?.table_number
         const tableNum = rawTableNum != null && rawTableNum !== '' ? String(rawTableNum) : null
         if (!tableNum) continue
 
@@ -454,7 +454,7 @@ export default function WaiterPage() {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            user_id: group.userId,
+            user_id: group.userId || undefined,
             message: `الويتر بياخد الطلبات للطاولة ${group.tableNumber}`,
             type: 'on_way'
           })

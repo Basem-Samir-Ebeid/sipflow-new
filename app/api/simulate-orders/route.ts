@@ -52,6 +52,7 @@ export async function POST(request: Request) {
           table_number: tableNum,
           total_price: drink.price,
         })
+        await db.decrementInventory(drink.id, 1)
         results.push({ success: true, drink: drink.name, name })
       } catch (err) {
         results.push({ success: false, drink: drink.name, name, error: String(err) })

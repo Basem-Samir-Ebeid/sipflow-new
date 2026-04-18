@@ -164,6 +164,7 @@ export function CashierDashboard({ currentUser, currentPlace, onLogout }: Cashie
   const taxRateVal = currentPlace.tax_rate ?? 0
 
   const getTableNum = (o: OrderWithDetails): string => {
+    if (o.table_number) return String(o.table_number)
     if (o.user?.table_number) return o.user.table_number
     if (o.notes?.includes('مطور')) {
       const m = o.notes.match(/طاولة\s+(\S+)/)
