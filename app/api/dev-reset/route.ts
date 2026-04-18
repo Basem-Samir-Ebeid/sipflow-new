@@ -44,8 +44,16 @@ export async function POST(request: NextRequest) {
     }
 
     return NextResponse.json({ success: false, error: 'نوع الريسيت غير معروف' })
-  } catch (error) {
+  } catch (error: any) {
     console.error('Dev reset error:', error)
-    return NextResponse.json({ success: false, error: 'حدث خطأ في السيرفر' }, { status: 500 })
+    const isDbError =
+      error?.message?.includes('getaddrinfo') ||
+      error?.message?.includes('ECONNREFUSED') ||
+      error?.message?.includes('DATABASE_URL') ||
+      error?.code === 'ENOTFOUND'
+    const msg = isDbError
+      ? 'قاعدة البيانات غير متصلة في بيئة الإنتاج — تأكد من إعداد DATABASE_URL الصحيح'
+      : 'حدث خطأ في السيرفر'
+    return NextResponse.json({ success: false, error: msg }, { status: 500 })
   }
 }

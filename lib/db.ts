@@ -8,12 +8,36 @@ declare global {
 function getPool() {
   if (!global._pgPool) {
     const dbUrl = process.env.DATABASE_URL || process.env.POSTGRES_URL
+
     if (!dbUrl) {
       throw new Error('DATABASE_URL or POSTGRES_URL environment variable is not set.')
     }
-    const isLocalDb = dbUrl.includes('localhost') || dbUrl.includes('127.0.0.1') || dbUrl.includes('/var/run')
+
+    // Replit's internal "helium" PostgreSQL is only reachable inside dev containers.
+    // Detect it and connect without SSL; in production this hostname won't resolve,
+    // so we also try building a connection from the individual PG* env vars.
+    const isHelium = dbUrl.includes('@helium') || dbUrl.includes('//helium')
+    const isLocalDb =
+      isHelium ||
+      dbUrl.includes('localhost') ||
+      dbUrl.includes('127.0.0.1') ||
+      dbUrl.includes('/var/run')
+
     if (isLocalDb) {
-      global._pgPool = new Pool({ connectionString: dbUrl, ssl: false })
+      // Try the individual PG* vars first if PGHOST is different from 'helium'
+      // (Replit may expose a different external host in PGHOST for production)
+      const pgHost = process.env.PGHOST
+      const pgPort = process.env.PGPORT
+      const pgUser = process.env.PGUSER
+      const pgPassword = process.env.PGPASSWORD
+      const pgDb = process.env.PGDATABASE
+      if (isHelium && pgHost && pgHost !== 'helium' && pgUser && pgPassword && pgDb) {
+        const externalUrl = `postgresql://${pgUser}:${pgPassword}@${pgHost}:${pgPort ?? 5432}/${pgDb}`
+        const withSsl = `${externalUrl}?sslmode=require`
+        global._pgPool = new Pool({ connectionString: withSsl })
+      } else {
+        global._pgPool = new Pool({ connectionString: dbUrl, ssl: false })
+      }
     } else {
       const urlWithSsl = dbUrl.includes('sslmode=') ? dbUrl : `${dbUrl}${dbUrl.includes('?') ? '&' : '?'}sslmode=require`
       global._pgPool = new Pool({ connectionString: urlWithSsl })
