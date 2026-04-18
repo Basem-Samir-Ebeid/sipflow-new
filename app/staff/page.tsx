@@ -6,9 +6,8 @@ import useSWR from 'swr'
 import {
   LogOut, Clock, CheckCircle, Loader2, RefreshCw,
   ClipboardList, MessageSquare, BarChart3, FileText, TrendingUp, ArrowRight,
-  CalendarDays, CalendarCheck, CalendarX, Users, Phone
+  CalendarDays, CalendarCheck, CalendarX, Users, Phone, Receipt, Star
 } from 'lucide-react'
-import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { toast, Toaster } from 'sonner'
 import Image from 'next/image'
@@ -51,14 +50,18 @@ interface Reservation {
 
 type StaffTab = 'pending' | 'done' | 'report' | 'reservations'
 
+const VIOLET = '#a855f7'
+const VIOLET_DIM = 'rgba(168,85,247,0.15)'
+const VIOLET_BORDER = 'rgba(168,85,247,0.25)'
+
 const DevBar = () => (
-  <div className="relative overflow-hidden py-[5px]" style={{ background: 'linear-gradient(90deg, #1a0a00, #3d1f00, #6b3a00, #D4A017, #6b3a00, #3d1f00, #1a0a00)' }}>
+  <div className="relative overflow-hidden py-[5px]" style={{ background: 'linear-gradient(90deg, #100820, #2a0a50, #4a1080, #a855f7, #4a1080, #2a0a50, #100820)' }}>
     <div className="flex items-center justify-center gap-2">
-      <span className="text-[10px] tracking-widest uppercase text-amber-200/60 font-medium">✦</span>
-      <span className="text-[11px] font-semibold tracking-[0.18em] uppercase" style={{ color: '#ffe8a0', textShadow: '0 0 12px rgba(212,160,23,0.8), 0 0 24px rgba(212,160,23,0.4)' }}>
+      <span className="text-[10px] tracking-widest uppercase text-violet-200/50 font-medium">✦</span>
+      <span className="text-[11px] font-semibold tracking-[0.18em] uppercase" style={{ color: '#e9d5ff', textShadow: '0 0 12px rgba(168,85,247,0.8), 0 0 24px rgba(168,85,247,0.4)' }}>
         Developed by Basem Samir Ebeid
       </span>
-      <span className="text-[10px] tracking-widest uppercase text-amber-200/60 font-medium">✦</span>
+      <span className="text-[10px] tracking-widest uppercase text-violet-200/50 font-medium">✦</span>
     </div>
   </div>
 )
@@ -208,7 +211,7 @@ export default function StaffPage() {
         const customerName = order.customer_name
         const tableNumber = order.table_number || order.user?.table_number
         const tableStr = tableNumber != null && tableNumber !== '' ? String(tableNumber) : undefined
-        const groupKey = customerName 
+        const groupKey = customerName
           ? `customer_${customerName}_${tableStr || 'notab'}`
           : (isShared && tableStr ? `table_${tableStr}` : (order.user_id || 'unknown'))
         if (!acc[groupKey]) {
@@ -335,63 +338,86 @@ export default function StaffPage() {
 
   if (!mounted) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="w-8 h-8 border-2 border-amber-500/40 border-t-amber-500 rounded-full animate-spin" />
+      <div className="min-h-screen flex items-center justify-center" style={{ background: '#080808' }}>
+        <div className="w-8 h-8 border-2 rounded-full animate-spin" style={{ borderColor: VIOLET_DIM, borderTopColor: VIOLET }} />
       </div>
     )
   }
 
+  /* ─── LOGIN ─── */
   if (!staffUser) {
     return (
-      <div className="min-h-screen flex flex-col" dir="rtl" style={{ background: '#0a0a0a' }}>
+      <div className="min-h-screen flex flex-col" dir="rtl" style={{ background: '#080808' }}>
         <DevBar />
         <div className="px-4 pt-4">
           <button onClick={() => { window.location.href = '/' }}
-            className="flex items-center gap-1.5 text-xs text-zinc-500 hover:text-zinc-300 transition-colors">
+            className="flex items-center gap-1.5 text-xs transition-colors"
+            style={{ color: 'rgba(255,255,255,0.35)' }}
+            onMouseEnter={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.7)')}
+            onMouseLeave={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.35)')}>
             <ArrowRight className="h-3.5 w-3.5" />
             الرئيسية
           </button>
         </div>
         <div className="flex-1 flex items-center justify-center p-5">
           <div className="w-full max-w-xs">
-            <div className="text-center mb-7">
+            <div className="text-center mb-8">
               <div className="relative mx-auto mb-5 h-20 w-20">
-                <div className="h-20 w-20 rounded-2xl overflow-hidden border border-violet-500/30 shadow-lg shadow-violet-500/15">
+                <div className="h-20 w-20 rounded-2xl overflow-hidden" style={{ border: `1px solid ${VIOLET_BORDER}`, boxShadow: `0 0 24px rgba(168,85,247,0.2)` }}>
                   <Image src="/images/sipflow-logo.jpg" alt="SîpFlõw" width={80} height={80} className="object-cover w-full h-full" />
                 </div>
                 <div className="absolute -bottom-2 -left-2 flex h-7 w-7 items-center justify-center rounded-full text-sm"
-                  style={{ background: 'linear-gradient(135deg, #a855f7, #7c3aed)', boxShadow: '0 0 10px rgba(168,85,247,0.5)' }}>
-                  <ClipboardList className="h-3.5 w-3.5 text-white" />
+                  style={{ background: 'linear-gradient(135deg, #a855f7, #7c3aed)', boxShadow: '0 0 14px rgba(168,85,247,0.6)' }}>
+                  <Receipt className="h-3.5 w-3.5 text-white" />
                 </div>
               </div>
-              <div className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 mb-2 text-xs font-semibold"
-                style={{ background: 'rgba(168,85,247,0.12)', border: '1px solid rgba(168,85,247,0.3)', color: '#c084fc' }}>
-                <span className="h-1.5 w-1.5 rounded-full bg-violet-400 animate-pulse" />
+              <div className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 mb-3 text-xs font-semibold"
+                style={{ background: VIOLET_DIM, border: `1px solid ${VIOLET_BORDER}`, color: '#c084fc' }}>
+                <span className="h-1.5 w-1.5 rounded-full animate-pulse" style={{ background: VIOLET }} />
                 بوابة الكاشير
               </div>
-              <h1 className="text-xl font-bold text-white">SîpFlõw · كاشير</h1>
-              <p className="text-xs text-zinc-500 mt-1">إدارة الطلبات والإيرادات</p>
+              <h1 className="text-xl font-bold text-white">SîpFlõw</h1>
+              <p className="text-xs mt-1" style={{ color: 'rgba(255,255,255,0.35)' }}>إدارة الطلبات والإيرادات</p>
             </div>
-            <div className="rounded-2xl p-5 space-y-4" style={{ background: '#141414', border: '1px solid rgba(168,85,247,0.2)' }}>
+
+            <div className="rounded-2xl p-5 space-y-4" style={{ background: '#131313', border: `1px solid ${VIOLET_BORDER}` }}>
               <div>
-                <label className="text-xs font-medium text-zinc-400 mb-1.5 block">اسم المستخدم</label>
-                <Input type="text" value={username} onChange={(e) => setUsername(e.target.value)}
-                  placeholder="username" dir="ltr"
-                  className="bg-zinc-900 border-zinc-700 text-white placeholder:text-zinc-600 focus-visible:ring-violet-500/40 focus-visible:border-violet-500/50"
-                  onKeyDown={(e) => e.key === 'Enter' && handleLogin()} />
+                <label className="text-xs font-medium mb-1.5 block" style={{ color: 'rgba(255,255,255,0.5)' }}>اسم المستخدم</label>
+                <input
+                  type="text"
+                  value={username}
+                  onChange={e => setUsername(e.target.value)}
+                  placeholder="أدخل اسم المستخدم"
+                  dir="rtl"
+                  onKeyDown={e => e.key === 'Enter' && handleLogin()}
+                  className="w-full h-11 rounded-xl px-4 text-sm text-white placeholder:text-zinc-600 outline-none transition-all"
+                  style={{ background: '#0d0d0d', border: '1px solid rgba(255,255,255,0.08)' }}
+                  onFocus={e => (e.currentTarget.style.borderColor = VIOLET_BORDER)}
+                  onBlur={e => (e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)')}
+                />
               </div>
               <div>
-                <label className="text-xs font-medium text-zinc-400 mb-1.5 block">كلمة المرور</label>
-                <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••" dir="ltr"
-                  className="bg-zinc-900 border-zinc-700 text-white placeholder:text-zinc-600 focus-visible:ring-violet-500/40 focus-visible:border-violet-500/50"
-                  onKeyDown={(e) => e.key === 'Enter' && handleLogin()} />
+                <label className="text-xs font-medium mb-1.5 block" style={{ color: 'rgba(255,255,255,0.5)' }}>كلمة المرور</label>
+                <input
+                  type="password"
+                  value={password}
+                  onChange={e => setPassword(e.target.value)}
+                  placeholder="••••••••"
+                  dir="ltr"
+                  onKeyDown={e => e.key === 'Enter' && handleLogin()}
+                  className="w-full h-11 rounded-xl px-4 text-sm text-white placeholder:text-zinc-600 outline-none transition-all"
+                  style={{ background: '#0d0d0d', border: '1px solid rgba(255,255,255,0.08)' }}
+                  onFocus={e => (e.currentTarget.style.borderColor = VIOLET_BORDER)}
+                  onBlur={e => (e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)')}
+                />
               </div>
-              <button onClick={handleLogin} disabled={isLoggingIn}
+              <button
+                onClick={handleLogin}
+                disabled={isLoggingIn}
                 className="w-full h-11 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-all active:scale-95 disabled:opacity-60"
-                style={{ background: isLoggingIn ? 'rgba(168,85,247,0.3)' : 'linear-gradient(135deg, #a855f7, #7c3aed)', color: '#fff', boxShadow: '0 2px 14px rgba(168,85,247,0.3)' }}>
-                {isLoggingIn ? <Loader2 className="h-4 w-4 animate-spin" /> : <ClipboardList className="h-4 w-4" />}
-                {isLoggingIn ? 'جاري الدخول...' : 'دخول كاشير'}
+                style={{ background: isLoggingIn ? VIOLET_DIM : 'linear-gradient(135deg, #a855f7, #7c3aed)', color: '#fff', boxShadow: '0 2px 16px rgba(168,85,247,0.35)' }}>
+                {isLoggingIn ? <Loader2 className="h-4 w-4 animate-spin" /> : <Receipt className="h-4 w-4" />}
+                {isLoggingIn ? 'جاري الدخول...' : 'دخول الكاشير'}
               </button>
             </div>
           </div>
@@ -400,227 +426,262 @@ export default function StaffPage() {
     )
   }
 
+  /* ─── ORDER CARD ─── */
   const OrderCard = ({ group, showComplete }: { group: UserOrderGroup; showComplete: boolean }) => {
     const isVip = group.orders.some(o => o.notes?.includes('مطور'))
     return (
-    <div className={`relative rounded-2xl shadow-sm${isVip ? ' mt-3' : ''}`}
-      style={isVip ? {
-        border: '2px solid #f59e0b',
-        background: 'var(--card)',
-        boxShadow: '0 0 22px rgba(245,158,11,0.35), inset 0 0 15px rgba(245,158,11,0.04)'
-      } : {
-        border: '1px solid var(--border)',
-        background: 'var(--card)'
-      }}>
-      {isVip && (
-        <div className="absolute -top-3.5 left-4 z-20 flex items-center gap-1 rounded-full px-3 py-1 text-xs font-bold shadow-xl"
-          style={{ background: 'linear-gradient(135deg, #f59e0b, #b45309)', color: '#fff', letterSpacing: '0.05em' }}>
-          👑 VIP مطور
-        </div>
-      )}
-      <div className="flex items-center justify-between px-4 py-3 border-b rounded-t-2xl"
-        style={{ 
-          background: isVip ? 'rgba(245,158,11,0.1)' : 'hsl(var(--muted)/0.4)',
-          borderColor: isVip ? 'rgba(245,158,11,0.35)' : 'var(--border)'
+      <div className="relative rounded-2xl overflow-hidden"
+        style={isVip ? {
+          border: '2px solid #f59e0b',
+          background: '#111',
+          boxShadow: '0 0 22px rgba(245,158,11,0.3)'
+        } : {
+          border: '1px solid rgba(255,255,255,0.07)',
+          background: '#111'
         }}>
-        <div className="flex items-center gap-2 text-amber-500">
-          <Clock className="h-4 w-4" />
-          <span className="text-sm font-medium">{formatTime(group.earliestTime)}</span>
+        {isVip && (
+          <div className="absolute -top-3 left-4 z-20 flex items-center gap-1 rounded-full px-3 py-0.5 text-xs font-bold shadow-xl"
+            style={{ background: 'linear-gradient(135deg, #f59e0b, #b45309)', color: '#fff' }}>
+            👑 VIP مطور
+          </div>
+        )}
+
+        {/* Card header */}
+        <div className="flex items-center justify-between px-4 py-3"
+          style={{ background: isVip ? 'rgba(245,158,11,0.08)' : 'rgba(168,85,247,0.06)', borderBottom: `1px solid ${isVip ? 'rgba(245,158,11,0.2)' : 'rgba(255,255,255,0.06)'}` }}>
+          <div className="flex items-center gap-2">
+            <Clock className="h-3.5 w-3.5" style={{ color: VIOLET }} />
+            <span className="text-sm font-medium" style={{ color: VIOLET }}>{formatTime(group.earliestTime)}</span>
+          </div>
+          <div className="text-right">
+            <p className="font-bold text-white text-sm">
+              {group.orders[0]?.customer_name && group.tableNumber
+                ? `${group.orders[0].customer_name} — طاولة ${group.tableNumber}`
+                : group.orders[0]?.customer_name
+                  ? group.orders[0].customer_name
+                  : group.tableNumber
+                    ? `طاولة ${group.tableNumber}`
+                    : group.userName}
+            </p>
+          </div>
         </div>
-        <div className="text-right">
-          <p className="font-bold" style={{ color: isVip ? '#f59e0b' : 'var(--foreground)' }}>
-            {group.orders[0]?.customer_name && group.tableNumber
-              ? `${group.orders[0].customer_name} - طاولة ${group.tableNumber}`
-              : group.orders[0]?.customer_name
-                ? group.orders[0].customer_name
-                : group.tableNumber
-                  ? `طاولة ${group.tableNumber}`
-                  : group.userName}
-          </p>
-        </div>
-      </div>
-      <div className="px-4 py-3 space-y-2">
-        {group.orders.map((order, idx) => (
-          <div key={order.id} className="flex items-start justify-between gap-3">
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 flex-wrap">
-                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/15 text-xs font-bold text-primary">{idx + 1}</span>
-                <span className="font-semibold text-foreground">{order.drink?.name}</span>
-                {order.quantity > 1 && (
-                  <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">× {order.quantity}</span>
+
+        {/* Items */}
+        <div className="px-4 py-3 space-y-2.5">
+          {group.orders.map((order, idx) => (
+            <div key={order.id} className="flex items-start justify-between gap-3">
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[10px] font-bold"
+                    style={{ background: VIOLET_DIM, color: VIOLET }}>{idx + 1}</span>
+                  <span className="font-semibold text-white text-sm">{order.drink?.name}</span>
+                  {order.quantity > 1 && (
+                    <span className="rounded-full px-2 py-0.5 text-xs font-bold"
+                      style={{ background: VIOLET_DIM, color: VIOLET }}>× {order.quantity}</span>
+                  )}
+                </div>
+                {order.notes && (
+                  <div className="mt-1 flex items-start gap-1.5 pr-7">
+                    <MessageSquare className="h-3 w-3 shrink-0 mt-0.5" style={{ color: 'rgba(255,255,255,0.3)' }} />
+                    <span className="text-xs italic" style={{ color: 'rgba(255,255,255,0.4)' }}>{order.notes}</span>
+                  </div>
                 )}
               </div>
-              {order.notes && (
-                <div className="mt-1 flex items-start gap-1.5 pr-8">
-                  <MessageSquare className="h-3.5 w-3.5 shrink-0 text-muted-foreground mt-0.5" />
-                  <span className="text-xs text-muted-foreground italic">{order.notes}</span>
-                </div>
+              {Number(order.total_price) > 0 && (
+                <span className="shrink-0 text-sm font-bold" style={{ color: VIOLET }}>{order.total_price} ج.م</span>
               )}
             </div>
-            {Number(order.total_price) > 0 && (
-              <span className="shrink-0 text-sm font-medium text-primary">{order.total_price} ج.م</span>
-            )}
-          </div>
-        ))}
-      </div>
-      <div className="flex items-center justify-between gap-3 border-t px-4 py-3"
-        style={{ borderColor: isVip ? 'rgba(245,158,11,0.3)' : 'var(--border)' }}>
-        {showComplete ? (
-          <Button onClick={() => markUserOrdersCompleted(group)} disabled={completingUserId === group.userId}
-            className="flex-1 bg-green-600 hover:bg-green-700" size="lg">
-            {completingUserId === group.userId
-              ? <Loader2 className="h-5 w-5 animate-spin ml-2" />
-              : <CheckCircle className="h-5 w-5 ml-2" />}
-            تم التنفيذ
-          </Button>
-        ) : (
-          <div className="flex flex-col gap-1">
-            <div className="flex items-center gap-2 text-green-600">
-              <CheckCircle className="h-5 w-5" />
-              <span className="font-semibold">منفّذ</span>
+          ))}
+        </div>
+
+        {/* Footer */}
+        <div className="flex items-center justify-between gap-3 px-4 py-3"
+          style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+          {showComplete ? (
+            <button
+              onClick={() => markUserOrdersCompleted(group)}
+              disabled={completingUserId === group.userId}
+              className="flex-1 h-10 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-all active:scale-95 disabled:opacity-60"
+              style={{ background: 'linear-gradient(135deg, #16a34a, #15803d)', color: '#fff', boxShadow: '0 2px 12px rgba(22,163,74,0.3)' }}>
+              {completingUserId === group.userId
+                ? <Loader2 className="h-4 w-4 animate-spin" />
+                : <CheckCircle className="h-4 w-4" />}
+              تم التنفيذ
+            </button>
+          ) : (
+            <div className="flex flex-col gap-1">
+              <div className="flex items-center gap-1.5">
+                <CheckCircle className="h-4 w-4 text-emerald-500" />
+                <span className="text-sm font-semibold text-emerald-400">منفّذ</span>
+              </div>
+              {(() => {
+                const rating = group.orders.find(o => o.rating)?.rating
+                if (!rating) return null
+                return (
+                  <div className="flex gap-0.5" dir="ltr">
+                    {[1,2,3,4,5].map(s => (
+                      <Star key={s} className="h-3 w-3" fill={s <= rating ? '#f59e0b' : 'transparent'} stroke={s <= rating ? '#f59e0b' : '#3f3f46'} />
+                    ))}
+                  </div>
+                )
+              })()}
             </div>
-            {(() => {
-              const rating = group.orders.find(o => o.rating)?.rating
-              if (!rating) return null
-              return (
-                <div className="flex gap-0.5" dir="ltr">
-                  {[1,2,3,4,5].map(s => (
-                    <span key={s} className="text-sm" style={{ color: s <= rating ? '#f59e0b' : '#3f3f46' }}>★</span>
-                  ))}
-                </div>
-              )
-            })()}
-          </div>
-        )}
-        {group.totalPrice > 0 && (
-          <div className="text-right shrink-0">
-            <p className="text-xs text-muted-foreground">الإجمالي</p>
-            <p className="text-lg font-bold text-primary">{group.totalPrice.toFixed(0)} ج.م</p>
-          </div>
-        )}
+          )}
+          {group.totalPrice > 0 && (
+            <div className="text-right shrink-0">
+              <p className="text-[10px]" style={{ color: 'rgba(255,255,255,0.3)' }}>الإجمالي</p>
+              <p className="text-lg font-black" style={{ color: VIOLET }}>{group.totalPrice.toFixed(0)} ج.م</p>
+            </div>
+          )}
+        </div>
       </div>
-    </div>
     )
   }
 
   const pendingReservations = reservations.filter(r => r.status === 'pending')
   const confirmedReservations = reservations.filter(r => r.status === 'confirmed')
 
+  /* ─── TABS CONFIG ─── */
+  const tabs = [
+    { key: 'pending' as StaffTab, label: 'قيد الانتظار', icon: ClipboardList, activeColor: '#f97316', count: pendingOrders.length },
+    { key: 'done' as StaffTab, label: 'منفّذة', icon: CheckCircle, activeColor: '#22c55e', count: completedOrders.length },
+    { key: 'report' as StaffTab, label: 'التقرير', icon: BarChart3, activeColor: '#38bdf8', count: 0 },
+    ...(staffUser.place_id ? [{ key: 'reservations' as StaffTab, label: 'الحجوزات', icon: CalendarDays, activeColor: VIOLET, count: pendingReservations.length }] : []),
+  ]
+
+  /* ─── MAIN UI ─── */
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen" dir="rtl" style={{ background: '#080808' }}>
       <Toaster position="top-center" richColors />
-      <header className="sticky top-0 z-50 bg-card border-b border-border">
+
+      {/* ── HEADER ── */}
+      <header className="sticky top-0 z-50" style={{ background: 'rgba(8,8,8,0.95)', backdropFilter: 'blur(12px)', borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
         <DevBar />
-        <div className="px-4 py-3 flex items-center justify-between">
+
+        <div className="flex items-center justify-between px-4 py-3">
+          {/* Left actions */}
           <div className="flex items-center gap-1">
-            <Button variant="ghost" size="icon" onClick={handleLogout} className="text-muted-foreground">
-              <LogOut className="h-5 w-5" />
-            </Button>
-            <Button variant="ghost" size="icon" onClick={() => { window.location.href = '/' }} className="text-muted-foreground hover:text-amber-500">
-              <ArrowRight className="h-5 w-5" />
-            </Button>
+            <button
+              onClick={handleLogout}
+              className="flex h-9 w-9 items-center justify-center rounded-xl transition-colors"
+              style={{ color: 'rgba(255,255,255,0.4)' }}
+              onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.06)')}
+              onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
+              <LogOut className="h-4.5 w-4.5" />
+            </button>
+            <button
+              onClick={() => { window.location.href = '/' }}
+              className="flex h-9 w-9 items-center justify-center rounded-xl transition-colors"
+              style={{ color: 'rgba(255,255,255,0.4)' }}
+              onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.06)')}
+              onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
+              <ArrowRight className="h-4.5 w-4.5" />
+            </button>
           </div>
-          <div className="flex items-center gap-3 text-right">
-            <div>
-              <h1 className="font-bold text-foreground">{staffUser.name}</h1>
-              <p className="text-xs text-muted-foreground">Staff</p>
+
+          {/* Right: name + avatar */}
+          <div className="flex items-center gap-3">
+            <div className="text-right">
+              <p className="text-sm font-bold text-white leading-tight">{staffUser.name}</p>
+              <div className="inline-flex items-center gap-1 mt-0.5">
+                <span className="h-1.5 w-1.5 rounded-full animate-pulse" style={{ background: VIOLET }} />
+                <span className="text-[10px] font-medium" style={{ color: VIOLET }}>نشط · كاشير</span>
+              </div>
             </div>
-            <div className="h-9 w-9 rounded-full overflow-hidden border border-amber-500/30 shrink-0">
+            <div className="h-9 w-9 rounded-xl overflow-hidden shrink-0" style={{ border: `1px solid ${VIOLET_BORDER}` }}>
               <Image src="/images/sipflow-logo.jpg" alt="logo" width={36} height={36} className="object-cover w-full h-full" />
             </div>
           </div>
         </div>
 
-        {/* Tabs */}
-        <div className="flex border-t border-border overflow-x-auto">
-          <button
-            onClick={() => setStaffTab('pending')}
-            className={`flex-1 flex items-center justify-center gap-1.5 py-3 text-xs font-semibold transition-colors border-b-2 whitespace-nowrap px-2 ${
-              staffTab === 'pending' ? 'border-orange-500 text-orange-500 bg-orange-500/5' : 'border-transparent text-muted-foreground hover:text-foreground'
-            }`}
-          >
-            <ClipboardList className="h-4 w-4" />
-            Pending
-            {pendingOrders.length > 0 && (
-              <span className="bg-orange-500 text-white text-xs rounded-full px-1.5 py-0.5 min-w-[20px] text-center">
-                {pendingOrders.length}
-              </span>
-            )}
-          </button>
-          <button
-            onClick={() => setStaffTab('done')}
-            className={`flex-1 flex items-center justify-center gap-1.5 py-3 text-xs font-semibold transition-colors border-b-2 whitespace-nowrap px-2 ${
-              staffTab === 'done' ? 'border-green-500 text-green-500 bg-green-500/5' : 'border-transparent text-muted-foreground hover:text-foreground'
-            }`}
-          >
-            <CheckCircle className="h-4 w-4" />
-            Done
-            {completedOrders.length > 0 && (
-              <span className="bg-green-500 text-white text-xs rounded-full px-1.5 py-0.5 min-w-[20px] text-center">
-                {completedOrders.length}
-              </span>
-            )}
-          </button>
-          <button
-            onClick={() => setStaffTab('report')}
-            className={`flex-1 flex items-center justify-center gap-1.5 py-3 text-xs font-semibold transition-colors border-b-2 whitespace-nowrap px-2 ${
-              staffTab === 'report' ? 'border-blue-500 text-blue-500 bg-blue-500/5' : 'border-transparent text-muted-foreground hover:text-foreground'
-            }`}
-          >
-            <BarChart3 className="h-4 w-4" />
-            Report
-          </button>
-          {staffUser.place_id && (
-            <button
-              onClick={() => setStaffTab('reservations')}
-              className={`flex-1 flex items-center justify-center gap-1.5 py-3 text-xs font-semibold transition-colors border-b-2 whitespace-nowrap px-2 ${
-                staffTab === 'reservations' ? 'border-amber-500 text-amber-500 bg-amber-500/5' : 'border-transparent text-muted-foreground hover:text-foreground'
-              }`}
-            >
-              <CalendarDays className="h-4 w-4" />
-              الحجوزات
-              {pendingReservations.length > 0 && (
-                <span className="bg-amber-500 text-black text-xs rounded-full px-1.5 py-0.5 min-w-[20px] text-center font-bold">
-                  {pendingReservations.length}
-                </span>
-              )}
-            </button>
-          )}
+        {/* Stats strip */}
+        <div className="flex border-t" style={{ borderColor: 'rgba(255,255,255,0.05)', background: 'rgba(255,255,255,0.02)' }}>
+          <div className="flex-1 flex flex-col items-center py-2.5 gap-0.5" style={{ borderLeft: '1px solid rgba(255,255,255,0.05)' }}>
+            <span className="text-lg font-black" style={{ color: '#f97316' }}>{pendingOrders.length}</span>
+            <span className="text-[9px] font-medium" style={{ color: 'rgba(255,255,255,0.35)' }}>معلّق</span>
+          </div>
+          <div className="flex-1 flex flex-col items-center py-2.5 gap-0.5" style={{ borderLeft: '1px solid rgba(255,255,255,0.05)' }}>
+            <span className="text-lg font-black text-emerald-400">{completedOrders.length}</span>
+            <span className="text-[9px] font-medium" style={{ color: 'rgba(255,255,255,0.35)' }}>منفّذ</span>
+          </div>
+          <div className="flex-1 flex flex-col items-center py-2.5 gap-0.5" style={{ borderLeft: '1px solid rgba(255,255,255,0.05)' }}>
+            <span className="text-lg font-black" style={{ color: VIOLET }}>{todayRevenue.toFixed(0)}</span>
+            <span className="text-[9px] font-medium" style={{ color: 'rgba(255,255,255,0.35)' }}>ج.م</span>
+          </div>
+          <div className="flex-1 flex flex-col items-center py-2.5 gap-0.5">
+            <span className="text-lg font-black text-amber-400">{allOrders.length}</span>
+            <span className="text-[9px] font-medium" style={{ color: 'rgba(255,255,255,0.35)' }}>طلب</span>
+          </div>
+        </div>
+
+        {/* Tab bar */}
+        <div className="flex border-t" style={{ borderColor: 'rgba(255,255,255,0.05)' }}>
+          {tabs.map(tab => {
+            const active = staffTab === tab.key
+            const Icon = tab.icon
+            return (
+              <button
+                key={tab.key}
+                onClick={() => setStaffTab(tab.key)}
+                className="flex-1 flex flex-col items-center gap-1 py-2.5 transition-colors relative"
+                style={{ color: active ? tab.activeColor : 'rgba(255,255,255,0.35)' }}>
+                {active && (
+                  <div className="absolute bottom-0 left-2 right-2 h-0.5 rounded-full" style={{ background: tab.activeColor }} />
+                )}
+                <div className="relative">
+                  <Icon className="h-4 w-4" />
+                  {tab.count > 0 && (
+                    <span className="absolute -top-1.5 -right-1.5 flex h-3.5 w-3.5 items-center justify-center rounded-full text-[8px] font-black text-white"
+                      style={{ background: tab.activeColor }}>
+                      {tab.count > 9 ? '9+' : tab.count}
+                    </span>
+                  )}
+                </div>
+                <span className="text-[9px] font-semibold">{tab.label}</span>
+              </button>
+            )
+          })}
         </div>
       </header>
 
-      <div className="p-4" dir="rtl">
+      {/* ── CONTENT ── */}
+      <div className="p-4 pb-24">
 
         {/* PENDING TAB */}
         {staffTab === 'pending' && (
           <>
             <div className="flex items-center justify-between mb-4">
-              <Button variant="outline" size="sm" onClick={() => mutateOrders()} className="gap-2">
-                <RefreshCw className="h-4 w-4" />
+              <button
+                onClick={() => mutateOrders()}
+                className="flex items-center gap-2 rounded-xl px-3 py-2 text-xs font-semibold transition-all active:scale-95"
+                style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.6)' }}>
+                <RefreshCw className="h-3.5 w-3.5" />
                 تحديث
-              </Button>
-              <p className="text-sm text-muted-foreground">{todayDate}</p>
+              </button>
+              <p className="text-xs" style={{ color: 'rgba(255,255,255,0.35)' }}>{todayDate}</p>
             </div>
 
             {isLoading ? (
-              <div className="text-center py-12">
-                <Loader2 className="h-8 w-8 mx-auto text-primary animate-spin mb-4" />
-                <p className="text-muted-foreground">جاري تحميل الطلبات...</p>
+              <div className="text-center py-16">
+                <Loader2 className="h-8 w-8 mx-auto animate-spin mb-4" style={{ color: VIOLET }} />
+                <p className="text-sm" style={{ color: 'rgba(255,255,255,0.4)' }}>جاري تحميل الطلبات...</p>
               </div>
             ) : pendingGroups.length === 0 ? (
               <div className="text-center py-16">
-                <CheckCircle className="h-14 w-14 mx-auto text-green-500 mb-4" />
-                <p className="text-lg font-bold text-foreground mb-1">لا توجد طلبات معلقة</p>
-                <p className="text-muted-foreground text-sm">جميع الطلبات تم تنفيذها ✓</p>
+                <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl" style={{ background: 'rgba(34,197,94,0.1)' }}>
+                  <CheckCircle className="h-8 w-8 text-emerald-500" />
+                </div>
+                <p className="text-base font-bold text-white mb-1">لا توجد طلبات معلقة</p>
+                <p className="text-sm" style={{ color: 'rgba(255,255,255,0.35)' }}>جميع الطلبات تم تنفيذها ✓</p>
               </div>
             ) : (
-              <div className="space-y-4">
+              <div className="space-y-3">
                 {pendingGroups.map(group => <OrderCard key={group.userId} group={group} showComplete={true} />)}
-                <div className="flex items-center justify-center gap-3 mt-2">
-                  <span className="bg-orange-500/10 text-orange-600 px-4 py-2 rounded-full text-sm font-medium">
+                <div className="flex items-center justify-center gap-3 mt-3">
+                  <span className="rounded-full px-4 py-1.5 text-xs font-semibold" style={{ background: 'rgba(249,115,22,0.1)', color: '#f97316' }}>
                     {pendingGroups.length} {pendingGroups.length === 1 ? 'عميل' : 'عملاء'} في الانتظار
                   </span>
-                  <span className="bg-muted text-muted-foreground px-4 py-2 rounded-full text-sm font-medium">
+                  <span className="rounded-full px-4 py-1.5 text-xs font-semibold" style={{ background: 'rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.5)' }}>
                     {pendingOrders.length} صنف
                   </span>
                 </div>
@@ -633,27 +694,32 @@ export default function StaffPage() {
         {staffTab === 'done' && (
           <>
             <div className="flex items-center justify-between mb-4">
-              <Button variant="outline" size="sm" onClick={() => mutateOrders()} className="gap-2">
-                <RefreshCw className="h-4 w-4" />
+              <button
+                onClick={() => mutateOrders()}
+                className="flex items-center gap-2 rounded-xl px-3 py-2 text-xs font-semibold transition-all active:scale-95"
+                style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.6)' }}>
+                <RefreshCw className="h-3.5 w-3.5" />
                 تحديث
-              </Button>
-              <p className="text-sm text-muted-foreground">المنفّذة اليوم</p>
+              </button>
+              <p className="text-xs" style={{ color: 'rgba(255,255,255,0.35)' }}>المنفّذة اليوم</p>
             </div>
 
             {completedGroups.length === 0 ? (
               <div className="text-center py-16">
-                <ClipboardList className="h-14 w-14 mx-auto text-muted-foreground/40 mb-4" />
-                <p className="text-lg font-bold text-foreground mb-1">لا توجد طلبات منفّذة بعد</p>
-                <p className="text-muted-foreground text-sm">الطلبات المنفّذة هتظهر هنا</p>
+                <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl" style={{ background: 'rgba(255,255,255,0.04)' }}>
+                  <ClipboardList className="h-8 w-8" style={{ color: 'rgba(255,255,255,0.2)' }} />
+                </div>
+                <p className="text-base font-bold text-white mb-1">لا توجد طلبات منفّذة بعد</p>
+                <p className="text-sm" style={{ color: 'rgba(255,255,255,0.35)' }}>الطلبات المنفّذة هتظهر هنا</p>
               </div>
             ) : (
-              <div className="space-y-4">
+              <div className="space-y-3">
                 {completedGroups.map(group => <OrderCard key={group.userId} group={group} showComplete={false} />)}
-                <div className="flex items-center justify-center gap-3 mt-2">
-                  <span className="bg-green-500/10 text-green-600 px-4 py-2 rounded-full text-sm font-medium">
+                <div className="flex items-center justify-center gap-3 mt-3">
+                  <span className="rounded-full px-4 py-1.5 text-xs font-semibold" style={{ background: 'rgba(34,197,94,0.1)', color: '#22c55e' }}>
                     {completedOrders.length} طلب منفّذ
                   </span>
-                  <span className="bg-muted text-muted-foreground px-4 py-2 rounded-full text-sm font-medium">
+                  <span className="rounded-full px-4 py-1.5 text-xs font-semibold" style={{ background: VIOLET_DIM, color: VIOLET }}>
                     {completedGroups.reduce((s, g) => s + g.totalPrice, 0).toFixed(0)} ج.م
                   </span>
                 </div>
@@ -666,58 +732,61 @@ export default function StaffPage() {
         {staffTab === 'report' && (
           <>
             <div className="flex items-center justify-between mb-4">
-              <Button onClick={handlePrintReport} className="gap-2 bg-blue-600 hover:bg-blue-700 text-white" size="sm">
-                <FileText className="h-4 w-4" />
+              <button
+                onClick={handlePrintReport}
+                className="flex items-center gap-2 rounded-xl px-3 py-2 text-xs font-bold text-white transition-all active:scale-95"
+                style={{ background: 'linear-gradient(135deg, #2563eb, #1d4ed8)', boxShadow: '0 2px 12px rgba(37,99,235,0.3)' }}>
+                <FileText className="h-3.5 w-3.5" />
                 طباعة التقرير
-              </Button>
-              <p className="text-sm text-muted-foreground font-medium">{todayDate}</p>
+              </button>
+              <p className="text-xs" style={{ color: 'rgba(255,255,255,0.35)' }}>{todayDate}</p>
             </div>
 
+            {/* Summary cards */}
             <div className="grid grid-cols-3 gap-3 mb-4">
-              <div className="bg-card border border-border rounded-2xl p-4 text-center">
-                <p className="text-2xl font-black text-primary">{allOrders.length}</p>
-                <p className="text-xs text-muted-foreground mt-1">إجمالي الطلبات</p>
-              </div>
-              <div className="bg-card border border-border rounded-2xl p-4 text-center">
-                <p className="text-2xl font-black text-green-600">{completedOrders.length}</p>
-                <p className="text-xs text-muted-foreground mt-1">منفّذ</p>
-              </div>
-              <div className="bg-card border border-border rounded-2xl p-4 text-center">
-                <p className="text-2xl font-black text-amber-500">{todayRevenue.toFixed(0)}</p>
-                <p className="text-xs text-muted-foreground mt-1">ج.م إيراد</p>
-              </div>
+              {[
+                { value: allOrders.length, label: 'إجمالي الطلبات', color: '#f97316' },
+                { value: completedOrders.length, label: 'منفّذ', color: '#22c55e' },
+                { value: todayRevenue.toFixed(0), label: 'ج.م إيراد', color: VIOLET },
+              ].map(item => (
+                <div key={item.label} className="rounded-2xl p-3 text-center" style={{ background: '#111', border: '1px solid rgba(255,255,255,0.07)' }}>
+                  <p className="text-2xl font-black" style={{ color: item.color }}>{item.value}</p>
+                  <p className="text-[10px] mt-1" style={{ color: 'rgba(255,255,255,0.35)' }}>{item.label}</p>
+                </div>
+              ))}
             </div>
 
-            {/* Ratings Summary */}
+            {/* Ratings */}
             {(() => {
               const ratedOrders = allOrders.filter(o => o.rating)
               if (ratedOrders.length === 0) return null
               const avg = ratedOrders.reduce((s, o) => s + (o.rating || 0), 0) / ratedOrders.length
               const dist = [5,4,3,2,1].map(s => ({ star: s, count: ratedOrders.filter(o => o.rating === s).length }))
               return (
-                <div className="bg-card border border-border rounded-2xl p-4 mb-4">
-                  <h3 className="font-bold text-foreground text-right mb-3 flex items-center justify-end gap-2">
-                    <span>⭐</span> تقييمات اليوم
+                <div className="rounded-2xl p-4 mb-4" style={{ background: '#111', border: '1px solid rgba(255,255,255,0.07)' }}>
+                  <h3 className="font-bold text-white text-right mb-3 flex items-center justify-end gap-2 text-sm">
+                    <Star className="h-4 w-4 text-amber-400" fill="#f59e0b" />
+                    تقييمات اليوم
                   </h3>
-                  <div className="flex items-center gap-4 mb-3">
+                  <div className="flex items-center gap-4 mb-2">
                     <div className="text-center">
                       <p className="text-3xl font-black text-amber-400">{avg.toFixed(1)}</p>
                       <div className="flex gap-0.5 justify-center mt-1" dir="ltr">
                         {[1,2,3,4,5].map(s => (
-                          <span key={s} className="text-sm" style={{ color: s <= Math.round(avg) ? '#f59e0b' : '#3f3f46' }}>★</span>
+                          <Star key={s} className="h-3 w-3" fill={s <= Math.round(avg) ? '#f59e0b' : 'transparent'} stroke={s <= Math.round(avg) ? '#f59e0b' : '#3f3f46'} />
                         ))}
                       </div>
-                      <p className="text-xs text-muted-foreground mt-1">{ratedOrders.length} تقييم</p>
+                      <p className="text-[10px] mt-1" style={{ color: 'rgba(255,255,255,0.35)' }}>{ratedOrders.length} تقييم</p>
                     </div>
-                    <div className="flex-1 space-y-1">
+                    <div className="flex-1 space-y-1.5">
                       {dist.map(({ star, count }) => (
                         <div key={star} className="flex items-center gap-2">
-                          <span className="text-xs text-muted-foreground w-3 text-left">{star}</span>
-                          <span className="text-xs text-amber-400">★</span>
-                          <div className="flex-1 h-1.5 bg-muted rounded-full overflow-hidden">
-                            <div className="h-full bg-amber-400 rounded-full transition-all" style={{ width: ratedOrders.length ? `${(count / ratedOrders.length) * 100}%` : '0%' }} />
+                          <span className="text-xs text-amber-400 w-3">{star}</span>
+                          <Star className="h-3 w-3 text-amber-400 shrink-0" fill="#f59e0b" />
+                          <div className="flex-1 h-1.5 rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.07)' }}>
+                            <div className="h-full rounded-full bg-amber-400 transition-all" style={{ width: ratedOrders.length ? `${(count / ratedOrders.length) * 100}%` : '0%' }} />
                           </div>
-                          <span className="text-xs text-muted-foreground w-4 text-right">{count}</span>
+                          <span className="text-xs w-4 text-right" style={{ color: 'rgba(255,255,255,0.35)' }}>{count}</span>
                         </div>
                       ))}
                     </div>
@@ -726,39 +795,44 @@ export default function StaffPage() {
               )
             })()}
 
+            {/* Drink breakdown */}
             {drinkReport.length === 0 ? (
               <div className="text-center py-16">
-                <TrendingUp className="h-14 w-14 mx-auto text-muted-foreground/40 mb-4" />
-                <p className="text-lg font-bold text-foreground mb-1">لا توجد طلبات اليوم</p>
-                <p className="text-muted-foreground text-sm">التقرير هيظهر هنا بعد أول طلب</p>
+                <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl" style={{ background: 'rgba(255,255,255,0.04)' }}>
+                  <TrendingUp className="h-8 w-8" style={{ color: 'rgba(255,255,255,0.2)' }} />
+                </div>
+                <p className="text-base font-bold text-white mb-1">لا توجد طلبات اليوم</p>
+                <p className="text-sm" style={{ color: 'rgba(255,255,255,0.35)' }}>التقرير هيظهر هنا بعد أول طلب</p>
               </div>
             ) : (
               <div className="space-y-2">
-                <h3 className="font-bold text-foreground text-right mb-3 flex items-center justify-end gap-2">
-                  <BarChart3 className="h-4 w-4" />
+                <h3 className="font-bold text-white text-right mb-3 flex items-center justify-end gap-2 text-sm">
+                  <BarChart3 className="h-4 w-4" style={{ color: '#38bdf8' }} />
                   تفاصيل المشروبات
                 </h3>
                 {drinkReport.map((item, idx) => {
                   const maxCount = drinkReport[0].count
                   const pct = Math.round((item.count / maxCount) * 100)
+                  const rankColors = ['#f59e0b', '#94a3b8', '#cd7c2f']
                   return (
-                    <div key={item.drinkName} className="bg-card border border-border rounded-xl p-3">
+                    <div key={item.drinkName} className="rounded-xl p-3" style={{ background: '#111', border: '1px solid rgba(255,255,255,0.07)' }}>
                       <div className="flex items-center justify-between mb-2">
-                        <div className="flex items-center gap-2 text-left">
+                        <div className="flex items-center gap-2">
                           {item.totalRevenue > 0 && (
-                            <span className="text-sm font-bold text-primary">{item.totalRevenue.toFixed(0)} ج.م</span>
+                            <span className="text-sm font-bold" style={{ color: VIOLET }}>{item.totalRevenue.toFixed(0)} ج.م</span>
                           )}
-                          <span className="bg-primary/10 text-primary text-xs font-bold rounded-full px-2 py-0.5">× {item.count}</span>
+                          <span className="rounded-full px-2 py-0.5 text-xs font-bold" style={{ background: VIOLET_DIM, color: VIOLET }}>× {item.count}</span>
                         </div>
-                        <div className="flex items-center gap-2 text-right">
-                          <span className="font-semibold text-foreground">{item.drinkName}</span>
-                          <span className="flex h-6 w-6 items-center justify-center rounded-full bg-muted text-xs font-bold text-muted-foreground">
+                        <div className="flex items-center gap-2">
+                          <span className="font-semibold text-white text-sm">{item.drinkName}</span>
+                          <span className="flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-black"
+                            style={{ background: idx < 3 ? `${rankColors[idx]}20` : 'rgba(255,255,255,0.07)', color: idx < 3 ? rankColors[idx] : 'rgba(255,255,255,0.4)' }}>
                             {idx + 1}
                           </span>
                         </div>
                       </div>
-                      <div className="h-1.5 bg-muted rounded-full overflow-hidden">
-                        <div className="h-full bg-primary rounded-full transition-all" style={{ width: `${pct}%` }} />
+                      <div className="h-1.5 rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.07)' }}>
+                        <div className="h-full rounded-full transition-all" style={{ width: `${pct}%`, background: idx === 0 ? 'linear-gradient(90deg, #a855f7, #38bdf8)' : VIOLET }} />
                       </div>
                     </div>
                   )
@@ -772,28 +846,32 @@ export default function StaffPage() {
         {staffTab === 'reservations' && staffUser.place_id && (
           <>
             <div className="flex items-center justify-between mb-4">
-              <Button variant="outline" size="sm" onClick={() => fetchReservations()} className="gap-2" disabled={isFetchingReservations}>
-                <RefreshCw className={`h-4 w-4 ${isFetchingReservations ? 'animate-spin' : ''}`} />
+              <button
+                onClick={() => fetchReservations()}
+                disabled={isFetchingReservations}
+                className="flex items-center gap-2 rounded-xl px-3 py-2 text-xs font-semibold transition-all active:scale-95 disabled:opacity-50"
+                style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.6)' }}>
+                <RefreshCw className={`h-3.5 w-3.5 ${isFetchingReservations ? 'animate-spin' : ''}`} />
                 تحديث
-              </Button>
-              <h2 className="font-bold text-foreground flex items-center gap-2">
-                <CalendarDays className="h-4 w-4 text-amber-500" />
+              </button>
+              <h2 className="text-sm font-bold text-white flex items-center gap-2">
+                <CalendarDays className="h-4 w-4" style={{ color: VIOLET }} />
                 الحجوزات
               </h2>
             </div>
 
             {isFetchingReservations ? (
-              <div className="text-center py-12">
-                <Loader2 className="h-8 w-8 mx-auto text-amber-500 animate-spin mb-4" />
-                <p className="text-muted-foreground">جاري تحميل الحجوزات...</p>
+              <div className="text-center py-16">
+                <Loader2 className="h-8 w-8 mx-auto animate-spin mb-4" style={{ color: VIOLET }} />
+                <p className="text-sm" style={{ color: 'rgba(255,255,255,0.4)' }}>جاري تحميل الحجوزات...</p>
               </div>
             ) : (
               <div className="space-y-4">
                 {/* Pending reservations */}
                 {pendingReservations.length > 0 && (
                   <div>
-                    <h3 className="text-sm font-semibold text-amber-500 mb-2 flex items-center gap-1.5">
-                      <span className="h-2 w-2 rounded-full bg-amber-500 animate-pulse" />
+                    <h3 className="text-xs font-semibold mb-3 flex items-center gap-1.5" style={{ color: '#f59e0b' }}>
+                      <span className="h-1.5 w-1.5 rounded-full animate-pulse bg-amber-400" />
                       تنتظر التأكيد ({pendingReservations.length})
                     </h3>
                     <div className="space-y-3">
@@ -804,55 +882,62 @@ export default function StaffPage() {
                         const isConfirming = confirmingId === r.id
                         const showTableInput = tableInputId === r.id
                         return (
-                          <div key={r.id} className="rounded-2xl border border-amber-500/30 bg-card p-4 space-y-3">
+                          <div key={r.id} className="rounded-2xl p-4 space-y-3" style={{ background: '#111', border: '1px solid rgba(245,158,11,0.25)' }}>
                             <div className="flex items-start justify-between gap-2">
-                              <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                              <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full" style={{ background: 'rgba(245,158,11,0.1)', color: '#f59e0b', border: '1px solid rgba(245,158,11,0.2)' }}>
                                 معلّق
                               </span>
                               <div className="text-right">
-                                <p className="font-bold text-foreground">{r.customer_name}</p>
+                                <p className="font-bold text-white text-sm">{r.customer_name}</p>
                                 {r.customer_phone && (
-                                  <a href={`tel:${r.customer_phone}`} className="text-xs text-amber-400 flex items-center gap-1 justify-end mt-0.5">
+                                  <a href={`tel:${r.customer_phone}`} className="text-xs flex items-center gap-1 justify-end mt-0.5" style={{ color: '#f59e0b' }}>
                                     <Phone className="h-3 w-3" /> {r.customer_phone}
                                   </a>
                                 )}
                               </div>
                             </div>
-                            <div className="flex items-center gap-3 text-xs text-muted-foreground flex-wrap">
-                              <span className="flex items-center gap-1"><Users className="h-3 w-3" /> {r.party_size} أشخاص</span>
-                              <span className="flex items-center gap-1"><CalendarDays className="h-3 w-3" /> {dateStr}</span>
-                              <span className="flex items-center gap-1"><Clock className="h-3 w-3" /> {timeStr}</span>
+
+                            <div className="grid grid-cols-2 gap-2">
+                              {[
+                                { icon: Users, label: `${r.party_size} أشخاص` },
+                                { icon: CalendarDays, label: dateStr },
+                                { icon: Clock, label: timeStr },
+                                ...(r.notes ? [{ icon: MessageSquare, label: r.notes }] : []),
+                              ].map((item, i) => (
+                                <div key={i} className="flex items-center gap-1.5 rounded-lg px-2 py-1.5" style={{ background: 'rgba(255,255,255,0.04)' }}>
+                                  <item.icon className="h-3 w-3 shrink-0" style={{ color: 'rgba(255,255,255,0.35)' }} />
+                                  <span className="text-xs" style={{ color: 'rgba(255,255,255,0.6)' }}>{item.label}</span>
+                                </div>
+                              ))}
                             </div>
-                            {r.notes && (
-                              <p className="text-xs text-muted-foreground bg-muted/50 rounded-lg px-2 py-1.5">📝 {r.notes}</p>
-                            )}
-                            {/* Table number input */}
+
                             {showTableInput ? (
                               <div className="space-y-2">
-                                <label className="text-xs text-muted-foreground">رقم الطاولة</label>
+                                <label className="text-xs" style={{ color: 'rgba(255,255,255,0.4)' }}>رقم الطاولة</label>
                                 <div className="flex gap-2">
-                                  <Input
+                                  <input
                                     type="text"
                                     placeholder="مثال: 5"
                                     value={tableNumbers[r.id] || ''}
                                     onChange={e => setTableNumbers(prev => ({ ...prev, [r.id]: e.target.value }))}
-                                    className="text-center font-bold"
                                     dir="ltr"
                                     autoFocus
+                                    className="flex-1 h-9 rounded-xl px-3 text-center font-bold text-white outline-none text-sm"
+                                    style={{ background: '#0d0d0d', border: `1px solid ${VIOLET_BORDER}` }}
                                   />
                                   <button
                                     onClick={() => handleConfirmReservation(r)}
                                     disabled={isConfirming}
-                                    className="px-4 rounded-xl bg-green-600 hover:bg-green-700 text-white font-bold text-sm flex items-center gap-1 disabled:opacity-60 transition-colors"
-                                  >
+                                    className="px-4 rounded-xl font-bold text-sm flex items-center gap-1 text-white disabled:opacity-60 transition-all active:scale-95"
+                                    style={{ background: 'linear-gradient(135deg, #16a34a, #15803d)' }}>
                                     {isConfirming ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <CalendarCheck className="h-3.5 w-3.5" />}
                                     تأكيد
                                   </button>
                                   <button
                                     onClick={() => { setTableInputId(null); setTableNumbers(prev => { const n = { ...prev }; delete n[r.id]; return n }) }}
-                                    className="px-3 rounded-xl border border-border text-muted-foreground hover:text-foreground text-sm transition-colors"
-                                  >
-                                    إلغاء
+                                    className="px-3 rounded-xl text-sm transition-colors"
+                                    style={{ background: 'rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.5)' }}>
+                                    ×
                                   </button>
                                 </div>
                               </div>
@@ -860,15 +945,14 @@ export default function StaffPage() {
                               <div className="flex gap-2 pt-1">
                                 <button
                                   onClick={() => setTableInputId(r.id)}
-                                  className="flex-1 flex items-center justify-center gap-1 rounded-xl py-2 text-sm font-bold text-white transition-colors"
-                                  style={{ background: 'linear-gradient(135deg, #16a34a, #15803d)' }}
-                                >
+                                  className="flex-1 flex items-center justify-center gap-1.5 rounded-xl py-2.5 text-sm font-bold text-white transition-all active:scale-95"
+                                  style={{ background: 'linear-gradient(135deg, #16a34a, #15803d)', boxShadow: '0 2px 10px rgba(22,163,74,0.3)' }}>
                                   <CalendarCheck className="h-4 w-4" /> تأكيد + تحديد طاولة
                                 </button>
                                 <button
                                   onClick={() => handleCancelReservation(r)}
-                                  className="flex items-center justify-center gap-1 rounded-xl px-4 py-2 text-xs bg-destructive/10 hover:bg-destructive/20 text-destructive transition-colors"
-                                >
+                                  className="flex items-center justify-center gap-1 rounded-xl px-4 py-2 text-xs font-semibold transition-all active:scale-95"
+                                  style={{ background: 'rgba(239,68,68,0.1)', color: '#ef4444', border: '1px solid rgba(239,68,68,0.2)' }}>
                                   <CalendarX className="h-3.5 w-3.5" /> إلغاء
                                 </button>
                               </div>
@@ -883,7 +967,7 @@ export default function StaffPage() {
                 {/* Confirmed reservations */}
                 {confirmedReservations.length > 0 && (
                   <div>
-                    <h3 className="text-sm font-semibold text-green-500 mb-2 flex items-center gap-1.5">
+                    <h3 className="text-xs font-semibold mb-2 flex items-center gap-1.5 text-emerald-400">
                       <CalendarCheck className="h-3.5 w-3.5" />
                       مؤكدة ({confirmedReservations.length})
                     </h3>
@@ -893,19 +977,17 @@ export default function StaffPage() {
                         const dateStr = dt.toLocaleDateString('ar-EG', { weekday: 'short', month: 'short', day: 'numeric' })
                         const timeStr = dt.toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' })
                         return (
-                          <div key={r.id} className="rounded-xl border border-green-500/20 bg-green-500/5 p-3">
-                            <div className="flex items-center justify-between gap-2">
-                              <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                                {r.table_number && (
-                                  <span className="font-bold text-green-400 bg-green-500/15 px-2 py-0.5 rounded-full">
-                                    🪑 طاولة {r.table_number}
-                                  </span>
-                                )}
-                                <span>{r.party_size} أشخاص</span>
-                                <span>{dateStr} · {timeStr}</span>
-                              </div>
-                              <p className="font-semibold text-foreground text-sm">{r.customer_name}</p>
+                          <div key={r.id} className="flex items-center justify-between rounded-xl px-3 py-2.5" style={{ background: 'rgba(34,197,94,0.06)', border: '1px solid rgba(34,197,94,0.15)' }}>
+                            <div className="flex items-center gap-2 flex-wrap">
+                              {r.table_number && (
+                                <span className="font-bold text-xs rounded-full px-2 py-0.5 text-emerald-400" style={{ background: 'rgba(34,197,94,0.12)' }}>
+                                  🪑 طاولة {r.table_number}
+                                </span>
+                              )}
+                              <span className="text-xs" style={{ color: 'rgba(255,255,255,0.45)' }}>{r.party_size} أشخاص</span>
+                              <span className="text-xs" style={{ color: 'rgba(255,255,255,0.35)' }}>{dateStr} · {timeStr}</span>
                             </div>
+                            <p className="font-semibold text-white text-sm">{r.customer_name}</p>
                           </div>
                         )
                       })}
@@ -915,9 +997,11 @@ export default function StaffPage() {
 
                 {reservations.length === 0 && !isFetchingReservations && (
                   <div className="text-center py-16">
-                    <CalendarDays className="h-14 w-14 mx-auto text-muted-foreground/30 mb-4" />
-                    <p className="text-lg font-bold text-foreground mb-1">لا توجد حجوزات</p>
-                    <p className="text-muted-foreground text-sm">الحجوزات هتظهر هنا بعد ما العملاء يحجزوا</p>
+                    <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl" style={{ background: 'rgba(255,255,255,0.04)' }}>
+                      <CalendarDays className="h-8 w-8" style={{ color: 'rgba(255,255,255,0.2)' }} />
+                    </div>
+                    <p className="text-base font-bold text-white mb-1">لا توجد حجوزات</p>
+                    <p className="text-sm" style={{ color: 'rgba(255,255,255,0.35)' }}>الحجوزات هتظهر هنا بعد ما العملاء يحجزوا</p>
                   </div>
                 )}
               </div>
@@ -926,84 +1010,79 @@ export default function StaffPage() {
         )}
       </div>
 
-      {/* Floating reservations button */}
+      {/* ── FLOATING RESERVATIONS BUTTON ── */}
       {staffUser.place_id && (
         <button
           onClick={() => { setShowReservationsModal(true); fetchReservations() }}
-          className="fixed bottom-6 left-4 z-40 flex items-center gap-2 rounded-2xl px-4 py-3 font-bold text-sm shadow-2xl transition-all active:scale-95"
+          className="fixed bottom-6 left-4 z-40 flex items-center gap-2 rounded-2xl px-4 py-3 font-bold text-sm text-white shadow-2xl transition-all active:scale-95"
           style={{
             background: pendingReservations.length > 0
-              ? 'linear-gradient(135deg, #d97706, #b45309)'
-              : 'linear-gradient(135deg, #374151, #1f2937)',
-            color: '#fff',
-            boxShadow: pendingReservations.length > 0
-              ? '0 4px 24px rgba(217,119,6,0.5)'
-              : '0 4px 16px rgba(0,0,0,0.4)'
-          }}
-        >
+              ? 'linear-gradient(135deg, #a855f7, #7c3aed)'
+              : 'rgba(255,255,255,0.07)',
+            border: pendingReservations.length > 0 ? 'none' : '1px solid rgba(255,255,255,0.1)',
+            boxShadow: pendingReservations.length > 0 ? '0 4px 24px rgba(168,85,247,0.45)' : '0 4px 16px rgba(0,0,0,0.4)'
+          }}>
           <CalendarDays className="h-5 w-5" />
           الحجوزات
           {pendingReservations.length > 0 && (
-            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-white text-amber-700 text-xs font-black">
+            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-white text-xs font-black" style={{ color: VIOLET }}>
               {pendingReservations.length}
             </span>
           )}
         </button>
       )}
 
-      {/* Reservations Modal */}
+      {/* ── RESERVATIONS MODAL ── */}
       {showReservationsModal && (
         <div className="fixed inset-0 z-50 flex flex-col" dir="rtl">
-          {/* Backdrop */}
-          <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={() => setShowReservationsModal(false)} />
-
-          {/* Sheet */}
-          <div className="absolute bottom-0 left-0 right-0 rounded-t-3xl bg-[#111] border-t border-amber-500/20 flex flex-col max-h-[85vh]">
-            {/* Handle */}
+          <div className="absolute inset-0 bg-black/75 backdrop-blur-sm" onClick={() => setShowReservationsModal(false)} />
+          <div className="absolute bottom-0 left-0 right-0 rounded-t-3xl flex flex-col max-h-[88vh]"
+            style={{ background: '#0f0f0f', border: `1px solid ${VIOLET_BORDER}`, borderBottom: 'none' }}>
             <div className="flex justify-center pt-3 pb-1">
-              <div className="h-1 w-10 rounded-full bg-white/20" />
+              <div className="h-1 w-10 rounded-full" style={{ background: 'rgba(255,255,255,0.15)' }} />
             </div>
 
-            {/* Header */}
-            <div className="flex items-center justify-between px-4 py-3 border-b border-white/10">
+            <div className="flex items-center justify-between px-4 py-3" style={{ borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
               <button
                 onClick={() => { setShowReservationsModal(false); fetchReservations() }}
-                className="p-1.5 rounded-full hover:bg-white/10 transition-colors"
-              >
-                <RefreshCw className={`h-4 w-4 text-muted-foreground ${isFetchingReservations ? 'animate-spin' : ''}`} />
+                className="p-1.5 rounded-full transition-colors"
+                style={{ color: 'rgba(255,255,255,0.4)' }}
+                onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.08)')}
+                onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
+                <RefreshCw className={`h-4 w-4 ${isFetchingReservations ? 'animate-spin' : ''}`} />
               </button>
-              <h2 className="font-bold text-white flex items-center gap-2">
-                <CalendarDays className="h-4 w-4 text-amber-500" />
+              <h2 className="font-bold text-white flex items-center gap-2 text-sm">
+                <CalendarDays className="h-4 w-4" style={{ color: VIOLET }} />
                 الحجوزات
                 {pendingReservations.length > 0 && (
-                  <span className="bg-amber-500 text-black text-xs rounded-full px-2 py-0.5 font-black">
+                  <span className="rounded-full px-2 py-0.5 text-xs font-black text-white" style={{ background: VIOLET }}>
                     {pendingReservations.length} جديد
                   </span>
                 )}
               </h2>
-              <button onClick={() => setShowReservationsModal(false)} className="text-muted-foreground text-2xl leading-none px-1">×</button>
+              <button onClick={() => setShowReservationsModal(false)}
+                className="text-2xl leading-none px-1 transition-colors"
+                style={{ color: 'rgba(255,255,255,0.4)' }}>×</button>
             </div>
 
-            {/* Content */}
             <div className="overflow-y-auto flex-1 p-4 space-y-4">
               {isFetchingReservations ? (
                 <div className="text-center py-12">
-                  <Loader2 className="h-8 w-8 mx-auto text-amber-500 animate-spin mb-3" />
-                  <p className="text-muted-foreground text-sm">جاري التحميل...</p>
+                  <Loader2 className="h-8 w-8 mx-auto animate-spin mb-3" style={{ color: VIOLET }} />
+                  <p className="text-sm" style={{ color: 'rgba(255,255,255,0.4)' }}>جاري التحميل...</p>
                 </div>
               ) : reservations.length === 0 ? (
                 <div className="text-center py-16">
-                  <CalendarDays className="h-12 w-12 mx-auto text-muted-foreground/30 mb-3" />
-                  <p className="text-foreground font-bold mb-1">لا توجد حجوزات</p>
-                  <p className="text-muted-foreground text-sm">الحجوزات هتظهر هنا</p>
+                  <CalendarDays className="h-12 w-12 mx-auto mb-3" style={{ color: 'rgba(255,255,255,0.2)' }} />
+                  <p className="font-bold text-white mb-1">لا توجد حجوزات</p>
+                  <p className="text-sm" style={{ color: 'rgba(255,255,255,0.35)' }}>الحجوزات هتظهر هنا</p>
                 </div>
               ) : (
                 <>
-                  {/* Pending */}
                   {pendingReservations.length > 0 && (
                     <div>
-                      <h3 className="text-sm font-semibold text-amber-400 mb-2 flex items-center gap-1.5">
-                        <span className="h-2 w-2 rounded-full bg-amber-400 animate-pulse" />
+                      <h3 className="text-xs font-semibold mb-2 flex items-center gap-1.5 text-amber-400">
+                        <span className="h-1.5 w-1.5 rounded-full bg-amber-400 animate-pulse" />
                         تنتظر التأكيد ({pendingReservations.length})
                       </h3>
                       <div className="space-y-3">
@@ -1014,66 +1093,73 @@ export default function StaffPage() {
                           const isConfirming = confirmingId === r.id
                           const showTableInput = tableInputId === r.id
                           return (
-                            <div key={r.id} className="rounded-2xl border border-amber-500/30 bg-white/5 p-4 space-y-3">
+                            <div key={r.id} className="rounded-2xl p-4 space-y-3" style={{ background: '#181818', border: '1px solid rgba(245,158,11,0.2)' }}>
                               <div className="flex items-start justify-between gap-2">
-                                <span className="text-xs px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20">معلّق</span>
+                                <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full" style={{ background: 'rgba(245,158,11,0.1)', color: '#f59e0b', border: '1px solid rgba(245,158,11,0.2)' }}>معلّق</span>
                                 <div className="text-right">
-                                  <p className="font-bold text-white">{r.customer_name}</p>
+                                  <p className="font-bold text-white text-sm">{r.customer_name}</p>
                                   {r.customer_phone && (
-                                    <a href={`tel:${r.customer_phone}`} className="text-xs text-amber-400 flex items-center gap-1 justify-end mt-0.5">
+                                    <a href={`tel:${r.customer_phone}`} className="text-xs flex items-center gap-1 justify-end mt-0.5" style={{ color: '#f59e0b' }}>
                                       <Phone className="h-3 w-3" /> {r.customer_phone}
                                     </a>
                                   )}
                                 </div>
                               </div>
-                              <div className="flex items-center gap-3 text-xs text-muted-foreground flex-wrap">
-                                <span className="flex items-center gap-1"><Users className="h-3 w-3" /> {r.party_size} أشخاص</span>
-                                <span className="flex items-center gap-1"><CalendarDays className="h-3 w-3" /> {dateStr}</span>
-                                <span className="flex items-center gap-1"><Clock className="h-3 w-3" /> {timeStr}</span>
+                              <div className="grid grid-cols-2 gap-2">
+                                {[
+                                  { icon: Users, label: `${r.party_size} أشخاص` },
+                                  { icon: CalendarDays, label: dateStr },
+                                  { icon: Clock, label: timeStr },
+                                  ...(r.notes ? [{ icon: MessageSquare, label: r.notes }] : []),
+                                ].map((item, i) => (
+                                  <div key={i} className="flex items-center gap-1.5 rounded-lg px-2 py-1.5" style={{ background: 'rgba(255,255,255,0.04)' }}>
+                                    <item.icon className="h-3 w-3 shrink-0" style={{ color: 'rgba(255,255,255,0.35)' }} />
+                                    <span className="text-xs" style={{ color: 'rgba(255,255,255,0.6)' }}>{item.label}</span>
+                                  </div>
+                                ))}
                               </div>
-                              {r.notes && (
-                                <p className="text-xs text-muted-foreground bg-white/5 rounded-lg px-2 py-1.5">📝 {r.notes}</p>
-                              )}
                               {showTableInput ? (
                                 <div className="space-y-2">
-                                  <label className="text-xs text-muted-foreground">رقم الطاولة</label>
+                                  <label className="text-xs" style={{ color: 'rgba(255,255,255,0.4)' }}>رقم الطاولة</label>
                                   <div className="flex gap-2">
-                                    <Input
+                                    <input
                                       type="text"
                                       placeholder="مثال: 5"
                                       value={tableNumbers[r.id] || ''}
                                       onChange={e => setTableNumbers(prev => ({ ...prev, [r.id]: e.target.value }))}
-                                      className="text-center font-bold bg-white/10 border-white/20 text-white"
                                       dir="ltr"
                                       autoFocus
+                                      className="flex-1 h-9 rounded-xl px-3 text-center font-bold text-white outline-none text-sm"
+                                      style={{ background: '#0d0d0d', border: `1px solid ${VIOLET_BORDER}` }}
                                     />
                                     <button
-                                      onClick={async () => { await handleConfirmReservation(r); setShowReservationsModal(false) }}
+                                      onClick={() => handleConfirmReservation(r)}
                                       disabled={isConfirming}
-                                      className="px-4 rounded-xl bg-green-600 hover:bg-green-700 text-white font-bold text-sm flex items-center gap-1 disabled:opacity-60 transition-colors"
-                                    >
+                                      className="px-4 rounded-xl font-bold text-sm flex items-center gap-1 text-white disabled:opacity-60 transition-all active:scale-95"
+                                      style={{ background: 'linear-gradient(135deg, #16a34a, #15803d)' }}>
                                       {isConfirming ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <CalendarCheck className="h-3.5 w-3.5" />}
                                       تأكيد
                                     </button>
                                     <button
                                       onClick={() => { setTableInputId(null); setTableNumbers(prev => { const n = { ...prev }; delete n[r.id]; return n }) }}
-                                      className="px-3 rounded-xl border border-white/20 text-muted-foreground text-sm"
-                                    >إلغاء</button>
+                                      className="px-3 rounded-xl text-sm"
+                                      style={{ background: 'rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.5)' }}>
+                                      ×
+                                    </button>
                                   </div>
                                 </div>
                               ) : (
-                                <div className="flex gap-2 pt-1">
+                                <div className="flex gap-2">
                                   <button
                                     onClick={() => setTableInputId(r.id)}
-                                    className="flex-1 flex items-center justify-center gap-1 rounded-xl py-2.5 text-sm font-bold text-white transition-colors"
-                                    style={{ background: 'linear-gradient(135deg, #16a34a, #15803d)' }}
-                                  >
+                                    className="flex-1 flex items-center justify-center gap-1.5 rounded-xl py-2.5 text-sm font-bold text-white transition-all active:scale-95"
+                                    style={{ background: 'linear-gradient(135deg, #16a34a, #15803d)', boxShadow: '0 2px 10px rgba(22,163,74,0.3)' }}>
                                     <CalendarCheck className="h-4 w-4" /> تأكيد + تحديد طاولة
                                   </button>
                                   <button
                                     onClick={() => handleCancelReservation(r)}
-                                    className="flex items-center justify-center gap-1 rounded-xl px-4 py-2 text-xs bg-red-500/10 hover:bg-red-500/20 text-red-400 transition-colors"
-                                  >
+                                    className="flex items-center justify-center gap-1 rounded-xl px-4 py-2 text-xs font-semibold transition-all active:scale-95"
+                                    style={{ background: 'rgba(239,68,68,0.1)', color: '#ef4444', border: '1px solid rgba(239,68,68,0.2)' }}>
                                     <CalendarX className="h-3.5 w-3.5" /> إلغاء
                                   </button>
                                 </div>
@@ -1085,10 +1171,9 @@ export default function StaffPage() {
                     </div>
                   )}
 
-                  {/* Confirmed */}
                   {confirmedReservations.length > 0 && (
                     <div>
-                      <h3 className="text-sm font-semibold text-green-400 mb-2 flex items-center gap-1.5">
+                      <h3 className="text-xs font-semibold mb-2 flex items-center gap-1.5 text-emerald-400">
                         <CalendarCheck className="h-3.5 w-3.5" />
                         مؤكدة ({confirmedReservations.length})
                       </h3>
@@ -1098,19 +1183,17 @@ export default function StaffPage() {
                           const dateStr = dt.toLocaleDateString('ar-EG', { weekday: 'short', month: 'short', day: 'numeric' })
                           const timeStr = dt.toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' })
                           return (
-                            <div key={r.id} className="rounded-xl border border-green-500/20 bg-green-500/5 p-3">
-                              <div className="flex items-center justify-between gap-2">
-                                <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                                  {r.table_number && (
-                                    <span className="font-bold text-green-400 bg-green-500/15 px-2 py-0.5 rounded-full">
-                                      🪑 طاولة {r.table_number}
-                                    </span>
-                                  )}
-                                  <span>{r.party_size} أشخاص</span>
-                                  <span>{dateStr} · {timeStr}</span>
-                                </div>
-                                <p className="font-semibold text-white text-sm">{r.customer_name}</p>
+                            <div key={r.id} className="flex items-center justify-between rounded-xl px-3 py-2.5" style={{ background: 'rgba(34,197,94,0.06)', border: '1px solid rgba(34,197,94,0.15)' }}>
+                              <div className="flex items-center gap-2 flex-wrap">
+                                {r.table_number && (
+                                  <span className="font-bold text-xs rounded-full px-2 py-0.5 text-emerald-400" style={{ background: 'rgba(34,197,94,0.12)' }}>
+                                    🪑 طاولة {r.table_number}
+                                  </span>
+                                )}
+                                <span className="text-xs" style={{ color: 'rgba(255,255,255,0.45)' }}>{r.party_size} أشخاص</span>
+                                <span className="text-xs" style={{ color: 'rgba(255,255,255,0.35)' }}>{dateStr} · {timeStr}</span>
                               </div>
+                              <p className="font-semibold text-white text-sm">{r.customer_name}</p>
                             </div>
                           )
                         })}
