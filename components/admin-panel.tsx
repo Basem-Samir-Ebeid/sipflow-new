@@ -374,6 +374,30 @@ export function AdminPanel({
     }
   }
 
+  // Bulk fill inventory for a list of drink IDs
+  const bulkSetInventory = async (drinkIds: string[], quantity: number) => {
+    setIsInvBulkLoading(true)
+    try {
+      await Promise.all(drinkIds.map(id =>
+        fetch(`/api/inventory/${id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ quantity }),
+        })
+      ))
+      setInventoryMap(prev => {
+        const updated = { ...prev }
+        drinkIds.forEach(id => { updated[id] = quantity })
+        return updated
+      })
+      toast.success(`تم تحديث ${drinkIds.length} صنف`)
+    } catch {
+      toast.error('حدث خطأ أثناء التحديث الجماعي')
+    } finally {
+      setIsInvBulkLoading(false)
+    }
+  }
+
   // ── Fetch global banner settings (dev admin) ──
   const fetchGlobalBanner = async () => {
     try {
@@ -514,6 +538,11 @@ export function AdminPanel({
   const [isFullResetting, setIsFullResetting] = useState(false)
   const [statsPlaceId, setStatsPlaceId] = useState<string>('')
   const [inventoryDevPlaceId, setInventoryDevPlaceId] = useState<string>('')
+  const [invFilterStatus, setInvFilterStatus] = useState<'all' | 'out' | 'low' | 'ok'>('all')
+  const [invSearch, setInvSearch] = useState('')
+  const [invBulkValue, setInvBulkValue] = useState('10')
+  const [isInvBulkLoading, setIsInvBulkLoading] = useState(false)
+  const [invExpandedCategories, setInvExpandedCategories] = useState<Record<string, boolean>>({})
   const [statsOrders, setStatsOrders] = useState<typeof orders>([])
   // Count tab state (dev admin)
   const [countPlaceId, setCountPlaceId] = useState<string>('')
@@ -3189,165 +3218,255 @@ const handleSaveSettings = async () => {
 
         {/* Inventory Tab */}
         <TabsContent value="inventory" className="space-y-4">
-          {/* Threshold + refresh row */}
-          <div className="flex items-center gap-3">
-            <div className="flex flex-1 items-center gap-2 rounded-xl px-3 py-2" style={{ background: 'rgba(251,191,36,0.06)', border: '1px solid rgba(251,191,36,0.2)' }}>
-              <Package className="h-4 w-4 text-amber-400 shrink-0" />
-              <span className="text-xs text-muted-foreground whitespace-nowrap">حد الإنذار</span>
-              <input
-                type="number" min="0" value={lowStockThreshold}
-                onChange={e => setLowStockThreshold(Math.max(0, parseInt(e.target.value) || 0))}
-                className="w-16 rounded-lg border border-amber-500/30 bg-transparent px-2 py-1 text-center text-sm font-bold text-amber-400 focus:outline-none"
-              />
-              <span className="text-xs text-muted-foreground">وحدة</span>
-            </div>
-            <Button variant="outline" size="sm" className="border-border shrink-0" onClick={fetchInventory}>
-              <RefreshCw className="ml-2 h-4 w-4" />
-              تحديث
-            </Button>
-          </div>
-          {/* Low-stock alert banner */}
           {(() => {
-            const lowItems = drinks.filter(d => (inventoryMap[d.id] ?? 0) < lowStockThreshold)
-            if (lowItems.length === 0) return null
+            const activeDrinks = isDevAdmin
+              ? (inventoryDevPlaceId ? drinks.filter(d => d.place_id === inventoryDevPlaceId) : drinks)
+              : drinks
+
+            const totalCount = activeDrinks.length
+            const outCount = activeDrinks.filter(d => (inventoryMap[d.id] ?? 0) === 0).length
+            const lowCount = activeDrinks.filter(d => { const q = inventoryMap[d.id] ?? 0; return q > 0 && q < lowStockThreshold }).length
+            const okCount = totalCount - outCount - lowCount
+
+            const filtered = activeDrinks.filter(d => {
+              const q = inventoryMap[d.id] ?? 0
+              const matchSearch = invSearch === '' || d.name.toLowerCase().includes(invSearch.toLowerCase())
+              const matchFilter =
+                invFilterStatus === 'all' ? true :
+                invFilterStatus === 'out' ? q === 0 :
+                invFilterStatus === 'low' ? (q > 0 && q < lowStockThreshold) :
+                q >= lowStockThreshold
+              return matchSearch && matchFilter
+            })
+
+            const categories = Array.from(new Set(filtered.map(d => d.category || 'عام')))
+
             return (
-              <div className="rounded-xl px-4 py-3" style={{ background: 'rgba(251,191,36,0.08)', border: '1px solid rgba(251,191,36,0.3)' }}>
-                <p className="text-xs font-bold text-amber-400 mb-1">⚠️ {lowItems.length} {lowItems.length === 1 ? 'صنف' : 'أصناف'} وصلت لحد الإنذار</p>
-                <p className="text-[10px] text-zinc-500">{lowItems.map(d => d.name).join(' · ')}</p>
-              </div>
-            )
-          })()}
-
-          {isDevAdmin ? (
-            /* Dev admin: place selector then filtered inventory */
-            <div className="space-y-4">
-              <div className="rounded-2xl p-4" style={{ background: 'linear-gradient(135deg, rgba(139,92,246,0.06), rgba(99,102,241,0.03))', border: '1px solid rgba(139,92,246,0.15)' }}>
-                <Label className="text-xs font-medium mb-2 block" style={{ color: '#a78bfa' }}>اختر المكان لعرض مخزونه</Label>
-                <select
-                  value={inventoryDevPlaceId}
-                  onChange={e => setInventoryDevPlaceId(e.target.value)}
-                  className="w-full rounded-xl px-3 py-2.5 text-sm text-white"
-                  style={{ background: 'rgba(139,92,246,0.08)', border: '1px solid rgba(139,92,246,0.2)' }}
-                >
-                  <option value="">— اختر المكان —</option>
-                  {places.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
-                </select>
-              </div>
-
-              {!inventoryDevPlaceId && (
-                <p className="text-center text-muted-foreground py-8">اختر مكاناً لعرض المخزون</p>
-              )}
-
-              {inventoryDevPlaceId && (() => {
-                const placeDrinks = drinks.filter(d => d.place_id === inventoryDevPlaceId)
-                const placeName = places.find(p => p.id === inventoryDevPlaceId)?.name
-                return (
-                  <div className="rounded-2xl border border-border bg-card p-4">
-                    <div className="mb-3 flex items-center gap-2">
-                      <span className="text-sm font-bold text-primary">📍 {placeName}</span>
-                      <span className="rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">{placeDrinks.length} صنف</span>
-                    </div>
-                    {placeDrinks.length === 0 ? (
-                      <p className="text-center text-xs text-muted-foreground py-4">لا توجد أصناف لهذا المكان</p>
-                    ) : (
-                      <div className="space-y-3">
-                        {placeDrinks.map(drink => {
-                          const qty = inventoryMap[drink.id] ?? 0
-                          return (
-                          <div key={drink.id} className="flex items-center justify-between rounded-xl bg-muted p-3">
-                            <div className="flex items-center gap-3">
-                              <div className="relative h-10 w-10 overflow-hidden rounded-full bg-card">
-                                {drink.image_url ? (
-                                  <Image src={drink.image_url} alt={drink.name} fill className="object-cover" />
-                                ) : (
-                                  <div className="flex h-full w-full items-center justify-center text-muted-foreground">
-                                    <Coffee className="h-5 w-5" />
-                                  </div>
-                                )}
-                              </div>
-                              <div>
-                                <p className="font-medium text-foreground">{drink.name}</p>
-                                <div className="flex items-center gap-2">
-                                  {Number(drink.price) > 0 && <p className="text-xs text-primary">{Number(drink.price)} ج.م</p>}
-                                  {qty === 0 && <span className="text-[10px] font-bold text-destructive bg-destructive/10 px-1.5 py-0.5 rounded-full">Out of Stock</span>}
-                                </div>
-                              </div>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <Button variant="outline" size="icon" className="h-8 w-8 border-border"
-                                onClick={() => updateInventory(drink.id, Math.max(0, qty - 1))}>
-                                <Minus className="h-4 w-4" />
-                              </Button>
-                              <Input type="number" value={qty}
-                                onChange={e => updateInventory(drink.id, parseInt(e.target.value) || 0)}
-                                className={`h-8 w-16 border-border bg-card text-center font-bold ${qty === 0 ? 'text-destructive' : 'text-foreground'}`} min="0" />
-                              <Button variant="outline" size="icon" className="h-8 w-8 border-border"
-                                onClick={() => updateInventory(drink.id, qty + 1)}>
-                                <Plus className="h-4 w-4" />
-                              </Button>
-                            </div>
-                          </div>
-                          )
-                        })}
+              <>
+                {/* ── Header ── */}
+                <div className="relative overflow-hidden rounded-2xl p-4" style={{ background: 'linear-gradient(135deg, rgba(16,185,129,0.12), rgba(5,150,105,0.06))', border: '1px solid rgba(16,185,129,0.2)' }}>
+                  <div className="flex items-center justify-between flex-wrap gap-3">
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-xl" style={{ background: 'linear-gradient(135deg, #10b981, #059669)' }}>
+                        <Package className="h-5 w-5 text-white" />
                       </div>
-                    )}
+                      <div>
+                        <h3 className="font-bold text-white text-sm">إدارة المخزون</h3>
+                        <p className="text-xs text-emerald-300">{totalCount} صنف إجمالي</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-1.5 rounded-lg px-2.5 py-1.5" style={{ background: 'rgba(16,185,129,0.12)', border: '1px solid rgba(16,185,129,0.2)' }}>
+                        <span className="text-[10px] text-emerald-400">حد الإنذار</span>
+                        <input type="number" min="0" value={lowStockThreshold}
+                          onChange={e => setLowStockThreshold(Math.max(0, parseInt(e.target.value) || 0))}
+                          className="w-10 rounded bg-transparent px-1 py-0.5 text-center text-xs font-bold text-amber-400 focus:outline-none"
+                        />
+                      </div>
+                      <Button variant="outline" size="sm" className="h-8 border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10" onClick={() => { fetchInventory(); toast.success('تم التحديث') }}>
+                        <RefreshCw className="h-3.5 w-3.5" />
+                      </Button>
+                    </div>
                   </div>
-                )
-              })()}
-            </div>
-          ) : (
-          /* Place admin: flat list */
-          <div className="rounded-2xl border border-border bg-card p-4">
-            <h3 className="mb-4 font-semibold text-foreground">إدارة المخزون ({drinks.length} صنف)</h3>
-            <div className="space-y-3">
-              {drinks.map((drink) => {
-                const qty = inventoryMap[drink.id] ?? 0
-                const isLow = qty < lowStockThreshold && qty > 0
-                const isOut = qty === 0
-                return (
-                <div key={drink.id} className="flex items-center justify-between rounded-xl p-4 transition-all"
-                  style={{
-                    background: isOut ? 'rgba(239,68,68,0.06)' : isLow ? 'rgba(251,191,36,0.06)' : 'hsl(var(--muted))',
-                    border: isOut ? '1px solid rgba(239,68,68,0.25)' : isLow ? '1px solid rgba(251,191,36,0.2)' : 'transparent'
-                  }}>
-                  <div className="flex items-center gap-3">
-                    <div className="relative h-12 w-12 overflow-hidden rounded-full bg-card">
-                      {drink.image_url ? (
-                        <Image src={drink.image_url} alt={drink.name} fill className="object-cover" />
-                      ) : (
-                        <div className="flex h-full w-full items-center justify-center text-lg text-muted-foreground">
-                          <Coffee className="h-6 w-6" />
-                        </div>
+                </div>
+
+                {/* ── Stats cards ── */}
+                <div className="grid grid-cols-4 gap-2">
+                  {[
+                    { label: 'الكل', value: totalCount, color: '#6366f1', bg: 'rgba(99,102,241,0.08)', border: 'rgba(99,102,241,0.2)', filter: 'all' as const },
+                    { label: 'متوفر', value: okCount, color: '#10b981', bg: 'rgba(16,185,129,0.08)', border: 'rgba(16,185,129,0.2)', filter: 'ok' as const },
+                    { label: 'منخفض', value: lowCount, color: '#f59e0b', bg: 'rgba(245,158,11,0.08)', border: 'rgba(245,158,11,0.2)', filter: 'low' as const },
+                    { label: 'نفد', value: outCount, color: '#ef4444', bg: 'rgba(239,68,68,0.08)', border: 'rgba(239,68,68,0.2)', filter: 'out' as const },
+                  ].map(s => (
+                    <button key={s.filter} onClick={() => setInvFilterStatus(s.filter)}
+                      className="rounded-xl p-2.5 text-center transition-all"
+                      style={{ background: invFilterStatus === s.filter ? s.bg : 'rgba(255,255,255,0.02)', border: `1px solid ${invFilterStatus === s.filter ? s.border : 'rgba(255,255,255,0.06)'}`, outline: invFilterStatus === s.filter ? `2px solid ${s.color}40` : 'none' }}>
+                      <p className="text-lg font-bold" style={{ color: s.color }}>{s.value}</p>
+                      <p className="text-[10px] text-muted-foreground">{s.label}</p>
+                    </button>
+                  ))}
+                </div>
+
+                {/* ── Dev admin place selector ── */}
+                {isDevAdmin && (
+                  <div className="rounded-xl p-3" style={{ background: 'rgba(139,92,246,0.06)', border: '1px solid rgba(139,92,246,0.15)' }}>
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="text-xs font-medium text-violet-400">المكان</span>
+                      {inventoryDevPlaceId && (
+                        <button onClick={() => setInventoryDevPlaceId('')} className="text-[10px] text-muted-foreground hover:text-white underline">عرض الكل</button>
                       )}
                     </div>
-                    <div>
-                      <p className="font-medium text-foreground">{drink.name}</p>
-                      <div className="flex items-center gap-2">
-                        {Number(drink.price) > 0 && <p className="text-xs text-primary">{Number(drink.price)} ج.م</p>}
-                        {isOut && <span className="text-[10px] font-bold text-destructive bg-destructive/10 px-1.5 py-0.5 rounded-full">نفد</span>}
-                        {isLow && <span className="text-[10px] font-bold text-amber-500 bg-amber-500/10 px-1.5 py-0.5 rounded-full">⚠️ منخفض</span>}
-                      </div>
+                    <div className="flex flex-wrap gap-2">
+                      {places.map(p => {
+                        const pDrinks = drinks.filter(d => d.place_id === p.id)
+                        const pOut = pDrinks.filter(d => (inventoryMap[d.id] ?? 0) === 0).length
+                        const pLow = pDrinks.filter(d => { const q = inventoryMap[d.id] ?? 0; return q > 0 && q < lowStockThreshold }).length
+                        const isSelected = inventoryDevPlaceId === p.id
+                        return (
+                          <button key={p.id} onClick={() => setInventoryDevPlaceId(isSelected ? '' : p.id)}
+                            className="flex items-center gap-2 rounded-xl px-3 py-2 text-xs transition-all"
+                            style={{ background: isSelected ? 'rgba(139,92,246,0.2)' : 'rgba(139,92,246,0.05)', border: `1px solid ${isSelected ? 'rgba(139,92,246,0.5)' : 'rgba(139,92,246,0.15)'}`, color: isSelected ? '#c4b5fd' : '#a1a1aa' }}>
+                            <span className="font-medium">{p.name}</span>
+                            <span className="text-[10px] opacity-60">{pDrinks.length}</span>
+                            {pOut > 0 && <span className="rounded-full bg-red-500/20 px-1.5 text-[10px] font-bold text-red-400">{pOut} نفد</span>}
+                            {pLow > 0 && <span className="rounded-full bg-amber-500/20 px-1.5 text-[10px] font-bold text-amber-400">{pLow} ↓</span>}
+                          </button>
+                        )
+                      })}
                     </div>
                   </div>
-                  <div className="flex items-center gap-3">
-                    <Button variant="outline" size="icon" className="h-10 w-10 border-border"
-                      onClick={() => updateInventory(drink.id, Math.max(0, qty - 1))}>
-                      <Minus className="h-5 w-5" />
+                )}
+
+                {/* ── Search + Bulk actions ── */}
+                <div className="flex items-center gap-2 flex-wrap">
+                  <div className="flex flex-1 min-w-[160px] items-center gap-2 rounded-xl border border-border bg-muted/40 px-3 py-2">
+                    <span className="text-muted-foreground text-sm">🔍</span>
+                    <input value={invSearch} onChange={e => setInvSearch(e.target.value)}
+                      placeholder="بحث عن صنف..."
+                      className="flex-1 bg-transparent text-sm text-foreground placeholder:text-muted-foreground focus:outline-none min-w-0" />
+                    {invSearch && <button onClick={() => setInvSearch('')} className="text-muted-foreground text-xs hover:text-white">✕</button>}
+                  </div>
+                  <div className="flex items-center gap-1.5 rounded-xl border border-border bg-muted/40 px-2 py-1.5">
+                    <span className="text-xs text-muted-foreground whitespace-nowrap">ملء الكل بـ</span>
+                    <input type="number" min="0" value={invBulkValue}
+                      onChange={e => setInvBulkValue(e.target.value)}
+                      className="w-12 rounded-lg bg-transparent px-1 py-0.5 text-center text-sm font-bold text-foreground focus:outline-none border border-border"
+                    />
+                    <Button size="sm" disabled={isInvBulkLoading || filtered.length === 0}
+                      className="h-7 rounded-lg px-2 text-xs"
+                      style={{ background: 'rgba(16,185,129,0.15)', color: '#10b981', border: '1px solid rgba(16,185,129,0.3)' }}
+                      onClick={() => bulkSetInventory(filtered.map(d => d.id), parseInt(invBulkValue) || 0)}>
+                      {isInvBulkLoading ? <Loader2 className="h-3 w-3 animate-spin" /> : 'تطبيق'}
                     </Button>
-                    <Input type="number" value={qty}
-                      onChange={e => updateInventory(drink.id, parseInt(e.target.value) || 0)}
-                      className={`h-10 w-20 border-border bg-card text-center text-lg font-bold ${isOut ? 'text-destructive' : isLow ? 'text-amber-500' : 'text-foreground'}`} min="0" />
-                    <Button variant="outline" size="icon" className="h-10 w-10 border-border"
-                      onClick={() => updateInventory(drink.id, qty + 1)}>
-                      <Plus className="h-5 w-5" />
+                    <Button size="sm" disabled={isInvBulkLoading || filtered.length === 0} variant="outline"
+                      className="h-7 rounded-lg px-2 text-xs border-destructive/30 text-destructive hover:bg-destructive/10"
+                      onClick={() => bulkSetInventory(filtered.map(d => d.id), 0)}>
+                      تصفير
                     </Button>
                   </div>
                 </div>
-                )
-              })}
-            </div>
-          </div>
-          )}
+
+                {/* ── Empty state ── */}
+                {filtered.length === 0 && (
+                  <div className="py-12 text-center text-muted-foreground text-sm">
+                    {invSearch ? `لا نتائج لـ "${invSearch}"` : isDevAdmin && !inventoryDevPlaceId ? 'اختر مكاناً أو ابحث عن صنف' : 'لا توجد أصناف'}
+                  </div>
+                )}
+
+                {/* ── Drinks grouped by category ── */}
+                {filtered.length > 0 && categories.map(cat => {
+                  const catDrinks = filtered.filter(d => (d.category || 'عام') === cat)
+                  if (catDrinks.length === 0) return null
+                  const isExpanded = invExpandedCategories[cat] !== false
+                  const catOut = catDrinks.filter(d => (inventoryMap[d.id] ?? 0) === 0).length
+                  const catLow = catDrinks.filter(d => { const q = inventoryMap[d.id] ?? 0; return q > 0 && q < lowStockThreshold }).length
+                  return (
+                    <div key={cat} className="rounded-2xl overflow-hidden" style={{ border: '1px solid rgba(255,255,255,0.06)' }}>
+                      {/* Category header */}
+                      <button
+                        className="w-full flex items-center justify-between px-4 py-3 text-right transition-colors hover:bg-white/[0.02]"
+                        style={{ background: 'rgba(255,255,255,0.03)' }}
+                        onClick={() => setInvExpandedCategories(prev => ({ ...prev, [cat]: !isExpanded }))}>
+                        <div className="flex items-center gap-3">
+                          <span className="text-sm font-bold text-foreground">{cat}</span>
+                          <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] text-muted-foreground">{catDrinks.length} صنف</span>
+                          {catOut > 0 && <span className="rounded-full px-2 py-0.5 text-[10px] font-bold text-red-400" style={{ background: 'rgba(239,68,68,0.12)' }}>{catOut} نفد</span>}
+                          {catLow > 0 && <span className="rounded-full px-2 py-0.5 text-[10px] font-bold text-amber-400" style={{ background: 'rgba(245,158,11,0.12)' }}>{catLow} منخفض</span>}
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <button onClick={e => { e.stopPropagation(); bulkSetInventory(catDrinks.map(d => d.id), parseInt(invBulkValue) || 0) }}
+                            className="rounded-lg px-2 py-1 text-[10px] font-medium transition-colors hover:bg-emerald-500/20"
+                            style={{ color: '#10b981', background: 'rgba(16,185,129,0.1)' }}>
+                            ملء الفئة
+                          </button>
+                          <span className="text-muted-foreground text-xs">{isExpanded ? '▲' : '▼'}</span>
+                        </div>
+                      </button>
+
+                      {/* Drinks list */}
+                      {isExpanded && (
+                        <div className="divide-y divide-border/40">
+                          {catDrinks.map(drink => {
+                            const qty = inventoryMap[drink.id] ?? 0
+                            const isOut = qty === 0
+                            const isLow = qty > 0 && qty < lowStockThreshold
+                            const isOk = qty >= lowStockThreshold
+                            const maxBar = Math.max(lowStockThreshold * 3, qty, 1)
+                            const barPct = Math.min(100, (qty / maxBar) * 100)
+                            return (
+                              <div key={drink.id} className="flex items-center gap-3 px-4 py-3 transition-colors hover:bg-white/[0.015]"
+                                style={{ background: isOut ? 'rgba(239,68,68,0.03)' : isLow ? 'rgba(245,158,11,0.03)' : 'transparent' }}>
+                                {/* Image */}
+                                <div className="relative h-11 w-11 shrink-0 overflow-hidden rounded-xl" style={{ background: 'rgba(255,255,255,0.05)' }}>
+                                  {drink.image_url ? (
+                                    <Image src={drink.image_url} alt={drink.name} fill className="object-cover" />
+                                  ) : (
+                                    <div className="flex h-full w-full items-center justify-center text-muted-foreground">
+                                      <Coffee className="h-5 w-5" />
+                                    </div>
+                                  )}
+                                </div>
+
+                                {/* Info + bar */}
+                                <div className="flex-1 min-w-0">
+                                  <div className="flex items-center gap-2 mb-1">
+                                    <p className="font-medium text-sm text-foreground truncate">{drink.name}</p>
+                                    {isOut && <span className="shrink-0 rounded-full px-1.5 py-0.5 text-[9px] font-bold text-red-400" style={{ background: 'rgba(239,68,68,0.15)' }}>نفد</span>}
+                                    {isLow && <span className="shrink-0 rounded-full px-1.5 py-0.5 text-[9px] font-bold text-amber-400" style={{ background: 'rgba(245,158,11,0.15)' }}>⚠ منخفض</span>}
+                                    {Number(drink.price) > 0 && <span className="shrink-0 text-[10px] text-primary">{Number(drink.price)} ج.م</span>}
+                                  </div>
+                                  <div className="h-1.5 w-full rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.06)' }}>
+                                    <div className="h-full rounded-full transition-all duration-300"
+                                      style={{
+                                        width: `${barPct}%`,
+                                        background: isOut ? '#ef4444' : isLow ? '#f59e0b' : '#10b981'
+                                      }} />
+                                  </div>
+                                </div>
+
+                                {/* Controls */}
+                                <div className="flex items-center gap-1.5 shrink-0">
+                                  {/* Quick presets */}
+                                  <div className="hidden sm:flex gap-1">
+                                    {[0, 10, 50].map(preset => (
+                                      <button key={preset} onClick={() => updateInventory(drink.id, preset)}
+                                        className="rounded-lg px-2 py-1 text-[10px] font-medium transition-colors"
+                                        style={{
+                                          background: qty === preset ? 'rgba(99,102,241,0.25)' : 'rgba(255,255,255,0.04)',
+                                          color: qty === preset ? '#818cf8' : '#71717a',
+                                          border: `1px solid ${qty === preset ? 'rgba(99,102,241,0.3)' : 'rgba(255,255,255,0.06)'}`
+                                        }}>
+                                        {preset}
+                                      </button>
+                                    ))}
+                                  </div>
+                                  <button onClick={() => updateInventory(drink.id, Math.max(0, qty - 1))}
+                                    className="flex h-8 w-8 items-center justify-center rounded-xl transition-colors hover:bg-white/10"
+                                    style={{ border: '1px solid rgba(255,255,255,0.1)' }}>
+                                    <Minus className="h-3.5 w-3.5" />
+                                  </button>
+                                  <input type="number" value={qty} min="0"
+                                    onChange={e => updateInventory(drink.id, Math.max(0, parseInt(e.target.value) || 0))}
+                                    className="h-8 w-14 rounded-xl border border-border bg-muted/60 text-center text-sm font-bold focus:outline-none focus:border-primary"
+                                    style={{ color: isOut ? '#ef4444' : isLow ? '#f59e0b' : 'inherit' }}
+                                  />
+                                  <button onClick={() => updateInventory(drink.id, qty + 1)}
+                                    className="flex h-8 w-8 items-center justify-center rounded-xl transition-colors hover:bg-white/10"
+                                    style={{ border: '1px solid rgba(255,255,255,0.1)' }}>
+                                    <Plus className="h-3.5 w-3.5" />
+                                  </button>
+                                </div>
+                              </div>
+                            )
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  )
+                })}
+              </>
+            )
+          })()}
         </TabsContent>
 
         {/* ── Place Admins Tab (Dev Admin only) ── */}
