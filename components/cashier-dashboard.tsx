@@ -2,19 +2,70 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { User, Place, OrderWithDetails } from '@/lib/types'
-import { LogOut, RefreshCw, Printer, CheckCircle2, Banknote, X, Clock, AlertCircle, FileText, ChevronRight, Eye, CalendarDays, CalendarCheck, CalendarX, Users, Phone, Loader2, Activity, TrendingUp, Utensils } from 'lucide-react'
+import {
+  LogOut, RefreshCw, Printer, CheckCircle2, Banknote, X, Clock, AlertCircle,
+  FileText, ChevronRight, Eye, CalendarDays, Loader2, Activity, TrendingUp,
+  Utensils, Search, ArrowLeftRight, RotateCcw, Wallet, CreditCard,
+  Smartphone, DollarSign, Percent, Shield, PlayCircle, StopCircle, Filter,
+  Receipt, ChevronDown, Minus, Plus, RefreshCcw
+} from 'lucide-react'
 import { toast, Toaster } from 'sonner'
 
-interface Reservation {
+/* ─────────────────────── Types ─────────────────────── */
+type PaymentMethod = 'cash' | 'visa' | 'instapay' | 'vodafone'
+type DiscountType = 'amount' | 'percent'
+type InvoiceStatus = 'paid' | 'refunded'
+type TableFilter = 'all' | 'open' | 'paid'
+
+interface SplitPayment { method: PaymentMethod; amount: number }
+
+interface SettlementItem { name: string; quantity: number; unitPrice: number; total: number }
+
+interface Settlement {
   id: string
-  place_id: string
-  customer_name: string
-  customer_phone: string | null
-  party_size: number
-  reserved_at: string
-  status: 'pending' | 'confirmed' | 'cancelled'
-  notes: string | null
-  table_number: string | null
+  invoiceNum: string
+  tableNum: string
+  items: SettlementItem[]
+  subtotal: number
+  discountType: DiscountType
+  discountValue: number
+  discountAmount: number
+  serviceCharge: number
+  taxRate: number
+  total: number
+  settledAt: Date
+  orderIds: string[]
+  splitPayments: SplitPayment[]
+  status: InvoiceStatus
+  cashierName: string
+}
+
+interface ReceiptData {
+  tableNum: string
+  items: SettlementItem[]
+  subtotal: number
+  discountAmount: number
+  serviceCharge: number
+  taxRate: number
+  total: number
+  cashier: string
+  place: string
+  invoiceNum: string
+  date: Date
+  splitPayments: SplitPayment[]
+}
+
+interface Shift {
+  isOpen: boolean
+  startAmount: number
+  openedAt: Date
+  cashierName: string
+}
+
+interface Reservation {
+  id: string; place_id: string; customer_name: string; customer_phone: string | null
+  party_size: number; reserved_at: string; status: 'pending' | 'confirmed' | 'cancelled'
+  notes: string | null; table_number: string | null
 }
 
 interface CashierDashboardProps {
@@ -23,34 +74,26 @@ interface CashierDashboardProps {
   onLogout: () => void
 }
 
-type SettlementItem = { name: string; quantity: number; unitPrice: number; total: number }
-type Settlement = {
-  id: string
-  tableNum: string
-  items: SettlementItem[]
-  subtotal: number
-  serviceCharge: number
-  taxRate: number
-  total: number
-  settledAt: Date
-  orderIds: string[]
-}
-type ReceiptData = {
-  tableNum: string
-  items: SettlementItem[]
-  subtotal: number
-  serviceCharge: number
-  taxRate: number
-  total: number
-  cashier: string
-  place: string
-  receiptNum: string
-  date: Date
+/* ─────────────────────── Constants ─────────────────────── */
+const PAYMENT_METHODS: { key: PaymentMethod; label: string; icon: React.ReactNode; color: string }[] = [
+  { key: 'cash', label: 'كاش', icon: <Banknote className="h-5 w-5" />, color: '#16a34a' },
+  { key: 'visa', label: 'فيزا', icon: <CreditCard className="h-5 w-5" />, color: '#2563eb' },
+  { key: 'instapay', label: 'إنستاباي', icon: <Smartphone className="h-5 w-5" />, color: '#7c3aed' },
+  { key: 'vodafone', label: 'فودافون كاش', icon: <Wallet className="h-5 w-5" />, color: '#dc2626' },
+]
+
+const LARGE_DISCOUNT_THRESHOLD = 50
+
+const genInvoiceNum = () => {
+  const d = new Date()
+  return `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, '0')}${String(d.getDate()).padStart(2, '0')}-${Math.floor(1000 + Math.random() * 9000)}`
 }
 
-const genReceiptNum = () => Math.floor(100000 + Math.random() * 900000).toString()
+const pmLabel = (m: PaymentMethod) => PAYMENT_METHODS.find(p => p.key === m)?.label ?? m
 
+/* ─────────────────────── Main Component ─────────────────────── */
 export function CashierDashboard({ currentUser, currentPlace, onLogout }: CashierDashboardProps) {
+  /* ── Core state ── */
   const [orders, setOrders] = useState<OrderWithDetails[]>([])
   const [isFetching, setIsFetching] = useState(false)
   const [paidTables, setPaidTables] = useState<Set<string>>(new Set())
@@ -58,61 +101,57 @@ export function CashierDashboard({ currentUser, currentPlace, onLogout }: Cashie
   const [selectedTable, setSelectedTable] = useState<string | null>(null)
   const [registeredTables, setRegisteredTables] = useState<string[]>([])
   const [settlements, setSettlements] = useState<Settlement[]>([])
+  const [lastReceipt, setLastReceipt] = useState<ReceiptData | null>(null)
+
+  /* ── UI state ── */
   const [showReport, setShowReport] = useState(false)
   const [isClearing, setIsClearing] = useState(false)
   const [receiptPreview, setReceiptPreview] = useState<ReceiptData | null>(null)
-  // Reservations state
+  const [searchQuery, setSearchQuery] = useState('')
+  const [tableFilter, setTableFilter] = useState<TableFilter>('all')
+  const [showOnlyOpen, setShowOnlyOpen] = useState(false)
+
+  /* ── Discount state (inside table modal) ── */
+  const [discountType, setDiscountType] = useState<DiscountType>('amount')
+  const [discountValue, setDiscountValue] = useState('')
+
+  /* ── Payment modal ── */
+  const [showPayment, setShowPayment] = useState(false)
+  const [splitPayments, setSplitPayments] = useState<SplitPayment[]>([{ method: 'cash', amount: 0 }])
+  const [isSplitMode, setIsSplitMode] = useState(false)
+
+  /* ── Admin password modal ── */
+  const [adminModal, setAdminModal] = useState<{ isOpen: boolean; action: string; cb: () => void } | null>(null)
+  const [adminPwInput, setAdminPwInput] = useState('')
+  const [adminPwError, setAdminPwError] = useState('')
+  const [adminPwLoading, setAdminPwLoading] = useState(false)
+
+  /* ── Table transfer modal ── */
+  const [transferModal, setTransferModal] = useState<{ fromTable: string } | null>(null)
+  const [transferTarget, setTransferTarget] = useState('')
+  const [isTransferring, setIsTransferring] = useState(false)
+
+  /* ── Shift state ── */
+  const [shift, setShift] = useState<Shift | null>(null)
+  const [showShiftOpen, setShowShiftOpen] = useState(false)
+  const [showShiftClose, setShowShiftClose] = useState(false)
+  const [shiftStartInput, setShiftStartInput] = useState('')
+
+  /* ── Reservations ── */
   const [showReservations, setShowReservations] = useState(false)
   const [reservations, setReservations] = useState<Reservation[]>([])
   const [isFetchingReservations, setIsFetchingReservations] = useState(false)
   const [confirmingId, setConfirmingId] = useState<string | null>(null)
   const [cancellingId, setCancellingId] = useState<string | null>(null)
   const [tableInputs, setTableInputs] = useState<Record<string, string>>({})
-  const prevPendingCountRef = useRef<number>(-1)
-  const prevOrderCountRef = useRef<number>(-1)
+
+  /* ── Alarm ── */
   const [alarmActive, setAlarmActive] = useState(false)
   const alarmLoopRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const prevPendingCountRef = useRef<number>(-1)
+  const prevOrderCountRef = useRef<number>(-1)
 
-  const playBeepOnce = () => {
-    try {
-      const ctx = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)()
-      const pattern = [
-        { freq: 880, dur: 0.15 },
-        { freq: 1100, dur: 0.15 },
-        { freq: 1320, dur: 0.2 },
-      ]
-      let offset = 0
-      const t = ctx.currentTime
-      for (const note of pattern) {
-        const osc = ctx.createOscillator()
-        const g = ctx.createGain()
-        osc.connect(g); g.connect(ctx.destination)
-        osc.type = 'sine'
-        const st = t + offset
-        osc.frequency.setValueAtTime(note.freq, st)
-        g.gain.setValueAtTime(0, st)
-        g.gain.linearRampToValueAtTime(0.8, st + 0.01)
-        g.gain.exponentialRampToValueAtTime(0.001, st + note.dur)
-        osc.start(st)
-        osc.stop(st + note.dur)
-        offset += note.dur + 0.05
-      }
-      setTimeout(() => { try { ctx.close() } catch {} }, 900)
-    } catch {}
-  }
-
-  const triggerAlarm = () => {
-    if (alarmLoopRef.current) return
-    setAlarmActive(true)
-    playBeepOnce()
-    alarmLoopRef.current = setInterval(() => playBeepOnce(), 2500)
-  }
-
-  const stopAlarm = () => {
-    if (alarmLoopRef.current) { clearInterval(alarmLoopRef.current); alarmLoopRef.current = null }
-    setAlarmActive(false)
-  }
-
+  /* ─────────── Computed ─────────── */
   const tableCount = currentPlace.table_count ?? 10
   const sequentialTables = Array.from({ length: tableCount }, (_, i) => String(i + 1))
   const allTables = Array.from(new Set([...sequentialTables, ...registeredTables])).sort((a, b) => {
@@ -121,6 +160,91 @@ export function CashierDashboard({ currentUser, currentPlace, onLogout }: Cashie
     return a.localeCompare(b)
   })
 
+  const serviceChargeRate = currentPlace.service_charge ?? 0
+  const taxRateVal = currentPlace.tax_rate ?? 0
+
+  const getTableNum = (o: OrderWithDetails): string => {
+    if (o.user?.table_number) return o.user.table_number
+    if (o.notes?.includes('مطور')) {
+      const m = o.notes.match(/طاولة\s+(\S+)/)
+      if (m) return m[1]
+    }
+    return 'x'
+  }
+
+  const tableMap = new Map<string, OrderWithDetails[]>()
+  orders.forEach(o => {
+    const tbl = getTableNum(o)
+    if (!tableMap.has(tbl)) tableMap.set(tbl, [])
+    tableMap.get(tbl)!.push(o)
+  })
+
+  const calcTotals = (subtotal: number, discAmt: number, sc: number, tr: number) => {
+    const afterDiscount = Math.max(0, subtotal - discAmt)
+    const serviceAmt = afterDiscount * sc / 100
+    const taxAmt = (afterDiscount + serviceAmt) * tr / 100
+    return { afterDiscount, serviceAmt, taxAmt, grandTotal: afterDiscount + serviceAmt + taxAmt }
+  }
+
+  const calcDiscount = (subtotal: number, type: DiscountType, val: string): number => {
+    const v = parseFloat(val) || 0
+    if (type === 'percent') return Math.min(subtotal, subtotal * v / 100)
+    return Math.min(subtotal, v)
+  }
+
+  const selectedOrders = selectedTable ? (tableMap.get(selectedTable) || []) : []
+  const selectedSubtotal = selectedOrders.reduce((s, o) => s + (Number(o.drink?.price) || 0) * o.quantity, 0)
+  const selectedDiscountAmt = calcDiscount(selectedSubtotal, discountType, discountValue)
+  const selectedTotals = calcTotals(selectedSubtotal, selectedDiscountAmt, serviceChargeRate, taxRateVal)
+  const selectedIsPaid = selectedTable ? paidTables.has(selectedTable) : false
+
+  const settledRevenue = settlements.filter(s => s.status === 'paid').reduce((s, st) => s + st.total, 0)
+  const activeRevenue = orders.filter(o => !paidTables.has(getTableNum(o))).reduce((s, o) => s + (Number(o.drink?.price) || 0) * o.quantity, 0)
+
+  /* ─────────── Shift helpers ─────────── */
+  const shiftTotals = () => {
+    const byMethod: Record<PaymentMethod, number> = { cash: 0, visa: 0, instapay: 0, vodafone: 0 }
+    let totalDiscounts = 0
+    settlements.filter(s => s.status === 'paid').forEach(s => {
+      s.splitPayments.forEach(sp => { byMethod[sp.method] = (byMethod[sp.method] || 0) + sp.amount })
+      totalDiscounts += s.discountAmount
+    })
+    return { byMethod, totalDiscounts, invoiceCount: settlements.filter(s => s.status === 'paid').length, total: settledRevenue }
+  }
+
+  /* ─────────── Audio ─────────── */
+  const playBeepOnce = () => {
+    try {
+      const ctx = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)()
+      const pattern = [{ freq: 880, dur: 0.15 }, { freq: 1100, dur: 0.15 }, { freq: 1320, dur: 0.2 }]
+      let offset = 0; const t = ctx.currentTime
+      for (const note of pattern) {
+        const osc = ctx.createOscillator(); const g = ctx.createGain()
+        osc.connect(g); g.connect(ctx.destination); osc.type = 'sine'
+        const st = t + offset
+        osc.frequency.setValueAtTime(note.freq, st)
+        g.gain.setValueAtTime(0, st)
+        g.gain.linearRampToValueAtTime(0.8, st + 0.01)
+        g.gain.exponentialRampToValueAtTime(0.001, st + note.dur)
+        osc.start(st); osc.stop(st + note.dur)
+        offset += note.dur + 0.05
+      }
+      setTimeout(() => { try { ctx.close() } catch {} }, 900)
+    } catch {}
+  }
+
+  const triggerAlarm = () => {
+    if (alarmLoopRef.current) return
+    setAlarmActive(true); playBeepOnce()
+    alarmLoopRef.current = setInterval(() => playBeepOnce(), 2500)
+  }
+
+  const stopAlarm = () => {
+    if (alarmLoopRef.current) { clearInterval(alarmLoopRef.current); alarmLoopRef.current = null }
+    setAlarmActive(false)
+  }
+
+  /* ─────────── Data fetching ─────────── */
   const fetchRegisteredTables = useCallback(async () => {
     try {
       const res = await fetch(`/api/users?place_id=${currentPlace.id}`)
@@ -131,62 +255,8 @@ export function CashierDashboard({ currentUser, currentPlace, onLogout }: Cashie
           .map((u: { table_number: string }) => u.table_number)
         setRegisteredTables(tables)
       }
-    } catch { /* silent */ }
+    } catch {}
   }, [currentPlace.id])
-
-  const fetchReservations = useCallback(async (silent = false) => {
-    if (!silent) setIsFetchingReservations(true)
-    try {
-      const res = await fetch(`/api/reservations?place_id=${currentPlace.id}`)
-      const data = await res.json()
-      if (Array.isArray(data)) {
-        setReservations(data)
-        const pendingCount = data.filter((r: Reservation) => r.status === 'pending').length
-        if (prevPendingCountRef.current >= 0 && pendingCount > prevPendingCountRef.current) {
-          toast.info(`حجز جديد وصل! (${pendingCount} في الانتظار)`, {
-            description: 'اضغط على زرار الحجوزات لمراجعتها',
-            duration: 6000,
-          })
-          triggerAlarm()
-        }
-        prevPendingCountRef.current = pendingCount
-      }
-    } catch { /* silent */ }
-    finally { if (!silent) setIsFetchingReservations(false) }
-  }, [currentPlace.id])
-
-  const handleConfirmReservation = async (id: string) => {
-    const tableNum = tableInputs[id]?.trim()
-    if (!tableNum) { toast.error('ادخل رقم الطاولة أولاً'); return }
-    setConfirmingId(id)
-    try {
-      const res = await fetch(`/api/reservations/${id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: 'confirmed', table_number: tableNum }),
-      })
-      if (!res.ok) throw new Error()
-      toast.success(`تم تأكيد الحجز — طاولة ${tableNum}`)
-      setTableInputs(prev => { const n = { ...prev }; delete n[id]; return n })
-      fetchReservations(true)
-    } catch { toast.error('فشل تأكيد الحجز') }
-    finally { setConfirmingId(null) }
-  }
-
-  const handleCancelReservation = async (id: string) => {
-    setCancellingId(id)
-    try {
-      const res = await fetch(`/api/reservations/${id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: 'cancelled' }),
-      })
-      if (!res.ok) throw new Error()
-      toast.success('تم إلغاء الحجز')
-      fetchReservations(true)
-    } catch { toast.error('فشل إلغاء الحجز') }
-    finally { setCancellingId(null) }
-  }
 
   const fetchOrders = useCallback(async () => {
     setIsFetching(true)
@@ -199,14 +269,29 @@ export function CashierDashboard({ currentUser, currentPlace, onLogout }: Cashie
       const fetched = Array.isArray(data) ? data : []
       const pendingCount = fetched.filter((o: { status: string }) => o.status === 'pending').length
       if (prevOrderCountRef.current >= 0 && pendingCount > prevOrderCountRef.current) {
-        toast.success('طلب جديد وصل!')
-        triggerAlarm()
+        toast.success('طلب جديد وصل!'); triggerAlarm()
       }
       prevOrderCountRef.current = pendingCount
-      setOrders(fetched)
-      setSecondsAgo(0)
+      setOrders(fetched); setSecondsAgo(0)
     } catch { setOrders([]) }
     finally { setIsFetching(false) }
+  }, [currentPlace.id])
+
+  const fetchReservations = useCallback(async (silent = false) => {
+    if (!silent) setIsFetchingReservations(true)
+    try {
+      const res = await fetch(`/api/reservations?place_id=${currentPlace.id}`)
+      const data = await res.json()
+      if (Array.isArray(data)) {
+        setReservations(data)
+        const pendingCount = data.filter((r: Reservation) => r.status === 'pending').length
+        if (prevPendingCountRef.current >= 0 && pendingCount > prevPendingCountRef.current) {
+          toast.info(`حجز جديد! (${pendingCount} في الانتظار)`, { duration: 6000 }); triggerAlarm()
+        }
+        prevPendingCountRef.current = pendingCount
+      }
+    } catch {}
+    finally { if (!silent) setIsFetchingReservations(false) }
   }, [currentPlace.id])
 
   useEffect(() => {
@@ -226,161 +311,123 @@ export function CashierDashboard({ currentUser, currentPlace, onLogout }: Cashie
     return () => clearInterval(t)
   }, [orders])
 
-  const getTableNum = (o: OrderWithDetails): string => {
-    if (o.user?.table_number) return o.user.table_number
-    if (o.notes?.includes('مطور')) {
-      const m = o.notes.match(/طاولة\s+(\S+)/)
-      if (m) return m[1]
-    }
-    return 'x'
+  /* ─────────── Admin password verification ─────────── */
+  const requireAdmin = (action: string, cb: () => void) => {
+    setAdminPwInput(''); setAdminPwError('')
+    setAdminModal({ isOpen: true, action, cb })
   }
 
-  const tableMap = new Map<string, OrderWithDetails[]>()
-  orders.forEach(o => {
-    const tbl = getTableNum(o)
-    if (!tableMap.has(tbl)) tableMap.set(tbl, [])
-    tableMap.get(tbl)!.push(o)
-  })
-
-  const settledRevenue = settlements.reduce((s, st) => s + st.total, 0)
-  const activeRevenue = orders.filter(o => !paidTables.has(getTableNum(o))).reduce((s, o) => s + (Number(o.drink?.price) || 0) * o.quantity, 0)
-  const selectedOrders = selectedTable ? (tableMap.get(selectedTable) || []) : []
-  const selectedTotal = selectedOrders.reduce((s, o) => s + (Number(o.drink?.price) || 0) * o.quantity, 0)
-  const selectedIsPaid = selectedTable ? paidTables.has(selectedTable) : false
-
-  const serviceChargeRate = currentPlace.service_charge ?? 0
-  const taxRateVal = currentPlace.tax_rate ?? 0
-
-  const calcTotals = (subtotal: number, sc: number, tr: number) => {
-    const serviceAmt = subtotal * sc / 100
-    const taxAmt = (subtotal + serviceAmt) * tr / 100
-    return { serviceAmt, taxAmt, grandTotal: subtotal + serviceAmt + taxAmt }
+  const verifyAdmin = async () => {
+    if (!adminPwInput.trim()) { setAdminPwError('ادخل كلمة السر'); return }
+    setAdminPwLoading(true); setAdminPwError('')
+    try {
+      const res = await fetch('/api/users/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: 'admin', password: adminPwInput, place_id: currentPlace.id })
+      })
+      const data = await res.json()
+      if (data.user && (data.user.role === 'admin' || data.user.role === 'cashier')) {
+        adminModal?.cb()
+        setAdminModal(null)
+      } else {
+        // Try staff login
+        const staffRes = await fetch('/api/staff/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username: 'admin', password: adminPwInput })
+        })
+        if (staffRes.ok) {
+          adminModal?.cb()
+          setAdminModal(null)
+        } else {
+          setAdminPwError('كلمة سر الأدمن غلط')
+        }
+      }
+    } catch { setAdminPwError('حدث خطأ، حاول تاني') }
+    finally { setAdminPwLoading(false) }
   }
 
-  const ordersToReceiptItems = (ords: OrderWithDetails[]): SettlementItem[] =>
-    ords.map(o => ({
-      name: o.drink?.name ?? '—',
-      quantity: o.quantity,
-      unitPrice: Number(o.drink?.price) || 0,
-      total: (Number(o.drink?.price) || 0) * o.quantity
-    }))
-
-  const openReceiptPreview = (tableNum: string, ords: OrderWithDetails[], subtotal: number) => {
-    const { grandTotal } = calcTotals(subtotal, serviceChargeRate, taxRateVal)
-    setReceiptPreview({
-      tableNum,
-      items: ordersToReceiptItems(ords),
-      subtotal,
-      serviceCharge: serviceChargeRate,
-      taxRate: taxRateVal,
-      total: grandTotal,
-      cashier: currentUser.name,
-      place: currentPlace.name,
-      receiptNum: genReceiptNum(),
-      date: new Date()
-    })
-  }
-
-  const openSettlementPreview = (s: Settlement) => {
-    setReceiptPreview({
-      tableNum: s.tableNum,
-      items: s.items,
-      subtotal: s.subtotal,
-      serviceCharge: s.serviceCharge,
-      taxRate: s.taxRate,
-      total: s.total,
-      cashier: currentUser.name,
-      place: currentPlace.name,
-      receiptNum: s.id.split('-')[1] || genReceiptNum(),
-      date: s.settledAt
-    })
-  }
-
-  const triggerPrint = (r: ReceiptData) => {
-    const rows = r.items.map(item => `
-      <tr>
-        <td style="padding:6px 4px;text-align:right;border-bottom:1px dashed #e0e0e0">${item.name}</td>
-        <td style="padding:6px 4px;text-align:center;border-bottom:1px dashed #e0e0e0;font-weight:700">${item.quantity}</td>
-        <td style="padding:6px 4px;text-align:right;border-bottom:1px dashed #e0e0e0">${item.unitPrice.toFixed(2)}</td>
-        <td style="padding:6px 4px;text-align:right;border-bottom:1px dashed #e0e0e0;font-weight:700">${item.total.toFixed(2)}</td>
-      </tr>`).join('')
-    const win = window.open('', '_blank', 'width=360,height=700')
-    if (!win) return
-    win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Receipt ${r.receiptNum}</title><style>
-      *{margin:0;padding:0;box-sizing:border-box}
-      body{font-family:Arial,sans-serif;font-size:13px;color:#1a1a2e;background:#fff;max-width:300px;margin:0 auto;padding:20px 12px}
-      @media print{body{padding:5px}}
-    </style></head><body>${buildReceiptBody(r, rows)}</body></html>`)
-    win.document.close(); win.focus()
-    setTimeout(() => { win.print(); win.close() }, 600)
-  }
-
-  const buildReceiptBody = (r: ReceiptData, rows: string) => {
-    const { serviceAmt, taxAmt } = calcTotals(r.subtotal, r.serviceCharge, r.taxRate)
-    const feesRows = [
-      r.serviceCharge > 0 ? `<div style="display:flex;justify-content:space-between;font-size:12px;margin:3px 0"><span>رسوم الخدمة (${r.serviceCharge}%):</span><span>${serviceAmt.toFixed(2)}</span></div>` : '',
-      r.taxRate > 0 ? `<div style="display:flex;justify-content:space-between;font-size:12px;margin:3px 0"><span>الضريبة (${r.taxRate}%):</span><span>${taxAmt.toFixed(2)}</span></div>` : ''
-    ].filter(Boolean).join('')
-    return `
-    <div style="text-align:center;margin-bottom:6px">
-      <img src="${window.location.origin}/images/sipflow-logo.jpg" alt="SîpFlõw" style="width:90px;height:90px;object-fit:contain;display:block;margin:0 auto 4px" />
-      <div style="font-size:20px;font-weight:900;letter-spacing:2px;color:#1a1a2e">SîpFlõw</div>
-      <div style="font-size:10px;letter-spacing:3px;color:#666;margin:2px 0 10px">— SYSTEM POS —</div>
-    </div>
-    <div style="border-top:1px dashed #aaa;margin:8px 0"></div>
-    <div style="font-size:12px;margin:3px 0">Receipt #: ${r.receiptNum}</div>
-    <div style="font-size:12px;margin:3px 0">Date: ${r.date.toLocaleDateString('en-GB')} &nbsp; ${r.date.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}</div>
-    <div style="font-size:12px;margin:3px 0">Cashier: ${r.cashier}</div>
-    <div style="font-size:12px;margin:3px 0">Table: ${r.tableNum}</div>
-    <div style="border-top:1px dashed #aaa;margin:8px 0"></div>
-    <table style="width:100%;border-collapse:collapse">
-      <thead>
-        <tr style="border-bottom:1px solid #1a1a2e">
-          <th style="padding:5px 4px;text-align:right;font-size:12px">Item</th>
-          <th style="padding:5px 4px;text-align:center;font-size:12px">Qty</th>
-          <th style="padding:5px 4px;text-align:right;font-size:12px">Price</th>
-          <th style="padding:5px 4px;text-align:right;font-size:12px">Total</th>
-        </tr>
-      </thead>
-      <tbody>${rows}</tbody>
-    </table>
-    <div style="border-top:1px dashed #aaa;margin:10px 0 6px"></div>
-    <div style="display:flex;justify-content:space-between;font-size:12px;margin:3px 0"><span>Subtotal:</span><span style="font-weight:700">${r.subtotal.toFixed(2)}</span></div>
-    ${feesRows}
-    <div style="border-top:1px dashed #aaa;margin:6px 0"></div>
-    <div style="background:#1a1a2e;color:#fff;padding:9px 10px;display:flex;justify-content:space-between;font-size:15px;font-weight:900;margin:8px 0;border-radius:2px">
-      <span>Grand Total:</span><span>${r.total.toFixed(2)}</span>
-    </div>
-    <div style="border-top:1px dashed #aaa;margin:6px 0"></div>
-    <div style="display:flex;justify-content:space-between;font-size:12px;margin:4px 0"><span>Paid by: Cash</span><span style="font-weight:700">${r.total.toFixed(2)}</span></div>
-    <div style="display:flex;justify-content:space-between;font-size:12px;margin:4px 0"><span>Change:</span><span>0.00</span></div>
-    <div style="border-top:1px dashed #aaa;margin:10px 0 6px"></div>
-    <div style="text-align:center;font-size:13px;margin:10px 0 4px">شكراً لزيارتكم! 🙏</div>
-    <div style="text-align:center;font-size:10px;color:#666">SîpFlõw — نظام الطلبات</div>
-    <div style="text-align:center;margin-top:14px">
-      <img src="https://api.qrserver.com/v1/create-qr-code/?size=90x90&data=SipFlow-${r.receiptNum}" width="80" height="80" />
-    </div>`
-  }
-
-  const handleMarkPaid = () => {
+  /* ─────────── Settlement / Payment ─────────── */
+  const openPaymentModal = () => {
     if (!selectedTable || selectedOrders.length === 0) return
-    const { grandTotal } = calcTotals(selectedTotal, serviceChargeRate, taxRateVal)
+    // Check if large discount needs admin
+    if (selectedDiscountAmt > LARGE_DISCOUNT_THRESHOLD) {
+      requireAdmin('خصم كبير يحتاج موافقة أدمن', () => {
+        setIsSplitMode(false)
+        setSplitPayments([{ method: 'cash', amount: selectedTotals.grandTotal }])
+        setShowPayment(true)
+      })
+      return
+    }
+    setIsSplitMode(false)
+    setSplitPayments([{ method: 'cash', amount: selectedTotals.grandTotal }])
+    setShowPayment(true)
+  }
+
+  const totalPaid = splitPayments.reduce((s, p) => s + (p.amount || 0), 0)
+  const changeAmount = Math.max(0, totalPaid - selectedTotals.grandTotal)
+  const remainingToPay = Math.max(0, selectedTotals.grandTotal - totalPaid)
+
+  const confirmPayment = () => {
+    if (!selectedTable) return
+    if (!isSplitMode && totalPaid < selectedTotals.grandTotal - 0.01) {
+      toast.error('المبلغ المدفوع أقل من الإجمالي'); return
+    }
+    if (isSplitMode && remainingToPay > 0.01) {
+      toast.error(`لازم تكمل ${remainingToPay.toFixed(2)} ج.م`); return
+    }
+
+    const invoiceNum = genInvoiceNum()
     const settlement: Settlement = {
       id: `${selectedTable}-${Date.now()}`,
+      invoiceNum,
       tableNum: selectedTable,
-      items: ordersToReceiptItems(selectedOrders),
-      subtotal: selectedTotal,
+      items: selectedOrders.map(o => ({
+        name: o.drink?.name ?? '—',
+        quantity: o.quantity,
+        unitPrice: Number(o.drink?.price) || 0,
+        total: (Number(o.drink?.price) || 0) * o.quantity
+      })),
+      subtotal: selectedSubtotal,
+      discountType,
+      discountValue: parseFloat(discountValue) || 0,
+      discountAmount: selectedDiscountAmt,
       serviceCharge: serviceChargeRate,
       taxRate: taxRateVal,
-      total: grandTotal,
+      total: selectedTotals.grandTotal,
       settledAt: new Date(),
-      orderIds: selectedOrders.map(o => o.id)
+      orderIds: selectedOrders.map(o => o.id),
+      splitPayments: isSplitMode ? splitPayments.filter(p => p.amount > 0) : splitPayments,
+      status: 'paid',
+      cashierName: currentUser.name
     }
+
+    const receipt: ReceiptData = {
+      tableNum: selectedTable,
+      items: settlement.items,
+      subtotal: selectedSubtotal,
+      discountAmount: selectedDiscountAmt,
+      serviceCharge: serviceChargeRate,
+      taxRate: taxRateVal,
+      total: selectedTotals.grandTotal,
+      cashier: currentUser.name,
+      place: currentPlace.name,
+      invoiceNum,
+      date: new Date(),
+      splitPayments: settlement.splitPayments
+    }
+
     setSettlements(prev => [settlement, ...prev])
     setPaidTables(prev => new Set([...prev, selectedTable]))
+    setLastReceipt(receipt)
+    setShowPayment(false)
     setSelectedTable(null)
+    setDiscountValue('')
+    toast.success(`✓ تم تسوية طاولة ${selectedTable} — فاتورة #${invoiceNum}`)
   }
 
+  /* ─────────── Clear table ─────────── */
   const handleClearTable = async () => {
     if (!selectedTable) return
     setIsClearing(true)
@@ -390,43 +437,218 @@ export function CashierDashboard({ currentUser, currentPlace, onLogout }: Cashie
       setPaidTables(prev => { const n = new Set(prev); n.delete(selectedTable); return n })
       setOrders(prev => prev.filter(o => getTableNum(o) !== selectedTable))
       setSelectedTable(null)
-    } catch { /* silent */ }
+      toast.success('تم تصفير الطاولة')
+    } catch { toast.error('فشل التصفير') }
     finally { setIsClearing(false) }
   }
 
+  /* ─────────── Delete order (needs admin) ─────────── */
+  const handleDeleteOrder = (orderId: string) => {
+    requireAdmin('حذف طلب يحتاج موافقة أدمن', async () => {
+      try {
+        await fetch(`/api/orders/${orderId}`, { method: 'DELETE' })
+        setOrders(prev => prev.filter(o => o.id !== orderId))
+        toast.success('تم حذف الطلب')
+      } catch { toast.error('فشل الحذف') }
+    })
+  }
+
+  /* ─────────── Table Transfer ─────────── */
+  const handleTransfer = async () => {
+    if (!transferModal || !transferTarget.trim()) { toast.error('ادخل رقم الطاولة الجديدة'); return }
+    setIsTransferring(true)
+    const fromOrders = tableMap.get(transferModal.fromTable) || []
+    try {
+      await Promise.all(fromOrders.map(o =>
+        fetch(`/api/users/${o.user_id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ table_number: transferTarget.trim() })
+        })
+      ))
+      await fetchOrders()
+      toast.success(`تم نقل الطلبات من طاولة ${transferModal.fromTable} إلى ${transferTarget}`)
+      setTransferModal(null)
+      setTransferTarget('')
+      setSelectedTable(null)
+    } catch { toast.error('فشل النقل') }
+    finally { setIsTransferring(false) }
+  }
+
+  /* ─────────── Mark refunded ─────────── */
+  const handleRefund = (settlementId: string) => {
+    requireAdmin('إسترجاع فاتورة يحتاج موافقة أدمن', () => {
+      setSettlements(prev => prev.map(s => s.id === settlementId ? { ...s, status: 'refunded' } : s))
+      toast.success('تم تسجيل الاسترجاع')
+    })
+  }
+
+  /* ─────────── Reservations ─────────── */
+  const handleConfirmReservation = async (id: string) => {
+    const tableNum = tableInputs[id]?.trim()
+    if (!tableNum) { toast.error('ادخل رقم الطاولة'); return }
+    setConfirmingId(id)
+    try {
+      const res = await fetch(`/api/reservations/${id}`, {
+        method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'confirmed', table_number: tableNum })
+      })
+      if (!res.ok) throw new Error()
+      toast.success(`تم تأكيد الحجز — طاولة ${tableNum}`)
+      setTableInputs(prev => { const n = { ...prev }; delete n[id]; return n })
+      fetchReservations(true)
+    } catch { toast.error('فشل تأكيد الحجز') }
+    finally { setConfirmingId(null) }
+  }
+
+  const handleCancelReservation = async (id: string) => {
+    setCancellingId(id)
+    try {
+      const res = await fetch(`/api/reservations/${id}`, {
+        method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'cancelled' })
+      })
+      if (!res.ok) throw new Error()
+      toast.success('تم إلغاء الحجز')
+      fetchReservations(true)
+    } catch { toast.error('فشل إلغاء الحجز') }
+    finally { setCancellingId(null) }
+  }
+
+  /* ─────────── Receipt printing ─────────── */
+  const buildReceiptHTML = (r: ReceiptData) => {
+    const { serviceAmt, taxAmt } = calcTotals(r.subtotal, r.discountAmount, r.serviceCharge, r.taxRate)
+    const rows = r.items.map(item => `
+      <tr>
+        <td style="padding:5px 3px;text-align:right;border-bottom:1px dashed #e0e0e0">${item.name}</td>
+        <td style="padding:5px 3px;text-align:center;border-bottom:1px dashed #e0e0e0;font-weight:700">${item.quantity}</td>
+        <td style="padding:5px 3px;text-align:right;border-bottom:1px dashed #e0e0e0">${item.unitPrice.toFixed(2)}</td>
+        <td style="padding:5px 3px;text-align:right;border-bottom:1px dashed #e0e0e0;font-weight:700">${item.total.toFixed(2)}</td>
+      </tr>`).join('')
+    const payRows = r.splitPayments.map(sp =>
+      `<div style="display:flex;justify-content:space-between;font-size:12px;margin:3px 0"><span>${pmLabel(sp.method)}:</span><span style="font-weight:700">${sp.amount.toFixed(2)} ج.م</span></div>`
+    ).join('')
+    const change = Math.max(0, r.splitPayments.reduce((s, p) => s + p.amount, 0) - r.total)
+    return `
+    <div style="text-align:center;margin-bottom:6px">
+      <img src="${window.location.origin}/images/sipflow-logo.jpg" alt="SîpFlõw" style="width:80px;height:80px;object-fit:contain;display:block;margin:0 auto 4px"/>
+      <div style="font-size:18px;font-weight:900;letter-spacing:2px">${r.place}</div>
+      <div style="font-size:10px;letter-spacing:2px;color:#666;margin:2px 0 8px">— SîpFlõw POS —</div>
+    </div>
+    <div style="border-top:1px dashed #aaa;margin:6px 0"></div>
+    <div style="font-size:11px;margin:2px 0">فاتورة #: ${r.invoiceNum}</div>
+    <div style="font-size:11px;margin:2px 0">التاريخ: ${r.date.toLocaleDateString('ar-EG')} ${r.date.toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' })}</div>
+    <div style="font-size:11px;margin:2px 0">الكاشير: ${r.cashier}</div>
+    <div style="font-size:11px;margin:2px 0">الطاولة: ${r.tableNum}</div>
+    <div style="border-top:1px dashed #aaa;margin:6px 0"></div>
+    <table style="width:100%;border-collapse:collapse">
+      <thead><tr style="border-bottom:1px solid #1a1a2e">
+        <th style="padding:4px 3px;text-align:right;font-size:11px">الصنف</th>
+        <th style="padding:4px 3px;text-align:center;font-size:11px">ك</th>
+        <th style="padding:4px 3px;text-align:right;font-size:11px">سعر</th>
+        <th style="padding:4px 3px;text-align:right;font-size:11px">إجمالي</th>
+      </tr></thead>
+      <tbody>${rows}</tbody>
+    </table>
+    <div style="border-top:1px dashed #aaa;margin:8px 0 4px"></div>
+    <div style="display:flex;justify-content:space-between;font-size:11px;margin:2px 0"><span>المجموع:</span><span>${r.subtotal.toFixed(2)}</span></div>
+    ${r.discountAmount > 0 ? `<div style="display:flex;justify-content:space-between;font-size:11px;margin:2px 0;color:#b45309"><span>خصم:</span><span>- ${r.discountAmount.toFixed(2)}</span></div>` : ''}
+    ${r.serviceCharge > 0 ? `<div style="display:flex;justify-content:space-between;font-size:11px;margin:2px 0;color:#555"><span>خدمة (${r.serviceCharge}%):</span><span>${serviceAmt.toFixed(2)}</span></div>` : ''}
+    ${r.taxRate > 0 ? `<div style="display:flex;justify-content:space-between;font-size:11px;margin:2px 0;color:#555"><span>ضريبة (${r.taxRate}%):</span><span>${taxAmt.toFixed(2)}</span></div>` : ''}
+    <div style="border-top:1px dashed #aaa;margin:4px 0"></div>
+    <div style="background:#1a1a2e;color:#fff;padding:8px 10px;display:flex;justify-content:space-between;font-size:14px;font-weight:900;margin:6px 0;border-radius:2px">
+      <span>الإجمالي:</span><span>${r.total.toFixed(2)} ج.م</span>
+    </div>
+    <div style="border-top:1px dashed #aaa;margin:4px 0"></div>
+    ${payRows}
+    <div style="display:flex;justify-content:space-between;font-size:11px;margin:2px 0"><span>الباقي:</span><span style="font-weight:700">${change.toFixed(2)} ج.م</span></div>
+    <div style="border-top:1px dashed #aaa;margin:8px 0 4px"></div>
+    <div style="text-align:center;font-size:12px;margin:8px 0 3px">شكراً لزيارتكم! 🙏</div>
+    <div style="text-align:center;font-size:10px;color:#666">SîpFlõw — نظام الطلبات</div>
+    <div style="text-align:center;margin-top:12px">
+      <img src="https://api.qrserver.com/v1/create-qr-code/?size=80x80&data=SipFlow-${r.invoiceNum}" width="70" height="70"/>
+    </div>`
+  }
+
+  const triggerPrint = (r: ReceiptData) => {
+    const win = window.open('', '_blank', 'width=360,height=700')
+    if (!win) return
+    win.document.write(`<!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8"><title>فاتورة ${r.invoiceNum}</title><style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:Arial,sans-serif;font-size:13px;max-width:300px;margin:0 auto;padding:16px 10px}@media print{body{padding:4px}}</style></head><body>${buildReceiptHTML(r)}</body></html>`)
+    win.document.close(); win.focus()
+    setTimeout(() => { win.print(); win.close() }, 600)
+  }
+
+  const printShiftReport = () => {
+    const t = shiftTotals()
+    const win = window.open('', '_blank', 'width=360,height=700')
+    if (!win) return
+    const pmRows = PAYMENT_METHODS.map(pm =>
+      t.byMethod[pm.key] > 0 ? `<div style="display:flex;justify-content:space-between;margin:4px 0"><span>${pm.label}:</span><span style="font-weight:700">${t.byMethod[pm.key].toFixed(2)} ج.م</span></div>` : ''
+    ).join('')
+    win.document.write(`<!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8"><title>تقرير الوردية</title><style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:Arial,sans-serif;font-size:13px;max-width:300px;margin:0 auto;padding:16px 10px}</style></head><body>
+      <div style="text-align:center;font-size:16px;font-weight:900;margin-bottom:8px">${currentPlace.name}</div>
+      <div style="text-align:center;font-size:12px;color:#666">تقرير الوردية — ${new Date().toLocaleDateString('ar-EG')}</div>
+      <div style="text-align:center;font-size:11px;color:#999">الكاشير: ${currentUser.name}</div>
+      <div style="border-top:1px dashed #aaa;margin:10px 0"></div>
+      <div style="display:flex;justify-content:space-between;margin:4px 0"><span>مبلغ البداية:</span><span>${shift?.startAmount.toFixed(2) ?? '0.00'} ج.م</span></div>
+      <div style="display:flex;justify-content:space-between;margin:4px 0"><span>عدد الفواتير:</span><span>${t.invoiceCount}</span></div>
+      <div style="display:flex;justify-content:space-between;margin:4px 0"><span>إجمالي الخصومات:</span><span>${t.totalDiscounts.toFixed(2)} ج.م</span></div>
+      <div style="border-top:1px dashed #aaa;margin:8px 0"></div>
+      ${pmRows}
+      <div style="border-top:1px dashed #aaa;margin:8px 0"></div>
+      <div style="display:flex;justify-content:space-between;font-size:14px;font-weight:900;background:#1a1a2e;color:#fff;padding:8px;border-radius:2px"><span>الإجمالي:</span><span>${t.total.toFixed(2)} ج.م</span></div>
+    </body></html>`)
+    win.document.close(); win.focus()
+    setTimeout(() => { win.print(); win.close() }, 600)
+  }
+
+  /* ─────────── Filtered tables ─────────── */
+  const filteredDisplayTables = allTables.filter(t => {
+    if (searchQuery) return t.includes(searchQuery)
+    if (tableFilter === 'open') return tableMap.has(t) && !paidTables.has(t)
+    if (tableFilter === 'paid') return paidTables.has(t)
+    return true
+  })
+
+  const filteredSettlements = settlements.filter(s => {
+    if (searchQuery) return s.tableNum.includes(searchQuery) || s.invoiceNum.includes(searchQuery)
+    return true
+  })
+
+  /* ─────────────────────────────── RENDER ─────────────────────────────── */
   return (
     <div className="min-h-screen bg-black" dir="rtl">
+      <Toaster position="top-center" richColors />
 
-      {/* Persistent Alarm Banner */}
+      {/* ── Alarm Banner ── */}
       {alarmActive && (
         <div className="fixed top-0 left-0 right-0 z-[9999] flex items-center justify-between gap-3 px-4 py-3"
-          style={{ background: 'linear-gradient(90deg, #7f1d1d, #b91c1c, #7f1d1d)', borderBottom: '3px solid #ef4444', boxShadow: '0 4px 20px rgba(239,68,68,0.5)' }}>
+          style={{ background: 'linear-gradient(90deg,#7f1d1d,#b91c1c,#7f1d1d)', borderBottom: '3px solid #ef4444', boxShadow: '0 4px 20px rgba(239,68,68,.5)' }}>
           <div className="flex items-center gap-2">
             <span className="text-2xl animate-bounce">🔔</span>
             <div>
-              <p className="font-black text-white text-sm">تنبيه جديد وصل!</p>
-              <p className="text-red-200 text-xs">اضغط لإيقاف التنبيه</p>
+              <p className="font-black text-white text-sm">تنبيه جديد!</p>
+              <p className="text-red-200 text-xs">اضغط لإيقاف</p>
             </div>
           </div>
           <button onClick={stopAlarm}
-            className="flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-bold text-white transition-all active:scale-95"
-            style={{ background: 'rgba(255,255,255,0.2)', border: '1px solid rgba(255,255,255,0.4)' }}>
-            <X className="h-4 w-4" />
-            إيقاف التنبيه
+            className="flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-bold text-white"
+            style={{ background: 'rgba(255,255,255,.2)', border: '1px solid rgba(255,255,255,.4)' }}>
+            <X className="h-4 w-4" /> إيقاف
           </button>
         </div>
       )}
 
-      {/* Header */}
+      {/* ── Header ── */}
       <header className={`sticky z-40 border-b border-zinc-700/60 bg-zinc-900/95 backdrop-blur-sm ${alarmActive ? 'top-14' : 'top-0'}`}>
-        <div className="relative overflow-hidden py-[5px]" style={{ background: 'linear-gradient(90deg, #1a0a00, #3d1f00, #6b3a00, #D4A017, #6b3a00, #3d1f00, #1a0a00)' }}>
+        <div className="relative py-[5px]" style={{ background: 'linear-gradient(90deg,#1a0a00,#3d1f00,#6b3a00,#D4A017,#6b3a00,#3d1f00,#1a0a00)' }}>
           <div className="flex items-center justify-center gap-2">
-            <span className="text-[10px] tracking-widest uppercase text-amber-200/60">✦</span>
-            <span className="text-[11px] font-semibold tracking-[0.18em] uppercase" style={{ color: '#ffe8a0' }}>SîpFlõw · نظام الكاشير</span>
-            <span className="text-[10px] tracking-widest uppercase text-amber-200/60">✦</span>
+            <span className="text-[10px] text-amber-200/60">✦</span>
+            <span className="text-[11px] font-semibold tracking-[.18em] uppercase" style={{ color: '#ffe8a0' }}>SîpFlõw · نظام الكاشير</span>
+            <span className="text-[10px] text-amber-200/60">✦</span>
           </div>
         </div>
-        <div className="mx-auto flex max-w-4xl items-center justify-between px-4 py-3">
+        <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3">
           <div className="flex items-center gap-3">
             <div className="flex h-9 w-9 items-center justify-center rounded-full overflow-hidden bg-black border-2" style={{ borderColor: '#D4A017' }}>
               {currentPlace.logo_url
@@ -435,89 +657,194 @@ export function CashierDashboard({ currentUser, currentPlace, onLogout }: Cashie
             </div>
             <div>
               <p className="text-sm font-bold text-white">{currentPlace.name}</p>
-              <p className="text-[10px] text-amber-400/70">كاشير: {currentUser.name}</p>
+              <div className="flex items-center gap-2">
+                <p className="text-[10px] text-amber-400/70">كاشير: {currentUser.name}</p>
+                {shift?.isOpen && (
+                  <span className="text-[10px] text-green-400 flex items-center gap-0.5">
+                    <span className="h-1.5 w-1.5 rounded-full bg-green-400 animate-pulse inline-block" />
+                    وردية مفتوحة
+                  </span>
+                )}
+              </div>
             </div>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 flex-wrap justify-end">
+            {/* Reprint last */}
+            {lastReceipt && (
+              <button onClick={() => { triggerPrint(lastReceipt) }}
+                title="إعادة طباعة آخر فاتورة"
+                className="flex items-center gap-1 rounded-full border border-zinc-700 bg-zinc-800 px-2.5 py-1.5 text-xs font-medium text-zinc-300 hover:bg-zinc-700 transition-colors">
+                <RotateCcw className="h-3 w-3" />
+                <span className="hidden sm:inline">إعادة طباعة</span>
+              </button>
+            )}
+            {/* Shift */}
+            <button
+              onClick={() => shift?.isOpen ? setShowShiftClose(true) : setShowShiftOpen(true)}
+              className={`flex items-center gap-1 rounded-full border px-2.5 py-1.5 text-xs font-medium transition-colors ${shift?.isOpen ? 'border-green-500/50 bg-green-500/10 text-green-300 hover:bg-green-500/20' : 'border-amber-500/50 bg-amber-500/10 text-amber-300 hover:bg-amber-500/20'}`}>
+              {shift?.isOpen ? <><StopCircle className="h-3 w-3" /> إغلاق وردية</> : <><PlayCircle className="h-3 w-3" /> فتح وردية</>}
+            </button>
+            {/* Reservations */}
             {(() => {
-              const pendingCount = reservations.filter(r => r.status === 'pending').length
+              const pc = reservations.filter(r => r.status === 'pending').length
               return (
                 <button onClick={() => setShowReservations(true)}
-                  className="relative flex items-center gap-1.5 rounded-full border border-zinc-700 bg-zinc-800 px-3 py-1.5 text-xs font-medium text-zinc-300 hover:bg-zinc-700 transition-colors">
-                  <CalendarDays className="h-3.5 w-3.5 text-amber-400" />
-                  حجوزات
-                  {pendingCount > 0 && (
-                    <span className="rounded-full bg-orange-500 px-1.5 text-[10px] font-black text-white animate-pulse">{pendingCount}</span>
-                  )}
+                  className="relative flex items-center gap-1 rounded-full border border-zinc-700 bg-zinc-800 px-2.5 py-1.5 text-xs font-medium text-zinc-300 hover:bg-zinc-700 transition-colors">
+                  <CalendarDays className="h-3 w-3 text-amber-400" />
+                  <span className="hidden sm:inline">حجوزات</span>
+                  {pc > 0 && <span className="rounded-full bg-orange-500 px-1 text-[9px] font-black text-white animate-pulse">{pc}</span>}
                 </button>
               )
             })()}
+            {/* Report */}
             <button onClick={() => setShowReport(v => !v)}
-              className={`flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium transition-colors ${showReport ? 'border-amber-500 bg-amber-500/15 text-amber-300' : 'border-zinc-700 bg-zinc-800 text-zinc-300 hover:bg-zinc-700'}`}>
-              <FileText className="h-3.5 w-3.5" />
-              ريبورت{settlements.length > 0 && <span className="mr-1 rounded-full bg-amber-500 px-1.5 text-[10px] font-black text-black">{settlements.length}</span>}
+              className={`flex items-center gap-1 rounded-full border px-2.5 py-1.5 text-xs font-medium transition-colors ${showReport ? 'border-amber-500 bg-amber-500/15 text-amber-300' : 'border-zinc-700 bg-zinc-800 text-zinc-300 hover:bg-zinc-700'}`}>
+              <FileText className="h-3 w-3" />
+              <span className="hidden sm:inline">ريبورت</span>
+              {settlements.length > 0 && <span className="rounded-full bg-amber-500 px-1 text-[9px] font-black text-black">{settlements.length}</span>}
             </button>
+            {/* Refresh */}
             <button onClick={fetchOrders} disabled={isFetching}
-              className="flex items-center gap-1.5 rounded-full border border-zinc-700 bg-zinc-800 px-3 py-1.5 text-xs text-zinc-300 hover:bg-zinc-700 transition-colors">
-              <RefreshCw className={`h-3.5 w-3.5 ${isFetching ? 'animate-spin' : ''}`} />
-              {isFetching ? 'جاري...' : `${secondsAgo}ث`}
+              className="flex items-center gap-1 rounded-full border border-zinc-700 bg-zinc-800 px-2.5 py-1.5 text-xs text-zinc-300 hover:bg-zinc-700 transition-colors">
+              <RefreshCw className={`h-3 w-3 ${isFetching ? 'animate-spin' : ''}`} />
+              <span className="hidden sm:inline">{isFetching ? '...' : `${secondsAgo}ث`}</span>
             </button>
-            <button onClick={onLogout} className="flex h-9 w-9 items-center justify-center rounded-full text-red-400 hover:bg-red-500/10 transition-colors">
+            {/* Logout */}
+            <button onClick={onLogout} className="flex h-8 w-8 items-center justify-center rounded-full text-red-400 hover:bg-red-500/10 transition-colors">
               <LogOut className="h-4 w-4" />
             </button>
           </div>
         </div>
       </header>
 
-      {/* ── REPORT VIEW ── */}
+      {/* ── No shift banner ── */}
+      {!shift?.isOpen && !showReport && (
+        <div className="mx-auto max-w-5xl px-4 pt-4">
+          <div className="rounded-2xl border border-amber-500/30 bg-amber-500/5 p-4 flex items-center justify-between">
+            <div>
+              <p className="text-amber-300 font-bold text-sm">الوردية مش مفتوحة</p>
+              <p className="text-amber-400/60 text-xs mt-0.5">افتح الوردية الأول عشان تسجل المبيعات</p>
+            </div>
+            <button onClick={() => setShowShiftOpen(true)}
+              className="flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-bold text-white"
+              style={{ background: 'linear-gradient(135deg,#d97706,#b45309)' }}>
+              <PlayCircle className="h-4 w-4" /> فتح وردية
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ─────────── REPORT VIEW ─────────── */}
       {showReport ? (
-        <main className="mx-auto max-w-4xl p-4 space-y-4">
+        <main className="mx-auto max-w-5xl p-4 space-y-4">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-lg font-black text-white">تقرير تقفيلات اليوم</h2>
-              <p className="text-xs text-zinc-500">{settlements.length} قعدة تم تسويتها</p>
+              <h2 className="text-lg font-black text-white">فواتير اليوم</h2>
+              <p className="text-xs text-zinc-500">{settlements.length} فاتورة — {settlements.filter(s => s.status === 'paid').length} مدفوعة</p>
             </div>
-            <div className="rounded-2xl border border-green-500/30 bg-green-500/5 px-4 py-2 text-center">
-              <p className="text-[10px] text-green-400/70">إجمالي اليوم</p>
-              <p className="text-xl font-black text-green-400">{settledRevenue.toFixed(0)} <span className="text-xs">ج.م</span></p>
+            <div className="flex items-center gap-2">
+              <button onClick={printShiftReport}
+                className="flex items-center gap-1.5 rounded-xl border border-zinc-700 px-3 py-1.5 text-xs font-medium text-zinc-300 hover:bg-zinc-800 transition-colors">
+                <Printer className="h-3.5 w-3.5" /> طباعة التقرير
+              </button>
+              <div className="rounded-2xl border border-green-500/30 bg-green-500/5 px-4 py-2 text-center">
+                <p className="text-[10px] text-green-400/70">إجمالي اليوم</p>
+                <p className="text-xl font-black text-green-400">{settledRevenue.toFixed(0)} <span className="text-xs">ج.م</span></p>
+              </div>
             </div>
+          </div>
+
+          {/* Shift summary cards */}
+          {settlements.length > 0 && (() => {
+            const t = shiftTotals()
+            return (
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                {PAYMENT_METHODS.map(pm => t.byMethod[pm.key] > 0 && (
+                  <div key={pm.key} className="rounded-2xl border border-zinc-700 bg-zinc-900 p-3 text-center">
+                    <div className="flex items-center justify-center mb-1" style={{ color: pm.color }}>{pm.icon}</div>
+                    <p className="text-[10px] text-zinc-500">{pm.label}</p>
+                    <p className="text-lg font-black text-white">{t.byMethod[pm.key].toFixed(0)}<span className="text-xs text-zinc-500"> ج.م</span></p>
+                  </div>
+                ))}
+              </div>
+            )
+          })()}
+
+          {/* Search invoices */}
+          <div className="relative">
+            <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500" />
+            <input
+              value={searchQuery} onChange={e => setSearchQuery(e.target.value)}
+              placeholder="بحث برقم الطاولة أو رقم الفاتورة..."
+              className="w-full rounded-xl border border-zinc-700 bg-zinc-900 py-2.5 pr-9 pl-4 text-sm text-white placeholder-zinc-600 focus:outline-none focus:border-amber-500/50"
+            />
           </div>
 
           {settlements.length === 0 ? (
             <div className="rounded-2xl border border-zinc-700 bg-zinc-900 p-10 text-center">
               <FileText className="h-10 w-10 mx-auto mb-3 text-zinc-700" />
-              <p className="text-zinc-500 text-sm">لا توجد تقفيلات حتى الآن</p>
-              <p className="text-zinc-600 text-xs mt-1">ستظهر هنا كل قعدة يتم تسويتها</p>
+              <p className="text-zinc-500 text-sm">لا توجد فواتير حتى الآن</p>
             </div>
           ) : (
             <div className="space-y-3">
-              {settlements.map((s, idx) => (
-                <div key={s.id} className="rounded-2xl border border-zinc-700 bg-zinc-900 overflow-hidden">
+              {filteredSettlements.map((s, idx) => (
+                <div key={s.id} className={`rounded-2xl border overflow-hidden ${s.status === 'refunded' ? 'border-red-500/30 bg-red-500/5' : 'border-zinc-700 bg-zinc-900'}`}>
                   <div className="flex items-center justify-between px-4 py-3 border-b border-zinc-800"
-                    style={{ background: 'linear-gradient(135deg, #0d1a0d, #122012)' }}>
+                    style={{ background: s.status === 'refunded' ? 'rgba(239,68,68,0.05)' : 'linear-gradient(135deg,#0d1a0d,#122012)' }}>
                     <div className="flex items-center gap-2">
                       <span className="text-xs text-zinc-500">#{settlements.length - idx}</span>
-                      <p className="font-black text-white">🪑 طاولة {s.tableNum}</p>
+                      <div>
+                        <p className="font-black text-white text-sm">🪑 طاولة {s.tableNum}</p>
+                        <p className="text-[10px] text-zinc-500">فاتورة #{s.invoiceNum}</p>
+                      </div>
+                      {s.status === 'refunded' && (
+                        <span className="rounded-full bg-red-500/20 border border-red-500/30 px-2 py-0.5 text-[10px] text-red-400 font-bold">مسترجع</span>
+                      )}
                     </div>
-                    <div className="flex items-center gap-3">
-                      <span className="text-xs text-zinc-500">{s.settledAt.toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' })}</span>
-                      <span className="text-lg font-black text-green-400">{s.total.toFixed(0)} <span className="text-xs text-green-600">ج.م</span></span>
+                    <div className="flex items-center gap-2">
+                      <div className="text-left">
+                        <p className="text-xs text-zinc-500">{s.settledAt.toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' })}</p>
+                        <div className="flex gap-1">
+                          {s.splitPayments.map((sp, i) => (
+                            <span key={i} className="text-[10px] text-zinc-400">{pmLabel(sp.method)}</span>
+                          ))}
+                        </div>
+                      </div>
+                      <span className={`text-lg font-black ${s.status === 'refunded' ? 'text-red-400' : 'text-green-400'}`}>
+                        {s.total.toFixed(0)}<span className="text-xs text-zinc-500 mr-0.5">ج.م</span>
+                      </span>
                     </div>
                   </div>
-                  <div className="px-4 py-3 space-y-1.5">
+                  <div className="px-4 py-3 space-y-1">
                     {s.items.map((item, i) => (
                       <div key={i} className="flex items-center justify-between text-sm">
                         <span className="text-zinc-300">{item.name}{item.quantity > 1 && <span className="text-zinc-500 mr-1">× {item.quantity}</span>}</span>
                         <span className="text-zinc-500 tabular-nums">{item.total.toFixed(0)} ج.م</span>
                       </div>
                     ))}
+                    {s.discountAmount > 0 && (
+                      <div className="flex justify-between text-xs text-amber-500 mt-1">
+                        <span>خصم</span><span>- {s.discountAmount.toFixed(0)} ج.م</span>
+                      </div>
+                    )}
                   </div>
-                  <div className="px-4 pb-3">
-                    <button onClick={() => openSettlementPreview(s)}
-                      className="w-full rounded-xl border border-zinc-700 py-2 text-xs font-medium text-zinc-400 hover:bg-zinc-800 hover:text-zinc-200 transition-colors flex items-center justify-center gap-1.5">
-                      <Eye className="h-3.5 w-3.5" />
-                      معاينة وطباعة الرسيت
+                  <div className="px-4 pb-3 flex gap-2">
+                    <button onClick={() => setReceiptPreview({
+                      tableNum: s.tableNum, items: s.items, subtotal: s.subtotal,
+                      discountAmount: s.discountAmount, serviceCharge: s.serviceCharge,
+                      taxRate: s.taxRate, total: s.total, cashier: s.cashierName,
+                      place: currentPlace.name, invoiceNum: s.invoiceNum,
+                      date: s.settledAt, splitPayments: s.splitPayments
+                    })}
+                      className="flex-1 rounded-xl border border-zinc-700 py-2 text-xs font-medium text-zinc-400 hover:bg-zinc-800 hover:text-zinc-200 transition-colors flex items-center justify-center gap-1">
+                      <Eye className="h-3.5 w-3.5" /> معاينة وطباعة
                     </button>
+                    {s.status === 'paid' && (
+                      <button onClick={() => handleRefund(s.id)}
+                        className="rounded-xl border border-red-500/30 px-3 py-2 text-xs font-medium text-red-400 hover:bg-red-500/10 transition-colors flex items-center gap-1">
+                        <RefreshCcw className="h-3.5 w-3.5" /> استرجاع
+                      </button>
+                    )}
                   </div>
                 </div>
               ))}
@@ -526,12 +853,17 @@ export function CashierDashboard({ currentUser, currentPlace, onLogout }: Cashie
         </main>
 
       ) : (
-        /* ── MAIN CASHIER VIEW ── */
-        <main className="mx-auto max-w-4xl p-4 space-y-4">
+        /* ─────────── MAIN CASHIER VIEW ─────────── */
+        <main className="mx-auto max-w-5xl p-4 space-y-4">
+
+          {/* Stats */}
           <div className="grid grid-cols-3 gap-3">
             <div className="rounded-2xl border border-zinc-700 bg-zinc-900 p-3 text-center">
               <p className="text-[10px] text-zinc-500 mb-1">نشطة / كل الطاولات</p>
-              <p className="text-xl font-black text-white">{tableMap.size} <span className="text-zinc-500 text-sm">/ {allTables.length}</span></p>
+              <p className="text-xl font-black text-white">
+                {[...tableMap.keys()].filter(t => !paidTables.has(t)).length}
+                <span className="text-zinc-500 text-sm"> / {allTables.length}</span>
+              </p>
             </div>
             <div className="rounded-2xl border border-amber-500/30 bg-amber-500/5 p-3 text-center">
               <p className="text-[10px] text-amber-400/70 mb-1">قيد التحصيل</p>
@@ -543,60 +875,55 @@ export function CashierDashboard({ currentUser, currentPlace, onLogout }: Cashie
             </div>
           </div>
 
-          {/* Quick Activity Summary */}
-          {orders.length > 0 && (
-            <div className="rounded-2xl border border-zinc-700/50 bg-gradient-to-br from-zinc-800/50 to-zinc-900/50 p-4">
-              <div className="flex items-center gap-2 mb-3">
-                <Activity className="h-4 w-4 text-amber-400" />
-                <span className="text-sm font-bold text-white">نشاط اليوم</span>
-              </div>
-              <div className="grid grid-cols-4 gap-3">
-                <div className="text-center p-2 rounded-xl bg-amber-500/10 border border-amber-500/20">
-                  <Utensils className="h-4 w-4 mx-auto mb-1 text-amber-400" />
-                  <p className="text-lg font-black text-amber-400">{[...tableMap.keys()].filter(t => t !== 'x' && (tableMap.get(t)?.length || 0) > 0 && !paidTables.has(t)).length}</p>
-                  <p className="text-[9px] text-amber-400/70">طاولة نشطة</p>
-                </div>
-                <div className="text-center p-2 rounded-xl bg-sky-500/10 border border-sky-500/20">
-                  <Clock className="h-4 w-4 mx-auto mb-1 text-sky-400" />
-                  <p className="text-lg font-black text-sky-400">{orders.filter(o => o.status === 'pending').length}</p>
-                  <p className="text-[9px] text-sky-400/70">طلب معلق</p>
-                </div>
-                <div className="text-center p-2 rounded-xl bg-green-500/10 border border-green-500/20">
-                  <CheckCircle2 className="h-4 w-4 mx-auto mb-1 text-green-400" />
-                  <p className="text-lg font-black text-green-400">{paidTables.size}</p>
-                  <p className="text-[9px] text-green-400/70">تم التسوية</p>
-                </div>
-                <div className="text-center p-2 rounded-xl bg-purple-500/10 border border-purple-500/20">
-                  <TrendingUp className="h-4 w-4 mx-auto mb-1 text-purple-400" />
-                  <p className="text-lg font-black text-purple-400">{(settledRevenue + activeRevenue).toFixed(0)}</p>
-                  <p className="text-[9px] text-purple-400/70">ج.م اليوم</p>
-                </div>
-              </div>
+          {/* Search + Filter */}
+          <div className="flex gap-2 flex-col sm:flex-row">
+            <div className="relative flex-1">
+              <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500" />
+              <input
+                value={searchQuery} onChange={e => setSearchQuery(e.target.value)}
+                placeholder="بحث برقم الطاولة..."
+                className="w-full rounded-xl border border-zinc-700 bg-zinc-900 py-2.5 pr-9 pl-4 text-sm text-white placeholder-zinc-600 focus:outline-none focus:border-amber-500/50"
+              />
             </div>
-          )}
-
-          <div className="flex flex-wrap items-center gap-4 text-xs text-zinc-500">
-            <span className="h-1.5 w-1.5 rounded-full bg-green-500 animate-pulse inline-block" /> تحديث كل 15 ث
-            <span className="flex items-center gap-1"><span className="inline-block w-3 h-3 rounded bg-amber-500/30 border border-amber-500" /> نشطة</span>
-            <span className="flex items-center gap-1"><span className="inline-block w-3 h-3 rounded bg-zinc-800 border border-zinc-700" /> فاضية</span>
-            <span className="flex items-center gap-1"><span className="inline-block w-3 h-3 rounded bg-green-500/20 border border-green-500" /> تسوية</span>
+            <div className="flex rounded-xl border border-zinc-700 overflow-hidden bg-zinc-900">
+              {([['all', 'الكل'], ['open', 'مفتوحة'], ['paid', 'مدفوعة']] as [TableFilter, string][]).map(([key, label]) => (
+                <button key={key} onClick={() => setTableFilter(key)}
+                  className={`px-3 py-2 text-xs font-medium transition-colors ${tableFilter === key ? 'bg-amber-500 text-black' : 'text-zinc-400 hover:text-zinc-200'}`}>
+                  {label}
+                </button>
+              ))}
+            </div>
           </div>
 
+          {/* Legend */}
+          <div className="flex flex-wrap items-center gap-4 text-xs text-zinc-500">
+            <span className="h-1.5 w-1.5 rounded-full bg-green-500 animate-pulse inline-block" /> تحديث كل 15ث
+            <span className="flex items-center gap-1"><span className="inline-block w-3 h-3 rounded bg-green-500/20 border border-green-500" /> مدفوعة</span>
+            <span className="flex items-center gap-1"><span className="inline-block w-3 h-3 rounded bg-amber-500/20 border border-amber-500" /> عليها طلبات</span>
+            <span className="flex items-center gap-1"><span className="inline-block w-3 h-3 rounded bg-red-500/20 border border-red-500" /> لم تُحاسب</span>
+            <span className="flex items-center gap-1"><span className="inline-block w-3 h-3 rounded bg-zinc-800 border border-zinc-700" /> فاضية</span>
+          </div>
+
+          {/* Table Grid */}
           <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-8 gap-3">
-            {allTables.map(tableNum => {
+            {filteredDisplayTables.map(tableNum => {
               const tOrds = tableMap.get(tableNum) || []
               const isActive = tOrds.length > 0
               const isPaid = paidTables.has(tableNum)
-              const total = tOrds.reduce((s, o) => s + (Number(o.drink?.price) || 0) * o.quantity, 0)
               const hasPending = tOrds.some(o => o.status === 'pending')
-              let cardClass = 'border-zinc-700 bg-zinc-800/60 text-zinc-500'
-              if (isPaid) cardClass = 'border-green-500/60 bg-green-500/15 text-green-400 cursor-pointer hover:bg-green-500/25 active:scale-95'
-              else if (isActive) cardClass = 'border-amber-500/50 bg-amber-500/10 text-amber-300 cursor-pointer hover:bg-amber-500/20 hover:border-amber-400 active:scale-95'
+              const total = tOrds.reduce((s, o) => s + (Number(o.drink?.price) || 0) * o.quantity, 0)
+
+              // Color logic: green=paid, yellow=has orders(pending), red=has orders not paid(all ready/completed)
+              let cardStyle = 'border-zinc-700 bg-zinc-800/60 text-zinc-500'
+              if (isPaid) cardStyle = 'border-green-500/70 bg-green-500/15 text-green-300 cursor-pointer hover:bg-green-500/25 active:scale-95'
+              else if (isActive && hasPending) cardStyle = 'border-amber-500/60 bg-amber-500/10 text-amber-300 cursor-pointer hover:bg-amber-500/20 active:scale-95'
+              else if (isActive) cardStyle = 'border-red-500/60 bg-red-500/10 text-red-300 cursor-pointer hover:bg-red-500/20 active:scale-95'
+
               return (
                 <button key={tableNum}
                   onClick={() => (isActive || isPaid) ? setSelectedTable(tableNum) : undefined}
                   disabled={!isActive && !isPaid}
-                  className={`relative rounded-2xl border p-3 text-center transition-all duration-200 ${cardClass}`}>
+                  className={`relative rounded-2xl border p-3 text-center transition-all duration-200 ${cardStyle}`}>
                   {hasPending && !isPaid && <span className="absolute -top-1 -right-1 h-3 w-3 rounded-full bg-orange-500 animate-pulse" />}
                   <p className="text-lg font-black">{tableNum}</p>
                   {isActive && !isPaid && <p className="text-[10px] mt-0.5 font-medium">{total.toFixed(0)} ج</p>}
@@ -606,6 +933,7 @@ export function CashierDashboard({ currentUser, currentPlace, onLogout }: Cashie
             })}
           </div>
 
+          {/* Out of range tables */}
           {[...tableMap.keys()].filter(t => !allTables.includes(t) && t !== 'x').length > 0 && (
             <div className="rounded-2xl border border-orange-500/20 bg-orange-500/5 p-3">
               <p className="text-xs text-orange-400 font-medium mb-2 flex items-center gap-1">
@@ -621,42 +949,80 @@ export function CashierDashboard({ currentUser, currentPlace, onLogout }: Cashie
               </div>
             </div>
           )}
+
+          {/* Today invoices quick list */}
+          {settlements.length > 0 && (
+            <div className="rounded-2xl border border-zinc-700 bg-zinc-900 overflow-hidden">
+              <div className="flex items-center justify-between px-4 py-3 border-b border-zinc-800">
+                <div className="flex items-center gap-2">
+                  <Receipt className="h-4 w-4 text-amber-400" />
+                  <span className="text-sm font-bold text-white">فواتير اليوم</span>
+                  <span className="rounded-full bg-zinc-700 px-2 py-0.5 text-[10px] text-zinc-400">{settlements.length}</span>
+                </div>
+                <button onClick={() => setShowReport(true)} className="text-xs text-amber-400 hover:text-amber-300">عرض الكل</button>
+              </div>
+              <div className="divide-y divide-zinc-800 max-h-48 overflow-y-auto">
+                {settlements.slice(0, 5).map(s => (
+                  <div key={s.id} className="flex items-center justify-between px-4 py-2.5">
+                    <div className="flex items-center gap-2">
+                      <span className={`h-2 w-2 rounded-full ${s.status === 'paid' ? 'bg-green-500' : 'bg-red-500'}`} />
+                      <span className="text-sm font-medium text-white">طاولة {s.tableNum}</span>
+                      <span className="text-[10px] text-zinc-500">{s.settledAt.toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' })}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-zinc-500">{s.splitPayments.map(sp => pmLabel(sp.method)).join(' + ')}</span>
+                      <span className="font-bold text-green-400 text-sm">{s.total.toFixed(0)} ج.م</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </main>
       )}
 
-      {/* ── TABLE MODAL ── */}
+      {/* ══════════════ TABLE MODAL ══════════════ */}
       {selectedTable && (
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/80 backdrop-blur-sm p-4"
-          onClick={e => { if (e.target === e.currentTarget) setSelectedTable(null) }}>
+          onClick={e => { if (e.target === e.currentTarget) { setSelectedTable(null); setDiscountValue('') } }}>
           <div className="w-full max-w-md rounded-2xl border border-zinc-700 bg-zinc-900 overflow-hidden">
+            {/* Header */}
             <div className="flex items-center justify-between px-5 py-4 border-b border-zinc-700"
-              style={{ background: selectedIsPaid ? 'linear-gradient(135deg, #0a1a0a, #122012)' : 'linear-gradient(135deg, #1a1000, #2a1800)' }}>
+              style={{ background: selectedIsPaid ? 'linear-gradient(135deg,#0a1a0a,#122012)' : 'linear-gradient(135deg,#1a1000,#2a1800)' }}>
               <div>
                 <p className="font-black text-white text-lg">🪑 طاولة {selectedTable}</p>
                 <p className={`text-xs ${selectedIsPaid ? 'text-green-400' : 'text-amber-400/70'}`}>
                   {selectedIsPaid ? '✓ تمت التسوية — في انتظار التصفير' : `${selectedOrders.length} طلب`}
                 </p>
               </div>
-              <button onClick={() => setSelectedTable(null)}
-                className="flex h-8 w-8 items-center justify-center rounded-full text-zinc-400 hover:bg-zinc-700 transition-colors">
-                <X className="h-4 w-4" />
-              </button>
+              <div className="flex items-center gap-2">
+                {!selectedIsPaid && selectedOrders.length > 0 && (
+                  <button onClick={() => setTransferModal({ fromTable: selectedTable })}
+                    title="نقل لطاولة أخرى"
+                    className="flex h-8 w-8 items-center justify-center rounded-full text-zinc-400 hover:bg-zinc-700 transition-colors">
+                    <ArrowLeftRight className="h-4 w-4" />
+                  </button>
+                )}
+                <button onClick={() => { setSelectedTable(null); setDiscountValue('') }}
+                  className="flex h-8 w-8 items-center justify-center rounded-full text-zinc-400 hover:bg-zinc-700 transition-colors">
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
             </div>
 
-            <div className="px-5 py-4 max-h-72 overflow-y-auto space-y-2.5">
+            {/* Orders list */}
+            <div className="px-5 py-4 max-h-64 overflow-y-auto space-y-2">
               {selectedOrders.length === 0
                 ? <p className="text-center text-zinc-500 py-6">لا توجد طلبات</p>
                 : selectedOrders.map(o => {
-                  const isReady     = o.status === 'ready' || o.status === 'completed'
+                  const isReady = o.status === 'ready' || o.status === 'completed'
                   const isPreparing = o.status === 'preparing'
-                  const nextStatus  = o.status === 'pending' ? 'preparing' : (o.status === 'preparing' ? 'ready' : null)
-                  const nextLabel   = nextStatus === 'preparing' ? '☕ تحضير' : nextStatus === 'ready' ? '✅ جاهز' : null
+                  const nextStatus = o.status === 'pending' ? 'preparing' : o.status === 'preparing' ? 'ready' : null
+                  const nextLabel = nextStatus === 'preparing' ? '☕ تحضير' : nextStatus === 'ready' ? '✅ جاهز' : null
                   return (
-                    <div key={o.id} className={`flex items-center justify-between gap-2 rounded-xl px-3 py-2.5 transition-colors ${isReady ? 'bg-green-500/10' : isPreparing ? 'bg-amber-500/10' : 'bg-zinc-800/40'}`}>
+                    <div key={o.id} className={`flex items-center justify-between gap-2 rounded-xl px-3 py-2.5 ${isReady ? 'bg-green-500/10' : isPreparing ? 'bg-amber-500/10' : 'bg-zinc-800/40'}`}>
                       <div className="flex items-center gap-2 min-w-0">
-                        <span className="text-base shrink-0">
-                          {isReady ? '✅' : isPreparing ? '☕' : '⏳'}
-                        </span>
+                        <span className="text-base shrink-0">{isReady ? '✅' : isPreparing ? '☕' : '⏳'}</span>
                         <div className="min-w-0">
                           <p className="text-zinc-200 text-sm font-medium truncate">
                             {o.drink?.name ?? '—'}
@@ -667,21 +1033,24 @@ export function CashierDashboard({ currentUser, currentPlace, onLogout }: Cashie
                           </p>
                         </div>
                       </div>
-                      <div className="flex items-center gap-2 shrink-0">
+                      <div className="flex items-center gap-1.5 shrink-0">
                         <span className="text-zinc-400 text-xs tabular-nums">{((Number(o.drink?.price) || 0) * o.quantity).toFixed(0)} ج</span>
                         {nextLabel && (
-                          <button
-                            onClick={async () => {
-                              await fetch(`/api/orders/${o.id}`, {
-                                method: 'PATCH',
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({ status: nextStatus })
-                              })
-                              fetchOrders()
-                            }}
-                            className={`rounded-lg px-2 py-1 text-[11px] font-bold transition-all ${nextStatus === 'ready' ? 'bg-green-600/80 hover:bg-green-600 text-white' : 'bg-amber-600/80 hover:bg-amber-600 text-white'}`}
-                          >
+                          <button onClick={async () => {
+                            await fetch(`/api/orders/${o.id}`, {
+                              method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+                              body: JSON.stringify({ status: nextStatus })
+                            })
+                            fetchOrders()
+                          }}
+                            className={`rounded-lg px-2 py-1 text-[10px] font-bold transition-all ${nextStatus === 'ready' ? 'bg-green-600/80 hover:bg-green-600 text-white' : 'bg-amber-600/80 hover:bg-amber-600 text-white'}`}>
                             {nextLabel}
+                          </button>
+                        )}
+                        {!selectedIsPaid && (
+                          <button onClick={() => handleDeleteOrder(o.id)}
+                            className="rounded-lg p-1 text-red-400/50 hover:bg-red-500/10 hover:text-red-400 transition-colors">
+                            <X className="h-3.5 w-3.5" />
                           </button>
                         )}
                       </div>
@@ -691,41 +1060,127 @@ export function CashierDashboard({ currentUser, currentPlace, onLogout }: Cashie
               }
             </div>
 
+            {/* Totals + Discount */}
+            {!selectedIsPaid && selectedOrders.length > 0 && (
+              <div className="px-5 py-3 border-t border-zinc-800 space-y-3 bg-zinc-800/30">
+                {/* Discount */}
+                <div>
+                  <p className="text-xs text-zinc-500 mb-2 flex items-center gap-1">
+                    <Percent className="h-3.5 w-3.5" /> خصم (اختياري)
+                  </p>
+                  <div className="flex gap-2">
+                    <div className="flex rounded-lg border border-zinc-700 overflow-hidden">
+                      <button onClick={() => setDiscountType('amount')}
+                        className={`px-2.5 py-1.5 text-xs font-medium transition-colors ${discountType === 'amount' ? 'bg-amber-500 text-black' : 'text-zinc-400 hover:text-zinc-200'}`}>
+                        ج.م
+                      </button>
+                      <button onClick={() => setDiscountType('percent')}
+                        className={`px-2.5 py-1.5 text-xs font-medium transition-colors ${discountType === 'percent' ? 'bg-amber-500 text-black' : 'text-zinc-400 hover:text-zinc-200'}`}>
+                        %
+                      </button>
+                    </div>
+                    <input
+                      type="number" min="0" value={discountValue} onChange={e => setDiscountValue(e.target.value)}
+                      placeholder={discountType === 'amount' ? 'مبلغ الخصم' : 'نسبة الخصم'}
+                      className="flex-1 rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-1.5 text-sm text-white placeholder-zinc-600 focus:outline-none focus:border-amber-500/50"
+                    />
+                  </div>
+                  {selectedDiscountAmt > LARGE_DISCOUNT_THRESHOLD && (
+                    <p className="text-xs text-amber-400 mt-1 flex items-center gap-1">
+                      <Shield className="h-3 w-3" /> خصم كبير — يحتاج موافقة أدمن
+                    </p>
+                  )}
+                </div>
+
+                {/* Summary */}
+                <div className="space-y-1 text-xs">
+                  <div className="flex justify-between text-zinc-400">
+                    <span>المجموع الفرعي</span><span>{selectedSubtotal.toFixed(2)} ج.م</span>
+                  </div>
+                  {selectedDiscountAmt > 0 && (
+                    <div className="flex justify-between text-amber-400">
+                      <span>خصم</span><span>- {selectedDiscountAmt.toFixed(2)} ج.م</span>
+                    </div>
+                  )}
+                  {serviceChargeRate > 0 && (
+                    <div className="flex justify-between text-zinc-500">
+                      <span>خدمة ({serviceChargeRate}%)</span><span>{selectedTotals.serviceAmt.toFixed(2)} ج.م</span>
+                    </div>
+                  )}
+                  {taxRateVal > 0 && (
+                    <div className="flex justify-between text-zinc-500">
+                      <span>ضريبة ({taxRateVal}%)</span><span>{selectedTotals.taxAmt.toFixed(2)} ج.م</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Grand total */}
             <div className="flex items-center justify-between px-5 py-3 border-t border-zinc-700 bg-zinc-800/50">
               <span className="font-bold text-zinc-200">الإجمالي</span>
               <span className="text-2xl font-black tabular-nums" style={{ color: '#D4A017' }}>
-                {selectedTotal.toFixed(0)} <span className="text-sm text-zinc-400">ج.م</span>
+                {selectedIsPaid
+                  ? settlements.find(s => s.tableNum === selectedTable)?.total.toFixed(0)
+                  : selectedTotals.grandTotal.toFixed(0)
+                } <span className="text-sm text-zinc-400">ج.م</span>
               </span>
             </div>
 
+            {/* Action buttons */}
             <div className="px-5 pb-5 pt-3 space-y-2">
               {!selectedIsPaid ? (
                 <>
-                  <button onClick={handleMarkPaid} disabled={selectedOrders.length === 0}
+                  <button onClick={openPaymentModal} disabled={selectedOrders.length === 0}
                     className="w-full rounded-xl py-3 text-sm font-bold text-white transition-all hover:opacity-90 disabled:opacity-50 flex items-center justify-center gap-2"
-                    style={{ background: 'linear-gradient(135deg, #16a34a, #15803d)' }}>
+                    style={{ background: 'linear-gradient(135deg,#16a34a,#15803d)' }}>
                     <CheckCircle2 className="h-4 w-4" /> تسوية الحساب
                   </button>
-                  <button onClick={() => openReceiptPreview(selectedTable, selectedOrders, selectedTotal)}
-                    className="w-full rounded-xl border border-zinc-600 py-3 text-sm font-medium text-zinc-300 hover:bg-zinc-700 transition-colors flex items-center justify-center gap-2">
-                    <Eye className="h-4 w-4" /> معاينة وطباعة الرسيت
+                  <button onClick={() => {
+                    const r: ReceiptData = {
+                      tableNum: selectedTable, items: selectedOrders.map(o => ({
+                        name: o.drink?.name ?? '—', quantity: o.quantity,
+                        unitPrice: Number(o.drink?.price) || 0, total: (Number(o.drink?.price) || 0) * o.quantity
+                      })),
+                      subtotal: selectedSubtotal, discountAmount: selectedDiscountAmt,
+                      serviceCharge: serviceChargeRate, taxRate: taxRateVal,
+                      total: selectedTotals.grandTotal, cashier: currentUser.name,
+                      place: currentPlace.name, invoiceNum: genInvoiceNum(),
+                      date: new Date(), splitPayments: [{ method: 'cash', amount: selectedTotals.grandTotal }]
+                    }
+                    setReceiptPreview(r)
+                  }}
+                    className="w-full rounded-xl border border-zinc-600 py-2.5 text-sm font-medium text-zinc-300 hover:bg-zinc-700 transition-colors flex items-center justify-center gap-2">
+                    <Eye className="h-4 w-4" /> معاينة الرسيت
                   </button>
                 </>
               ) : (
                 <>
-                  <div className="rounded-xl border border-green-500/30 bg-green-500/10 px-4 py-2.5 text-center mb-1">
-                    <p className="text-xs text-green-400 font-medium">✓ تمت تسوية الحساب بنجاح</p>
-                    <p className="text-[11px] text-green-600 mt-0.5">اضغط أدناه لتصفير القعدة للزبون الجاي</p>
+                  <div className="rounded-xl border border-green-500/30 bg-green-500/10 px-4 py-2.5 text-center">
+                    <p className="text-xs text-green-400 font-medium">✓ تمت التسوية</p>
+                    <p className="text-[11px] text-green-600 mt-0.5">اضغط أدناه لتصفير الطاولة</p>
                   </div>
                   <button onClick={handleClearTable} disabled={isClearing}
                     className="w-full rounded-xl py-3 text-sm font-bold text-white transition-all hover:opacity-90 disabled:opacity-50 flex items-center justify-center gap-2"
-                    style={{ background: 'linear-gradient(135deg, #b45309, #92400e)' }}>
-                    {isClearing ? '⏳ جاري التصفير...' : <><ChevronRight className="h-4 w-4" /> تصفير القعدة</>}
+                    style={{ background: 'linear-gradient(135deg,#b45309,#92400e)' }}>
+                    {isClearing ? <><Loader2 className="h-4 w-4 animate-spin" /> جاري...</> : <><ChevronRight className="h-4 w-4" /> إغلاق الطاولة</>}
                   </button>
-                  <button onClick={() => openReceiptPreview(selectedTable, selectedOrders, selectedTotal)}
-                    className="w-full rounded-xl border border-zinc-600 py-3 text-sm font-medium text-zinc-300 hover:bg-zinc-700 transition-colors flex items-center justify-center gap-2">
-                    <Eye className="h-4 w-4" /> معاينة وطباعة الرسيت
-                  </button>
+                  {(() => {
+                    const s = settlements.find(st => st.tableNum === selectedTable)
+                    if (!s) return null
+                    return (
+                      <button onClick={() => setReceiptPreview({
+                        tableNum: s.tableNum, items: s.items, subtotal: s.subtotal,
+                        discountAmount: s.discountAmount, serviceCharge: s.serviceCharge,
+                        taxRate: s.taxRate, total: s.total, cashier: s.cashierName,
+                        place: currentPlace.name, invoiceNum: s.invoiceNum,
+                        date: s.settledAt, splitPayments: s.splitPayments
+                      })}
+                        className="w-full rounded-xl border border-zinc-600 py-2.5 text-sm font-medium text-zinc-300 hover:bg-zinc-700 transition-colors flex items-center justify-center gap-2">
+                        <Eye className="h-4 w-4" /> معاينة وطباعة الرسيت
+                      </button>
+                    )
+                  })()}
                 </>
               )}
             </div>
@@ -733,117 +1188,218 @@ export function CashierDashboard({ currentUser, currentPlace, onLogout }: Cashie
         </div>
       )}
 
-      {/* ── RECEIPT PREVIEW MODAL ── */}
+      {/* ══════════════ PAYMENT MODAL ══════════════ */}
+      {showPayment && selectedTable && (
+        <div className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center bg-black/90 backdrop-blur-sm p-4">
+          <div className="w-full max-w-sm rounded-2xl border border-zinc-700 bg-zinc-900 overflow-hidden">
+            {/* Header */}
+            <div className="flex items-center justify-between px-5 py-4 border-b border-zinc-700"
+              style={{ background: 'linear-gradient(135deg,#052e16,#14532d)' }}>
+              <div>
+                <p className="font-black text-white">💳 طريقة الدفع</p>
+                <p className="text-xs text-green-400/80">طاولة {selectedTable}</p>
+              </div>
+              <button onClick={() => setShowPayment(false)}
+                className="flex h-8 w-8 items-center justify-center rounded-full text-zinc-400 hover:bg-black/30">
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            <div className="p-5 space-y-4">
+              {/* Total display */}
+              <div className="rounded-2xl border border-green-500/30 bg-green-500/5 p-4 text-center">
+                <p className="text-xs text-green-400/70 mb-1">الإجمالي المطلوب</p>
+                <p className="text-3xl font-black text-green-300">{selectedTotals.grandTotal.toFixed(2)}</p>
+                <p className="text-sm text-green-500">ج.م</p>
+              </div>
+
+              {/* Split toggle */}
+              <div className="flex items-center justify-between">
+                <p className="text-sm font-medium text-zinc-300">تقسيم الفاتورة</p>
+                <button onClick={() => {
+                  setIsSplitMode(v => !v)
+                  if (!isSplitMode) {
+                    setSplitPayments([{ method: 'cash', amount: 0 }, { method: 'visa', amount: 0 }])
+                  } else {
+                    setSplitPayments([{ method: 'cash', amount: selectedTotals.grandTotal }])
+                  }
+                }}
+                  className={`relative h-6 w-11 rounded-full transition-colors ${isSplitMode ? 'bg-amber-500' : 'bg-zinc-700'}`}>
+                  <span className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform ${isSplitMode ? 'translate-x-0.5' : 'translate-x-5'}`} />
+                </button>
+              </div>
+
+              {/* Payment method(s) */}
+              {!isSplitMode ? (
+                <div className="space-y-2">
+                  <p className="text-xs text-zinc-500">اختر طريقة الدفع</p>
+                  <div className="grid grid-cols-2 gap-2">
+                    {PAYMENT_METHODS.map(pm => (
+                      <button key={pm.key}
+                        onClick={() => setSplitPayments([{ method: pm.key, amount: selectedTotals.grandTotal }])}
+                        className={`flex items-center justify-center gap-2 rounded-xl border py-3 text-sm font-bold transition-all ${splitPayments[0]?.method === pm.key ? 'border-transparent text-white' : 'border-zinc-700 bg-zinc-800 text-zinc-400 hover:border-zinc-500'}`}
+                        style={splitPayments[0]?.method === pm.key ? { background: pm.color, borderColor: pm.color } : {}}>
+                        {pm.icon} {pm.label}
+                      </button>
+                    ))}
+                  </div>
+                  {/* Cash amount input */}
+                  {splitPayments[0]?.method === 'cash' && (
+                    <div>
+                      <p className="text-xs text-zinc-500 mb-1.5">المبلغ المدفوع (اختياري)</p>
+                      <input
+                        type="number" min="0"
+                        value={splitPayments[0].amount || ''}
+                        onChange={e => setSplitPayments([{ method: 'cash', amount: parseFloat(e.target.value) || selectedTotals.grandTotal }])}
+                        placeholder={selectedTotals.grandTotal.toFixed(2)}
+                        className="w-full rounded-xl border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm text-white placeholder-zinc-600 focus:outline-none focus:border-green-500/50"
+                      />
+                      {splitPayments[0].amount > selectedTotals.grandTotal && (
+                        <p className="text-xs text-green-400 mt-1">
+                          الباقي: {(splitPayments[0].amount - selectedTotals.grandTotal).toFixed(2)} ج.م
+                        </p>
+                      )}
+                    </div>
+                  )}
+                </div>
+              ) : (
+                /* Split payment */
+                <div className="space-y-3">
+                  {splitPayments.map((sp, i) => (
+                    <div key={i} className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <p className="text-xs text-zinc-500">طريقة {i + 1}</p>
+                        {splitPayments.length > 1 && (
+                          <button onClick={() => setSplitPayments(prev => prev.filter((_, idx) => idx !== i))}
+                            className="text-red-400 hover:text-red-300 text-xs">حذف</button>
+                        )}
+                      </div>
+                      <div className="flex gap-2">
+                        <select
+                          value={sp.method}
+                          onChange={e => setSplitPayments(prev => prev.map((p, idx) => idx === i ? { ...p, method: e.target.value as PaymentMethod } : p))}
+                          className="flex-1 rounded-xl border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm text-white focus:outline-none focus:border-amber-500/50"
+                        >
+                          {PAYMENT_METHODS.map(pm => <option key={pm.key} value={pm.key}>{pm.label}</option>)}
+                        </select>
+                        <input type="number" min="0" value={sp.amount || ''}
+                          onChange={e => setSplitPayments(prev => prev.map((p, idx) => idx === i ? { ...p, amount: parseFloat(e.target.value) || 0 } : p))}
+                          placeholder="المبلغ"
+                          className="w-28 rounded-xl border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm text-white placeholder-zinc-600 focus:outline-none focus:border-amber-500/50"
+                        />
+                      </div>
+                    </div>
+                  ))}
+                  {splitPayments.length < 4 && (
+                    <button onClick={() => setSplitPayments(prev => [...prev, { method: 'cash', amount: 0 }])}
+                      className="w-full rounded-xl border border-dashed border-zinc-600 py-2 text-xs text-zinc-500 hover:text-zinc-300 hover:border-zinc-400 transition-colors flex items-center justify-center gap-1">
+                      <Plus className="h-3.5 w-3.5" /> إضافة طريقة دفع
+                    </button>
+                  )}
+                  {/* Remaining */}
+                  <div className={`rounded-xl px-3 py-2 text-center text-sm font-bold ${remainingToPay > 0.01 ? 'bg-red-500/10 text-red-300' : 'bg-green-500/10 text-green-300'}`}>
+                    {remainingToPay > 0.01 ? `متبقي: ${remainingToPay.toFixed(2)} ج.م` : '✓ مكتمل'}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Confirm */}
+            <div className="px-5 pb-5">
+              <button onClick={confirmPayment}
+                className="w-full rounded-xl py-3 text-sm font-bold text-white transition-all hover:opacity-90 flex items-center justify-center gap-2"
+                style={{ background: 'linear-gradient(135deg,#16a34a,#15803d)' }}>
+                <CheckCircle2 className="h-4 w-4" />
+                تأكيد الدفع وإصدار الفاتورة
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ══════════════ RECEIPT PREVIEW MODAL ══════════════ */}
       {receiptPreview && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/90 backdrop-blur-sm p-4"
+        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/90 backdrop-blur-sm p-4"
           onClick={e => { if (e.target === e.currentTarget) setReceiptPreview(null) }}>
           <div className="w-full max-w-sm rounded-2xl overflow-hidden shadow-2xl border border-zinc-700">
-            {/* Preview Header */}
             <div className="flex items-center justify-between px-4 py-3 bg-zinc-900 border-b border-zinc-700">
               <p className="text-white font-bold text-sm flex items-center gap-2">
-                <FileText className="h-4 w-4 text-amber-400" />
-                معاينة الرسيت
+                <FileText className="h-4 w-4 text-amber-400" /> معاينة الرسيت
               </p>
               <div className="flex items-center gap-2">
-                <button
-                  onClick={() => { triggerPrint(receiptPreview); setReceiptPreview(null) }}
-                  className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold text-white transition-all hover:opacity-90"
-                  style={{ background: 'linear-gradient(135deg, #1a1a2e, #2d2d5e)' }}>
+                <button onClick={() => { triggerPrint(receiptPreview); setReceiptPreview(null) }}
+                  className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold text-white"
+                  style={{ background: 'linear-gradient(135deg,#1a1a2e,#2d2d5e)' }}>
                   <Printer className="h-3.5 w-3.5" /> طباعة
                 </button>
                 <button onClick={() => setReceiptPreview(null)}
-                  className="flex h-7 w-7 items-center justify-center rounded-full text-zinc-400 hover:bg-zinc-700 transition-colors">
+                  className="flex h-7 w-7 items-center justify-center rounded-full text-zinc-400 hover:bg-zinc-700">
                   <X className="h-4 w-4" />
                 </button>
               </div>
             </div>
-
-            {/* Receipt Preview Body */}
             <div className="overflow-y-auto bg-gray-100" style={{ maxHeight: '75vh' }}>
-              <div className="bg-white mx-auto shadow-md" style={{ maxWidth: '300px', padding: '20px 14px', fontFamily: 'Arial, sans-serif', fontSize: '13px', color: '#1a1a2e' }}>
-                {/* Logo */}
+              <div className="bg-white mx-auto shadow-md" style={{ maxWidth: '300px', padding: '16px 12px', fontFamily: 'Arial, sans-serif', fontSize: '13px', direction: 'rtl' }}>
                 <div style={{ textAlign: 'center', marginBottom: '8px' }}>
-                  <img src="/images/sipflow-logo.jpg" alt="SîpFlõw" style={{ width: '90px', height: '90px', objectFit: 'contain', margin: '0 auto 4px' }} />
-                  <div style={{ fontSize: '20px', fontWeight: 900, letterSpacing: '2px', color: '#1a1a2e' }}>SîpFlõw</div>
-                  <div style={{ fontSize: '10px', letterSpacing: '3px', color: '#666', margin: '2px 0 8px' }}>— SYSTEM POS —</div>
+                  <img src="/images/sipflow-logo.jpg" alt="SîpFlõw" style={{ width: '70px', height: '70px', objectFit: 'contain', margin: '0 auto 4px' }} />
+                  <div style={{ fontSize: '16px', fontWeight: 900 }}>{receiptPreview.place}</div>
+                  <div style={{ fontSize: '10px', color: '#666', marginBottom: '6px' }}>— SîpFlõw POS —</div>
                 </div>
-
-                <div style={{ borderTop: '1px dashed #aaa', margin: '8px 0' }} />
-
-                <div style={{ fontSize: '12px', margin: '3px 0' }}>Receipt #: {receiptPreview.receiptNum}</div>
-                <div style={{ fontSize: '12px', margin: '3px 0' }}>
-                  Date: {receiptPreview.date.toLocaleDateString('en-GB')} &nbsp;
-                  {receiptPreview.date.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}
-                </div>
-                <div style={{ fontSize: '12px', margin: '3px 0' }}>Cashier: {receiptPreview.cashier}</div>
-                <div style={{ fontSize: '12px', margin: '3px 0' }}>Table: {receiptPreview.tableNum}</div>
-
-                <div style={{ borderTop: '1px dashed #aaa', margin: '8px 0' }} />
-
-                {/* Items Table */}
+                <div style={{ borderTop: '1px dashed #aaa', margin: '6px 0' }} />
+                <div style={{ fontSize: '11px', margin: '2px 0' }}>فاتورة #: {receiptPreview.invoiceNum}</div>
+                <div style={{ fontSize: '11px', margin: '2px 0' }}>التاريخ: {receiptPreview.date.toLocaleDateString('ar-EG')} {receiptPreview.date.toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' })}</div>
+                <div style={{ fontSize: '11px', margin: '2px 0' }}>الكاشير: {receiptPreview.cashier}</div>
+                <div style={{ fontSize: '11px', margin: '2px 0' }}>الطاولة: {receiptPreview.tableNum}</div>
+                <div style={{ borderTop: '1px dashed #aaa', margin: '6px 0' }} />
                 <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                   <thead>
                     <tr style={{ borderBottom: '1px solid #1a1a2e' }}>
-                      <th style={{ padding: '5px 3px', textAlign: 'right', fontSize: '12px', fontWeight: 700 }}>Item</th>
-                      <th style={{ padding: '5px 3px', textAlign: 'center', fontSize: '12px', fontWeight: 700 }}>Qty</th>
-                      <th style={{ padding: '5px 3px', textAlign: 'right', fontSize: '12px', fontWeight: 700 }}>Price</th>
-                      <th style={{ padding: '5px 3px', textAlign: 'right', fontSize: '12px', fontWeight: 700 }}>Total</th>
+                      <th style={{ padding: '4px 2px', textAlign: 'right', fontSize: '11px' }}>الصنف</th>
+                      <th style={{ padding: '4px 2px', textAlign: 'center', fontSize: '11px' }}>ك</th>
+                      <th style={{ padding: '4px 2px', textAlign: 'right', fontSize: '11px' }}>سعر</th>
+                      <th style={{ padding: '4px 2px', textAlign: 'right', fontSize: '11px' }}>إجمالي</th>
                     </tr>
                   </thead>
                   <tbody>
                     {receiptPreview.items.map((item, i) => (
                       <tr key={i} style={{ borderBottom: '1px dashed #e0e0e0' }}>
-                        <td style={{ padding: '6px 3px', textAlign: 'right', fontSize: '12px' }}>{item.name}</td>
-                        <td style={{ padding: '6px 3px', textAlign: 'center', fontSize: '12px', fontWeight: 700 }}>{item.quantity}</td>
-                        <td style={{ padding: '6px 3px', textAlign: 'right', fontSize: '12px' }}>{item.unitPrice.toFixed(2)}</td>
-                        <td style={{ padding: '6px 3px', textAlign: 'right', fontSize: '12px', fontWeight: 700 }}>{item.total.toFixed(2)}</td>
+                        <td style={{ padding: '5px 2px', textAlign: 'right', fontSize: '12px' }}>{item.name}</td>
+                        <td style={{ padding: '5px 2px', textAlign: 'center', fontSize: '12px', fontWeight: 700 }}>{item.quantity}</td>
+                        <td style={{ padding: '5px 2px', textAlign: 'right', fontSize: '12px' }}>{item.unitPrice.toFixed(2)}</td>
+                        <td style={{ padding: '5px 2px', textAlign: 'right', fontSize: '12px', fontWeight: 700 }}>{item.total.toFixed(2)}</td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
-
                 {(() => {
-                  const { serviceAmt, taxAmt } = calcTotals(receiptPreview.subtotal, receiptPreview.serviceCharge, receiptPreview.taxRate)
+                  const { serviceAmt, taxAmt } = calcTotals(receiptPreview.subtotal, receiptPreview.discountAmount, receiptPreview.serviceCharge, receiptPreview.taxRate)
+                  const change = Math.max(0, receiptPreview.splitPayments.reduce((s, p) => s + p.amount, 0) - receiptPreview.total)
                   return (
                     <>
-                      <div style={{ borderTop: '1px dashed #aaa', margin: '10px 0 6px' }} />
-                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', margin: '3px 0' }}>
-                        <span>Subtotal:</span><span style={{ fontWeight: 700 }}>{receiptPreview.subtotal.toFixed(2)}</span>
+                      <div style={{ borderTop: '1px dashed #aaa', margin: '8px 0 4px' }} />
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', margin: '2px 0' }}><span>المجموع:</span><span>{receiptPreview.subtotal.toFixed(2)}</span></div>
+                      {receiptPreview.discountAmount > 0 && <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', margin: '2px 0', color: '#b45309' }}><span>خصم:</span><span>- {receiptPreview.discountAmount.toFixed(2)}</span></div>}
+                      {receiptPreview.serviceCharge > 0 && <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', margin: '2px 0', color: '#555' }}><span>خدمة ({receiptPreview.serviceCharge}%):</span><span>{serviceAmt.toFixed(2)}</span></div>}
+                      {receiptPreview.taxRate > 0 && <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', margin: '2px 0', color: '#555' }}><span>ضريبة ({receiptPreview.taxRate}%):</span><span>{taxAmt.toFixed(2)}</span></div>}
+                      <div style={{ borderTop: '1px dashed #aaa', margin: '4px 0' }} />
+                      <div style={{ background: '#1a1a2e', color: '#fff', padding: '8px 10px', display: 'flex', justifyContent: 'space-between', fontSize: '14px', fontWeight: 900, margin: '6px 0', borderRadius: '2px' }}>
+                        <span>الإجمالي:</span><span>{receiptPreview.total.toFixed(2)} ج.م</span>
                       </div>
-                      {receiptPreview.serviceCharge > 0 && (
-                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', margin: '3px 0', color: '#555' }}>
-                          <span>رسوم الخدمة ({receiptPreview.serviceCharge}%):</span>
-                          <span>{serviceAmt.toFixed(2)}</span>
+                      <div style={{ borderTop: '1px dashed #aaa', margin: '4px 0' }} />
+                      {receiptPreview.splitPayments.map((sp, i) => (
+                        <div key={i} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', margin: '2px 0' }}>
+                          <span>{pmLabel(sp.method)}:</span><span style={{ fontWeight: 700 }}>{sp.amount.toFixed(2)} ج.م</span>
                         </div>
-                      )}
-                      {receiptPreview.taxRate > 0 && (
-                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', margin: '3px 0', color: '#555' }}>
-                          <span>الضريبة ({receiptPreview.taxRate}%):</span>
-                          <span>{taxAmt.toFixed(2)}</span>
-                        </div>
-                      )}
-                      <div style={{ borderTop: '1px dashed #aaa', margin: '6px 0' }} />
-                      <div style={{ background: '#1a1a2e', color: '#fff', padding: '9px 10px', display: 'flex', justifyContent: 'space-between', fontSize: '15px', fontWeight: 900, margin: '8px 0', borderRadius: '2px' }}>
-                        <span>Grand Total:</span>
-                        <span>{receiptPreview.total.toFixed(2)}</span>
-                      </div>
-                      <div style={{ borderTop: '1px dashed #aaa', margin: '6px 0' }} />
-                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', margin: '4px 0' }}>
-                        <span>Paid by: Cash</span><span style={{ fontWeight: 700 }}>{receiptPreview.total.toFixed(2)}</span>
-                      </div>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', margin: '4px 0' }}>
-                        <span>Change:</span><span>0.00</span>
-                      </div>
+                      ))}
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', margin: '2px 0' }}><span>الباقي:</span><span style={{ fontWeight: 700 }}>{change.toFixed(2)} ج.م</span></div>
                     </>
                   )
                 })()}
-                <div style={{ borderTop: '1px dashed #aaa', margin: '10px 0 6px' }} />
-
-                <div style={{ textAlign: 'center', fontSize: '13px', margin: '10px 0 4px' }}>شكراً لزيارتكم! 🙏</div>
+                <div style={{ borderTop: '1px dashed #aaa', margin: '8px 0 4px' }} />
+                <div style={{ textAlign: 'center', fontSize: '12px', margin: '8px 0 3px' }}>شكراً لزيارتكم! 🙏</div>
                 <div style={{ textAlign: 'center', fontSize: '10px', color: '#666' }}>SîpFlõw — نظام الطلبات</div>
-                <div style={{ textAlign: 'center', marginTop: '14px' }}>
-                  <img src={`https://api.qrserver.com/v1/create-qr-code/?size=90x90&data=SipFlow-${receiptPreview.receiptNum}`}
-                    width="80" height="80" alt="QR" style={{ display: 'inline-block' }} />
+                <div style={{ textAlign: 'center', marginTop: '12px' }}>
+                  <img src={`https://api.qrserver.com/v1/create-qr-code/?size=70x70&data=SipFlow-${receiptPreview.invoiceNum}`} width="65" height="65" alt="QR" />
                 </div>
               </div>
             </div>
@@ -851,16 +1407,212 @@ export function CashierDashboard({ currentUser, currentPlace, onLogout }: Cashie
         </div>
       )}
 
-      {/* ── RESERVATIONS MODAL ── */}
+      {/* ══════════════ ADMIN PASSWORD MODAL ══════════════ */}
+      {adminModal?.isOpen && (
+        <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/90 backdrop-blur-sm p-4">
+          <div className="w-full max-w-sm rounded-2xl border border-zinc-700 bg-zinc-900 overflow-hidden">
+            <div className="flex items-center justify-between px-5 py-4 border-b border-zinc-700"
+              style={{ background: 'linear-gradient(135deg,#1a0a00,#2a0a00)' }}>
+              <div className="flex items-center gap-2">
+                <Shield className="h-5 w-5 text-amber-400" />
+                <p className="font-black text-white">تأكيد الأدمن</p>
+              </div>
+              <button onClick={() => setAdminModal(null)}
+                className="flex h-8 w-8 items-center justify-center rounded-full text-zinc-400 hover:bg-zinc-700">
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+            <div className="p-5 space-y-4">
+              <p className="text-sm text-zinc-400">{adminModal.action}</p>
+              <div>
+                <label className="text-xs text-zinc-500 mb-1.5 block">كلمة سر الأدمن</label>
+                <input
+                  type="password" value={adminPwInput}
+                  onChange={e => setAdminPwInput(e.target.value)}
+                  onKeyDown={e => e.key === 'Enter' && verifyAdmin()}
+                  placeholder="ادخل كلمة السر"
+                  autoFocus
+                  className="w-full rounded-xl border border-zinc-700 bg-zinc-800 px-4 py-3 text-sm text-white placeholder-zinc-600 focus:outline-none focus:border-amber-500/50"
+                />
+                {adminPwError && <p className="text-xs text-red-400 mt-1">{adminPwError}</p>}
+              </div>
+              <button onClick={verifyAdmin} disabled={adminPwLoading}
+                className="w-full rounded-xl py-3 text-sm font-bold text-white flex items-center justify-center gap-2"
+                style={{ background: 'linear-gradient(135deg,#d97706,#b45309)' }}>
+                {adminPwLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <><Shield className="h-4 w-4" /> تأكيد</>}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ══════════════ TABLE TRANSFER MODAL ══════════════ */}
+      {transferModal && (
+        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/90 backdrop-blur-sm p-4">
+          <div className="w-full max-w-sm rounded-2xl border border-zinc-700 bg-zinc-900 overflow-hidden">
+            <div className="flex items-center justify-between px-5 py-4 border-b border-zinc-700">
+              <div className="flex items-center gap-2">
+                <ArrowLeftRight className="h-5 w-5 text-amber-400" />
+                <p className="font-black text-white">نقل طلبات</p>
+              </div>
+              <button onClick={() => { setTransferModal(null); setTransferTarget('') }}
+                className="flex h-8 w-8 items-center justify-center rounded-full text-zinc-400 hover:bg-zinc-700">
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+            <div className="p-5 space-y-4">
+              <p className="text-sm text-zinc-400">
+                نقل طلبات طاولة <span className="text-white font-bold">{transferModal.fromTable}</span> إلى:
+              </p>
+              <input
+                type="text" value={transferTarget} onChange={e => setTransferTarget(e.target.value)}
+                placeholder="رقم الطاولة الجديدة"
+                autoFocus
+                className="w-full rounded-xl border border-zinc-700 bg-zinc-800 px-4 py-3 text-sm text-white placeholder-zinc-600 focus:outline-none focus:border-amber-500/50"
+              />
+              <button onClick={handleTransfer} disabled={isTransferring || !transferTarget.trim()}
+                className="w-full rounded-xl py-3 text-sm font-bold text-white flex items-center justify-center gap-2 disabled:opacity-50"
+                style={{ background: 'linear-gradient(135deg,#2563eb,#1d4ed8)' }}>
+                {isTransferring ? <Loader2 className="h-4 w-4 animate-spin" /> : <><ArrowLeftRight className="h-4 w-4" /> نقل</>}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ══════════════ SHIFT OPEN MODAL ══════════════ */}
+      {showShiftOpen && (
+        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/90 backdrop-blur-sm p-4">
+          <div className="w-full max-w-sm rounded-2xl border border-zinc-700 bg-zinc-900 overflow-hidden">
+            <div className="flex items-center justify-between px-5 py-4 border-b border-zinc-700"
+              style={{ background: 'linear-gradient(135deg,#052e16,#14532d)' }}>
+              <div className="flex items-center gap-2">
+                <PlayCircle className="h-5 w-5 text-green-400" />
+                <p className="font-black text-white">فتح وردية جديدة</p>
+              </div>
+              <button onClick={() => setShowShiftOpen(false)}
+                className="flex h-8 w-8 items-center justify-center rounded-full text-zinc-400 hover:bg-black/30">
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+            <div className="p-5 space-y-4">
+              <div>
+                <p className="text-sm text-zinc-400 mb-1">الكاشير: <span className="text-white">{currentUser.name}</span></p>
+                <p className="text-xs text-zinc-500">{new Date().toLocaleDateString('ar-EG', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
+              </div>
+              <div>
+                <label className="text-xs text-zinc-500 mb-1.5 block">مبلغ البداية (ج.م)</label>
+                <input
+                  type="number" min="0" value={shiftStartInput}
+                  onChange={e => setShiftStartInput(e.target.value)}
+                  placeholder="0.00"
+                  autoFocus
+                  className="w-full rounded-xl border border-zinc-700 bg-zinc-800 px-4 py-3 text-sm text-white placeholder-zinc-600 focus:outline-none focus:border-green-500/50"
+                />
+              </div>
+              <button
+                onClick={() => {
+                  setShift({ isOpen: true, startAmount: parseFloat(shiftStartInput) || 0, openedAt: new Date(), cashierName: currentUser.name })
+                  setShowShiftOpen(false); setShiftStartInput('')
+                  toast.success('تم فتح الوردية')
+                }}
+                className="w-full rounded-xl py-3 text-sm font-bold text-white flex items-center justify-center gap-2"
+                style={{ background: 'linear-gradient(135deg,#16a34a,#15803d)' }}>
+                <PlayCircle className="h-4 w-4" /> فتح الوردية
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ══════════════ SHIFT CLOSE MODAL ══════════════ */}
+      {showShiftClose && shift && (
+        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/90 backdrop-blur-sm p-4">
+          <div className="w-full max-w-sm rounded-2xl border border-zinc-700 bg-zinc-900 overflow-hidden">
+            <div className="flex items-center justify-between px-5 py-4 border-b border-zinc-700"
+              style={{ background: 'linear-gradient(135deg,#1a0000,#2a0000)' }}>
+              <div className="flex items-center gap-2">
+                <StopCircle className="h-5 w-5 text-red-400" />
+                <p className="font-black text-white">إغلاق الوردية</p>
+              </div>
+              <button onClick={() => setShowShiftClose(false)}
+                className="flex h-8 w-8 items-center justify-center rounded-full text-zinc-400 hover:bg-black/30">
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+            <div className="p-5 space-y-3">
+              {(() => {
+                const t = shiftTotals()
+                const shiftDuration = Math.round((Date.now() - shift.openedAt.getTime()) / 60000)
+                return (
+                  <>
+                    <div className="rounded-xl border border-zinc-700 bg-zinc-800/50 p-3 space-y-2 text-sm">
+                      <div className="flex justify-between text-zinc-400">
+                        <span>الكاشير</span><span className="text-white">{shift.cashierName}</span>
+                      </div>
+                      <div className="flex justify-between text-zinc-400">
+                        <span>وقت الوردية</span><span className="text-white">{shiftDuration} دقيقة</span>
+                      </div>
+                      <div className="flex justify-between text-zinc-400">
+                        <span>مبلغ البداية</span><span className="text-white">{shift.startAmount.toFixed(2)} ج.م</span>
+                      </div>
+                    </div>
+                    <div className="rounded-xl border border-zinc-700 bg-zinc-800/50 p-3 space-y-2 text-sm">
+                      <p className="text-xs text-zinc-500 font-medium">تفصيل المبيعات</p>
+                      {PAYMENT_METHODS.map(pm => t.byMethod[pm.key] > 0 && (
+                        <div key={pm.key} className="flex justify-between">
+                          <span className="text-zinc-400 flex items-center gap-1">{pm.icon}<span className="text-xs">{pm.label}</span></span>
+                          <span className="text-white font-bold">{t.byMethod[pm.key].toFixed(2)} ج.م</span>
+                        </div>
+                      ))}
+                      <div className="flex justify-between text-amber-400">
+                        <span>إجمالي الخصومات</span><span>- {t.totalDiscounts.toFixed(2)} ج.م</span>
+                      </div>
+                      <div className="flex justify-between text-zinc-400">
+                        <span>عدد الفواتير</span><span className="text-white">{t.invoiceCount}</span>
+                      </div>
+                    </div>
+                    <div className="rounded-xl border border-green-500/30 bg-green-500/5 p-3 flex justify-between">
+                      <span className="font-bold text-white">الإجمالي</span>
+                      <span className="text-xl font-black text-green-400">{t.total.toFixed(2)} ج.م</span>
+                    </div>
+                    <div className="rounded-xl border border-zinc-700 bg-zinc-800/50 p-3 text-sm">
+                      <div className="flex justify-between text-zinc-400">
+                        <span>المتوقع (كاش)</span><span className="text-white">{(shift.startAmount + t.byMethod.cash).toFixed(2)} ج.م</span>
+                      </div>
+                    </div>
+                    <div className="flex gap-2">
+                      <button onClick={printShiftReport}
+                        className="flex-1 rounded-xl border border-zinc-700 py-2.5 text-xs font-medium text-zinc-300 hover:bg-zinc-800 flex items-center justify-center gap-1">
+                        <Printer className="h-3.5 w-3.5" /> طباعة التقرير
+                      </button>
+                      <button
+                        onClick={() => {
+                          setShift(null); setShowShiftClose(false)
+                          setSettlements([]); setPaidTables(new Set())
+                          toast.success('تم إغلاق الوردية')
+                        }}
+                        className="flex-1 rounded-xl py-2.5 text-xs font-bold text-white flex items-center justify-center gap-1"
+                        style={{ background: 'linear-gradient(135deg,#dc2626,#b91c1c)' }}>
+                        <StopCircle className="h-3.5 w-3.5" /> إغلاق وتصفير
+                      </button>
+                    </div>
+                  </>
+                )
+              })()}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ══════════════ RESERVATIONS MODAL ══════════════ */}
       {showReservations && (
         <div className="fixed inset-0 z-50 flex flex-col" dir="rtl">
           <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={() => setShowReservations(false)} />
           <div className="relative mt-auto w-full max-h-[85vh] flex flex-col rounded-t-3xl border-t border-zinc-700 bg-zinc-950 overflow-hidden">
-            {/* Handle */}
             <div className="flex items-center justify-center pt-3 pb-1">
               <div className="h-1 w-10 rounded-full bg-zinc-700" />
             </div>
-            {/* Title bar */}
             <div className="flex items-center justify-between px-5 py-3 border-b border-zinc-800">
               <div className="flex items-center gap-2">
                 <CalendarDays className="h-5 w-5 text-amber-400" />
@@ -871,109 +1623,56 @@ export function CashierDashboard({ currentUser, currentPlace, onLogout }: Cashie
                   </span>
                 )}
               </div>
-              <div className="flex items-center gap-2">
-                <button onClick={() => fetchReservations()} disabled={isFetchingReservations}
-                  className="flex items-center gap-1 rounded-full border border-zinc-700 bg-zinc-800 px-3 py-1.5 text-xs text-zinc-300 hover:bg-zinc-700 transition-colors">
-                  {isFetchingReservations
-                    ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                    : <RefreshCw className="h-3.5 w-3.5" />}
-                </button>
-                <button onClick={() => setShowReservations(false)}
-                  className="flex h-8 w-8 items-center justify-center rounded-full text-zinc-400 hover:bg-zinc-800 transition-colors">
-                  <X className="h-4 w-4" />
-                </button>
-              </div>
+              <button onClick={() => setShowReservations(false)}
+                className="flex h-8 w-8 items-center justify-center rounded-full text-zinc-400 hover:bg-zinc-800">
+                <X className="h-4 w-4" />
+              </button>
             </div>
-
-            {/* Content */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-3">
-              {isFetchingReservations && reservations.length === 0 ? (
-                <div className="flex items-center justify-center py-12">
-                  <Loader2 className="h-8 w-8 animate-spin text-amber-400" />
+            <div className="overflow-y-auto flex-1 p-4 space-y-3">
+              {isFetchingReservations ? (
+                <div className="flex items-center justify-center py-10">
+                  <Loader2 className="h-6 w-6 text-amber-400 animate-spin" />
                 </div>
               ) : reservations.length === 0 ? (
-                <div className="rounded-2xl border border-zinc-800 bg-zinc-900 p-10 text-center">
-                  <CalendarDays className="h-10 w-10 mx-auto mb-3 text-zinc-700" />
-                  <p className="text-zinc-500 text-sm">لا توجد حجوزات حتى الآن</p>
-                </div>
+                <div className="text-center py-10 text-zinc-500">لا توجد حجوزات</div>
               ) : (
-                reservations.map(r => {
-                  const dt = new Date(r.reserved_at)
-                  const dateStr = dt.toLocaleDateString('ar-EG', { weekday: 'short', month: 'short', day: 'numeric' })
-                  const timeStr = dt.toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' })
-                  const isPending = r.status === 'pending'
-                  const isConfirmed = r.status === 'confirmed'
-                  const isCancelled = r.status === 'cancelled'
-                  return (
-                    <div key={r.id}
-                      className={`rounded-2xl border overflow-hidden ${isPending ? 'border-orange-500/40 bg-orange-500/5' : isConfirmed ? 'border-green-500/30 bg-green-500/5' : 'border-zinc-700 bg-zinc-900 opacity-60'}`}>
-                      <div className="flex items-center justify-between px-4 py-3">
-                        <div className="flex items-center gap-2">
-                          {isPending && <span className="h-2 w-2 rounded-full bg-orange-400 animate-pulse" />}
-                          {isConfirmed && <CalendarCheck className="h-4 w-4 text-green-400" />}
-                          {isCancelled && <CalendarX className="h-4 w-4 text-zinc-500" />}
-                          <div>
-                            <p className="text-sm font-bold text-white">{r.customer_name}</p>
-                            <p className="text-[10px] text-zinc-400">{dateStr} — {timeStr}</p>
-                          </div>
-                        </div>
-                        <div className="text-left">
-                          <div className="flex items-center gap-1 text-xs text-zinc-400">
-                            <Users className="h-3.5 w-3.5" />
-                            <span>{r.party_size} أشخاص</span>
-                          </div>
-                          {r.customer_phone && (
-                            <div className="flex items-center gap-1 text-xs text-zinc-500 mt-0.5">
-                              <Phone className="h-3 w-3" />
-                              <span>{r.customer_phone}</span>
-                            </div>
-                          )}
-                          {isConfirmed && r.table_number && (
-                            <p className="text-xs font-bold text-green-400 mt-0.5">طاولة {r.table_number}</p>
-                          )}
-                        </div>
+                reservations.map(r => (
+                  <div key={r.id} className={`rounded-2xl border p-4 ${r.status === 'pending' ? 'border-orange-500/30 bg-orange-500/5' : r.status === 'confirmed' ? 'border-green-500/30 bg-green-500/5' : 'border-zinc-700 bg-zinc-900 opacity-60'}`}>
+                    <div className="flex items-start justify-between mb-3">
+                      <div>
+                        <p className="font-bold text-white">{r.customer_name}</p>
+                        {r.customer_phone && <p className="text-xs text-zinc-500">{r.customer_phone}</p>}
+                        <p className="text-xs text-zinc-500 mt-0.5">{r.party_size} أشخاص — {new Date(r.reserved_at).toLocaleString('ar-EG', { hour: '2-digit', minute: '2-digit', month: 'short', day: 'numeric' })}</p>
+                        {r.notes && <p className="text-xs text-zinc-400 mt-1 italic">"{r.notes}"</p>}
                       </div>
-                      {r.notes && (
-                        <div className="px-4 pb-2">
-                          <p className="text-[10px] text-zinc-500 bg-zinc-800 rounded-lg px-2 py-1">💬 {r.notes}</p>
-                        </div>
-                      )}
-                      {isPending && (
-                        <div className="px-4 pb-3 flex items-center gap-2">
-                          <input
-                            type="text"
-                            inputMode="numeric"
-                            placeholder="رقم الط��ولة"
-                            value={tableInputs[r.id] ?? ''}
-                            onChange={e => setTableInputs(prev => ({ ...prev, [r.id]: e.target.value }))}
-                            className="flex-1 rounded-xl border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm text-white placeholder:text-zinc-600 focus:border-amber-500 focus:outline-none"
-                          />
-                          <button
-                            onClick={() => handleConfirmReservation(r.id)}
-                            disabled={confirmingId === r.id}
-                            className="flex items-center gap-1.5 rounded-xl bg-amber-500 px-3 py-2 text-xs font-bold text-black hover:bg-amber-400 disabled:opacity-60 transition-colors">
-                            {confirmingId === r.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <CalendarCheck className="h-3.5 w-3.5" />}
-                            تأكيد
-                          </button>
-                          <button
-                            onClick={() => handleCancelReservation(r.id)}
-                            disabled={cancellingId === r.id}
-                            className="flex items-center gap-1.5 rounded-xl border border-zinc-700 bg-zinc-800 px-3 py-2 text-xs font-bold text-zinc-400 hover:bg-zinc-700 disabled:opacity-60 transition-colors">
-                            {cancellingId === r.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <X className="h-3.5 w-3.5" />}
-                            إلغاء
-                          </button>
-                        </div>
-                      )}
+                      <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${r.status === 'pending' ? 'bg-orange-500/20 text-orange-300' : r.status === 'confirmed' ? 'bg-green-500/20 text-green-300' : 'bg-zinc-700 text-zinc-400'}`}>
+                        {r.status === 'pending' ? 'انتظار' : r.status === 'confirmed' ? `✓ طاولة ${r.table_number}` : 'ملغي'}
+                      </span>
                     </div>
-                  )
-                })
+                    {r.status === 'pending' && (
+                      <div className="flex gap-2">
+                        <input
+                          value={tableInputs[r.id] ?? ''} onChange={e => setTableInputs(prev => ({ ...prev, [r.id]: e.target.value }))}
+                          placeholder="رقم الطاولة"
+                          className="flex-1 rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-1.5 text-sm text-white placeholder-zinc-600 focus:outline-none"
+                        />
+                        <button onClick={() => handleConfirmReservation(r.id)} disabled={confirmingId === r.id}
+                          className="rounded-lg px-3 py-1.5 text-xs font-bold text-white bg-green-600 hover:bg-green-500 disabled:opacity-50 flex items-center gap-1">
+                          {confirmingId === r.id ? <Loader2 className="h-3 w-3 animate-spin" /> : '✓'} تأكيد
+                        </button>
+                        <button onClick={() => handleCancelReservation(r.id)} disabled={cancellingId === r.id}
+                          className="rounded-lg px-3 py-1.5 text-xs font-bold text-red-400 border border-red-500/30 hover:bg-red-500/10 disabled:opacity-50">
+                          {cancellingId === r.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <X className="h-3 w-3" />}
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                ))
               )}
             </div>
           </div>
         </div>
       )}
-
-      <Toaster position="top-center" richColors />
     </div>
   )
 }
