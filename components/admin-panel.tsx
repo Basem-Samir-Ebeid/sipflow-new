@@ -91,26 +91,26 @@ export function AdminPanel({
     super_developer: {
       label: 'Super Developer',
       description: 'صلاحية كاملة لكل أجزاء النظام',
-      homeTab: 'stats',
-      tabs: ['stats', 'analytics', 'count', 'drinks', 'inventory', 'cashier', 'reservations', 'place-admins', 'staff', 'places', 'subscriptions', 'messages', 'settings', 'danger', 'live', 'permissions', 'simulator', 'templates'],
+      homeTab: 'analytics',
+      tabs: ['analytics', 'count', 'drinks', 'inventory', 'cashier', 'reservations', 'place-admins', 'staff', 'places', 'subscriptions', 'messages', 'settings', 'danger', 'live', 'permissions', 'simulator', 'templates'],
     },
     support_admin: {
       label: 'Support Admin',
       description: 'متابعة المشاكل والرسائل والبث المباشر بدون أدوات الإدارة الخطرة',
       homeTab: 'live',
-      tabs: ['live', 'messages', 'stats'],
+      tabs: ['live', 'messages'],
     },
     sales_admin: {
       label: 'Sales Admin',
       description: 'إدارة الأماكن والاشتراكات والحجوزات',
       homeTab: 'subscriptions',
-      tabs: ['places', 'subscriptions', 'reservations', 'stats'],
+      tabs: ['places', 'subscriptions', 'reservations'],
     },
     finance_admin: {
       label: 'Finance Admin',
       description: 'متابعة الإيرادات والتقارير والفواتير',
       homeTab: 'analytics',
-      tabs: ['stats', 'analytics', 'cashier', 'count'],
+      tabs: ['analytics', 'cashier', 'count'],
     },
   }
   const canAccessDevTab = (tab: string) => !isDevAdmin || devRoleMeta[devAdminRole].tabs.includes(tab)
@@ -1261,7 +1261,7 @@ export function AdminPanel({
       setSettingPasswordForUser(null)
       setNewUserPassword('')
       setConfirmUserPassword('')
-      setActiveAdminTab('stats')
+      setActiveAdminTab(isDevAdmin ? 'staff' : 'stats')
     }
   }
 
@@ -1327,7 +1327,7 @@ export function AdminPanel({
       setMessageContent('')
       setMessageSent(true)
       setTimeout(() => setMessageSent(false), 3000)
-      setActiveAdminTab('stats')
+      setActiveAdminTab(isDevAdmin ? 'messages' : 'stats')
     } catch (err) {
       console.error('Error sending message:', err)
     } finally {
@@ -1371,7 +1371,7 @@ const handleSaveSettings = async () => {
     // Placeholder for future settings
     setSettingsSaved(true)
     setTimeout(() => setSettingsSaved(false), 3000)
-    setActiveAdminTab('stats');
+    setActiveAdminTab(isDevAdmin ? 'settings' : 'stats');
   } catch (err) {
     console.error('Error saving settings:', err)
   } finally {
@@ -1639,7 +1639,6 @@ const handleSaveSettings = async () => {
       fetchPlaces().then(list => {
         if (list.length > 0) {
           const fid = list[0].id
-          setStatsPlaceId(prev => { const chosen = prev || fid; fetchStatsForPlace(chosen); return chosen })
           setDevDrinkPlaceId(prev => prev || fid)
           setResetPlaceId(prev => prev || fid)
           setInventoryDevPlaceId(prev => prev || fid)
@@ -1853,7 +1852,6 @@ const handleSaveSettings = async () => {
   const handleTabChange = (v: string) => {
     if (isDevAdmin && !canAccessDevTab(v)) return
     setActiveAdminTab(v)
-    if (v === 'stats' && isDevAdmin) fetchPlaces().then(list => { if (list.length > 0) setStatsPlaceId(prev => { const chosen = prev || list[0].id; fetchStatsForPlace(chosen); return chosen }) })
     if (v === 'staff') fetchStaffUsers()
     if (v === 'inventory') { fetchInventory(); if (isDevAdmin) fetchPlaces().then(list => { if (list.length > 0) setInventoryDevPlaceId(prev => prev || list[0].id) }) }
     if (v === 'places') fetchPlaces().then(list => { const m: Record<string, boolean> = {}; list.forEach((p: Place) => { m[p.id] = p.order_tracking_enabled !== false }); setOrderTrackingMap(m) })
@@ -2059,9 +2057,8 @@ const handleSaveSettings = async () => {
               {/* Analytics group */}
               <div>
                 <p className="text-[9px] font-semibold uppercase tracking-widest px-1 mb-1" style={{ color: '#7c3aed' }}>Analytics</p>
-                <div className="grid grid-cols-3 gap-1.5">
+                <div className="grid grid-cols-2 gap-1.5">
                   {[
-                    { tab: 'stats',     icon: <BarChart3 className="h-3.5 w-3.5" />,   label: 'Stats',       ac: '#7c3aed' },
                     { tab: 'analytics', icon: <TrendingUp className="h-3.5 w-3.5" />,  label: 'Reports',     ac: '#7c3aed' },
                     { tab: 'count',     icon: <CheckCircle2 className="h-3.5 w-3.5" />,label: 'Delivered',   ac: '#7c3aed' },
                   ].filter(item => canAccessDevTab(item.tab)).map(item => (
@@ -2299,7 +2296,6 @@ const handleSaveSettings = async () => {
         {isDevAdmin ? (
           <TabsList className="hidden">
             {[
-              ['stats', 'Stats'],
               ['analytics', 'Reports'],
               ['count', 'Delivered'],
               ['drinks', 'Drinks'],
