@@ -2058,12 +2058,12 @@ const handleSaveSettings = async () => {
 
               {/* Analytics group */}
               <div>
-                <p className="text-[9px] font-semibold uppercase tracking-widest px-1 mb-1" style={{ color: '#7c3aed' }}>تحليلات</p>
+                <p className="text-[9px] font-semibold uppercase tracking-widest px-1 mb-1" style={{ color: '#7c3aed' }}>Analytics</p>
                 <div className="grid grid-cols-3 gap-1.5">
                   {[
-                    { tab: 'stats',     icon: <BarChart3 className="h-3.5 w-3.5" />,   label: 'الإحصائيات', ac: '#7c3aed' },
-                    { tab: 'analytics', icon: <TrendingUp className="h-3.5 w-3.5" />,  label: 'التقارير',    ac: '#7c3aed' },
-                    { tab: 'count',     icon: <CheckCircle2 className="h-3.5 w-3.5" />,label: 'المُسلَّم',   ac: '#7c3aed' },
+                    { tab: 'stats',     icon: <BarChart3 className="h-3.5 w-3.5" />,   label: 'Stats',       ac: '#7c3aed' },
+                    { tab: 'analytics', icon: <TrendingUp className="h-3.5 w-3.5" />,  label: 'Reports',     ac: '#7c3aed' },
+                    { tab: 'count',     icon: <CheckCircle2 className="h-3.5 w-3.5" />,label: 'Delivered',   ac: '#7c3aed' },
                   ].filter(item => canAccessDevTab(item.tab)).map(item => (
                     <button key={item.tab} onClick={() => handleTabChange(item.tab)}
                       className="flex flex-col items-center gap-1 rounded-xl py-2.5 px-1 transition-all duration-150 hover:scale-105 active:scale-95"
@@ -2082,13 +2082,13 @@ const handleSaveSettings = async () => {
 
               {/* Content group */}
               <div>
-                <p className="text-[9px] font-semibold uppercase tracking-widest px-1 mb-1" style={{ color: '#b45309' }}>المحتوى</p>
+                <p className="text-[9px] font-semibold uppercase tracking-widest px-1 mb-1" style={{ color: '#b45309' }}>Content</p>
                 <div className="grid grid-cols-4 gap-1.5">
                   {[
-                    { tab: 'drinks',       icon: <Coffee className="h-3.5 w-3.5" />,      label: 'الأصناف',   ac: '#d97706' },
-                    { tab: 'inventory',    icon: <Package className="h-3.5 w-3.5" />,     label: 'المخزون',   ac: '#d97706' },
-                    { tab: 'cashier',      icon: <Banknote className="h-3.5 w-3.5" />,    label: 'الكاشير',   ac: '#d97706' },
-                    { tab: 'reservations', icon: <CalendarDays className="h-3.5 w-3.5" />,label: 'الحجوزات',  ac: '#d97706' },
+                    { tab: 'drinks',       icon: <Coffee className="h-3.5 w-3.5" />,      label: 'Drinks',       ac: '#d97706' },
+                    { tab: 'inventory',    icon: <Package className="h-3.5 w-3.5" />,     label: 'Inventory',    ac: '#d97706' },
+                    { tab: 'cashier',      icon: <Banknote className="h-3.5 w-3.5" />,    label: 'Cashier',      ac: '#d97706' },
+                    { tab: 'reservations', icon: <CalendarDays className="h-3.5 w-3.5" />,label: 'Reservations', ac: '#d97706' },
                   ].filter(item => canAccessDevTab(item.tab)).map(item => (
                     <button key={item.tab} onClick={() => handleTabChange(item.tab)}
                       className="flex flex-col items-center gap-1 rounded-xl py-2.5 px-1 transition-all duration-150 hover:scale-105 active:scale-95"
@@ -2107,12 +2107,12 @@ const handleSaveSettings = async () => {
 
               {/* People group */}
               <div>
-                <p className="text-[9px] font-semibold uppercase tracking-widest px-1 mb-1" style={{ color: '#047857' }}>الأشخاص</p>
+                <p className="text-[9px] font-semibold uppercase tracking-widest px-1 mb-1" style={{ color: '#047857' }}>People</p>
                 <div className="grid grid-cols-4 gap-1.5">
                   {[
-                    { tab: 'place-admins', icon: <UserCog className="h-3.5 w-3.5" />,   label: 'الأدمنز',   ac: '#059669' },
-                    { tab: 'staff',        icon: <Users className="h-3.5 w-3.5" />,      label: 'Staff',     ac: '#059669' },
-                    { tab: 'places',       icon: <Link2 className="h-3.5 w-3.5" />,      label: 'الأماكن',  ac: '#059669' },
+                    { tab: 'place-admins', icon: <UserCog className="h-3.5 w-3.5" />,   label: 'Admins',    ac: '#059669' },
+                    { tab: 'staff',        icon: <Users className="h-3.5 w-3.5" />,      label: 'Employees', ac: '#059669' },
+                    { tab: 'places',       icon: <Link2 className="h-3.5 w-3.5" />,      label: 'Places',    ac: '#059669' },
                   ].filter(item => canAccessDevTab(item.tab)).map(item => (
                     <button key={item.tab} onClick={() => handleTabChange(item.tab)}
                       className="flex flex-col items-center gap-1 rounded-xl py-2.5 px-1 transition-all duration-150 hover:scale-105 active:scale-95"
@@ -2132,10 +2132,10 @@ const handleSaveSettings = async () => {
               {/* Subscriptions group */}
               {canAccessDevTab('subscriptions') && (
                 <div>
-                  <p className="text-[9px] font-semibold uppercase tracking-widest px-1 mb-1" style={{ color: '#d97706' }}>الباقات</p>
+                  <p className="text-[9px] font-semibold uppercase tracking-widest px-1 mb-1" style={{ color: '#d97706' }}>Packages</p>
                   <div className="grid grid-cols-2 gap-1.5">
                     {[
-                      { tab: 'subscriptions', icon: <Award className="h-3.5 w-3.5" />, label: 'الاشتراكات', ac: '#d97706' },
+                      { tab: 'subscriptions', icon: <Award className="h-3.5 w-3.5" />, label: 'Subscriptions', ac: '#d97706' },
                     ].map(item => (
                       <button key={item.tab} onClick={() => handleTabChange(item.tab)}
                         className="relative flex flex-col items-center gap-1 rounded-xl py-2.5 px-1 transition-all duration-150 hover:scale-105 active:scale-95"
@@ -2161,11 +2161,11 @@ const handleSaveSettings = async () => {
               {/* Dev Tools group */}
               {canAccessDevTab('simulator') && (
                 <div>
-                  <p className="text-[9px] font-semibold uppercase tracking-widest px-1 mb-1" style={{ color: '#6366f1' }}>أدوات المطور</p>
+                  <p className="text-[9px] font-semibold uppercase tracking-widest px-1 mb-1" style={{ color: '#6366f1' }}>Dev Tools</p>
                   <div className="grid grid-cols-2 gap-1.5">
                     {[
-                      { tab: 'simulator', icon: <span className="text-sm">🎮</span>, label: 'المحاكي', ac: '#6366f1' },
-                      { tab: 'templates', icon: <span className="text-sm">📦</span>, label: 'القوالب', ac: '#a855f7' },
+                      { tab: 'simulator', icon: <span className="text-sm">🎮</span>, label: 'Simulator', ac: '#6366f1' },
+                      { tab: 'templates', icon: <span className="text-sm">📦</span>, label: 'Templates',  ac: '#a855f7' },
                     ].map(item => (
                       <button key={item.tab} onClick={() => handleTabChange(item.tab)}
                         className="flex flex-col items-center gap-1 rounded-xl py-2.5 px-1 transition-all duration-150 hover:scale-105 active:scale-95"
@@ -2185,13 +2185,13 @@ const handleSaveSettings = async () => {
 
               {/* System group */}
               <div>
-                <p className="text-[9px] font-semibold uppercase tracking-widest px-1 mb-1" style={{ color: '#0369a1' }}>النظام</p>
+                <p className="text-[9px] font-semibold uppercase tracking-widest px-1 mb-1" style={{ color: '#0369a1' }}>System</p>
                 <div className="grid grid-cols-3 gap-1.5">
                   {[
-                    { tab: 'messages', icon: <MessageSquare className="h-3.5 w-3.5" />, label: 'الرسائل',   ac: '#0284c7', badge: devNotifsUnread > 0 ? devNotifsUnread : 0 },
-                    { tab: 'settings', icon: <Settings2 className="h-3.5 w-3.5" />,     label: 'الإعدادات', ac: '#0284c7', badge: 0 },
-                    { tab: 'permissions', icon: <ShieldCheck className="h-3.5 w-3.5" />, label: 'الصلاحيات', ac: '#0284c7', badge: 0 },
-                    { tab: 'danger',   icon: <Trash2 className="h-3.5 w-3.5" />,        label: 'الخطرة',    ac: '#dc2626', badge: 0 },
+                    { tab: 'messages',    icon: <MessageSquare className="h-3.5 w-3.5" />, label: 'Messages',    ac: '#0284c7', badge: devNotifsUnread > 0 ? devNotifsUnread : 0 },
+                    { tab: 'settings',    icon: <Settings2 className="h-3.5 w-3.5" />,     label: 'Settings',    ac: '#0284c7', badge: 0 },
+                    { tab: 'permissions', icon: <ShieldCheck className="h-3.5 w-3.5" />,   label: 'Permissions', ac: '#0284c7', badge: 0 },
+                    { tab: 'danger',      icon: <Trash2 className="h-3.5 w-3.5" />,        label: 'Danger',      ac: '#dc2626', badge: 0 },
                   ].filter(item => canAccessDevTab(item.tab)).map(item => (
                     <button key={item.tab} onClick={() => handleTabChange(item.tab)}
                       className="relative flex flex-col items-center gap-1 rounded-xl py-2.5 px-1 transition-all duration-150 hover:scale-105 active:scale-95"
@@ -2299,21 +2299,21 @@ const handleSaveSettings = async () => {
         {isDevAdmin ? (
           <TabsList className="hidden">
             {[
-              ['stats', 'الإحصائيات'],
-              ['analytics', 'التقارير'],
-              ['count', 'المسلم'],
-              ['drinks', 'الأصناف'],
-              ['inventory', 'المخزون'],
-              ['cashier', 'الكاشير'],
-              ['reservations', 'الحجوزات'],
-              ['place-admins', 'أدمنز الأماكن'],
-              ['staff', 'Staff'],
-              ['places', 'الأماكن'],
-              ['subscriptions', 'الاشتراكات'],
-              ['messages', 'الرسائل'],
-              ['settings', 'الإعدادات'],
-              ['permissions', 'الصلاحيات'],
-              ['danger', 'الخطرة'],
+              ['stats', 'Stats'],
+              ['analytics', 'Reports'],
+              ['count', 'Delivered'],
+              ['drinks', 'Drinks'],
+              ['inventory', 'Inventory'],
+              ['cashier', 'Cashier'],
+              ['reservations', 'Reservations'],
+              ['place-admins', 'Admins'],
+              ['staff', 'Employees'],
+              ['places', 'Places'],
+              ['subscriptions', 'Subscriptions'],
+              ['messages', 'Messages'],
+              ['settings', 'Settings'],
+              ['permissions', 'Permissions'],
+              ['danger', 'Danger'],
               ['live', 'Live'],
             ].filter(([value]) => canAccessDevTab(value)).map(([value, label]) => (
               <TabsTrigger key={value} value={value}>{label}</TabsTrigger>
@@ -2324,26 +2324,26 @@ const handleSaveSettings = async () => {
           <TabsList className="flex w-full h-auto flex-col gap-2 bg-transparent border-0 p-0 mb-3">
             {/* Row 1 — Operations */}
             <div className="flex items-center gap-1 w-full">
-              <span className="text-[9px] font-black tracking-widest shrink-0 px-1" style={{ color: 'rgba(212,160,23,0.35)' }}>تشغيل</span>
+              <span className="text-[9px] font-black tracking-widest shrink-0 px-1" style={{ color: 'rgba(212,160,23,0.35)' }}>Operations</span>
               <div className="flex-1 h-px" style={{ background: 'rgba(212,160,23,0.1)' }} />
             </div>
             <div className="grid grid-cols-4 gap-1.5 w-full">
               {[
                 {
-                  value: 'stats', icon: <BarChart3 className="h-4 w-4" />, label: 'إحصائيات',
+                  value: 'stats', icon: <BarChart3 className="h-4 w-4" />, label: 'Stats',
                   active: 'rgba(251,191,36,0.2)', activeBorder: 'rgba(251,191,36,0.5)', activeText: '#fbbf24', dot: null
                 },
                 {
-                  value: 'tables', icon: <TableProperties className="h-4 w-4" />, label: 'الطاولات',
+                  value: 'tables', icon: <TableProperties className="h-4 w-4" />, label: 'Tables',
                   active: 'rgba(251,191,36,0.2)', activeBorder: 'rgba(251,191,36,0.5)', activeText: '#fbbf24',
                   dot: (() => { const n = new Set(orders.filter(o => o.table_number && o.status !== 'completed').map(o => o.table_number)).size; return n > 0 ? { color: '#34d399', label: n } : null })()
                 },
                 {
-                  value: 'cashier', icon: <Banknote className="h-4 w-4" />, label: 'الكاشير',
+                  value: 'cashier', icon: <Banknote className="h-4 w-4" />, label: 'Cashier',
                   active: 'rgba(251,191,36,0.2)', activeBorder: 'rgba(251,191,36,0.5)', activeText: '#fbbf24', dot: null
                 },
                 {
-                  value: 'reservations', icon: <CalendarDays className="h-4 w-4" />, label: 'الحجوزات',
+                  value: 'reservations', icon: <CalendarDays className="h-4 w-4" />, label: 'Reservations',
                   active: 'rgba(251,191,36,0.2)', activeBorder: 'rgba(251,191,36,0.5)', activeText: '#fbbf24', dot: null
                 },
               ].map(t => (
@@ -2368,22 +2368,22 @@ const handleSaveSettings = async () => {
 
             {/* Row 2 — Menu */}
             <div className="flex items-center gap-1 w-full mt-1">
-              <span className="text-[9px] font-black tracking-widest shrink-0 px-1" style={{ color: 'rgba(212,160,23,0.35)' }}>المنيو</span>
+              <span className="text-[9px] font-black tracking-widest shrink-0 px-1" style={{ color: 'rgba(212,160,23,0.35)' }}>Menu</span>
               <div className="flex-1 h-px" style={{ background: 'rgba(212,160,23,0.1)' }} />
             </div>
             <div className="grid grid-cols-3 gap-1.5 w-full">
               {[
                 {
-                  value: 'drinks', icon: <Coffee className="h-4 w-4" />, label: 'الأصناف',
+                  value: 'drinks', icon: <Coffee className="h-4 w-4" />, label: 'Drinks',
                   active: 'rgba(251,146,60,0.18)', activeBorder: 'rgba(251,146,60,0.45)', activeText: '#fb923c', dot: null
                 },
                 {
-                  value: 'inventory', icon: <Package className="h-4 w-4" />, label: 'المخزون',
+                  value: 'inventory', icon: <Package className="h-4 w-4" />, label: 'Inventory',
                   active: 'rgba(251,146,60,0.18)', activeBorder: 'rgba(251,146,60,0.45)', activeText: '#fb923c',
                   dot: (() => { const n = drinks.filter(d => (inventoryMap[d.id] ?? 0) < lowStockThreshold && (inventoryMap[d.id] ?? 0) >= 0).length; return n > 0 ? { color: '#f59e0b', label: n } : null })()
                 },
                 {
-                  value: 'analytics', icon: <TrendingUp className="h-4 w-4" />, label: 'التقارير',
+                  value: 'analytics', icon: <TrendingUp className="h-4 w-4" />, label: 'Reports',
                   active: 'rgba(251,146,60,0.18)', activeBorder: 'rgba(251,146,60,0.45)', activeText: '#fb923c', dot: null
                 },
               ].map(t => (
@@ -2408,25 +2408,25 @@ const handleSaveSettings = async () => {
 
             {/* Row 3 — System */}
             <div className="flex items-center gap-1 w-full mt-1">
-              <span className="text-[9px] font-black tracking-widest shrink-0 px-1" style={{ color: 'rgba(212,160,23,0.35)' }}>النظام</span>
+              <span className="text-[9px] font-black tracking-widest shrink-0 px-1" style={{ color: 'rgba(212,160,23,0.35)' }}>System</span>
               <div className="flex-1 h-px" style={{ background: 'rgba(212,160,23,0.1)' }} />
             </div>
             <div className="grid grid-cols-4 gap-1.5 w-full">
               {[
                 {
-                  value: 'staff', icon: <UserCog className="h-4 w-4" />, label: 'الموظفين',
+                  value: 'staff', icon: <UserCog className="h-4 w-4" />, label: 'Employees',
                   active: 'rgba(52,211,153,0.15)', activeBorder: 'rgba(52,211,153,0.4)', activeText: '#34d399', dot: null
                 },
                 {
-                  value: 'messages', icon: <MessageSquare className="h-4 w-4" />, label: 'الرسائل',
+                  value: 'messages', icon: <MessageSquare className="h-4 w-4" />, label: 'Messages',
                   active: 'rgba(96,165,250,0.15)', activeBorder: 'rgba(96,165,250,0.4)', activeText: '#60a5fa', dot: null
                 },
                 {
-                  value: 'settings', icon: <Settings2 className="h-4 w-4" />, label: 'الإعدادات',
+                  value: 'settings', icon: <Settings2 className="h-4 w-4" />, label: 'Settings',
                   active: 'rgba(96,165,250,0.15)', activeBorder: 'rgba(96,165,250,0.4)', activeText: '#60a5fa', dot: null
                 },
                 {
-                  value: 'danger', icon: <Trash2 className="h-4 w-4" />, label: 'الخطرة',
+                  value: 'danger', icon: <Trash2 className="h-4 w-4" />, label: 'Danger',
                   active: 'rgba(248,113,113,0.18)', activeBorder: 'rgba(248,113,113,0.45)', activeText: '#f87171', dot: null
                 },
               ].map(t => (
