@@ -634,12 +634,13 @@ export function AdminPanel({
   type PlanConfigEdit = {
     maxTables: string; maxStaff: string; maxProducts: string
     reservationsEnabled: boolean; reportsEnabled: boolean; durationDays: string
+    customPrice: string
   }
   const DEFAULT_PLAN_EDITS: Record<string, PlanConfigEdit> = {
-    free:    { maxTables: '10',  maxStaff: '3',  maxProducts: '30',  reservationsEnabled: false, reportsEnabled: false, durationDays: '' },
-    monthly: { maxTables: '20',  maxStaff: '10', maxProducts: '100', reservationsEnabled: true,  reportsEnabled: true,  durationDays: '30' },
-    yearly:  { maxTables: '30',  maxStaff: '15', maxProducts: '200', reservationsEnabled: true,  reportsEnabled: true,  durationDays: '365' },
-    premium: { maxTables: '',    maxStaff: '',   maxProducts: '',    reservationsEnabled: true,  reportsEnabled: true,  durationDays: '' },
+    free:    { maxTables: '10',  maxStaff: '3',  maxProducts: '30',  reservationsEnabled: false, reportsEnabled: false, durationDays: '',    customPrice: '' },
+    monthly: { maxTables: '20',  maxStaff: '10', maxProducts: '100', reservationsEnabled: true,  reportsEnabled: true,  durationDays: '30',  customPrice: '' },
+    yearly:  { maxTables: '30',  maxStaff: '15', maxProducts: '200', reservationsEnabled: true,  reportsEnabled: true,  durationDays: '365', customPrice: '' },
+    premium: { maxTables: '',    maxStaff: '',   maxProducts: '',    reservationsEnabled: true,  reportsEnabled: true,  durationDays: '',    customPrice: '' },
   }
   const [planEdits, setPlanEdits] = useState<Record<string, PlanConfigEdit>>(DEFAULT_PLAN_EDITS)
   const [showPlanEditor, setShowPlanEditor] = useState(false)
@@ -1586,6 +1587,7 @@ const handleSaveSettings = async () => {
           reservationsEnabled: edit.reservationsEnabled,
           reportsEnabled:      edit.reportsEnabled,
           durationDays:        edit.durationDays === '' ? null : Number(edit.durationDays),
+          customPrice:         edit.customPrice === '' ? null : Number(edit.customPrice),
         }
       }
       const res = await fetch('/api/subscription-plans', {
@@ -6483,7 +6485,8 @@ const handleSaveSettings = async () => {
                               <p className="text-[11px] font-bold" style={{ color: p.color }}>{p.label}</p>
                               {e && (
                                 <p className="text-[10px] font-black shrink-0" style={{ color: p.color }}>
-                                  {calcSuggestedPrice(e).total} ج
+                                  {e.customPrice !== '' ? Number(e.customPrice) : calcSuggestedPrice(e).total} ج
+                                  {e.customPrice !== '' && <span className="text-[8px] mr-0.5" style={{ color: 'rgba(255,255,255,0.35)' }}>✏️</span>}
                                 </p>
                               )}
                             </div>
@@ -6593,7 +6596,7 @@ const handleSaveSettings = async () => {
                                         </div>
                                       ))}
                                     </div>
-                                    <div className="flex items-end justify-between">
+                                    <div className="flex items-end justify-between mb-2.5">
                                       <div>
                                         {hasDuration && pricing.total !== pricing.monthly && (
                                           <p className="text-[9px]" style={{ color: 'rgba(255,255,255,0.3)' }}>
@@ -6606,6 +6609,26 @@ const handleSaveSettings = async () => {
                                         <p className="text-lg font-black leading-none" style={{ color: p.color }}>{pricing.total}</p>
                                         <p className="text-[9px] font-bold" style={{ color: `rgba(${p.rgb},0.7)` }}>جنيه</p>
                                       </div>
+                                    </div>
+                                    <div className="flex items-center gap-2 pt-2" style={{ borderTop: '1px solid rgba(255,255,255,0.07)' }}>
+                                      <span className="text-[10px] shrink-0" style={{ color: 'rgba(255,255,255,0.4)' }}>✏️ تعديل السعر</span>
+                                      <Input
+                                        type="number" min="0"
+                                        value={(e as any).customPrice ?? ''}
+                                        onChange={ev => setField('customPrice', ev.target.value)}
+                                        placeholder={String(pricing.total)}
+                                        className="h-7 text-xs rounded-lg text-center flex-1"
+                                        style={{ background: `rgba(${p.rgb},0.08)`, border: `1px solid rgba(${p.rgb},0.3)`, color: p.color }}
+                                      />
+                                      <span className="text-[10px] shrink-0" style={{ color: 'rgba(255,255,255,0.4)' }}>ج</span>
+                                      {(e as any).customPrice !== '' && (
+                                        <button
+                                          onClick={() => setField('customPrice', '')}
+                                          className="text-[9px] px-1.5 py-0.5 rounded-md shrink-0"
+                                          style={{ background: 'rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.35)' }}>
+                                          إعادة
+                                        </button>
+                                      )}
                                     </div>
                                   </div>
                                 )
