@@ -324,7 +324,7 @@ export default function WaiterPage() {
     try {
       await Promise.all(group.items.filter(i => i.status === 'ready').map(i => fetch(`/api/orders/${i.id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status: 'on_the_way' }) })))
       toast.success(`${group.tableNumber} في الطريق إلى الطاولة 🚶`)
-      try { await fetch('/api/messages', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ user_id: group.userId || undefined, message: `الويتر بياخد الطلبات للطاولة ${group.tableNumber}`, type: 'on_way' }) }) } catch {}
+      try { await fetch('/api/messages', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ user_id: group.userId || undefined, message: `الكابتن بياخد الطلبات للطاولة ${group.tableNumber}`, type: 'on_way' }) }) } catch {}
       fetchOrders()
     } catch { toast.error('حصل خطأ، حاول تاني') }
   }
@@ -488,7 +488,7 @@ export default function WaiterPage() {
               </div>
               <div className="flex items-center justify-end gap-1 mt-0.5">
                 <span className="h-1.5 w-1.5 rounded-full bg-amber-500 animate-pulse" />
-                <span className="text-[11px] text-amber-500 font-medium">نشط · ويتر</span>
+                <span className="text-[11px] text-amber-500 font-medium">نشط · كابتن</span>
               </div>
             </div>
             <div className="h-9 w-9 rounded-xl overflow-hidden shrink-0" style={{ border: '1px solid rgba(212,160,23,0.25)', boxShadow: '0 0 12px rgba(212,160,23,0.12)' }}>
