@@ -643,6 +643,37 @@ export function AdminPanel({
   const [isSavingPlans, setIsSavingPlans] = useState(false)
   const [planSaveMsg, setPlanSaveMsg] = useState('')
 
+  const calcSuggestedPrice = (e: PlanConfigEdit): { breakdown: { label: string; amount: number }[]; total: number; monthly: number } => {
+    const tableRate = 5
+    const staffRate = 10
+    const productRate = 0.5
+    const reservationsAdd = 70
+    const reportsAdd = 50
+    const tables = e.maxTables ? Math.min(parseInt(e.maxTables) || 0, 200) : 60
+    const staff = e.maxStaff ? Math.min(parseInt(e.maxStaff) || 0, 100) : 25
+    const products = e.maxProducts ? Math.min(parseInt(e.maxProducts) || 0, 2000) : 600
+    const days = e.durationDays ? parseInt(e.durationDays) || 30 : 30
+    const multiplier = days / 30
+    const tablesAmt = Math.round(tables * tableRate)
+    const staffAmt = Math.round(staff * staffRate)
+    const productsAmt = Math.round(products * productRate)
+    const resAmt = e.reservationsEnabled ? reservationsAdd : 0
+    const repAmt = e.reportsEnabled ? reportsAdd : 0
+    const monthly = tablesAmt + staffAmt + productsAmt + resAmt + repAmt
+    const total = Math.round(monthly * multiplier)
+    return {
+      breakdown: [
+        { label: `${e.maxTables || '∞'} طاولة`, amount: tablesAmt },
+        { label: `${e.maxStaff || '∞'} موظف`, amount: staffAmt },
+        { label: `${e.maxProducts || '∞'} منتج`, amount: productsAmt },
+        ...(e.reservationsEnabled ? [{ label: 'الحجوزات', amount: resAmt }] : []),
+        ...(e.reportsEnabled ? [{ label: 'التقارير', amount: repAmt }] : []),
+      ],
+      total,
+      monthly,
+    }
+  }
+
   // Analytics state
   type AnalyticsData = {
     global: boolean
@@ -6338,8 +6369,15 @@ const handleSaveSettings = async () => {
                         <div key={p.key} className="rounded-xl p-2.5 flex items-center gap-2"
                           style={{ background: `rgba(${rgb},0.08)`, border: `1px solid rgba(${rgb},0.2)` }}>
                           <span className="text-base shrink-0">{p.emoji}</span>
-                          <div className="min-w-0">
-                            <p className="text-[11px] font-bold" style={{ color: p.color }}>{p.label}</p>
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-center justify-between gap-1">
+                              <p className="text-[11px] font-bold" style={{ color: p.color }}>{p.label}</p>
+                              {e && (
+                                <p className="text-[10px] font-black shrink-0" style={{ color: p.color }}>
+                                  {calcSuggestedPrice(e).total} ج
+                                </p>
+                              )}
+                            </div>
                             <p className="text-[9px] truncate" style={{ color: 'rgba(255,255,255,0.35)' }}>
                               {e ? `${e.maxTables || '∞'} ط · ${e.maxStaff || '∞'} م · ${e.maxProducts || '∞'} منتج` : '...'}
                             </p>
@@ -6425,6 +6463,44 @@ const handleSaveSettings = async () => {
                                   </button>
                                 </div>
                               </div>
+
+                              {/* Pricing estimate */}
+                              {(() => {
+                                const pricing = calcSuggestedPrice(e as PlanConfigEdit)
+                                const hasDuration = !!(e as any).durationDays
+                                return (
+                                  <div className="rounded-xl p-3 mt-1" style={{ background: `rgba(${p.rgb},0.06)`, border: `1px solid rgba(${p.rgb},0.18)` }}>
+                                    <div className="flex items-center justify-between mb-2">
+                                      <span className="text-[10px] font-bold" style={{ color: `rgba(255,255,255,0.5)` }}>💰 التسعير المقترح</span>
+                                      <span className="text-[9px] px-1.5 py-0.5 rounded-full" style={{ background: 'rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.3)' }}>
+                                        {hasDuration ? `كل ${(e as any).durationDays} يوم` : 'شهرياً'}
+                                      </span>
+                                    </div>
+                                    <div className="flex flex-wrap gap-1.5 mb-2.5">
+                                      {pricing.breakdown.map((item, i) => (
+                                        <div key={i} className="flex items-center gap-1 rounded-lg px-2 py-1" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}>
+                                          <span className="text-[9px]" style={{ color: 'rgba(255,255,255,0.4)' }}>{item.label}</span>
+                                          <span className="text-[9px] font-bold" style={{ color: p.color }}>+{item.amount} ج</span>
+                                        </div>
+                                      ))}
+                                    </div>
+                                    <div className="flex items-end justify-between">
+                                      <div>
+                                        {hasDuration && pricing.total !== pricing.monthly && (
+                                          <p className="text-[9px]" style={{ color: 'rgba(255,255,255,0.3)' }}>
+                                            {pricing.monthly} ج/شهر × {Math.round(parseInt((e as any).durationDays) / 30 * 10) / 10}
+                                          </p>
+                                        )}
+                                        <p className="text-[10px]" style={{ color: 'rgba(255,255,255,0.35)' }}>السعر الكلي للفترة</p>
+                                      </div>
+                                      <div className="text-left">
+                                        <p className="text-lg font-black leading-none" style={{ color: p.color }}>{pricing.total}</p>
+                                        <p className="text-[9px] font-bold" style={{ color: `rgba(${p.rgb},0.7)` }}>جنيه</p>
+                                      </div>
+                                    </div>
+                                  </div>
+                                )
+                              })()}
                             </div>
                           )
                         })}
