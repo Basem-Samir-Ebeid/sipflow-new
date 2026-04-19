@@ -25,7 +25,7 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Plus, Trash2, Pencil, Upload, RefreshCw, Users, Coffee, Key, BarChart3, TrendingUp, Award, Clock, Send, MessageSquare, Settings2, Hash, UserPlus, UserCog, Minus, Package, Banknote, CheckCircle2, Hourglass, TableProperties, Copy, ExternalLink, Link2, Eye, EyeOff, QrCode, CalendarDays, CalendarCheck, CalendarX, Download, Loader2, Activity, ShieldCheck, ChevronLeft, Radio, Camera, UserCircle } from 'lucide-react'
+import { Plus, Trash2, Pencil, Upload, RefreshCw, Users, Coffee, Key, BarChart3, TrendingUp, Award, Clock, Send, MessageSquare, Settings2, Hash, UserPlus, UserCog, Minus, Package, Banknote, CheckCircle2, Hourglass, TableProperties, Copy, ExternalLink, Link2, Eye, EyeOff, QrCode, CalendarDays, CalendarCheck, CalendarX, Download, Loader2, Activity, ShieldCheck, ChevronLeft, Radio, Camera, UserCircle, Bell, AlertTriangle, BrainCircuit, Siren } from 'lucide-react'
 import { Checkbox } from '@/components/ui/checkbox'
 import Image from 'next/image'
 import { LivePlacesHub } from '@/components/LivePlacesHub'
@@ -92,7 +92,7 @@ export function AdminPanel({
       label: 'Super Developer',
       description: 'صلاحية كاملة لكل أجزاء النظام',
       homeTab: 'analytics',
-      tabs: ['analytics', 'count', 'drinks', 'inventory', 'cashier', 'reservations', 'place-admins', 'staff', 'places', 'subscriptions', 'messages', 'settings', 'danger', 'live', 'permissions', 'simulator', 'templates'],
+      tabs: ['alerts', 'analytics', 'count', 'drinks', 'inventory', 'cashier', 'reservations', 'place-admins', 'staff', 'places', 'subscriptions', 'messages', 'settings', 'danger', 'live', 'permissions', 'simulator', 'templates'],
     },
     support_admin: {
       label: 'Support Admin',
@@ -110,7 +110,7 @@ export function AdminPanel({
       label: 'Finance Admin',
       description: 'متابعة الإيرادات والتقارير والفواتير',
       homeTab: 'analytics',
-      tabs: ['analytics', 'cashier', 'count'],
+      tabs: ['alerts', 'analytics', 'cashier', 'count'],
     },
   }
   const canAccessDevTab = (tab: string) => !isDevAdmin || devRoleMeta[devAdminRole].tabs.includes(tab)
@@ -243,6 +243,16 @@ export function AdminPanel({
   const [editingDevAdminAccount, setEditingDevAdminAccount] = useState<DevAdminAccount | null>(null)
   const [isSavingDevAdminAccount, setIsSavingDevAdminAccount] = useState(false)
   const [staffUrlCopied, setStaffUrlCopied] = useState(false)
+
+  // Smart Alerts state
+  const [smartAlerts, setSmartAlerts] = useState<{
+    id: string; place_id: string; place_name: string; type: string;
+    severity: 'critical' | 'warning' | 'info'; message: string;
+    details: Record<string, unknown>; created_at: string
+  }[]>([])
+  const [smartAlertsLoading, setSmartAlertsLoading] = useState(false)
+  const [smartAlertsLastRun, setSmartAlertsLastRun] = useState<Date | null>(null)
+  const [smartAlertsMeta, setSmartAlertsMeta] = useState<{ critical: number; warning: number; info: number; places: number } | null>(null)
   const [staffOrigin, setStaffOrigin] = useState('')
 
   useEffect(() => {
@@ -988,6 +998,22 @@ export function AdminPanel({
       setStatsOrders(Array.isArray(data) ? data : [])
     } catch { setStatsOrders([]) }
     finally { setIsFetchingStats(false) }
+  }
+
+  const fetchSmartAlerts = async () => {
+    setSmartAlertsLoading(true)
+    try {
+      const res = await fetch('/api/smart-alerts')
+      if (!res.ok) throw new Error('fetch failed')
+      const data = await res.json()
+      setSmartAlerts(data.alerts || [])
+      setSmartAlertsMeta({ critical: data.critical_count || 0, warning: data.warning_count || 0, info: data.info_count || 0, places: data.analyzed_places || 0 })
+      setSmartAlertsLastRun(new Date())
+    } catch {
+      setSmartAlerts([])
+    } finally {
+      setSmartAlertsLoading(false)
+    }
   }
 
   const fetchCountForPlace = async (pid: string) => {
@@ -1852,6 +1878,7 @@ const handleSaveSettings = async () => {
   const handleTabChange = (v: string) => {
     if (isDevAdmin && !canAccessDevTab(v)) return
     setActiveAdminTab(v)
+    if (v === 'alerts') fetchSmartAlerts()
     if (v === 'staff') fetchStaffUsers()
     if (v === 'inventory') { fetchInventory(); if (isDevAdmin) fetchPlaces().then(list => { if (list.length > 0) setInventoryDevPlaceId(prev => prev || list[0].id) }) }
     if (v === 'places') fetchPlaces().then(list => { const m: Record<string, boolean> = {}; list.forEach((p: Place) => { m[p.id] = p.order_tracking_enabled !== false }); setOrderTrackingMap(m) })
@@ -2052,6 +2079,36 @@ const handleSaveSettings = async () => {
                   <span className="absolute inline-flex h-2 w-2 rounded-full bg-emerald-400 opacity-60 animate-ping" />
                   <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-400" />
                 </span>
+              </button>}
+
+              {/* Smart Alerts — full width */}
+              {canAccessDevTab('alerts') && <button onClick={() => handleTabChange('alerts')}
+                className="relative w-full flex items-center gap-2.5 rounded-xl px-3.5 py-2.5 transition-all duration-150 hover:scale-[1.01] active:scale-[0.99]"
+                style={{
+                  background: activeAdminTab === 'alerts'
+                    ? 'linear-gradient(135deg, rgba(239,68,68,0.35), rgba(220,38,38,0.25))'
+                    : 'rgba(239,68,68,0.06)',
+                  border: `1px solid ${activeAdminTab === 'alerts' ? 'rgba(239,68,68,0.6)' : 'rgba(239,68,68,0.18)'}`,
+                  boxShadow: activeAdminTab === 'alerts' ? '0 0 14px rgba(239,68,68,0.2)' : 'none'
+                }}>
+                <BrainCircuit className="h-4 w-4 shrink-0" style={{ color: activeAdminTab === 'alerts' ? '#fca5a5' : '#7f3030' }} />
+                <span className="text-xs font-bold" style={{ color: activeAdminTab === 'alerts' ? '#fca5a5' : '#7f3030' }}>Smart Alerts</span>
+                {(smartAlertsMeta?.critical ?? 0) + (smartAlertsMeta?.warning ?? 0) > 0 ? (
+                  <span className="ml-auto flex items-center gap-1">
+                    {(smartAlertsMeta?.critical ?? 0) > 0 && (
+                      <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-red-600 px-1 text-[9px] font-black text-white animate-pulse">
+                        {smartAlertsMeta!.critical}
+                      </span>
+                    )}
+                    {(smartAlertsMeta?.warning ?? 0) > 0 && (
+                      <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-amber-500 px-1 text-[9px] font-black text-black">
+                        {smartAlertsMeta!.warning}
+                      </span>
+                    )}
+                  </span>
+                ) : (
+                  <span className="ml-auto h-2 w-2 rounded-full" style={{ background: 'rgba(239,68,68,0.3)' }} />
+                )}
               </button>}
 
               {/* Analytics group */}
@@ -2296,6 +2353,7 @@ const handleSaveSettings = async () => {
         {isDevAdmin ? (
           <TabsList className="hidden">
             {[
+              ['alerts', 'Alerts'],
               ['analytics', 'Reports'],
               ['count', 'Delivered'],
               ['drinks', 'Drinks'],
@@ -2514,6 +2572,168 @@ const handleSaveSettings = async () => {
             </div>
           ) : (
             <div className="rounded-xl border border-red-900/40 bg-red-950/20 p-4 text-sm text-red-200">هذه الصفحة متاحة فقط لصلاحية Super Developer.</div>
+          )}
+        </TabsContent>
+
+        {/* ══════════════════════════════════════════════ */}
+        {/* Smart Alerts Tab                              */}
+        {/* ══════════════════════════════════════════════ */}
+        <TabsContent value="alerts" className="space-y-3">
+          {/* Header */}
+          <div className="relative overflow-hidden rounded-2xl p-4" style={{
+            background: 'linear-gradient(135deg, #0d0505 0%, #1a0a0a 60%, #200e0e 100%)',
+            border: '1px solid rgba(239,68,68,0.25)'
+          }}>
+            <div className="pointer-events-none absolute -top-6 -right-6 h-32 w-32 rounded-full opacity-30"
+              style={{ background: 'radial-gradient(circle, #ef4444, transparent)', filter: 'blur(20px)' }} />
+            <div className="relative flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl"
+                  style={{ background: 'rgba(239,68,68,0.15)', border: '1px solid rgba(239,68,68,0.3)' }}>
+                  <BrainCircuit className="h-5 w-5 text-red-400" />
+                </div>
+                <div>
+                  <h2 className="text-sm font-black text-white">Smart Alerts</h2>
+                  <p className="text-[11px]" style={{ color: 'rgba(255,255,255,0.35)' }}>
+                    {smartAlertsLastRun
+                      ? `آخر تحليل: ${smartAlertsLastRun.toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' })}`
+                      : 'اضغط للتحليل'}
+                    {smartAlertsMeta && ` · ${smartAlertsMeta.places} مكان`}
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={fetchSmartAlerts}
+                disabled={smartAlertsLoading}
+                className="flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-bold transition-all hover:scale-105 active:scale-95 disabled:opacity-60"
+                style={{ background: 'rgba(239,68,68,0.2)', border: '1px solid rgba(239,68,68,0.4)', color: '#fca5a5' }}
+              >
+                {smartAlertsLoading
+                  ? <><Loader2 className="h-3.5 w-3.5 animate-spin" />جاري التحليل...</>
+                  : <><RefreshCw className="h-3.5 w-3.5" />تحليل الآن</>}
+              </button>
+            </div>
+
+            {/* Summary pills */}
+            {smartAlertsMeta && (
+              <div className="relative mt-3 flex gap-2">
+                <span className="flex items-center gap-1 rounded-lg px-2.5 py-1 text-[11px] font-bold"
+                  style={{ background: 'rgba(239,68,68,0.2)', border: '1px solid rgba(239,68,68,0.35)', color: '#fca5a5' }}>
+                  <Siren className="h-3 w-3" />{smartAlertsMeta.critical} حرجة
+                </span>
+                <span className="flex items-center gap-1 rounded-lg px-2.5 py-1 text-[11px] font-bold"
+                  style={{ background: 'rgba(245,158,11,0.2)', border: '1px solid rgba(245,158,11,0.35)', color: '#fcd34d' }}>
+                  <AlertTriangle className="h-3 w-3" />{smartAlertsMeta.warning} تحذير
+                </span>
+                <span className="flex items-center gap-1 rounded-lg px-2.5 py-1 text-[11px] font-bold"
+                  style={{ background: 'rgba(99,102,241,0.15)', border: '1px solid rgba(99,102,241,0.3)', color: '#a5b4fc' }}>
+                  <Bell className="h-3 w-3" />{smartAlertsMeta.info} معلومة
+                </span>
+              </div>
+            )}
+          </div>
+
+          {/* Loading state */}
+          {smartAlertsLoading && (
+            <div className="flex flex-col items-center justify-center gap-3 py-12">
+              <div className="relative flex h-14 w-14 items-center justify-center rounded-full"
+                style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)' }}>
+                <BrainCircuit className="h-6 w-6 text-red-400 animate-pulse" />
+              </div>
+              <div className="text-center">
+                <p className="text-sm font-semibold text-white">جاري تحليل كل الأماكن...</p>
+                <p className="text-xs text-zinc-500 mt-0.5">فحص الطلبات · الكاشير · نداءات النادل</p>
+              </div>
+            </div>
+          )}
+
+          {/* Empty state */}
+          {!smartAlertsLoading && smartAlertsLastRun && smartAlerts.length === 0 && (
+            <div className="flex flex-col items-center justify-center gap-3 py-12 text-center">
+              <div className="flex h-14 w-14 items-center justify-center rounded-full"
+                style={{ background: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.25)' }}>
+                <CheckCircle2 className="h-6 w-6 text-emerald-400" />
+              </div>
+              <p className="text-sm font-bold text-white">كل شيء تمام 🎉</p>
+              <p className="text-xs text-zinc-500">مفيش تنبيهات في الوقت الحالي</p>
+            </div>
+          )}
+
+          {/* Initial state - not run yet */}
+          {!smartAlertsLoading && !smartAlertsLastRun && (
+            <div className="flex flex-col items-center justify-center gap-3 py-12 text-center">
+              <div className="flex h-14 w-14 items-center justify-center rounded-full"
+                style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.18)' }}>
+                <BrainCircuit className="h-6 w-6" style={{ color: 'rgba(239,68,68,0.5)' }} />
+              </div>
+              <p className="text-sm font-semibold text-white">اضغط "تحليل الآن" لبدء الفحص</p>
+              <p className="text-xs text-zinc-500">سيتم فحص كل الأماكن النشطة وإظهار التنبيهات الذكية</p>
+              <button
+                onClick={fetchSmartAlerts}
+                className="mt-2 flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-bold transition-all hover:scale-105 active:scale-95"
+                style={{ background: 'linear-gradient(135deg, rgba(239,68,68,0.3), rgba(220,38,38,0.2))', border: '1px solid rgba(239,68,68,0.4)', color: '#fca5a5' }}
+              >
+                <BrainCircuit className="h-4 w-4" />ابدأ التحليل
+              </button>
+            </div>
+          )}
+
+          {/* Alerts feed */}
+          {!smartAlertsLoading && smartAlerts.length > 0 && (
+            <div className="space-y-2">
+              {smartAlerts.map(alert => {
+                const isCritical = alert.severity === 'critical'
+                const isWarning = alert.severity === 'warning'
+                const color = isCritical ? { bg: 'rgba(239,68,68,0.12)', border: 'rgba(239,68,68,0.3)', text: '#fca5a5', icon: '#ef4444', dot: '#ef4444' }
+                  : isWarning ? { bg: 'rgba(245,158,11,0.1)', border: 'rgba(245,158,11,0.3)', text: '#fcd34d', icon: '#f59e0b', dot: '#f59e0b' }
+                  : { bg: 'rgba(99,102,241,0.08)', border: 'rgba(99,102,241,0.22)', text: '#a5b4fc', icon: '#6366f1', dot: '#6366f1' }
+
+                const typeIcon = alert.type === 'stuck_orders' ? '⏳'
+                  : alert.type === 'cashier_silent' ? '💳'
+                  : alert.type === 'high_pending' ? '🔥'
+                  : alert.type === 'ghost_session' ? '👻'
+                  : alert.type === 'waiter_spike' ? '📣'
+                  : '⚠️'
+
+                return (
+                  <div key={alert.id} className="relative overflow-hidden rounded-xl p-3.5"
+                    style={{ background: color.bg, border: `1px solid ${color.border}` }}>
+                    {isCritical && (
+                      <div className="pointer-events-none absolute inset-0 rounded-xl animate-pulse opacity-20"
+                        style={{ background: 'rgba(239,68,68,0.08)' }} />
+                    )}
+                    <div className="relative flex items-start gap-3">
+                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-lg"
+                        style={{ background: `${color.bg}`, border: `1px solid ${color.border}` }}>
+                        {typeIcon}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-0.5">
+                          <span className="text-[10px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded-md"
+                            style={{ background: `${color.border}`, color: color.text }}>
+                            {isCritical ? 'حرجة' : isWarning ? 'تحذير' : 'معلومة'}
+                          </span>
+                          <span className="text-[11px] font-bold truncate" style={{ color: color.text }}>
+                            📍 {alert.place_name}
+                          </span>
+                        </div>
+                        <p className="text-sm font-semibold text-white leading-snug">{alert.message}</p>
+                        <p className="text-[10px] mt-1" style={{ color: 'rgba(255,255,255,0.3)' }}>
+                          {new Date(alert.created_at).toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' })}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          )}
+
+          {/* Auto-refresh note */}
+          {smartAlertsLastRun && (
+            <p className="text-center text-[10px]" style={{ color: 'rgba(255,255,255,0.15)' }}>
+              النظام لا يعمل تلقائياً في الخلفية — اضغط "تحليل الآن" لتحديث النتائج
+            </p>
           )}
         </TabsContent>
 
