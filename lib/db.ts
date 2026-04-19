@@ -152,6 +152,8 @@ export const db = {
 
   // ─── Drinks ────────────────────────────────────────────
   async getDrinks(placeId?: string | null) {
+    await sql`ALTER TABLE drinks ADD COLUMN IF NOT EXISTS seasonal_start DATE`.catch(() => {})
+    await sql`ALTER TABLE drinks ADD COLUMN IF NOT EXISTS seasonal_end DATE`.catch(() => {})
     if (placeId) {
       return await sql`SELECT * FROM drinks WHERE place_id = ${placeId} ORDER BY sort_order`
     }
@@ -172,12 +174,18 @@ export const db = {
     return result[0]
   },
 
-  async updateDrink(id: string, data: { name?: string; price?: number; image_url?: string | null }) {
+  async updateDrink(id: string, data: { name?: string; price?: number; image_url?: string | null; sort_order?: number; seasonal_start?: string | null; seasonal_end?: string | null; available?: boolean }) {
+    await sql`ALTER TABLE drinks ADD COLUMN IF NOT EXISTS seasonal_start DATE`.catch(() => {})
+    await sql`ALTER TABLE drinks ADD COLUMN IF NOT EXISTS seasonal_end DATE`.catch(() => {})
     const result = await sql`
       UPDATE drinks 
-      SET name = COALESCE(${data.name}, name),
-          price = COALESCE(${data.price}, price),
-          image_url = COALESCE(${data.image_url}, image_url),
+      SET name = COALESCE(${data.name ?? null}, name),
+          price = COALESCE(${data.price ?? null}, price),
+          image_url = CASE WHEN ${data.image_url !== undefined} THEN ${data.image_url ?? null} ELSE image_url END,
+          sort_order = CASE WHEN ${data.sort_order !== undefined} THEN ${data.sort_order ?? 0} ELSE sort_order END,
+          seasonal_start = CASE WHEN ${data.seasonal_start !== undefined} THEN ${data.seasonal_start ?? null} ELSE seasonal_start END,
+          seasonal_end = CASE WHEN ${data.seasonal_end !== undefined} THEN ${data.seasonal_end ?? null} ELSE seasonal_end END,
+          available = CASE WHEN ${data.available !== undefined} THEN ${data.available ?? true} ELSE available END,
           updated_at = NOW()
       WHERE id = ${id}
       RETURNING *

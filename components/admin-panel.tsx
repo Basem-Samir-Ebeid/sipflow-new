@@ -25,7 +25,7 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Plus, Trash2, Pencil, Upload, RefreshCw, Users, Coffee, Key, BarChart3, TrendingUp, Award, Clock, Send, MessageSquare, Settings2, Hash, UserPlus, UserCog, Minus, Package, Banknote, CheckCircle2, Hourglass, TableProperties, Copy, ExternalLink, Link2, Eye, EyeOff, QrCode, CalendarDays, CalendarCheck, CalendarX, Download, Loader2, Activity, ShieldCheck, ChevronLeft, Radio, Camera, UserCircle, Bell, AlertTriangle, BrainCircuit, Siren, FileText } from 'lucide-react'
+import { Plus, Trash2, Pencil, Upload, RefreshCw, Users, Coffee, Key, BarChart3, TrendingUp, Award, Clock, Send, MessageSquare, Settings2, Hash, UserPlus, UserCog, Minus, Package, Banknote, CheckCircle2, Hourglass, TableProperties, Copy, ExternalLink, Link2, Eye, EyeOff, QrCode, CalendarDays, CalendarCheck, CalendarX, Download, Loader2, Activity, ShieldCheck, ChevronLeft, Radio, Camera, UserCircle, Bell, AlertTriangle, BrainCircuit, Siren, FileText, GripVertical, Wrench } from 'lucide-react'
 import { Checkbox } from '@/components/ui/checkbox'
 import Image from 'next/image'
 import { LivePlacesHub } from '@/components/LivePlacesHub'
@@ -351,6 +351,20 @@ export function AdminPanel({
   const [editImage, setEditImage] = useState<string | null>(null)
   const editFileInputRef = useRef<HTMLInputElement>(null)
 
+  // Seasonal edit state
+  const [editSeasonalEnabled, setEditSeasonalEnabled] = useState(false)
+  const [editSeasonalStart, setEditSeasonalStart] = useState('')
+  const [editSeasonalEnd, setEditSeasonalEnd] = useState('')
+
+  // Drag-to-reorder state
+  const [dragOverId, setDragOverId] = useState<string | null>(null)
+  const dragItemId = useRef<string | null>(null)
+
+  // Maintenance mode state
+  const [isMaintenanceMode, setIsMaintenanceMode] = useState(false)
+  const [maintenanceMsg, setMaintenanceMsg] = useState('الموقع تحت الصيانة، سنعود قريباً')
+  const [isSavingMaintenance, setIsSavingMaintenance] = useState(false)
+
   // Inventory state
   const [inventoryMap, setInventoryMap] = useState<Record<string, number>>({})
   const [lowStockThreshold, setLowStockThreshold] = useState(10)
@@ -505,16 +519,20 @@ export function AdminPanel({
     finally { setIsDeletingOldData(false) }
   }
 
-  // Fetch place closed status
+  // Fetch place closed status and maintenance mode
   const fetchClosedStatus = async () => {
     if (!placeId) return
     try {
-      const [closedRes, msgRes] = await Promise.all([
+      const [closedRes, msgRes, maintRes, maintMsgRes] = await Promise.all([
         fetch(`/api/settings?key=place_closed_${placeId}`),
-        fetch(`/api/settings?key=place_closed_message_${placeId}`)
+        fetch(`/api/settings?key=place_closed_message_${placeId}`),
+        fetch(`/api/settings?key=maintenance_${placeId}`),
+        fetch(`/api/settings?key=maintenance_message_${placeId}`)
       ])
       if (closedRes.ok) { const d = await closedRes.json(); setIsPlaceClosed(d.value === 'true') }
       if (msgRes.ok) { const d = await msgRes.json(); if (d.value) setPlaceClosedMsg(d.value) }
+      if (maintRes.ok) { const d = await maintRes.json(); setIsMaintenanceMode(d.value === 'true') }
+      if (maintMsgRes.ok) { const d = await maintMsgRes.json(); if (d.value) setMaintenanceMsg(d.value) }
     } catch {}
   }
 
@@ -1008,7 +1026,9 @@ export function AdminPanel({
       body: JSON.stringify({
         name: editName.trim(),
         price: parseFloat(editPrice) || 0,
-        image_url: editImage
+        image_url: editImage,
+        seasonal_start: editSeasonalEnabled && editSeasonalStart ? editSeasonalStart : null,
+        seasonal_end: editSeasonalEnabled && editSeasonalEnd ? editSeasonalEnd : null,
       })
     })
     
@@ -1018,6 +1038,39 @@ export function AdminPanel({
       setEditDialogOpen(false)
       onDrinkUpdated()
     }
+  }
+
+  // Drag-to-reorder helpers
+  const handleDragStart = (id: string) => {
+    dragItemId.current = id
+  }
+
+  const handleDragOver = (e: React.DragEvent, id: string) => {
+    e.preventDefault()
+    setDragOverId(id)
+  }
+
+  const handleDrop = async (targetId: string, drinksList: Drink[]) => {
+    const sourceId = dragItemId.current
+    if (!sourceId || sourceId === targetId) { setDragOverId(null); return }
+    const sourceIdx = drinksList.findIndex(d => d.id === sourceId)
+    const targetIdx = drinksList.findIndex(d => d.id === targetId)
+    if (sourceIdx === -1 || targetIdx === -1) { setDragOverId(null); return }
+    const reordered = [...drinksList]
+    const [moved] = reordered.splice(sourceIdx, 1)
+    reordered.splice(targetIdx, 0, moved)
+    const order = reordered.map((d, i) => ({ id: d.id, sort_order: i + 1 }))
+    setDragOverId(null)
+    dragItemId.current = null
+    try {
+      await fetch('/api/drinks/reorder', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ order })
+      })
+      onDrinkUpdated()
+      toast.success('تم حفظ الترتيب')
+    } catch { toast.error('خطأ في حفظ الترتيب') }
   }
 
   const handleDeleteDrink = async (drinkId: string) => {
@@ -1308,6 +1361,10 @@ export function AdminPanel({
     setEditPrice(drink.price?.toString() || '0')
     setEditStock((inventoryMap[drink.id] ?? 0).toString())
     setEditImage(drink.image_url)
+    const hasSeasonal = !!(drink.seasonal_start || drink.seasonal_end)
+    setEditSeasonalEnabled(hasSeasonal)
+    setEditSeasonalStart(drink.seasonal_start ? drink.seasonal_start.slice(0, 10) : '')
+    setEditSeasonalEnd(drink.seasonal_end ? drink.seasonal_end.slice(0, 10) : '')
     setEditDialogOpen(true)
   }
 
@@ -3403,9 +3460,23 @@ const handleSaveSettings = async () => {
                       {placeDrinks.length === 0 && (
                         <p className="text-center text-muted-foreground py-4">لا توجد أصناف في هذا المكان بعد</p>
                       )}
-                      {placeDrinks.map(drink => (
-                        <div key={drink.id} className="flex items-center justify-between rounded-xl bg-muted p-3">
-                          <div className="flex items-center gap-3">
+                      {placeDrinks.map(drink => {
+                        const isSeasonal = !!(drink.seasonal_start || drink.seasonal_end)
+                        return (
+                        <div
+                          key={drink.id}
+                          draggable
+                          onDragStart={() => handleDragStart(drink.id)}
+                          onDragOver={(e) => handleDragOver(e, drink.id)}
+                          onDrop={() => handleDrop(drink.id, placeDrinks)}
+                          onDragEnd={() => setDragOverId(null)}
+                          className="flex items-center justify-between rounded-xl bg-muted p-3 transition-all"
+                          style={dragOverId === drink.id ? { outline: '2px solid rgba(212,160,23,0.6)', background: 'rgba(212,160,23,0.07)' } : {}}
+                        >
+                          <div className="flex items-center gap-2">
+                            <span className="cursor-grab text-muted-foreground hover:text-foreground active:cursor-grabbing">
+                              <GripVertical className="h-4 w-4" />
+                            </span>
                             <div className="relative h-10 w-10 overflow-hidden rounded-full bg-card">
                               {drink.image_url ? (
                                 <Image src={drink.image_url} alt={drink.name} fill className="object-cover" />
@@ -3416,7 +3487,12 @@ const handleSaveSettings = async () => {
                               )}
                             </div>
                             <div>
-                              <p className="font-medium text-foreground">{drink.name}</p>
+                              <div className="flex items-center gap-2">
+                                <p className="font-medium text-foreground">{drink.name}</p>
+                                {isSeasonal && (
+                                  <span className="text-[10px] font-bold rounded-full px-2 py-0.5" style={{ background: 'rgba(234,179,8,0.15)', color: '#eab308', border: '1px solid rgba(234,179,8,0.3)' }}>موسمي</span>
+                                )}
+                              </div>
                               <div className="flex items-center gap-2">
                                 {Number(drink.price) > 0 && <p className="text-xs text-primary">{Number(drink.price)} ج.م</p>}
                                 <span className="text-[10px] text-muted-foreground">{drink.category === 'hot' ? '☕' : drink.category === 'cold' ? '🧊' : '💨'}</span>
@@ -3444,7 +3520,8 @@ const handleSaveSettings = async () => {
                             </AlertDialog>
                           </div>
                         </div>
-                      ))}
+                        )
+                      })}
                     </div>
                   </>
                 )
@@ -3456,12 +3533,23 @@ const handleSaveSettings = async () => {
           <div className="rounded-2xl border border-border bg-card p-4">
             <h3 className="mb-4 font-semibold text-foreground">الأصناف الحالية ({drinks.length})</h3>
             <div className="space-y-2">
-              {drinks.map((drink) => (
-                <div 
-                  key={drink.id} 
-                  className="flex items-center justify-between rounded-xl bg-muted p-3"
+              {drinks.map((drink) => {
+                const isSeasonal = !!(drink.seasonal_start || drink.seasonal_end)
+                return (
+                <div
+                  key={drink.id}
+                  draggable
+                  onDragStart={() => handleDragStart(drink.id)}
+                  onDragOver={(e) => handleDragOver(e, drink.id)}
+                  onDrop={() => handleDrop(drink.id, drinks)}
+                  onDragEnd={() => setDragOverId(null)}
+                  className="flex items-center justify-between rounded-xl bg-muted p-3 transition-all"
+                  style={dragOverId === drink.id ? { outline: '2px solid rgba(212,160,23,0.6)', background: 'rgba(212,160,23,0.07)' } : {}}
                 >
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-2">
+                    <span className="cursor-grab text-muted-foreground hover:text-foreground active:cursor-grabbing">
+                      <GripVertical className="h-4 w-4" />
+                    </span>
                     <div className="relative h-12 w-12 overflow-hidden rounded-full bg-card">
                       {drink.image_url ? (
                         <Image src={drink.image_url} alt={drink.name} fill className="object-cover" />
@@ -3472,7 +3560,12 @@ const handleSaveSettings = async () => {
                       )}
                     </div>
                     <div>
-                      <p className="font-medium text-foreground">{drink.name}</p>
+                      <div className="flex items-center gap-2">
+                        <p className="font-medium text-foreground">{drink.name}</p>
+                        {isSeasonal && (
+                          <span className="text-[10px] font-bold rounded-full px-2 py-0.5" style={{ background: 'rgba(234,179,8,0.15)', color: '#eab308', border: '1px solid rgba(234,179,8,0.3)' }}>موسمي</span>
+                        )}
+                      </div>
                       {Number(drink.price) > 0 && (
                         <p className="text-xs text-primary">{Number(drink.price)} ج.م</p>
                       )}
@@ -3497,7 +3590,7 @@ const handleSaveSettings = async () => {
                         </AlertDialogHeader>
                         <AlertDialogFooter>
                           <AlertDialogCancel className="border-border">إلغاء</AlertDialogCancel>
-                          <AlertDialogAction 
+                          <AlertDialogAction
                             onClick={() => handleDeleteDrink(drink.id)}
                             className="bg-destructive text-destructive-foreground"
                           >
@@ -3508,7 +3601,8 @@ const handleSaveSettings = async () => {
                     </AlertDialog>
                   </div>
                 </div>
-              ))}
+                )
+              })}
             </div>
           </div>
           )}
@@ -3558,6 +3652,49 @@ const handleSaveSettings = async () => {
                   className="mt-1 border-border bg-muted text-foreground"
                 />
               </div>
+              {/* Seasonal Section */}
+              <div className="rounded-xl p-4 space-y-3" style={{ background: 'rgba(234,179,8,0.05)', border: '1px solid rgba(234,179,8,0.2)' }}>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="text-base">🌟</span>
+                    <div>
+                      <p className="text-sm font-bold" style={{ color: '#eab308' }}>عرض موسمي</p>
+                      <p className="text-[10px] text-muted-foreground">يظهر الصنف فقط في الفترة المحددة</p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setEditSeasonalEnabled(!editSeasonalEnabled)}
+                    className={`relative inline-flex h-6 w-10 items-center rounded-full transition-colors focus:outline-none`}
+                    style={{ background: editSeasonalEnabled ? 'rgba(234,179,8,0.8)' : 'rgba(255,255,255,0.1)' }}
+                  >
+                    <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${editSeasonalEnabled ? 'translate-x-5' : 'translate-x-1'}`} />
+                  </button>
+                </div>
+                {editSeasonalEnabled && (
+                  <div className="grid grid-cols-2 gap-3 pt-1">
+                    <div>
+                      <Label className="text-xs mb-1 block" style={{ color: '#eab308' }}>من تاريخ</Label>
+                      <Input
+                        type="date"
+                        value={editSeasonalStart}
+                        onChange={e => setEditSeasonalStart(e.target.value)}
+                        className="h-9 text-sm border-border bg-muted text-foreground"
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-xs mb-1 block" style={{ color: '#eab308' }}>إلى تاريخ</Label>
+                      <Input
+                        type="date"
+                        value={editSeasonalEnd}
+                        onChange={e => setEditSeasonalEnd(e.target.value)}
+                        className="h-9 text-sm border-border bg-muted text-foreground"
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
+
               <Button 
                 className="w-full bg-primary text-primary-foreground hover:bg-primary/90" 
                 onClick={handleEditDrink}
@@ -4910,6 +5047,76 @@ const handleSaveSettings = async () => {
                         body: JSON.stringify({ key: `place_closed_message_${placeId}`, value: placeClosedMsg })
                       })
                       toast.success('تم حفظ رسالة الإغلاق')
+                    }}
+                  >
+                    حفظ الرسالة
+                  </Button>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* ── Maintenance Mode (place admin only) ── */}
+          {!isDevAdmin && placeId && (
+            <div className="rounded-2xl p-4 space-y-3" style={{
+              background: isMaintenanceMode ? 'rgba(212,160,23,0.06)' : 'rgba(255,255,255,0.02)',
+              border: `1px solid ${isMaintenanceMode ? 'rgba(212,160,23,0.35)' : 'rgba(255,255,255,0.08)'}`
+            }}>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="flex items-center justify-center w-8 h-8 rounded-xl" style={{ background: isMaintenanceMode ? 'rgba(212,160,23,0.15)' : 'rgba(255,255,255,0.05)', border: `1px solid ${isMaintenanceMode ? 'rgba(212,160,23,0.3)' : 'rgba(255,255,255,0.08)'}` }}>
+                    <Wrench className="h-4 w-4" style={{ color: isMaintenanceMode ? '#D4A017' : 'rgba(255,255,255,0.4)' }} />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-bold text-foreground">
+                      {isMaintenanceMode ? '🔧 وضع الصيانة مفعّل' : '🔧 وضع الصيانة'}
+                    </h3>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      {isMaintenanceMode ? 'الزبائن يرون شاشة الصيانة' : 'اعرض شاشة صيانة للزبائن مؤقتاً'}
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={async () => {
+                    setIsSavingMaintenance(true)
+                    const next = !isMaintenanceMode
+                    try {
+                      await fetch('/api/settings', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ key: `maintenance_${placeId}`, value: next.toString() })
+                      })
+                      setIsMaintenanceMode(next)
+                      toast.success(next ? '🔧 تم تفعيل وضع الصيانة' : '✅ تم إيقاف وضع الصيانة')
+                    } catch { toast.error('خطأ في تغيير وضع الصيانة') }
+                    finally { setIsSavingMaintenance(false) }
+                  }}
+                  disabled={isSavingMaintenance}
+                  className={`relative inline-flex h-7 w-12 items-center rounded-full transition-colors focus:outline-none`}
+                  style={{ background: isMaintenanceMode ? '#D4A017' : 'rgba(255,255,255,0.1)' }}
+                >
+                  <span className={`inline-block h-5 w-5 transform rounded-full bg-white shadow-lg transition-transform ${isMaintenanceMode ? 'translate-x-6' : 'translate-x-1'}`} />
+                </button>
+              </div>
+
+              {isMaintenanceMode && (
+                <div className="space-y-2 pt-1">
+                  <Label className="text-xs text-muted-foreground">رسالة الصيانة (تظهر للزبون)</Label>
+                  <Input
+                    value={maintenanceMsg}
+                    onChange={e => setMaintenanceMsg(e.target.value)}
+                    className="border-border bg-muted text-foreground text-sm"
+                    placeholder="مثال: نقوم بتحديث النظام، سنعود قريباً"
+                  />
+                  <Button size="sm" variant="outline" className="w-full"
+                    style={{ borderColor: 'rgba(212,160,23,0.3)', color: '#D4A017' }}
+                    onClick={async () => {
+                      await fetch('/api/settings', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ key: `maintenance_message_${placeId}`, value: maintenanceMsg })
+                      })
+                      toast.success('تم حفظ رسالة الصيانة')
                     }}
                   >
                     حفظ الرسالة

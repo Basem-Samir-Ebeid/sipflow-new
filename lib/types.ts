@@ -68,6 +68,8 @@ export interface Drink {
   available: boolean
   sort_order: number
   place_id: string | null
+  seasonal_start: string | null
+  seasonal_end: string | null
   created_at: string
   updated_at: string
 }

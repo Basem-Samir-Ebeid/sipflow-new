@@ -122,6 +122,10 @@ export default function HomePage() {
   const [isPlaceCurrentlyClosed, setIsPlaceCurrentlyClosed] = useState(false)
   const [placeClosedMessage, setPlaceClosedMessage] = useState('المكان مغلق حالياً، نعتذر عن الإزعاج')
 
+  // Maintenance mode state
+  const [isMaintenanceMode, setIsMaintenanceMode] = useState(false)
+  const [maintenanceMessage, setMaintenanceMessage] = useState('الموقع تحت الصيانة، سنعود قريباً')
+
   // Global banner state
   const [globalBannerEnabled, setGlobalBannerEnabled] = useState(false)
   const [globalBannerText, setGlobalBannerText] = useState('')
@@ -203,6 +207,15 @@ export default function HomePage() {
 
   const { data: drinks = [], mutate: mutateDrinks } = useSWR<Drink[]>(
     `/api/drinks${placeParam}`, apiFetcher, { refreshInterval: 5000 })
+
+  // Filter seasonal drinks for customers (admins see all)
+  const visibleDrinks = (isAdmin || isDevAdmin) ? drinks : drinks.filter(drink => {
+    if (!drink.seasonal_start && !drink.seasonal_end) return true
+    const today = new Date().toISOString().slice(0, 10)
+    if (drink.seasonal_start && today < drink.seasonal_start) return false
+    if (drink.seasonal_end && today > drink.seasonal_end) return false
+    return true
+  })
   const { data: users = [], mutate: mutateUsers } = useSWR<User[]>(
     `/api/users${placeParam}`, apiFetcher, { refreshInterval: 5000 })
   const { data: session, mutate: mutateSession } = useSWR<Session>(
@@ -415,7 +428,7 @@ export default function HomePage() {
     return () => clearInterval(interval)
   }, [])
 
-  // Fetch place closed status whenever place changes
+  // Fetch place closed status and maintenance mode whenever place changes
   useEffect(() => {
     if (!currentPlace?.id) return
     fetch(`/api/settings?key=place_closed_${currentPlace.id}`)
@@ -425,6 +438,14 @@ export default function HomePage() {
     fetch(`/api/settings?key=place_closed_message_${currentPlace.id}`)
       .then(r => r.json())
       .then(d => { if (d.value) setPlaceClosedMessage(d.value) })
+      .catch(() => {})
+    fetch(`/api/settings?key=maintenance_${currentPlace.id}`)
+      .then(r => r.json())
+      .then(d => { setIsMaintenanceMode(d.value === 'true') })
+      .catch(() => {})
+    fetch(`/api/settings?key=maintenance_message_${currentPlace.id}`)
+      .then(r => r.json())
+      .then(d => { if (d.value) setMaintenanceMessage(d.value) })
       .catch(() => {})
   }, [currentPlace?.id])
 
@@ -1293,7 +1314,7 @@ export default function HomePage() {
   }
 
   const handleSurpriseMe = () => {
-    const available = drinks.filter(d => {
+    const available = visibleDrinks.filter(d => {
       if ((inventoryMap[d.id] ?? 0) <= 0) return false
       const cat = (d.category || '').toLowerCase()
       const nameHasShisha = d.name?.includes('شيشة') || d.name?.toLowerCase().includes('shisha')
@@ -3960,6 +3981,20 @@ export default function HomePage() {
               </div>
             )}
 
+            {/* ── Maintenance Mode Overlay ── */}
+            {isMaintenanceMode && !isAdmin && !isDevAdmin && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-md p-6">
+                <div className="w-full max-w-sm rounded-3xl text-center space-y-5 p-8" style={{ background: 'linear-gradient(170deg, rgba(18,12,0,0.98), rgba(10,8,0,0.98))', border: '1px solid rgba(212,160,23,0.4)', boxShadow: '0 0 40px rgba(212,160,23,0.1)' }}>
+                  <div className="text-6xl">🔧</div>
+                  <h2 className="text-2xl font-bold" style={{ color: '#D4A017' }}>تحت الصيانة</h2>
+                  <p className="text-sm leading-relaxed" style={{ color: '#9ca3af' }}>{maintenanceMessage}</p>
+                  {currentPlace?.name && (
+                    <p className="text-xs" style={{ color: 'rgba(212,160,23,0.4)' }}>— {currentPlace.name}</p>
+                  )}
+                </div>
+              </div>
+            )}
+
             <div className="text-center space-y-3">
               {(() => {
                 const logoUrl = isDevAdmin
@@ -4122,7 +4157,7 @@ export default function HomePage() {
 
             {(!isDevAdmin || menuDevPlaceId) && (
             <div className="grid grid-cols-2 gap-3">
-              {drinks
+              {visibleDrinks
                 .filter(d => {
                   if (isDevAdmin && menuDevPlaceId && d.place_id !== menuDevPlaceId) return false
                   const cat = (d.category || '').toLowerCase()
@@ -4149,7 +4184,7 @@ export default function HomePage() {
                     } : undefined}
                   />
                 ))}
-              {drinks.filter(d => {
+              {visibleDrinks.filter(d => {
                 if (isDevAdmin && menuDevPlaceId && d.place_id !== menuDevPlaceId) return false
                 const cat = (d.category || '').toLowerCase()
                 const nameHasShisha = d.name?.includes('شيشة') || d.name?.toLowerCase().includes('shisha')
