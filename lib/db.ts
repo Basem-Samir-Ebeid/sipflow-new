@@ -154,6 +154,7 @@ export const db = {
   async getDrinks(placeId?: string | null) {
     await sql`ALTER TABLE drinks ADD COLUMN IF NOT EXISTS seasonal_start DATE`.catch(() => {})
     await sql`ALTER TABLE drinks ADD COLUMN IF NOT EXISTS seasonal_end DATE`.catch(() => {})
+    await sql`ALTER TABLE drinks ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()`.catch(() => {})
     if (placeId) {
       return await sql`SELECT * FROM drinks WHERE place_id = ${placeId} ORDER BY sort_order`
     }
@@ -191,6 +192,10 @@ export const db = {
       RETURNING *
     `
     return result[0]
+  },
+
+  async updateDrinkSortOrder(id: string, sortOrder: number) {
+    await sql`UPDATE drinks SET sort_order = ${sortOrder} WHERE id = ${id}`
   },
 
   async deleteDrink(id: string) {
