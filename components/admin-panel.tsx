@@ -2167,7 +2167,7 @@ const handleSaveSettings = async () => {
                 <div className="grid grid-cols-2 gap-1.5">
                   {[
                     { tab: 'analytics', icon: <TrendingUp className="h-3.5 w-3.5" />,  label: 'Reports',     ac: '#7c3aed' },
-                    { tab: 'count',     icon: <CheckCircle2 className="h-3.5 w-3.5" />,label: 'Delivered',   ac: '#7c3aed' },
+                    { tab: 'count',     icon: <CheckCircle2 className="h-3.5 w-3.5" />,label: 'الحصر اليومي', ac: '#7c3aed' },
                   ].filter(item => canAccessDevTab(item.tab)).map(item => (
                     <button key={item.tab} onClick={() => handleTabChange(item.tab)}
                       className="flex flex-col items-center gap-1 rounded-xl py-2.5 px-1 transition-all duration-150 hover:scale-105 active:scale-95"
@@ -5531,35 +5531,71 @@ const handleSaveSettings = async () => {
 
         {/* ─── Count (Delivered Items) Tab ─── */}
         <TabsContent value="count" className="space-y-4">
-          {/* Dev admin: place selector for count */}
+
+          {/* ── Section header with explanation ── */}
+          <div className="rounded-2xl overflow-hidden" style={{ background: 'linear-gradient(135deg,rgba(16,185,129,0.08),rgba(5,150,105,0.04))', border: '1px solid rgba(16,185,129,0.18)' }}>
+            <div className="flex items-start gap-3 p-4">
+              <div className="h-10 w-10 rounded-xl flex items-center justify-center shrink-0 mt-0.5" style={{ background: 'rgba(16,185,129,0.15)', border: '1px solid rgba(16,185,129,0.25)' }}>
+                <CheckCircle2 className="h-5 w-5" style={{ color: '#34d399' }} />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-bold mb-1" style={{ color: '#34d399' }}>الحصر اليومي للأصناف المسلّمة</p>
+                <p className="text-[11px] leading-relaxed" style={{ color: 'rgba(255,255,255,0.45)' }}>
+                  يعرض تقرير شامل بكل الأصناف (المشروبات والأكل) التي تم تحضيرها أو تسليمها فعلياً خلال اليوم الحالي — مرتّبة حسب الأكثر مبيعاً مع نسبة كل صنف. يُستخدم لمتابعة الإنتاج ومطابقة الحسابات مع المخزون.
+                </p>
+                <div className="flex items-center gap-3 mt-2">
+                  {[
+                    { icon: '📊', text: 'ترتيب بالأكثر مبيعاً' },
+                    { icon: '🖨️', text: 'قابل للطباعة' },
+                    { icon: '🔄', text: 'يتجدد تلقائياً' },
+                  ].map((f, i) => (
+                    <span key={i} className="flex items-center gap-1 text-[10px]" style={{ color: 'rgba(255,255,255,0.3)' }}>
+                      <span>{f.icon}</span>{f.text}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Dev admin: place selector */}
           {isDevAdmin && (
-            <div className="rounded-2xl p-4" style={{ background: 'linear-gradient(135deg, rgba(139,92,246,0.06), rgba(99,102,241,0.03))', border: '1px solid rgba(139,92,246,0.15)' }}>
-              <Label className="text-xs font-medium mb-2 block" style={{ color: '#a78bfa' }}>اختر المكان لعرض حصر الأصناف المسلّمة</Label>
-              <select
-                value={countPlaceId}
-                onChange={e => { setCountPlaceId(e.target.value); fetchCountForPlace(e.target.value) }}
-                className="w-full rounded-xl px-3 py-2.5 text-sm text-white"
-                style={{ background: 'rgba(139,92,246,0.08)', border: '1px solid rgba(139,92,246,0.2)' }}
-              >
-                <option value="">— اختر مكان —</option>
-                {places.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
-              </select>
+            <div className="rounded-2xl overflow-hidden" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.08)' }}>
+              <div className="flex items-center gap-2 px-4 py-2.5" style={{ borderBottom: '1px solid rgba(139,92,246,0.1)', background: 'rgba(139,92,246,0.05)' }}>
+                <span className="text-xs" style={{ color: 'rgba(255,255,255,0.25)' }}>📍</span>
+                <span className="text-[10px] font-semibold uppercase tracking-widest" style={{ color: 'rgba(167,139,250,0.7)' }}>اختر المكان</span>
+              </div>
+              <div className="p-3">
+                <select
+                  value={countPlaceId}
+                  onChange={e => { setCountPlaceId(e.target.value); fetchCountForPlace(e.target.value) }}
+                  className="w-full h-10 rounded-xl px-3 text-sm text-white outline-none"
+                  style={{ background: 'rgba(139,92,246,0.08)', border: '1px solid rgba(139,92,246,0.2)' }}
+                >
+                  <option value="">— اختر مكان لعرض حصره —</option>
+                  {places.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                </select>
+              </div>
             </div>
           )}
+
           {isDevAdmin && !countPlaceId && (
-            <p className="text-center text-muted-foreground py-8">اختر مكاناً لعرض الحصر</p>
+            <div className="text-center py-12 rounded-2xl" style={{ background: 'rgba(255,255,255,0.015)', border: '1px solid rgba(255,255,255,0.06)' }}>
+              <p className="text-3xl mb-2">📋</p>
+              <p className="text-sm font-medium" style={{ color: 'rgba(255,255,255,0.3)' }}>اختر مكاناً لعرض الحصر اليومي</p>
+            </div>
           )}
+
           {isDevAdmin && countPlaceId && isFetchingCount && (
-            <p className="text-center text-muted-foreground py-8">جاري تحميل الحصر...</p>
+            <div className="text-center py-12 rounded-2xl" style={{ background: 'rgba(255,255,255,0.015)', border: '1px solid rgba(255,255,255,0.06)' }}>
+              <RefreshCw className="h-6 w-6 animate-spin mx-auto mb-2" style={{ color: 'rgba(255,255,255,0.2)' }} />
+              <p className="text-sm" style={{ color: 'rgba(255,255,255,0.3)' }}>جاري تحميل الحصر...</p>
+            </div>
           )}
-          
+
           {(!isDevAdmin || (countPlaceId && !isFetchingCount)) && (() => {
-            // Get orders to use (dev admin uses countOrders, place admin uses orders prop)
             const ordersToUse = isDevAdmin ? countOrders : orders
-            // Get completed/ready orders
             const completedOrders = ordersToUse.filter(o => o.status === 'ready' || o.status === 'completed')
-            
-            // Count delivered items by drink name
             const deliveredDrinks: Record<string, { drinkName: string; count: number }> = {}
             completedOrders.forEach(order => {
               const name = order.drink?.name || 'غير معروف'
@@ -5592,59 +5628,90 @@ const handleSaveSettings = async () => {
 
             return (
               <>
-                <div className="flex items-center justify-between mb-4">
-                  <Button onClick={handlePrintCount} className="gap-2 bg-amber-600 hover:bg-amber-700 text-white" size="sm">
-                    <Download className="h-4 w-4" />
-                    طباعة الحصر
-                  </Button>
-                  <p className="text-sm text-muted-foreground font-medium">{todayDate}</p>
+                {/* Stats row */}
+                <div className="grid grid-cols-3 gap-2">
+                  {[
+                    { value: totalDelivered, label: 'إجمالي المسلّم', icon: '📦', color: '#34d399', rgb: '52,211,153' },
+                    { value: deliveredList.length, label: 'أنواع مختلفة', icon: '🍹', color: '#a78bfa', rgb: '167,139,250' },
+                    { value: completedOrders.length, label: 'طلب منجز', icon: '✅', color: '#60a5fa', rgb: '96,165,250' },
+                  ].map((s, i) => (
+                    <div key={i} className="rounded-2xl p-3 text-center" style={{ background: `rgba(${s.rgb},0.07)`, border: `1px solid rgba(${s.rgb},0.2)` }}>
+                      <p className="text-xl mb-0.5">{s.icon}</p>
+                      <p className="text-xl font-black leading-none" style={{ color: s.color }}>{s.value}</p>
+                      <p className="text-[10px] mt-1" style={{ color: 'rgba(255,255,255,0.35)' }}>{s.label}</p>
+                    </div>
+                  ))}
                 </div>
 
-                <div className="grid grid-cols-2 gap-3 mb-6">
-                  <div className="bg-card border border-amber-500/30 rounded-2xl p-4 text-center">
-                    <p className="text-2xl font-black text-amber-500">{totalDelivered}</p>
-                    <p className="text-xs text-muted-foreground mt-1">إجمالي الأصناف المسلّمة</p>
-                  </div>
-                  <div className="bg-card border border-border rounded-2xl p-4 text-center">
-                    <p className="text-2xl font-black text-primary">{deliveredList.length}</p>
-                    <p className="text-xs text-muted-foreground mt-1">أنواع مختلفة</p>
-                  </div>
+                {/* Date + print */}
+                <div className="flex items-center justify-between px-1">
+                  <p className="text-[11px]" style={{ color: 'rgba(255,255,255,0.25)' }}>{todayDate}</p>
+                  <button
+                    onClick={handlePrintCount}
+                    className="flex items-center gap-1.5 h-8 px-3 rounded-xl text-[11px] font-bold transition-all"
+                    style={{ background: 'rgba(251,191,36,0.12)', border: '1px solid rgba(251,191,36,0.25)', color: '#fbbf24' }}>
+                    <Download className="h-3.5 w-3.5" />
+                    طباعة الحصر
+                  </button>
                 </div>
 
                 {deliveredList.length === 0 ? (
-                  <div className="text-center py-16">
-                    <CheckCircle2 className="h-14 w-14 mx-auto text-muted-foreground/40 mb-4" />
-                    <p className="text-lg font-bold text-foreground mb-1">لا توجد أصناف مسلّمة بعد</p>
-                    <p className="text-muted-foreground text-sm">الحصر هيظهر هنا بعد تسليم أول طلب</p>
+                  <div className="text-center py-16 rounded-2xl" style={{ background: 'rgba(255,255,255,0.015)', border: '1px solid rgba(255,255,255,0.06)' }}>
+                    <CheckCircle2 className="h-12 w-12 mx-auto mb-3" style={{ color: 'rgba(255,255,255,0.1)' }} />
+                    <p className="text-sm font-bold" style={{ color: 'rgba(255,255,255,0.3)' }}>لا توجد أصناف مسلّمة بعد</p>
+                    <p className="text-[11px] mt-1" style={{ color: 'rgba(255,255,255,0.2)' }}>الحصر يظهر بعد تسليم أول طلب</p>
                   </div>
                 ) : (
-                  <div className="space-y-2">
-                    <h3 className="font-bold text-foreground text-right mb-3 flex items-center justify-end gap-2">
-                      <CheckCircle2 className="h-4 w-4" />
-                      حصر الأصناف المسلّمة
-                    </h3>
+                  <div className="rounded-2xl overflow-hidden" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.07)' }}>
+                    {/* List header */}
+                    <div className="grid grid-cols-12 gap-2 px-3 py-2" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)', background: 'rgba(255,255,255,0.02)' }}>
+                      <span className="col-span-1 text-[9px] font-bold uppercase tracking-widest text-center" style={{ color: 'rgba(255,255,255,0.2)' }}>#</span>
+                      <span className="col-span-6 text-[9px] font-bold uppercase tracking-widest" style={{ color: 'rgba(255,255,255,0.2)' }}>الصنف</span>
+                      <span className="col-span-3 text-[9px] font-bold uppercase tracking-widest text-center" style={{ color: 'rgba(255,255,255,0.2)' }}>الكمية</span>
+                      <span className="col-span-2 text-[9px] font-bold uppercase tracking-widest text-center" style={{ color: 'rgba(255,255,255,0.2)' }}>النسبة</span>
+                    </div>
                     {deliveredList.map((item, idx) => {
                       const maxCount = deliveredList[0].count
                       const pct = Math.round((item.count / maxCount) * 100)
+                      const totalPct = totalDelivered > 0 ? Math.round((item.count / totalDelivered) * 100) : 0
+                      const isTop = idx === 0
+                      const barColor = idx === 0 ? '#34d399' : idx === 1 ? '#60a5fa' : idx === 2 ? '#a78bfa' : '#6b7280'
                       return (
-                        <div key={item.drinkName} className="bg-card border border-border rounded-xl p-3">
-                          <div className="flex items-center justify-between mb-2">
-                            <div className="flex items-center gap-2 text-left">
-                              <span className="bg-amber-500/10 text-amber-500 text-xs font-bold rounded-full px-2 py-0.5">× {item.count}</span>
-                            </div>
-                            <div className="flex items-center gap-2 text-right">
-                              <span className="font-semibold text-foreground">{item.drinkName}</span>
-                              <span className="flex h-6 w-6 items-center justify-center rounded-full bg-muted text-xs font-bold text-muted-foreground">
-                                {idx + 1}
-                              </span>
+                        <div key={item.drinkName}
+                          className="grid grid-cols-12 gap-2 px-3 py-2.5 items-center transition-colors"
+                          style={{ borderBottom: idx < deliveredList.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none', background: isTop ? 'rgba(52,211,153,0.04)' : 'transparent' }}>
+                          {/* Rank */}
+                          <div className="col-span-1 flex justify-center">
+                            {isTop
+                              ? <span className="text-base leading-none">🥇</span>
+                              : idx === 1 ? <span className="text-base leading-none">🥈</span>
+                              : idx === 2 ? <span className="text-base leading-none">🥉</span>
+                              : <span className="text-[10px] font-bold text-center w-full" style={{ color: 'rgba(255,255,255,0.2)' }}>{idx + 1}</span>
+                            }
+                          </div>
+                          {/* Name + bar */}
+                          <div className="col-span-6">
+                            <p className="text-xs font-semibold mb-1 truncate" style={{ color: isTop ? '#34d399' : 'rgba(255,255,255,0.75)' }}>{item.drinkName}</p>
+                            <div className="h-1 rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.06)' }}>
+                              <div className="h-full rounded-full transition-all duration-700" style={{ width: `${pct}%`, background: barColor }} />
                             </div>
                           </div>
-                          <div className="h-1.5 bg-muted rounded-full overflow-hidden">
-                            <div className="h-full rounded-full transition-all" style={{ width: `${pct}%`, background: 'linear-gradient(90deg, #f59e0b, #d97706)' }} />
+                          {/* Count */}
+                          <div className="col-span-3 text-center">
+                            <span className="text-sm font-black" style={{ color: barColor }}>× {item.count}</span>
+                          </div>
+                          {/* Percentage */}
+                          <div className="col-span-2 text-center">
+                            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-lg" style={{ background: `rgba(255,255,255,0.05)`, color: 'rgba(255,255,255,0.4)' }}>{totalPct}%</span>
                           </div>
                         </div>
                       )
                     })}
+                    {/* Footer total */}
+                    <div className="flex items-center justify-between px-3 py-2.5" style={{ borderTop: '1px solid rgba(255,255,255,0.08)', background: 'rgba(255,255,255,0.02)' }}>
+                      <span className="text-[10px] font-bold uppercase tracking-widest" style={{ color: 'rgba(255,255,255,0.25)' }}>الإجمالي</span>
+                      <span className="text-sm font-black" style={{ color: '#34d399' }}>× {totalDelivered}</span>
+                    </div>
                   </div>
                 )}
               </>
