@@ -401,7 +401,7 @@ export default function WaiterPage() {
               className="w-full h-12 rounded-2xl font-bold text-sm flex items-center justify-center gap-2 transition-all active:scale-[0.98] disabled:opacity-50 mt-2"
               style={{ background: 'linear-gradient(135deg, #D4A017, #92640a)', color: '#fff', boxShadow: '0 4px 20px rgba(212,160,23,0.3)' }}>
               {isLoggingIn ? <Loader2 className="h-4 w-4 animate-spin" /> : <span className="text-base">🛎️</span>}
-              {isLoggingIn ? 'جاري الدخول...' : 'دخول الويتر'}
+              {isLoggingIn ? 'جاري الدخول...' : 'دخول الكابتن'}
             </button>
           </div>
         </div>
