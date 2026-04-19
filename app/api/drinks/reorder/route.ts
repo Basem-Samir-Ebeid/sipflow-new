@@ -5,10 +5,12 @@ export async function POST(request: Request) {
   try {
     const body = await request.json()
     const { order } = body as { order: { id: string; sort_order: number }[] }
-    if (!Array.isArray(order)) {
+    if (!Array.isArray(order) || order.length === 0) {
       return NextResponse.json({ error: 'Invalid payload' }, { status: 400 })
     }
-    await Promise.all(order.map(({ id, sort_order }) => db.updateDrink(id, { sort_order })))
+    for (const { id, sort_order } of order) {
+      await db.updateDrinkSortOrder(id, sort_order)
+    }
     return NextResponse.json({ success: true })
   } catch (error) {
     console.error('Error reordering drinks:', error)

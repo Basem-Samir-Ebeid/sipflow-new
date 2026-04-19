@@ -285,6 +285,11 @@ export function AdminPanel({
     loadDevAdminAccounts().catch(() => {})
   }, [isDevAdmin, devAdminRole])
 
+  // Sync localDrinks whenever the parent drinks prop refreshes from server
+  useEffect(() => {
+    setLocalDrinks(drinks)
+  }, [drinks])
+
   const handleCopyStaffUrl = () => {
     const url = `${window.location.origin}/staff`
     navigator.clipboard.writeText(url).then(() => {
@@ -359,6 +364,7 @@ export function AdminPanel({
   // Drag-to-reorder state
   const [dragOverId, setDragOverId] = useState<string | null>(null)
   const dragItemId = useRef<string | null>(null)
+  const [localDrinks, setLocalDrinks] = useState<Drink[]>(drinks)
 
   // Maintenance mode state
   const [isMaintenanceMode, setIsMaintenanceMode] = useState(false)
@@ -1052,25 +1058,41 @@ export function AdminPanel({
 
   const handleDrop = async (targetId: string, drinksList: Drink[]) => {
     const sourceId = dragItemId.current
-    if (!sourceId || sourceId === targetId) { setDragOverId(null); return }
+    setDragOverId(null)
+    dragItemId.current = null
+    if (!sourceId || sourceId === targetId) return
     const sourceIdx = drinksList.findIndex(d => d.id === sourceId)
     const targetIdx = drinksList.findIndex(d => d.id === targetId)
-    if (sourceIdx === -1 || targetIdx === -1) { setDragOverId(null); return }
+    if (sourceIdx === -1 || targetIdx === -1) return
+
+    // Build reordered list
     const reordered = [...drinksList]
     const [moved] = reordered.splice(sourceIdx, 1)
     reordered.splice(targetIdx, 0, moved)
     const order = reordered.map((d, i) => ({ id: d.id, sort_order: i + 1 }))
-    setDragOverId(null)
-    dragItemId.current = null
+
+    // Optimistic update — reflect new order immediately in the UI
+    const reorderedMap = new Map(reordered.map((d, i) => [d.id, { ...d, sort_order: i + 1 }]))
+    setLocalDrinks(prev => {
+      const inGroup = prev.filter(d => reorderedMap.has(d.id)).map(d => reorderedMap.get(d.id)!)
+      const outGroup = prev.filter(d => !reorderedMap.has(d.id))
+      return [...inGroup.sort((a, b) => a.sort_order - b.sort_order), ...outGroup]
+    })
+
     try {
-      await fetch('/api/drinks/reorder', {
+      const res = await fetch('/api/drinks/reorder', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ order })
       })
-      onDrinkUpdated()
+      if (!res.ok) throw new Error('فشل الحفظ')
       toast.success('تم حفظ الترتيب')
-    } catch { toast.error('خطأ في حفظ الترتيب') }
+      onDrinkUpdated()
+    } catch {
+      // Rollback to server state on error
+      setLocalDrinks(drinks)
+      toast.error('خطأ في حفظ الترتيب')
+    }
   }
 
   const handleDeleteDrink = async (drinkId: string) => {
@@ -3449,7 +3471,7 @@ const handleSaveSettings = async () => {
             ) : (
             <div className="rounded-2xl border border-border bg-card p-4">
               {(() => {
-                const placeDrinks = drinks.filter(d => d.place_id === devDrinkPlaceId)
+                const placeDrinks = localDrinks.filter(d => d.place_id === devDrinkPlaceId)
                 const placeName = places.find(p => p.id === devDrinkPlaceId)?.name
                 return (
                   <>
@@ -3531,9 +3553,9 @@ const handleSaveSettings = async () => {
           ) : (
           /* Place admin: flat list */
           <div className="rounded-2xl border border-border bg-card p-4">
-            <h3 className="mb-4 font-semibold text-foreground">الأصناف الحالية ({drinks.length})</h3>
+            <h3 className="mb-4 font-semibold text-foreground">الأصناف الحالية ({localDrinks.length})</h3>
             <div className="space-y-2">
-              {drinks.map((drink) => {
+              {localDrinks.map((drink) => {
                 const isSeasonal = !!(drink.seasonal_start || drink.seasonal_end)
                 return (
                 <div
@@ -3541,7 +3563,7 @@ const handleSaveSettings = async () => {
                   draggable
                   onDragStart={() => handleDragStart(drink.id)}
                   onDragOver={(e) => handleDragOver(e, drink.id)}
-                  onDrop={() => handleDrop(drink.id, drinks)}
+                  onDrop={() => handleDrop(drink.id, localDrinks)}
                   onDragEnd={() => setDragOverId(null)}
                   className="flex items-center justify-between rounded-xl bg-muted p-3 transition-all"
                   style={dragOverId === drink.id ? { outline: '2px solid rgba(212,160,23,0.6)', background: 'rgba(212,160,23,0.07)' } : {}}
