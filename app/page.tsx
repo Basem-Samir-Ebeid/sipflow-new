@@ -2003,7 +2003,7 @@ export default function HomePage() {
               {[
                 { label: 'Place Admin', icon: <Settings className="h-4 w-4" />, onClick: () => { setShowPlaceAdminLanding(true); setPlaceAdminConfirmError('') }, color: '#94a3b8', iconColor: 'rgba(148,163,184,0.15)' },
                 { label: 'Cashier', icon: <ClipboardList className="h-4 w-4" />, onClick: () => { setShowCashierLogin(true); setCashierLoginError('') }, color: '#6ee7b7', iconColor: 'rgba(110,231,183,0.12)' },
-                { label: 'Waiter', icon: <Bell className="h-4 w-4" />, onClick: () => { window.location.href = '/waiter' }, color: '#fcd34d', iconColor: 'rgba(252,211,77,0.1)' },
+                { label: 'Captain', icon: <Bell className="h-4 w-4" />, onClick: () => { window.location.href = '/waiter' }, color: '#fcd34d', iconColor: 'rgba(252,211,77,0.1)' },
                 { label: 'Bar', icon: <Coffee className="h-4 w-4" />, onClick: () => { window.location.href = '/bar' }, color: '#7dd3fc', iconColor: 'rgba(125,211,252,0.1)' },
               ].map((btn, i) => (
                 <button

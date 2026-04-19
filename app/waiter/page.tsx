@@ -375,7 +375,7 @@ export default function WaiterPage() {
             <div className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 mb-3 text-[11px] font-semibold"
               style={{ background: 'rgba(212,160,23,0.08)', border: '1px solid rgba(212,160,23,0.2)', color: '#D4A017' }}>
               <span className="h-1.5 w-1.5 rounded-full bg-amber-400 animate-pulse" />
-              بوابة الويتر
+              بوابة الكابتن
             </div>
             <h1 className="text-2xl font-black text-white tracking-tight">SîpFlõw</h1>
             <p className="text-xs text-zinc-500 mt-1">تتبع الطلبات وتسليمها للطاولات</p>
