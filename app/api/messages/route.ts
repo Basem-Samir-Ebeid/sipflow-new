@@ -23,6 +23,11 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: true })
     }
 
+    if (body.action === 'delete_one' && body.id) {
+      await db.deleteMessage(body.id)
+      return NextResponse.json({ success: true })
+    }
+
     const message = await db.createMessage({ ...body, place_id: body.place_id || null })
     return NextResponse.json(message)
   } catch (error) {

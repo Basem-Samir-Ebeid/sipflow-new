@@ -587,6 +587,9 @@ export function AdminPanel({
   const [messageSent, setMessageSent] = useState(false)
   const [isDeletingMessages, setIsDeletingMessages] = useState(false)
   const [messagesDeleted, setMessagesDeleted] = useState(false)
+  const [placeMessages, setPlaceMessages] = useState<{ id: string; title: string | null; message: string; created_at: string; is_from_admin: boolean }[]>([])
+  const [isFetchingPlaceMessages, setIsFetchingPlaceMessages] = useState(false)
+  const [isDeletingPlaceMsg, setIsDeletingPlaceMsg] = useState<string | null>(null)
 
   // QR code state
   const [qrDialogOpen, setQrDialogOpen] = useState(false)
@@ -1726,6 +1729,20 @@ const handleSaveSettings = async () => {
     return () => clearInterval(interval)
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isDevAdmin])
+
+  const fetchPlaceMessages = async () => {
+    if (!placeId) return
+    setIsFetchingPlaceMessages(true)
+    try {
+      const res = await fetch(`/api/messages?place_id=${placeId}&limit=50`)
+      if (res.ok) setPlaceMessages(await res.json())
+    } catch {} finally { setIsFetchingPlaceMessages(false) }
+  }
+
+  useEffect(() => {
+    if (!isDevAdmin && placeId) fetchPlaceMessages()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isDevAdmin, placeId])
 
   // Send notification to dev admin (called only when !isDevAdmin i.e. place admin)
   const notifyDev = async (action: string, details?: string) => {
@@ -4358,6 +4375,98 @@ const handleSaveSettings = async () => {
         </TabsContent>
 
         <TabsContent value="messages" className="space-y-4">
+
+          {/* ── Place Admin: Inbox from Dev Admin ── */}
+          {!isDevAdmin && (
+            <div className="space-y-3">
+              {/* Header */}
+              <div className="rounded-2xl p-4" style={{ background: 'rgba(59,130,246,0.05)', border: '1px solid rgba(59,130,246,0.2)' }}>
+                <div className="flex items-center justify-between mb-1">
+                  <div className="flex items-center gap-2">
+                    <span className="text-lg">📬</span>
+                    <div>
+                      <h3 className="text-sm font-bold text-foreground">رسائل الإدارة</h3>
+                      <p className="text-xs text-muted-foreground">الرسائل الواردة من مطور النظام</p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={fetchPlaceMessages}
+                    disabled={isFetchingPlaceMessages}
+                    className="flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[11px] font-medium transition-all"
+                    style={{ background: 'rgba(59,130,246,0.1)', border: '1px solid rgba(59,130,246,0.25)', color: '#93c5fd' }}>
+                    <RefreshCw className={`h-3 w-3 ${isFetchingPlaceMessages ? 'animate-spin' : ''}`} />
+                    تحديث
+                  </button>
+                </div>
+              </div>
+
+              {/* Messages list */}
+              {isFetchingPlaceMessages ? (
+                <div className="text-center py-10">
+                  <RefreshCw className="h-5 w-5 animate-spin mx-auto mb-2 text-blue-400" />
+                  <p className="text-xs text-muted-foreground">جاري تحميل الرسائل...</p>
+                </div>
+              ) : placeMessages.length === 0 ? (
+                <div className="text-center py-14 rounded-2xl" style={{ border: '1px dashed rgba(255,255,255,0.08)', background: 'rgba(255,255,255,0.01)' }}>
+                  <span className="text-4xl block mb-3">📭</span>
+                  <p className="text-sm font-medium text-foreground">لا توجد رسائل بعد</p>
+                  <p className="text-xs text-muted-foreground mt-1">ستظهر هنا الرسائل القادمة من مطور النظام</p>
+                </div>
+              ) : (
+                <div className="space-y-2.5">
+                  {placeMessages.map(msg => (
+                    <div key={msg.id} className="rounded-2xl p-3.5" style={{ background: 'rgba(59,130,246,0.04)', border: '1px solid rgba(59,130,246,0.15)' }}>
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex items-start gap-2.5 min-w-0 flex-1">
+                          <div className="mt-0.5 flex-shrink-0 w-7 h-7 rounded-lg flex items-center justify-center text-sm" style={{ background: 'rgba(59,130,246,0.15)', border: '1px solid rgba(59,130,246,0.3)' }}>
+                            📣
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            {msg.title && (
+                              <p className="text-sm font-bold text-white mb-1">{msg.title}</p>
+                            )}
+                            <p className="text-sm text-foreground/90 leading-relaxed">{msg.message}</p>
+                            <p className="text-[10px] text-muted-foreground mt-1.5">
+                              {new Date(msg.created_at).toLocaleString('ar-EG', { day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                            </p>
+                          </div>
+                        </div>
+                        <button
+                          onClick={async () => {
+                            setIsDeletingPlaceMsg(msg.id)
+                            try {
+                              await fetch('/api/messages', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'delete_one', id: msg.id }) })
+                              setPlaceMessages(prev => prev.filter(m => m.id !== msg.id))
+                            } catch {} finally { setIsDeletingPlaceMsg(null) }
+                          }}
+                          disabled={isDeletingPlaceMsg === msg.id}
+                          className="flex-shrink-0 text-muted-foreground hover:text-red-400 transition-colors text-xs mt-0.5">
+                          {isDeletingPlaceMsg === msg.id ? '...' : '✕'}
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Clear all */}
+              {placeMessages.length > 0 && (
+                <button
+                  onClick={async () => {
+                    setIsDeletingMessages(true)
+                    try {
+                      await fetch('/api/messages', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'delete_all', place_id: placeId }) })
+                      setPlaceMessages([])
+                    } catch {} finally { setIsDeletingMessages(false) }
+                  }}
+                  disabled={isDeletingMessages}
+                  className="w-full rounded-xl py-2.5 text-xs font-medium transition-all"
+                  style={{ background: 'rgba(239,68,68,0.07)', border: '1px solid rgba(239,68,68,0.2)', color: '#fca5a5' }}>
+                  {isDeletingMessages ? 'جاري الحذف...' : `🗑️ مسح كل الرسائل (${placeMessages.length})`}
+                </button>
+              )}
+            </div>
+          )}
 
           {/* ── Broadcast Message (dev admin only) ── */}
           {isDevAdmin && (
