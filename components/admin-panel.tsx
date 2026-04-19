@@ -893,7 +893,7 @@ export function AdminPanel({
         })
       })
       if (res.ok) {
-        notifyDev('إضافة ويتر جديد', `الاسم: ${newWaiterName.trim()} — المستخدم: ${newWaiterUsername.trim()}`)
+        notifyDev('إضافة كابتن جديد', `الاسم: ${newWaiterName.trim()} — المستخدم: ${newWaiterUsername.trim()}`)
         setNewWaiterUsername('')
         setNewWaiterPassword('')
         setNewWaiterName('')
@@ -902,7 +902,7 @@ export function AdminPanel({
         fetchStaffUsers()
       } else {
         const errData = await res.json().catch(() => ({}))
-        setWaiterError(errData?.error || 'فشل إضافة الويتر — اسم المستخدم موجود بالفعل أو حدث خطأ')
+        setWaiterError(errData?.error || 'فشل إضافة الكابتن — اسم المستخدم موجود بالفعل أو حدث خطأ')
       }
     } catch (err) {
       console.error('Error adding waiter:', err)
@@ -4717,9 +4717,9 @@ const handleSaveSettings = async () => {
             <div className="p-4">
               <div className="flex items-center gap-2 mb-3">
                 <span className="text-lg">🛎️</span>
-                <h3 className="font-semibold text-foreground">إدارة الويتر</h3>
+                <h3 className="font-semibold text-foreground">إدارة الكابتن</h3>
               </div>
-              <p className="text-sm text-muted-foreground mb-4">ابعت الرابط ده للويتر عشان يدخل على صفحته مباشرةً</p>
+              <p className="text-sm text-muted-foreground mb-4">ابعت الرابط ده للكابتن عشان يدخل على صفحته مباشرةً</p>
               <div className="flex items-center gap-2 rounded-xl bg-muted/80 border border-border px-4 py-3 mb-3">
                 <span className="flex-1 text-sm font-mono text-amber-300 truncate" dir="ltr">
                   {staffOrigin ? `${staffOrigin}/waiter` : '.../waiter'}
@@ -4748,8 +4748,8 @@ const handleSaveSettings = async () => {
                 🛎️
               </div>
               <div>
-                <p className="text-sm font-semibold text-foreground">إضافة ويتر جديد</p>
-                <p className="text-[11px] text-muted-foreground">وصول لصفحة الويتر وتتبع الطلبات</p>
+                <p className="text-sm font-semibold text-foreground">إضافة كابتن جديد</p>
+                <p className="text-[11px] text-muted-foreground">وصول لصفحة الكابتن وتتبع الطلبات</p>
               </div>
             </div>
             <div className="p-4 space-y-3">
@@ -4776,13 +4776,13 @@ const handleSaveSettings = async () => {
                   </select>
                 </div>
               )}
-              {waiterAdded && <div className="rounded-lg p-2.5 text-center text-xs font-medium" style={{ background: 'rgba(212,160,23,0.12)', border: '1px solid rgba(212,160,23,0.25)', color: '#D4A017' }}>✓ تم إضافة الويتر بنجاح</div>}
+              {waiterAdded && <div className="rounded-lg p-2.5 text-center text-xs font-medium" style={{ background: 'rgba(212,160,23,0.12)', border: '1px solid rgba(212,160,23,0.25)', color: '#D4A017' }}>✓ تم إضافة الكابتن بنجاح</div>}
               {waiterError && <div className="rounded-lg p-2.5 text-center text-xs font-medium" style={{ background: 'rgba(220,38,38,0.1)', border: '1px solid rgba(220,38,38,0.3)', color: '#f87171' }}>⚠ {waiterError}</div>}
               <button onClick={handleAddWaiter} disabled={isAddingWaiter || !newWaiterUsername.trim() || !newWaiterPassword.trim() || !newWaiterName.trim() || (isDevAdmin && !newWaiterPlaceId)}
                 className="w-full h-9 rounded-lg text-sm font-bold flex items-center justify-center gap-2 disabled:opacity-50 transition-opacity"
                 style={{ background: 'linear-gradient(135deg, #D4A017, #b8860b)', color: '#1a0800' }}>
                 {isAddingWaiter ? <RefreshCw className="h-3.5 w-3.5 animate-spin" /> : <Plus className="h-3.5 w-3.5" />}
-                {isAddingWaiter ? 'جاري الإضافة...' : 'إضافة ويتر'}
+                {isAddingWaiter ? 'جاري الإضافة...' : 'إضافة كابتن'}
               </button>
             </div>
           </div>
@@ -4794,7 +4794,7 @@ const handleSaveSettings = async () => {
                 <RefreshCw className="ml-2 h-4 w-4" />
                 تحديث
               </Button>
-              <h3 className="font-semibold text-foreground">الويتر الحاليين</h3>
+              <h3 className="font-semibold text-foreground">الكابتن الحاليين</h3>
             </div>
             <div className="space-y-3">
               {(() => {
@@ -4811,7 +4811,7 @@ const handleSaveSettings = async () => {
                         </AlertDialogTrigger>
                         <AlertDialogContent className="border-border bg-card">
                           <AlertDialogHeader>
-                            <AlertDialogTitle className="text-foreground">حذف الويتر</AlertDialogTitle>
+                            <AlertDialogTitle className="text-foreground">حذف الكابتن</AlertDialogTitle>
                             <AlertDialogDescription>هل أنت متأكد من حذف {staff.name}؟</AlertDialogDescription>
                           </AlertDialogHeader>
                           <AlertDialogFooter>
@@ -4826,7 +4826,7 @@ const handleSaveSettings = async () => {
                     </div>
                     <div className="text-right">
                       <div className="flex items-center gap-1 justify-end">
-                        <span className="text-xs rounded-full px-2 py-0.5 font-medium" style={{ background: 'rgba(212,160,23,0.15)', color: '#D4A017' }}>🛎️ ويتر</span>
+                        <span className="text-xs rounded-full px-2 py-0.5 font-medium" style={{ background: 'rgba(212,160,23,0.15)', color: '#D4A017' }}>🛎️ كابتن</span>
                         <p className="font-medium text-foreground">{staff.name}</p>
                       </div>
                       <p className="text-sm text-muted-foreground">@{staff.username}</p>
@@ -4837,7 +4837,7 @@ const handleSaveSettings = async () => {
                       )}
                     </div>
                   </div>
-                )) : <p className="text-center text-muted-foreground">لا يوجد ويتر بعد</p>
+                )) : <p className="text-center text-muted-foreground">لا يوجد كابتن بعد</p>
               })()}
             </div>
           </div>
