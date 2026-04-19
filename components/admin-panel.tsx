@@ -5655,173 +5655,237 @@ const handleSaveSettings = async () => {
         {/* ─── Places Tab (Dev Admin only) ─── */}
         {isDevAdmin && (
           <TabsContent value="places" className="space-y-4">
-            {/* Add new place */}
-            <div className="rounded-2xl border border-border bg-card p-4 space-y-3">
-              <h3 className="font-bold text-foreground flex items-center gap-2">
-                <Plus className="h-4 w-4 text-primary" /> إضافة مكان جديد
-              </h3>
-              <div>
-                <Label className="text-xs text-muted-foreground">اسم المكان <span className="text-primary">(هيكون نفس الكود اللي يكتبه العميل)</span></Label>
-                <Input value={newPlaceName} onChange={e => setNewPlaceName(e.target.value)}
-                  placeholder="مثال: كافيه النيل" className="mt-1 border-border bg-muted text-foreground" />
-              </div>
-              <div>
-                <Label className="text-xs text-muted-foreground">وصف (اختياري)</Label>
-                <Input value={newPlaceDesc} onChange={e => setNewPlaceDesc(e.target.value)}
-                  placeholder="وصف المكان..." className="mt-1 border-border bg-muted text-foreground" />
-              </div>
-              <div>
-                <Label className="text-xs text-muted-foreground mb-2 block">نوع المكان</Label>
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => setNewPlaceType('cafe')}
-                    className={`flex-1 rounded-xl border py-2 px-3 text-sm font-medium transition-colors flex items-center justify-center gap-2 ${newPlaceType === 'cafe' ? 'border-amber-500/60 bg-amber-500/10 text-amber-400' : 'border-border bg-muted text-muted-foreground'}`}
-                  >
-                    ☕ كافيه / مطعم
-                  </button>
-                  <button
-                    onClick={() => setNewPlaceType('company')}
-                    className={`flex-1 rounded-xl border py-2 px-3 text-sm font-medium transition-colors flex items-center justify-center gap-2 ${newPlaceType === 'company' ? 'border-blue-500/60 bg-blue-500/10 text-blue-400' : 'border-border bg-muted text-muted-foreground'}`}
-                  >
-                    🏢 شركة
-                  </button>
+
+            {/* ── Add + Clone grid ── */}
+            <div className="grid grid-cols-1 gap-3">
+
+              {/* Add new place */}
+              <div className="rounded-2xl overflow-hidden" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.08)' }}>
+                {/* Header */}
+                <div className="flex items-center gap-3 px-4 py-3" style={{ background: 'linear-gradient(135deg,rgba(251,191,36,0.12),rgba(245,158,11,0.06))', borderBottom: '1px solid rgba(251,191,36,0.12)' }}>
+                  <div className="h-8 w-8 rounded-xl flex items-center justify-center text-base shrink-0" style={{ background: 'rgba(251,191,36,0.15)', border: '1px solid rgba(251,191,36,0.25)' }}>＋</div>
+                  <div>
+                    <p className="text-sm font-bold" style={{ color: '#fbbf24' }}>إضافة مكان جديد</p>
+                    <p className="text-[10px]" style={{ color: 'rgba(255,255,255,0.35)' }}>اسم المكان = الكود اللي يكتبه العميل</p>
+                  </div>
                 </div>
-                {newPlaceType === 'company' && (
-                  <div className="space-y-2 mt-2">
-                    <p className="text-xs text-blue-400/80">الشركات لها موظفون بإيميل وباسورد — يُخصم إجمالي مشاريبهم من مرتباتهم شهرياً</p>
+                {/* Body */}
+                <div className="p-4 space-y-3">
+                  <div className="grid grid-cols-1 gap-2">
                     <div>
-                      <Label className="text-xs text-muted-foreground">عدد المشاريب المجانية لكل موظف يومياً</Label>
-                      <div className="flex items-center gap-2 mt-1">
-                        <Input
-                          type="number"
-                          min={0}
-                          value={newPlaceFreeCount}
-                          onChange={e => setNewPlaceFreeCount(Math.max(0, parseInt(e.target.value) || 0))}
-                          className="h-9 w-24 text-center border-border bg-muted text-foreground"
-                        />
-                        <span className="text-xs text-muted-foreground">مشروب مجاني — بعدها يُحسب السعر عادي</span>
-                      </div>
-                      {newPlaceFreeCount === 0 && (
-                        <p className="text-[11px] text-muted-foreground/60 mt-1">0 = كل المشاريب بسعرها العادي</p>
-                      )}
+                      <Label className="text-[10px] font-semibold mb-1 block" style={{ color: 'rgba(255,255,255,0.4)' }}>اسم المكان</Label>
+                      <Input value={newPlaceName} onChange={e => setNewPlaceName(e.target.value)}
+                        placeholder="مثال: كافيه النيل"
+                        className="h-9 text-sm border-0 text-foreground"
+                        style={{ background: 'rgba(255,255,255,0.05)', borderRadius: '10px' }} />
+                    </div>
+                    <div>
+                      <Label className="text-[10px] font-semibold mb-1 block" style={{ color: 'rgba(255,255,255,0.4)' }}>وصف <span style={{ color: 'rgba(255,255,255,0.25)' }}>(اختياري)</span></Label>
+                      <Input value={newPlaceDesc} onChange={e => setNewPlaceDesc(e.target.value)}
+                        placeholder="وصف المكان..."
+                        className="h-9 text-sm border-0 text-foreground"
+                        style={{ background: 'rgba(255,255,255,0.05)', borderRadius: '10px' }} />
                     </div>
                   </div>
-                )}
-              </div>
-              {placesError && <p className="text-sm text-destructive">{placesError}</p>}
-              <Button className="w-full" onClick={handleAddPlace} disabled={isAddingPlace}>
-                <Plus className="ml-2 h-4 w-4" />
-                {isAddingPlace ? 'جاري الإضافة...' : 'إضافة المكان'}
-              </Button>
-            </div>
-
-            {/* ── Clone Place ── */}
-            <div className="rounded-2xl p-4 space-y-3" style={{ background: 'rgba(168,85,247,0.04)', border: '1px solid rgba(168,85,247,0.2)' }}>
-              <div className="flex items-center gap-2">
-                <span className="text-lg">🪄</span>
-                <div>
-                  <h3 className="text-sm font-bold text-foreground">نسخ مكان</h3>
-                  <p className="text-xs text-muted-foreground">ينسخ المنيو والإعدادات لمكان جديد</p>
+                  {/* Type selector */}
+                  <div>
+                    <Label className="text-[10px] font-semibold mb-1.5 block" style={{ color: 'rgba(255,255,255,0.4)' }}>نوع المكان</Label>
+                    <div className="grid grid-cols-2 gap-2">
+                      <button
+                        onClick={() => setNewPlaceType('cafe')}
+                        className="flex items-center justify-center gap-2 rounded-xl py-2.5 text-xs font-semibold transition-all"
+                        style={newPlaceType === 'cafe'
+                          ? { background: 'rgba(251,191,36,0.15)', border: '1px solid rgba(251,191,36,0.4)', color: '#fbbf24' }
+                          : { background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.35)' }}>
+                        ☕ كافيه / مطعم
+                      </button>
+                      <button
+                        onClick={() => setNewPlaceType('company')}
+                        className="flex items-center justify-center gap-2 rounded-xl py-2.5 text-xs font-semibold transition-all"
+                        style={newPlaceType === 'company'
+                          ? { background: 'rgba(59,130,246,0.15)', border: '1px solid rgba(59,130,246,0.4)', color: '#60a5fa' }
+                          : { background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.35)' }}>
+                        🏢 شركة
+                      </button>
+                    </div>
+                  </div>
+                  {newPlaceType === 'company' && (
+                    <div className="rounded-xl p-3 space-y-2" style={{ background: 'rgba(59,130,246,0.06)', border: '1px solid rgba(59,130,246,0.15)' }}>
+                      <p className="text-[10px] leading-relaxed" style={{ color: 'rgba(96,165,250,0.8)' }}>الشركات لها موظفون بإيميل وباسورد — يُخصم إجمالي مشاريبهم من مرتباتهم شهرياً</p>
+                      <div className="flex items-center gap-3">
+                        <Input
+                          type="number" min={0}
+                          value={newPlaceFreeCount}
+                          onChange={e => setNewPlaceFreeCount(Math.max(0, parseInt(e.target.value) || 0))}
+                          className="h-8 w-20 text-center border-0 text-sm font-bold"
+                          style={{ background: 'rgba(59,130,246,0.12)', color: '#60a5fa', borderRadius: '8px' }}
+                        />
+                        <span className="text-[11px]" style={{ color: 'rgba(255,255,255,0.4)' }}>مشروب مجاني/يوم — بعدها بسعره</span>
+                      </div>
+                    </div>
+                  )}
+                  {placesError && (
+                    <p className="text-xs px-3 py-2 rounded-lg" style={{ background: 'rgba(239,68,68,0.1)', color: '#f87171' }}>{placesError}</p>
+                  )}
+                  <button
+                    onClick={handleAddPlace} disabled={isAddingPlace}
+                    className="w-full h-10 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-all disabled:opacity-50"
+                    style={{ background: 'linear-gradient(135deg,#d97706,#92400e)', color: '#fff', boxShadow: '0 4px 14px rgba(217,119,6,0.3)' }}>
+                    {isAddingPlace ? <RefreshCw className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
+                    {isAddingPlace ? 'جاري الإضافة...' : 'إضافة المكان'}
+                  </button>
                 </div>
               </div>
-              <div className="space-y-2">
-                <Label className="text-xs text-muted-foreground">المكان المصدر</Label>
-                <select
-                  value={cloneSourceId}
-                  onChange={e => {
-                    setCloneSourceId(e.target.value)
-                    const src = places.find(p => p.id === e.target.value)
-                    if (src && !cloneNewName) setCloneNewName(`${src.name} (نسخة)`)
-                    if (src && !cloneNewCode) setCloneNewCode(`${src.code}-copy`)
-                  }}
-                  className="w-full rounded-lg border border-border bg-muted px-3 py-2 text-sm text-foreground"
-                >
-                  <option value="">— اختر المكان المصدر —</option>
-                  {places.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
-                </select>
-                <Input
-                  value={cloneNewName}
-                  onChange={e => setCloneNewName(e.target.value)}
-                  placeholder="اسم المكان الجديد"
-                  className="border-border bg-muted text-foreground text-sm"
-                />
-                <Input
-                  value={cloneNewCode}
-                  onChange={e => setCloneNewCode(e.target.value)}
-                  placeholder="كود المكان الجديد (يكتبه الزبون)"
-                  className="border-border bg-muted text-foreground text-sm"
-                />
+
+              {/* Clone Place */}
+              <div className="rounded-2xl overflow-hidden" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.08)' }}>
+                {/* Header */}
+                <div className="flex items-center gap-3 px-4 py-3" style={{ background: 'linear-gradient(135deg,rgba(168,85,247,0.12),rgba(139,92,246,0.06))', borderBottom: '1px solid rgba(168,85,247,0.15)' }}>
+                  <div className="h-8 w-8 rounded-xl flex items-center justify-center text-base shrink-0" style={{ background: 'rgba(168,85,247,0.15)', border: '1px solid rgba(168,85,247,0.3)' }}>🪄</div>
+                  <div>
+                    <p className="text-sm font-bold" style={{ color: '#c084fc' }}>نسخ مكان</p>
+                    <p className="text-[10px]" style={{ color: 'rgba(255,255,255,0.35)' }}>ينسخ المنيو والإعدادات لمكان جديد</p>
+                  </div>
+                </div>
+                {/* Body */}
+                <div className="p-4 space-y-2.5">
+                  <div>
+                    <Label className="text-[10px] font-semibold mb-1 block" style={{ color: 'rgba(255,255,255,0.4)' }}>المكان المصدر</Label>
+                    <select
+                      value={cloneSourceId}
+                      onChange={e => {
+                        setCloneSourceId(e.target.value)
+                        const src = places.find(p => p.id === e.target.value)
+                        if (src && !cloneNewName) setCloneNewName(`${src.name} (نسخة)`)
+                        if (src && !cloneNewCode) setCloneNewCode(`${src.code}-copy`)
+                      }}
+                      className="w-full h-9 rounded-xl px-3 text-sm text-foreground border-0 outline-none"
+                      style={{ background: 'rgba(168,85,247,0.08)', border: '1px solid rgba(168,85,247,0.2)' }}
+                    >
+                      <option value="">— اختر المكان المصدر —</option>
+                      {places.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                    </select>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <Label className="text-[10px] font-semibold mb-1 block" style={{ color: 'rgba(255,255,255,0.4)' }}>الاسم الجديد</Label>
+                      <Input value={cloneNewName} onChange={e => setCloneNewName(e.target.value)}
+                        placeholder="اسم المكان الجديد"
+                        className="h-9 text-sm border-0 text-foreground"
+                        style={{ background: 'rgba(255,255,255,0.05)', borderRadius: '10px' }} />
+                    </div>
+                    <div>
+                      <Label className="text-[10px] font-semibold mb-1 block" style={{ color: 'rgba(255,255,255,0.4)' }}>الكود الجديد</Label>
+                      <Input value={cloneNewCode} onChange={e => setCloneNewCode(e.target.value)}
+                        placeholder="كود-الزبون"
+                        className="h-9 text-sm border-0 text-foreground"
+                        style={{ background: 'rgba(255,255,255,0.05)', borderRadius: '10px' }} />
+                    </div>
+                  </div>
+                  <button
+                    onClick={handleClonePlace} disabled={isCloningPlace}
+                    className="w-full h-10 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-all disabled:opacity-50 mt-1"
+                    style={{ background: 'rgba(168,85,247,0.15)', border: '1px solid rgba(168,85,247,0.35)', color: '#c084fc', boxShadow: '0 4px 14px rgba(168,85,247,0.15)' }}>
+                    {isCloningPlace ? <RefreshCw className="h-4 w-4 animate-spin" /> : <span>🪄</span>}
+                    {isCloningPlace ? 'جاري النسخ...' : 'نسخ المكان'}
+                  </button>
+                </div>
               </div>
-              <Button
-                className="w-full"
-                style={{ background: 'rgba(168,85,247,0.15)', color: '#c084fc', border: '1px solid rgba(168,85,247,0.35)' }}
-                onClick={handleClonePlace}
-                disabled={isCloningPlace}
-              >
-                {isCloningPlace ? 'جاري النسخ...' : '🪄 نسخ المكان'}
-              </Button>
             </div>
 
-            {/* Places list */}
-            <div className="space-y-3">
+            {/* ── Places list ── */}
+            <div className="space-y-2.5">
+              {/* List header */}
+              <div className="flex items-center gap-2 px-1">
+                <span className="text-[10px] font-bold tracking-widest uppercase" style={{ color: 'rgba(255,255,255,0.25)' }}>الأماكن المسجّلة</span>
+                <div className="flex-1 h-px" style={{ background: 'rgba(255,255,255,0.06)' }} />
+                <span className="text-[10px] px-2 py-0.5 rounded-full" style={{ background: 'rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.3)' }}>{places.length}</span>
+              </div>
+
               {places.length === 0 ? (
-                <div className="text-center py-8 text-muted-foreground">
-                  <p className="text-3xl mb-2">🏪</p>
-                  <p>لا توجد أماكن بعد</p>
+                <div className="text-center py-12 rounded-2xl" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)' }}>
+                  <p className="text-4xl mb-2">🏪</p>
+                  <p className="text-sm" style={{ color: 'rgba(255,255,255,0.3)' }}>لا توجد أماكن بعد</p>
                 </div>
               ) : places.map(place => (
-                <div key={place.id} className="rounded-xl border border-border bg-card p-4 space-y-3">
+                <div key={place.id} className="rounded-2xl overflow-hidden" style={{ background: 'rgba(255,255,255,0.02)', border: place.is_active ? '1px solid rgba(255,255,255,0.09)' : '1px solid rgba(239,68,68,0.15)' }}>
 
                   {/* ── Info row ── */}
-                  <div className="flex items-center gap-3">
-                    {/* Logo / placeholder */}
-                    <div className="shrink-0 h-12 w-12 rounded-xl overflow-hidden border border-border bg-muted flex items-center justify-center text-xl">
+                  <div className="flex items-center gap-3 p-3">
+                    {/* Logo */}
+                    <div className="shrink-0 h-11 w-11 rounded-xl overflow-hidden flex items-center justify-center text-xl" style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.08)' }}>
                       {place.logo_url
                         ? <img src={place.logo_url} alt="شعار" className="h-full w-full object-cover" onError={e => { (e.target as HTMLImageElement).style.display = 'none' }} />
-                        : <span className="text-muted-foreground/40">🏪</span>
+                        : <span style={{ color: 'rgba(255,255,255,0.2)' }}>🏪</span>
                       }
                     </div>
                     {/* Name + badges */}
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <span className="font-bold text-foreground leading-tight">{place.name}</span>
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <span className="font-bold text-sm text-foreground leading-tight">{place.name}</span>
                         {place.code !== place.name && (
-                          <span className="rounded px-1.5 py-0.5 text-[10px] font-mono font-bold bg-primary/10 text-primary">{place.code}</span>
+                          <span className="rounded-md px-1.5 py-0.5 text-[9px] font-mono font-bold" style={{ background: 'rgba(139,92,246,0.15)', color: '#a78bfa' }}>{place.code}</span>
                         )}
-                        <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${place.is_active ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}`}>
-                          {place.is_active ? 'مفعّل' : 'موقوف'}
+                        <span className={`text-[9px] px-1.5 py-0.5 rounded-full font-bold ${place.is_active ? '' : ''}`}
+                          style={place.is_active
+                            ? { background: 'rgba(16,185,129,0.12)', color: '#6ee7b7' }
+                            : { background: 'rgba(239,68,68,0.12)', color: '#fca5a5' }}>
+                          {place.is_active ? '● مفعّل' : '● موقوف'}
                         </span>
                         {place.place_type === 'company' && (
-                          <span className="text-[10px] px-2 py-0.5 rounded-full font-medium bg-blue-500/20 text-blue-400">🏢 شركة</span>
+                          <span className="text-[9px] px-1.5 py-0.5 rounded-full font-bold" style={{ background: 'rgba(59,130,246,0.12)', color: '#93c5fd' }}>🏢 شركة</span>
                         )}
                       </div>
-                      {place.description && <p className="text-xs text-muted-foreground mt-0.5 truncate">{place.description}</p>}
-                      <div className="flex items-center gap-1 mt-0.5">
-                        <UserCog className="h-3 w-3 text-muted-foreground" />
+                      <div className="flex items-center gap-1.5 mt-0.5">
+                        <UserCog className="h-3 w-3 shrink-0" style={{ color: 'rgba(255,255,255,0.2)' }} />
                         {placeAdmins[place.id]
-                          ? <span className="text-xs text-amber-400 font-medium">{placeAdmins[place.id]!.name}</span>
-                          : <span className="text-xs text-muted-foreground">لا يوجد أدمن</span>
+                          ? <span className="text-[11px] font-semibold" style={{ color: '#fbbf24' }}>{placeAdmins[place.id]!.name}</span>
+                          : <span className="text-[11px]" style={{ color: 'rgba(255,255,255,0.25)' }}>لا يوجد أدمن</span>
                         }
+                        {place.description && <span className="text-[10px] truncate" style={{ color: 'rgba(255,255,255,0.2)' }}>· {place.description}</span>}
                       </div>
+                    </div>
+                    {/* Right quick actions */}
+                    <div className="flex flex-col gap-1.5 shrink-0">
+                      <button
+                        onClick={() => handleTogglePlace(place.id, place.is_active)}
+                        className="h-7 px-2.5 rounded-lg text-[10px] font-bold transition-all"
+                        style={place.is_active
+                          ? { background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.25)', color: '#fca5a5' }
+                          : { background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.25)', color: '#6ee7b7' }}>
+                        {place.is_active ? 'إيقاف' : 'تفعيل'}
+                      </button>
+                      <button
+                        onClick={() => handleToggleOrderTracking(place.id, !orderTrackingMap[place.id])}
+                        disabled={isSavingTracking}
+                        className="h-7 px-2.5 rounded-lg text-[10px] font-bold transition-all"
+                        style={orderTrackingMap[place.id] !== false
+                          ? { background: 'rgba(251,191,36,0.1)', border: '1px solid rgba(251,191,36,0.25)', color: '#fbbf24' }
+                          : { background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.3)' }}>
+                        📍 {orderTrackingMap[place.id] !== false ? 'تتبع' : 'موقوف'}
+                      </button>
                     </div>
                   </div>
 
                   {/* ── Action buttons row ── */}
-                  <div className="flex items-center gap-2 flex-wrap border-t border-border/40 pt-3">
+                  <div className="flex items-center gap-1.5 flex-wrap px-3 pb-3">
                     {/* Logo */}
-                    <Button size="sm" variant="outline"
-                      className={`text-xs ${logoEditingPlace === place.id ? 'border-amber-500/60 text-amber-400 bg-amber-500/10' : ''}`}
+                    <button
                       onClick={() => {
                         if (logoEditingPlace === place.id) { setLogoEditingPlace(null); setLogoUrlInput(''); setLogoError(''); return }
                         setLogoEditingPlace(place.id)
                         setLogoUrlInput(place.logo_url || '')
                         setLogoError('')
                         setAssigningForPlace(null)
-                      }}>
+                      }}
+                      className="h-7 px-2.5 rounded-lg text-[11px] font-medium transition-all"
+                      style={logoEditingPlace === place.id
+                        ? { background: 'rgba(251,191,36,0.15)', border: '1px solid rgba(251,191,36,0.35)', color: '#fbbf24' }
+                        : { background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.5)' }}>
                       🖼️ شعار
-                    </Button>
-                    {/* Assign admin */}
-                    <Button size="sm" variant="outline" className="text-xs"
+                    </button>
+                    {/* Assign/edit admin */}
+                    <button
                       onClick={() => {
                         if (assigningForPlace === place.id) { setAssigningForPlace(null); return }
                         setAssigningForPlace(place.id)
@@ -5829,17 +5893,22 @@ const handleSaveSettings = async () => {
                         setAdminPassword('')
                         setAdminName(placeAdmins[place.id]?.name || '')
                         setLogoEditingPlace(null)
-                      }}>
-                      <UserCog className="h-3 w-3 ml-1" />
+                      }}
+                      className="h-7 px-2.5 rounded-lg text-[11px] font-medium transition-all flex items-center gap-1"
+                      style={assigningForPlace === place.id
+                        ? { background: 'rgba(139,92,246,0.15)', border: '1px solid rgba(139,92,246,0.35)', color: '#a78bfa' }
+                        : { background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.5)' }}>
+                      <UserCog className="h-3 w-3" />
                       {placeAdmins[place.id] ? 'تعديل الأدمن' : 'تعيين أدمن'}
-                    </Button>
+                    </button>
                     {/* Delete admin */}
                     {placeAdmins[place.id] && (
                       <AlertDialog>
                         <AlertDialogTrigger asChild>
-                          <Button size="sm" variant="outline" className="text-xs text-destructive border-destructive/40 hover:bg-destructive/10">
-                            <Trash2 className="h-3 w-3 ml-1" /> حذف الأدمن
-                          </Button>
+                          <button className="h-7 px-2.5 rounded-lg text-[11px] font-medium transition-all flex items-center gap-1"
+                            style={{ background: 'rgba(239,68,68,0.06)', border: '1px solid rgba(239,68,68,0.2)', color: '#fca5a5' }}>
+                            <Trash2 className="h-3 w-3" /> حذف الأدمن
+                          </button>
                         </AlertDialogTrigger>
                         <AlertDialogContent className="border-border bg-card">
                           <AlertDialogHeader>
@@ -5857,68 +5926,63 @@ const handleSaveSettings = async () => {
                         </AlertDialogContent>
                       </AlertDialog>
                     )}
-                    {/* Company employees button */}
+                    {/* Company employees */}
                     {place.place_type === 'company' && (
-                      <Button size="sm" variant="outline"
-                        className={`text-xs ${companyEmpPlace === place.id ? 'border-blue-500/60 text-blue-400 bg-blue-500/10' : ''}`}
+                      <button
                         onClick={() => {
                           if (companyEmpPlace === place.id) { setCompanyEmpPlace(null); setCompanyEmployees([]); return }
                           setCompanyEmpPlace(place.id)
                           setReportsPlace(null)
                           setFreeDrinkEditingPlace(null)
                           fetchCompanyEmployees(place.id)
-                        }}>
-                        <Users className="h-3 w-3 ml-1" /> موظفي الشركة
-                      </Button>
+                        }}
+                        className="h-7 px-2.5 rounded-lg text-[11px] font-medium transition-all flex items-center gap-1"
+                        style={companyEmpPlace === place.id
+                          ? { background: 'rgba(59,130,246,0.15)', border: '1px solid rgba(59,130,246,0.35)', color: '#60a5fa' }
+                          : { background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.5)' }}>
+                        <Users className="h-3 w-3" /> الموظفون
+                      </button>
                     )}
-                    {/* Free drink button */}
+                    {/* Free drink */}
                     {place.place_type === 'company' && (
-                      <Button size="sm" variant="outline"
-                        className={`text-xs ${freeDrinkEditingPlace === place.id ? 'border-amber-500/60 text-amber-400 bg-amber-500/10' : ''}`}
+                      <button
                         onClick={() => {
                           if (freeDrinkEditingPlace === place.id) { setFreeDrinkEditingPlace(null); return }
                           setFreeDrinkEditingPlace(place.id)
                           setCompanyEmpPlace(null)
                           setReportsPlace(null)
-                        }}>
-                        🎁 مشروب مجاني
-                      </Button>
+                        }}
+                        className="h-7 px-2.5 rounded-lg text-[11px] font-medium transition-all"
+                        style={freeDrinkEditingPlace === place.id
+                          ? { background: 'rgba(251,191,36,0.15)', border: '1px solid rgba(251,191,36,0.35)', color: '#fbbf24' }
+                          : { background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.5)' }}>
+                        🎁 مجاني
+                      </button>
                     )}
-                    {/* Employee reports button */}
+                    {/* Reports */}
                     {place.place_type === 'company' && (
-                      <Button size="sm" variant="outline"
-                        className={`text-xs ${reportsPlace === place.id ? 'border-green-500/60 text-green-400 bg-green-500/10' : ''}`}
+                      <button
                         onClick={() => {
                           if (reportsPlace === place.id) { setReportsPlace(null); setEmployeeReports([]); return }
                           setReportsPlace(place.id)
                           setCompanyEmpPlace(null)
                           fetchEmployeeReports(place.id, reportsMonth)
-                        }}>
-                        <BarChart3 className="h-3 w-3 ml-1" /> التقارير
-                      </Button>
+                        }}
+                        className="h-7 px-2.5 rounded-lg text-[11px] font-medium transition-all flex items-center gap-1"
+                        style={reportsPlace === place.id
+                          ? { background: 'rgba(16,185,129,0.15)', border: '1px solid rgba(16,185,129,0.35)', color: '#6ee7b7' }
+                          : { background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.5)' }}>
+                        <BarChart3 className="h-3 w-3" /> تقارير
+                      </button>
                     )}
-                    {/* Spacer */}
+                    {/* Spacer + delete */}
                     <div className="flex-1" />
-                    {/* Tracking toggle */}
-                    <button
-                      title="تتبع الطلبات"
-                      onClick={() => handleToggleOrderTracking(place.id, !orderTrackingMap[place.id])}
-                      disabled={isSavingTracking}
-                      className={`flex items-center gap-1 rounded-lg border px-2 py-1 text-[11px] font-medium transition-colors ${orderTrackingMap[place.id] !== false ? 'border-amber-500/40 bg-amber-500/10 text-amber-400' : 'border-border text-muted-foreground bg-muted'}`}
-                    >
-                      📍 {orderTrackingMap[place.id] !== false ? 'تتبع' : 'موقوف'}
-                    </button>
-                    {/* Toggle active */}
-                    <Button size="sm" variant="outline" className="text-xs"
-                      onClick={() => handleTogglePlace(place.id, place.is_active)}>
-                      {place.is_active ? 'إيقاف' : 'تفعيل'}
-                    </Button>
-                    {/* Delete place */}
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
-                        <Button size="sm" variant="destructive" className="text-xs">
-                          <Trash2 className="h-3 w-3" />
-                        </Button>
+                        <button className="h-7 w-7 rounded-lg flex items-center justify-center transition-all"
+                          style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)', color: '#f87171' }}>
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
                       </AlertDialogTrigger>
                       <AlertDialogContent className="border-border bg-card">
                         <AlertDialogHeader>
