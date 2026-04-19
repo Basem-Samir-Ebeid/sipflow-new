@@ -25,7 +25,7 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Plus, Trash2, Pencil, Upload, RefreshCw, Users, Coffee, Key, BarChart3, TrendingUp, Award, Clock, Send, MessageSquare, Settings2, Hash, UserPlus, UserCog, Minus, Package, Banknote, CheckCircle2, Hourglass, TableProperties, Copy, ExternalLink, Link2, Eye, EyeOff, QrCode, CalendarDays, CalendarCheck, CalendarX, Download, Loader2, Activity, ShieldCheck, ChevronLeft, Radio, Camera, UserCircle, Bell, AlertTriangle, BrainCircuit, Siren } from 'lucide-react'
+import { Plus, Trash2, Pencil, Upload, RefreshCw, Users, Coffee, Key, BarChart3, TrendingUp, Award, Clock, Send, MessageSquare, Settings2, Hash, UserPlus, UserCog, Minus, Package, Banknote, CheckCircle2, Hourglass, TableProperties, Copy, ExternalLink, Link2, Eye, EyeOff, QrCode, CalendarDays, CalendarCheck, CalendarX, Download, Loader2, Activity, ShieldCheck, ChevronLeft, Radio, Camera, UserCircle, Bell, AlertTriangle, BrainCircuit, Siren, FileText } from 'lucide-react'
 import { Checkbox } from '@/components/ui/checkbox'
 import Image from 'next/image'
 import { LivePlacesHub } from '@/components/LivePlacesHub'
@@ -92,7 +92,7 @@ export function AdminPanel({
       label: 'Super Developer',
       description: 'صلاحية كاملة لكل أجزاء النظام',
       homeTab: 'analytics',
-      tabs: ['alerts', 'analytics', 'count', 'drinks', 'inventory', 'cashier', 'reservations', 'place-admins', 'staff', 'places', 'subscriptions', 'messages', 'settings', 'danger', 'live', 'permissions', 'simulator', 'templates'],
+      tabs: ['alerts', 'analytics', 'notes', 'drinks', 'inventory', 'cashier', 'reservations', 'place-admins', 'staff', 'places', 'subscriptions', 'messages', 'settings', 'danger', 'live', 'permissions', 'simulator', 'templates'],
     },
     support_admin: {
       label: 'Support Admin',
@@ -243,6 +243,11 @@ export function AdminPanel({
   const [editingDevAdminAccount, setEditingDevAdminAccount] = useState<DevAdminAccount | null>(null)
   const [isSavingDevAdminAccount, setIsSavingDevAdminAccount] = useState(false)
   const [staffUrlCopied, setStaffUrlCopied] = useState(false)
+
+  // Developer Notes state
+  const [devNote, setDevNote] = useState('')
+  const [isSavingNote, setIsSavingNote] = useState(false)
+  const [noteSavedMsg, setNoteSavedMsg] = useState('')
 
   // Smart Alerts state
   const [smartAlerts, setSmartAlerts] = useState<{
@@ -1929,6 +1934,7 @@ const handleSaveSettings = async () => {
     if (isDevAdmin && !canAccessDevTab(v)) return
     setActiveAdminTab(v)
     if (v === 'alerts') fetchSmartAlerts()
+    if (v === 'notes' && isDevAdmin) { fetch('/api/settings?key=dev_notes').then(r => r.json()).then(d => { if (d.value) setDevNote(d.value) }).catch(() => {}) }
     if (v === 'staff') fetchStaffUsers()
     if (v === 'inventory') { fetchInventory(); if (isDevAdmin) fetchPlaces().then(list => { if (list.length > 0) setInventoryDevPlaceId(prev => prev || list[0].id) }) }
     if (v === 'places') fetchPlaces().then(list => { const m: Record<string, boolean> = {}; list.forEach((p: Place) => { m[p.id] = p.order_tracking_enabled !== false }); setOrderTrackingMap(m) })
@@ -2167,7 +2173,7 @@ const handleSaveSettings = async () => {
                 <div className="grid grid-cols-2 gap-1.5">
                   {[
                     { tab: 'analytics', icon: <TrendingUp className="h-3.5 w-3.5" />,  label: 'Reports',     ac: '#7c3aed' },
-                    { tab: 'count',     icon: <CheckCircle2 className="h-3.5 w-3.5" />,label: 'الحصر اليومي', ac: '#7c3aed' },
+                    { tab: 'notes',     icon: <FileText className="h-3.5 w-3.5" />,    label: 'المذكرة',      ac: '#7c3aed' },
                   ].filter(item => canAccessDevTab(item.tab)).map(item => (
                     <button key={item.tab} onClick={() => handleTabChange(item.tab)}
                       className="flex flex-col items-center gap-1 rounded-xl py-2.5 px-1 transition-all duration-150 hover:scale-105 active:scale-95"
@@ -2405,7 +2411,7 @@ const handleSaveSettings = async () => {
             {[
               ['alerts', 'Alerts'],
               ['analytics', 'Reports'],
-              ['count', 'Delivered'],
+              ['notes', 'المذكرة'],
               ['drinks', 'Drinks'],
               ['inventory', 'Inventory'],
               ['cashier', 'Cashier'],
@@ -5528,6 +5534,80 @@ const handleSaveSettings = async () => {
             </div>
           </div>
         </TabsContent>
+
+        {/* ─── Notes Tab (Dev Admin only) ─── */}
+        {isDevAdmin && (
+          <TabsContent value="notes" className="space-y-4">
+            {/* Header */}
+            <div className="rounded-2xl overflow-hidden" style={{ background: 'linear-gradient(135deg,rgba(245,158,11,0.08),rgba(217,119,6,0.04))', border: '1px solid rgba(245,158,11,0.18)' }}>
+              <div className="flex items-start gap-3 p-4">
+                <div className="h-10 w-10 rounded-xl flex items-center justify-center shrink-0" style={{ background: 'rgba(245,158,11,0.15)', border: '1px solid rgba(245,158,11,0.25)' }}>
+                  <FileText className="h-5 w-5" style={{ color: '#fbbf24' }} />
+                </div>
+                <div>
+                  <p className="text-sm font-bold mb-0.5" style={{ color: '#fbbf24' }}>مذكرة المطور</p>
+                  <p className="text-[11px] leading-relaxed" style={{ color: 'rgba(255,255,255,0.4)' }}>
+                    مساحة خاصة لتسجيل الملاحظات الداخلية، التذكيرات، والمهام العالقة. تُحفظ في قاعدة البيانات وتظهر فقط للأدمن المطور.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Notepad */}
+            <div className="rounded-2xl overflow-hidden" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.08)' }}>
+              <div className="flex items-center justify-between px-4 py-2.5" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)', background: 'rgba(255,255,255,0.02)' }}>
+                <div className="flex items-center gap-2">
+                  <span className="h-2 w-2 rounded-full" style={{ background: '#fbbf24', boxShadow: '0 0 6px rgba(251,191,36,0.5)' }} />
+                  <span className="text-[10px] font-semibold uppercase tracking-widest" style={{ color: 'rgba(255,255,255,0.3)' }}>ملاحظاتي الخاصة</span>
+                </div>
+                <span className="text-[9px]" style={{ color: 'rgba(255,255,255,0.2)' }}>{devNote.length} حرف</span>
+              </div>
+              <div className="p-3">
+                <textarea
+                  value={devNote}
+                  onChange={e => { setDevNote(e.target.value); setNoteSavedMsg('') }}
+                  placeholder={'اكتب ملاحظاتك هنا...\n\nمثال:\n• تذكير: تجديد اشتراك SipFlow في 15 مايو\n• مشكلة: مكان X بيواجه تأخر في الطلبات\n• فكرة: إضافة تقرير أسبوعي للأماكن'}
+                  rows={12}
+                  dir="rtl"
+                  className="w-full resize-none bg-transparent text-sm outline-none leading-relaxed"
+                  style={{ color: 'rgba(255,255,255,0.8)', caretColor: '#fbbf24', fontFamily: 'inherit' }}
+                />
+              </div>
+            </div>
+
+            {/* Actions */}
+            <div className="flex items-center gap-3">
+              <button
+                onClick={async () => {
+                  setIsSavingNote(true)
+                  setNoteSavedMsg('')
+                  try {
+                    await fetch('/api/settings', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ key: 'dev_notes', value: devNote }) })
+                    setNoteSavedMsg('✅ تم الحفظ')
+                    setTimeout(() => setNoteSavedMsg(''), 3000)
+                  } catch { setNoteSavedMsg('❌ فشل الحفظ') }
+                  finally { setIsSavingNote(false) }
+                }}
+                disabled={isSavingNote}
+                className="flex-1 h-10 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-all disabled:opacity-50"
+                style={{ background: 'linear-gradient(135deg,#d97706,#92400e)', color: '#fff', boxShadow: '0 4px 14px rgba(217,119,6,0.3)' }}>
+                {isSavingNote ? <RefreshCw className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
+                {isSavingNote ? 'جاري الحفظ...' : 'حفظ الملاحظات'}
+              </button>
+              {devNote && (
+                <button
+                  onClick={() => { setDevNote(''); setNoteSavedMsg('') }}
+                  className="h-10 px-4 rounded-xl text-sm font-medium transition-all"
+                  style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.4)' }}>
+                  مسح
+                </button>
+              )}
+              {noteSavedMsg && (
+                <span className="text-sm font-medium" style={{ color: noteSavedMsg.startsWith('✅') ? '#34d399' : '#f87171' }}>{noteSavedMsg}</span>
+              )}
+            </div>
+          </TabsContent>
+        )}
 
         {/* ─── Count (Delivered Items) Tab ─── */}
         <TabsContent value="count" className="space-y-4">
