@@ -2173,7 +2173,7 @@ const handleSaveSettings = async () => {
                 <div className="grid grid-cols-2 gap-1.5">
                   {[
                     { tab: 'analytics', icon: <TrendingUp className="h-3.5 w-3.5" />,  label: 'Reports',     ac: '#7c3aed' },
-                    { tab: 'notes',     icon: <FileText className="h-3.5 w-3.5" />,    label: 'المذكرة',      ac: '#7c3aed' },
+                    { tab: 'notes',     icon: <FileText className="h-3.5 w-3.5" />,    label: 'Notes',        ac: '#7c3aed' },
                   ].filter(item => canAccessDevTab(item.tab)).map(item => (
                     <button key={item.tab} onClick={() => handleTabChange(item.tab)}
                       className="flex flex-col items-center gap-1 rounded-xl py-2.5 px-1 transition-all duration-150 hover:scale-105 active:scale-95"
