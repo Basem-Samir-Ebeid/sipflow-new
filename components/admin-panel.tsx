@@ -691,10 +691,13 @@ export function AdminPanel({
     totalOrders: number
     totalSessions?: number
     avgOrderValue?: number
+    avgRating?: number | null
+    totalRatings?: number
+    ratingDistribution?: { star: number; count: number }[]
     topDrinks: { name: string; qty: number; revenue: number }[]
     peakHours: { hour: number; count: number }[]
     dailyRevenue?: { day: string; revenue: number; orders: number }[]
-    placeComparison?: { id: string; name: string; totalOrders: number; totalRevenue: number; totalSessions: number }[]
+    placeComparison?: { id: string; name: string; totalOrders: number; totalRevenue: number; totalSessions: number; avgRating?: number | null; totalRatings?: number }[]
   }
   const [analyticsData, setAnalyticsData] = useState<AnalyticsData | null>(null)
   const [analyticsPeriod, setAnalyticsPeriod] = useState<'today' | 'week' | 'month'>('week')
@@ -7823,6 +7826,54 @@ const handleSaveSettings = async () => {
                   ))}
                 </div>
 
+                {/* Rating summary card */}
+                {analyticsData.totalRatings != null && analyticsData.totalRatings > 0 && (
+                  <div className="rounded-2xl border bg-card p-5 space-y-4" style={{ borderColor: 'rgba(212,160,23,0.2)' }}>
+                    <h3 className="font-bold text-foreground flex items-center gap-2">
+                      <span style={{ color: '#D4A017' }}>★</span>
+                      تقييمات الزبائن
+                    </h3>
+                    <div className="flex items-center gap-6 flex-wrap">
+                      {/* Average score */}
+                      <div className="flex flex-col items-center gap-1">
+                        <span className="text-4xl font-black" style={{ color: '#D4A017' }}>
+                          {analyticsData.avgRating?.toFixed(1) ?? '—'}
+                        </span>
+                        <div className="flex gap-0.5" dir="ltr">
+                          {[1,2,3,4,5].map(s => (
+                            <span key={s} className="text-lg" style={{ color: s <= Math.round(analyticsData.avgRating ?? 0) ? '#f59e0b' : '#3f3f46' }}>★</span>
+                          ))}
+                        </div>
+                        <span className="text-xs text-muted-foreground">{analyticsData.totalRatings} تقييم</span>
+                      </div>
+
+                      {/* Distribution bars */}
+                      <div className="flex-1 space-y-1.5 min-w-[160px]">
+                        {[5,4,3,2,1].map(star => {
+                          const entry = analyticsData.ratingDistribution?.find(r => r.star === star)
+                          const cnt   = entry?.count ?? 0
+                          const pct   = analyticsData.totalRatings! > 0 ? (cnt / analyticsData.totalRatings!) * 100 : 0
+                          return (
+                            <div key={star} className="flex items-center gap-2">
+                              <span className="text-xs text-muted-foreground w-4 text-left">{star}★</span>
+                              <div className="flex-1 h-2 rounded-full bg-muted overflow-hidden">
+                                <div
+                                  className="h-full rounded-full transition-all"
+                                  style={{
+                                    width: `${pct}%`,
+                                    background: star >= 4 ? '#D4A017' : star === 3 ? '#f59e0b80' : 'rgba(239,68,68,0.6)'
+                                  }}
+                                />
+                              </div>
+                              <span className="text-xs text-muted-foreground w-6 text-left">{cnt}</span>
+                            </div>
+                          )
+                        })}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 {/* Dev admin: Place comparison */}
                 {analyticsData.placeComparison && analyticsData.placeComparison.length > 0 && (
                   <div className="rounded-2xl border border-border bg-card p-5 space-y-4">
@@ -7838,7 +7889,14 @@ const handleSaveSettings = async () => {
                               <span className="text-xs text-muted-foreground w-4">{i + 1}</span>
                               {p.name}
                             </span>
-                            <span className="text-xs text-muted-foreground">{p.totalRevenue.toFixed(0)} جنيه • {p.totalOrders} طلب</span>
+                            <div className="flex items-center gap-2">
+                              {p.avgRating != null && (
+                                <span className="text-xs font-medium" style={{ color: '#f59e0b' }}>
+                                  ★ {p.avgRating.toFixed(1)}
+                                </span>
+                              )}
+                              <span className="text-xs text-muted-foreground">{p.totalRevenue.toFixed(0)} جنيه • {p.totalOrders} طلب</span>
+                            </div>
                           </div>
                           <div className="h-2 rounded-full bg-muted overflow-hidden">
                             <div

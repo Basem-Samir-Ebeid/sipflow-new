@@ -407,6 +407,8 @@ export const db = {
   },
 
   async updateOrderRating(id: string, rating: number, comment?: string) {
+    await sql`ALTER TABLE orders ADD COLUMN IF NOT EXISTS rating INTEGER`.catch(() => {})
+    await sql`ALTER TABLE orders ADD COLUMN IF NOT EXISTS rating_comment TEXT`.catch(() => {})
     const result = await sql`
       UPDATE orders SET rating = ${rating}, rating_comment = ${comment || null}, updated_at = NOW() WHERE id = ${id}
       RETURNING *
