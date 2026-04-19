@@ -229,6 +229,14 @@ export default function HomePage() {
   const [trackerMinimized, setTrackerMinimized] = useState(false)
   const [prevTrackedStatuses, setPrevTrackedStatuses] = useState<Record<string, string>>({})
   const trackingIntervalRef = useRef<NodeJS.Timeout | null>(null)
+
+  // Dev admin place tracker state
+  type DevPlaceOrder = { id: string; drinkName: string; quantity: number; status: string; notes?: string | null; tableNumber?: string | null; customerName?: string | null; updatedAt: string }
+  const [devPlaceTrackedOrders, setDevPlaceTrackedOrders] = useState<DevPlaceOrder[]>([])
+  const [showDevTracker, setShowDevTracker] = useState(false)
+  const [devTrackerMinimized, setDevTrackerMinimized] = useState(false)
+  const [devTrackerPlaceId, setDevTrackerPlaceId] = useState('')
+  const devTrackingIntervalRef = useRef<NodeJS.Timeout | null>(null)
   const processedMessageIds = useRef<Set<string>>(new Set())
   
   const WAITER_MSG_TITLES = ['🔔 نداء نادل', '🚶 رد النادل']
@@ -618,6 +626,25 @@ export default function HomePage() {
     trackingIntervalRef.current = interval
     return () => clearInterval(interval)
   }, [showTracker, session?.id, tableNumber])
+
+  // Dev admin place tracker — polls ALL tables at the selected place
+  useEffect(() => {
+    if (!showDevTracker || !devTrackerPlaceId) return
+
+    const pollDevTrack = async () => {
+      try {
+        const res  = await fetch(`/api/orders/track?place_id=${devTrackerPlaceId}`)
+        const data = await res.json()
+        if (!Array.isArray(data)) return
+        setDevPlaceTrackedOrders(data)
+      } catch { /* silent */ }
+    }
+
+    pollDevTrack()
+    const interval = setInterval(pollDevTrack, 4000)
+    devTrackingIntervalRef.current = interval
+    return () => clearInterval(interval)
+  }, [showDevTracker, devTrackerPlaceId])
 
   const fetchBoardPlaces = async () => {
     const res = await fetch('/api/places')
@@ -1240,6 +1267,12 @@ export default function HomePage() {
         // Show tracker widget if tracking is enabled for this place
         if (currentPlace?.order_tracking_enabled !== false && !isDevAdmin) {
           setShowTracker(true)
+        }
+        // Dev admin: show place-wide tracker
+        if (isDevAdmin && menuDevPlaceId) {
+          setDevTrackerPlaceId(menuDevPlaceId)
+          setShowDevTracker(true)
+          setDevTrackerMinimized(false)
         }
       }
       if (isDevAdmin && menuDevPlaceId) {
@@ -3705,6 +3738,125 @@ export default function HomePage() {
                         )}
                       </div>
                     )}
+                  </div>
+                </div>
+              )}
+            </>
+          )
+        })()}
+
+        {/* ── Dev Admin Place Tracker Widget ── */}
+        {showDevTracker && isDevAdmin && (() => {
+          // Group orders by table number
+          const tableMap = new Map<string, DevPlaceOrder[]>()
+          devPlaceTrackedOrders.forEach(o => {
+            const key = o.tableNumber || '—'
+            if (!tableMap.has(key)) tableMap.set(key, [])
+            tableMap.get(key)!.push(o)
+          })
+          const tables = Array.from(tableMap.entries()).sort(([a], [b]) => {
+            const na = parseInt(a), nb = parseInt(b)
+            if (!isNaN(na) && !isNaN(nb)) return na - nb
+            return a.localeCompare(b)
+          })
+          const totalOrders = devPlaceTrackedOrders.length
+          const pendingCount = devPlaceTrackedOrders.filter(o => !['completed'].includes(o.status)).length
+
+          const statusLabel = (s: string) =>
+            s === 'completed' ? 'تسليم ✓' : s === 'on_the_way' ? 'في الطريق 🚶' : s === 'ready' ? 'جاهز ✓' : s === 'preparing' ? 'يتحضر ☕' : 'انتظار ⏳'
+          const statusColor = (s: string) =>
+            s === 'completed' ? '#4ade80' : s === 'on_the_way' ? '#60a5fa' : s === 'ready' ? '#34d399' : s === 'preparing' ? '#fbbf24' : '#71717a'
+
+          return (
+            <>
+              {/* Mini floating pill when minimized */}
+              {devTrackerMinimized && (
+                <button
+                  onClick={() => setDevTrackerMinimized(false)}
+                  className="fixed bottom-4 right-4 z-40 flex items-center gap-2 rounded-full px-3 py-2 text-xs font-bold shadow-xl border transition-all"
+                  style={{ background: 'rgba(10,8,6,0.95)', borderColor: 'rgba(99,102,241,0.5)', color: '#818cf8' }}
+                >
+                  <span className="h-2 w-2 rounded-full bg-indigo-400 animate-pulse" />
+                  🏪 لوحة القعدة
+                  {pendingCount > 0 && <span className="rounded-full bg-indigo-500/20 px-1.5 text-indigo-300">{pendingCount}</span>}
+                </button>
+              )}
+
+              {/* Full widget */}
+              {!devTrackerMinimized && (
+                <div className="fixed bottom-4 right-4 z-40 w-80" dir="rtl">
+                  <div className="rounded-2xl border shadow-2xl overflow-hidden" style={{ background: 'rgba(10,8,6,0.97)', borderColor: 'rgba(99,102,241,0.4)' }}>
+                    {/* Header */}
+                    <div className="flex items-center justify-between px-4 py-2.5 border-b" style={{ borderColor: 'rgba(99,102,241,0.15)', background: 'rgba(99,102,241,0.08)' }}>
+                      <div className="flex items-center gap-2">
+                        <span className="h-2 w-2 rounded-full bg-indigo-400 animate-pulse" />
+                        <span className="text-sm font-bold text-indigo-300">🏪 لوحة القعدة</span>
+                        <span className="text-[10px] text-indigo-400/60 bg-indigo-500/10 rounded-full px-1.5">
+                          {tables.length} طربيزة • {totalOrders} طلب
+                        </span>
+                      </div>
+                      <button
+                        onClick={() => setDevTrackerMinimized(true)}
+                        className="flex h-6 w-6 items-center justify-center rounded-full text-muted-foreground hover:text-foreground hover:bg-muted/40 transition-colors"
+                      >
+                        <X className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+
+                    {/* Tables list */}
+                    {tables.length === 0 ? (
+                      <div className="px-4 py-6 text-center text-xs text-zinc-500">لا يوجد طلبات نشطة حالياً</div>
+                    ) : (
+                      <div className="divide-y max-h-80 overflow-y-auto" style={{ borderColor: 'rgba(99,102,241,0.08)' }}>
+                        {tables.map(([tableKey, tableOrders]) => {
+                          const allDone = tableOrders.every(o => o.status === 'completed')
+                          const anyOnWay = tableOrders.some(o => o.status === 'on_the_way')
+                          const pending = tableOrders.filter(o => o.status !== 'completed').length
+                          return (
+                            <div key={tableKey} className="px-4 py-3 space-y-2">
+                              {/* Table header */}
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-1.5">
+                                  <span className="text-xs font-bold" style={{ color: allDone ? '#4ade80' : anyOnWay ? '#60a5fa' : '#818cf8' }}>
+                                    🪑 طربيزة {tableKey}
+                                  </span>
+                                  {tableOrders[0]?.customerName && (
+                                    <span className="text-[10px] text-zinc-500">— {tableOrders[0].customerName}</span>
+                                  )}
+                                </div>
+                                <span className="text-[10px] font-medium rounded-full px-1.5 py-0.5"
+                                  style={{ background: allDone ? 'rgba(74,222,128,0.1)' : 'rgba(129,140,248,0.1)', color: allDone ? '#4ade80' : '#818cf8' }}>
+                                  {allDone ? 'منتهي ✓' : `${pending} متبقي`}
+                                </span>
+                              </div>
+                              {/* Orders list */}
+                              <div className="space-y-1">
+                                {tableOrders.map(o => (
+                                  <div key={o.id} className="flex items-center justify-between text-[11px]">
+                                    <span className="text-zinc-300 truncate max-w-[55%]">
+                                      {o.drinkName}
+                                      {o.quantity > 1 && <span className="text-zinc-500 mr-1">×{o.quantity}</span>}
+                                    </span>
+                                    <span style={{ color: statusColor(o.status) }}>{statusLabel(o.status)}</span>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )
+                        })}
+                      </div>
+                    )}
+
+                    {/* Footer summary */}
+                    <div className="px-4 py-2 border-t flex items-center justify-between" style={{ borderColor: 'rgba(99,102,241,0.12)', background: 'rgba(0,0,0,0.3)' }}>
+                      <span className="text-[11px] text-zinc-500">تحديث كل ٤ ثواني</span>
+                      <button
+                        onClick={() => { setShowDevTracker(false); clearInterval(devTrackingIntervalRef.current ?? undefined) }}
+                        className="text-[10px] text-zinc-600 hover:text-red-400 transition-colors"
+                      >
+                        إغلاق
+                      </button>
+                    </div>
                   </div>
                 </div>
               )}

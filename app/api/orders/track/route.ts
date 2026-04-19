@@ -6,9 +6,10 @@ export async function GET(req: Request) {
   const userId      = searchParams.get('user_id')
   const sessionId   = searchParams.get('session_id')
   const tableNumber = searchParams.get('table_number') // optional — filter by table
+  const placeId     = searchParams.get('place_id')     // dev admin — all tables at place
 
-  if (!userId && !sessionId) {
-    return NextResponse.json({ error: 'user_id or session_id required' }, { status: 400 })
+  if (!userId && !sessionId && !placeId) {
+    return NextResponse.json({ error: 'user_id, session_id, or place_id required' }, { status: 400 })
   }
 
   try {
@@ -19,7 +20,25 @@ export async function GET(req: Request) {
 
     let rows: any[]
 
-    if (sessionId) {
+    if (placeId) {
+      // Dev admin: fetch ALL active orders for this place's current session
+      rows = await sql`
+        SELECT
+          o.id, o.drink_id, o.quantity, o.status, o.created_at, o.updated_at,
+          d.name AS drink_name,
+          o.notes, o.total_price, o.table_number, o.customer_name,
+          p.order_tracking_enabled
+        FROM orders o
+        JOIN drinks   d ON d.id = o.drink_id
+        JOIN sessions s ON s.id = o.session_id
+        JOIN places   p ON p.id = s.place_id
+        WHERE s.place_id = ${placeId}
+          AND s.is_active = true
+          AND o.status NOT IN ('cancelled')
+        ORDER BY o.table_number NULLS LAST, o.created_at DESC
+        LIMIT 100
+      `
+    } else if (sessionId) {
       if (tableNumber) {
         // Filter by session AND table number (shared-user mode)
         rows = await sql`
@@ -82,6 +101,8 @@ export async function GET(req: Request) {
       status                : r.status,
       notes                 : r.notes,
       totalPrice            : Number(r.total_price),
+      tableNumber           : r.table_number ?? null,
+      customerName          : r.customer_name ?? null,
       createdAt             : r.created_at,
       updatedAt             : r.updated_at,
       orderTrackingEnabled  : r.order_tracking_enabled !== false,
