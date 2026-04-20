@@ -63,6 +63,8 @@ interface AdminPanelProps {
   placeId?: string | null
   systemLogoUrl?: string
   onSystemLogoChange?: (url: string) => void
+  buttonIcons?: Record<string, string>
+  onButtonIconsChange?: (icons: Record<string, string>) => void
 }
 
 const formatDisplayName = (name: string | null | undefined, tableNumber: string | null | undefined): string => {
@@ -90,6 +92,8 @@ export function AdminPanel({
   placeId = null,
   systemLogoUrl: externalSystemLogoUrl,
   onSystemLogoChange,
+  buttonIcons: externalButtonIcons,
+  onButtonIconsChange,
 }: AdminPanelProps) {
   const devRoleMeta: Record<DevAdminRole, { label: string; description: string; homeTab: string; tabs: string[] }> = {
     super_developer: {
@@ -769,6 +773,20 @@ export function AdminPanel({
   const [systemLogoUploading, setSystemLogoUploading] = useState(false)
   const systemLogoInputRef = useRef<HTMLInputElement>(null)
 
+  // ── Button icons state (super_developer only) ──
+  const defaultButtonIcons = { placeAdmin: '⚙️', cashier: '🧾', captain: '🔔', bar: '☕' }
+  const [localButtonIcons, setLocalButtonIcons] = useState<Record<string, string>>(
+    externalButtonIcons || defaultButtonIcons
+  )
+  const [isSavingButtonIcons, setIsSavingButtonIcons] = useState(false)
+
+  const BUTTON_ICON_DEFS = [
+    { key: 'placeAdmin', label: 'Place Admin', options: ['⚙️','🔧','🏪','👔','💼','🔑','🎯','🛡️','🏛️','👑','🗝️','🖥️'] },
+    { key: 'cashier',   label: 'Cashier',      options: ['🧾','💰','💳','🖨️','📋','📝','🏧','💵','🤑','🛒','📊','🔖'] },
+    { key: 'captain',   label: 'Captain',       options: ['🔔','🛎️','📣','👋','📡','✋','🚀','🧭','📢','🎙️','🧑‍✈️','⭐'] },
+    { key: 'bar',       label: 'Bar',           options: ['☕','🍵','🥤','🍺','🍹','🧋','🫖','🍶','🧃','🥛','🍷','🎂'] },
+  ]
+
   useEffect(() => {
     fetch('/api/settings?key=dev_admin_photo_url')
       .then(r => r.json())
@@ -801,6 +819,41 @@ export function AdminPanel({
     } finally {
       setAdminPhotoUploading(false)
       if (adminPhotoInputRef.current) adminPhotoInputRef.current.value = ''
+    }
+  }
+
+  const handleSaveButtonIcons = async () => {
+    setIsSavingButtonIcons(true)
+    try {
+      await fetch('/api/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ key: 'button_icons', value: JSON.stringify(localButtonIcons) }),
+      })
+      onButtonIconsChange?.(localButtonIcons)
+      toast.success('تم حفظ أيقونات الزراير بنجاح ✅')
+    } catch {
+      toast.error('حدث خطأ أثناء الحفظ')
+    } finally {
+      setIsSavingButtonIcons(false)
+    }
+  }
+
+  const handleResetButtonIcons = async () => {
+    setIsSavingButtonIcons(true)
+    try {
+      await fetch('/api/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ key: 'button_icons', value: JSON.stringify(defaultButtonIcons) }),
+      })
+      setLocalButtonIcons(defaultButtonIcons)
+      onButtonIconsChange?.(defaultButtonIcons)
+      toast.success('تم إعادة الأيقونات للافتراضية')
+    } catch {
+      toast.error('حدث خطأ')
+    } finally {
+      setIsSavingButtonIcons(false)
     }
   }
 
@@ -5208,6 +5261,75 @@ const handleSaveSettings = async () => {
                   </Button>
                 </div>
               )}
+            </div>
+          )}
+
+          {/* Button Icons Setting — super_developer only */}
+          {isDevAdmin && devAdminRole === 'super_developer' && (
+            <div className="relative rounded-2xl overflow-hidden p-5 space-y-4" style={{ background: 'linear-gradient(170deg, rgba(139,92,246,0.06) 0%, rgba(15,15,25,0.95) 100%)', border: '1px solid rgba(139,92,246,0.15)', boxShadow: '0 4px 20px rgba(0,0,0,0.2)' }}>
+              <div className="absolute inset-0 pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle at 100% 0%, rgba(139,92,246,0.05) 0%, transparent 50%)' }} />
+              <div className="relative flex items-center gap-3 pb-3" style={{ borderBottom: '1px solid rgba(139,92,246,0.1)' }}>
+                <div className="flex items-center justify-center w-9 h-9 rounded-xl text-lg" style={{ background: 'linear-gradient(135deg, rgba(139,92,246,0.2), rgba(99,102,241,0.15))', border: '1px solid rgba(139,92,246,0.2)' }}>
+                  🎨
+                </div>
+                <div>
+                  <h3 className="font-bold text-white text-sm">أيقونات الزراير</h3>
+                  <p className="text-[10px]" style={{ color: 'rgba(167,139,250,0.6)' }}>تخصيص أيقونات زراير الأدوار في الصفحة الرئيسية</p>
+                </div>
+              </div>
+              <div className="relative space-y-4">
+                {BUTTON_ICON_DEFS.map(({ key, label, options }) => (
+                  <div key={key} className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-semibold" style={{ color: 'rgba(167,139,250,0.85)' }}>{label}</span>
+                      <span className="text-xl leading-none">{localButtonIcons[key]}</span>
+                    </div>
+                    <div className="flex flex-wrap gap-1.5">
+                      {options.map(emoji => (
+                        <button
+                          key={emoji}
+                          type="button"
+                          onClick={() => setLocalButtonIcons(prev => ({ ...prev, [key]: emoji }))}
+                          className="h-9 w-9 rounded-xl text-lg transition-all hover:scale-110 active:scale-95 flex items-center justify-center"
+                          style={{
+                            background: localButtonIcons[key] === emoji
+                              ? 'rgba(139,92,246,0.3)'
+                              : 'rgba(255,255,255,0.04)',
+                            border: localButtonIcons[key] === emoji
+                              ? '1.5px solid rgba(139,92,246,0.7)'
+                              : '1px solid rgba(255,255,255,0.07)',
+                            boxShadow: localButtonIcons[key] === emoji
+                              ? '0 0 10px rgba(139,92,246,0.35)'
+                              : 'none',
+                          }}
+                        >
+                          {emoji}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+                <div className="flex gap-2 pt-1">
+                  <Button
+                    className="flex-1 h-10 rounded-xl text-sm font-bold"
+                    style={{ background: 'linear-gradient(135deg, #7c3aed, #6366f1)', color: '#fff', boxShadow: '0 4px 15px rgba(124,58,237,0.3)' }}
+                    disabled={isSavingButtonIcons}
+                    onClick={handleSaveButtonIcons}
+                  >
+                    {isSavingButtonIcons ? <Loader2 className="h-4 w-4 animate-spin ml-1" /> : null}
+                    حفظ الأيقونات
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="h-10 rounded-xl text-xs"
+                    style={{ borderColor: 'rgba(139,92,246,0.2)', color: 'rgba(167,139,250,0.7)' }}
+                    disabled={isSavingButtonIcons}
+                    onClick={handleResetButtonIcons}
+                  >
+                    إعادة الافتراضي
+                  </Button>
+                </div>
+              </div>
             </div>
           )}
 

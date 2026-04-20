@@ -38,6 +38,12 @@ export default function HomePage() {
   const [mounted, setMounted] = useState(false)
   const [showStars, setShowStars] = useState(false)
   const [systemLogoUrl, setSystemLogoUrl] = useState('/images/sipflow-logo.jpg')
+  const [buttonIcons, setButtonIcons] = useState<Record<string, string>>({
+    placeAdmin: '⚙️',
+    cashier: '🧾',
+    captain: '🔔',
+    bar: '☕',
+  })
   const [currentPlace, setCurrentPlace] = useState<Place | null>(null)
   const [placeCode, setPlaceCode] = useState('')
   const [placeLookupLoading, setPlaceLookupLoading] = useState(false)
@@ -364,6 +370,18 @@ export default function HomePage() {
     fetch('/api/settings?key=system_logo_url')
       .then(r => r.json())
       .then(d => { if (d.value) setSystemLogoUrl(d.value) })
+      .catch(() => {})
+  }, [])
+
+  // Fetch button icons
+  useEffect(() => {
+    fetch('/api/settings?key=button_icons')
+      .then(r => r.json())
+      .then(d => {
+        if (d.value) {
+          try { setButtonIcons(prev => ({ ...prev, ...JSON.parse(d.value) })) } catch {}
+        }
+      })
       .catch(() => {})
   }, [])
 
@@ -2099,10 +2117,10 @@ export default function HomePage() {
             {/* Role buttons 2x2 */}
             <div className="grid grid-cols-2 gap-2">
               {[
-                { label: 'Place Admin', icon: <Settings className="h-4 w-4" />, onClick: () => { setShowPlaceAdminLanding(true); setPlaceAdminConfirmError('') }, color: '#94a3b8', iconColor: 'rgba(148,163,184,0.15)' },
-                { label: 'Cashier', icon: <ClipboardList className="h-4 w-4" />, onClick: () => { setShowCashierLogin(true); setCashierLoginError('') }, color: '#6ee7b7', iconColor: 'rgba(110,231,183,0.12)' },
-                { label: 'Captain', icon: <Bell className="h-4 w-4" />, onClick: () => { window.location.href = '/waiter' }, color: '#fcd34d', iconColor: 'rgba(252,211,77,0.1)' },
-                { label: 'Bar', icon: <Coffee className="h-4 w-4" />, onClick: () => { window.location.href = '/bar' }, color: '#7dd3fc', iconColor: 'rgba(125,211,252,0.1)' },
+                { label: 'Place Admin', icon: <span className="text-base leading-none">{buttonIcons.placeAdmin}</span>, onClick: () => { setShowPlaceAdminLanding(true); setPlaceAdminConfirmError('') }, color: '#94a3b8', iconColor: 'rgba(148,163,184,0.15)' },
+                { label: 'Cashier', icon: <span className="text-base leading-none">{buttonIcons.cashier}</span>, onClick: () => { setShowCashierLogin(true); setCashierLoginError('') }, color: '#6ee7b7', iconColor: 'rgba(110,231,183,0.12)' },
+                { label: 'Captain', icon: <span className="text-base leading-none">{buttonIcons.captain}</span>, onClick: () => { window.location.href = '/waiter' }, color: '#fcd34d', iconColor: 'rgba(252,211,77,0.1)' },
+                { label: 'Bar', icon: <span className="text-base leading-none">{buttonIcons.bar}</span>, onClick: () => { window.location.href = '/bar' }, color: '#7dd3fc', iconColor: 'rgba(125,211,252,0.1)' },
               ].map((btn, i) => (
                 <button
                   key={i}
@@ -5002,6 +5020,8 @@ export default function HomePage() {
             placeId={currentUser?.place_id || currentPlace?.id || null}
             systemLogoUrl={systemLogoUrl}
             onSystemLogoChange={(url) => setSystemLogoUrl(url)}
+            buttonIcons={buttonIcons}
+            onButtonIconsChange={(icons) => setButtonIcons(prev => ({ ...prev, ...icons }))}
           />
         )}
       </div>
