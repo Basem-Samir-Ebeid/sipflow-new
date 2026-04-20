@@ -42,6 +42,17 @@ type DevAdminAccount = {
   createdAt?: string | null
 }
 
+type IdeaImplementationScope = 'developer_admin' | 'all_pages'
+
+type ImplementedIdeaRecord = {
+  title?: string
+  tab?: string
+  tabLabel?: string
+  scope?: IdeaImplementationScope
+  implementedAt?: string
+  steps?: string[]
+}
+
 
 
 interface AdminPanelProps {
@@ -278,6 +289,7 @@ export function AdminPanel({
     return defaults
   }
   const [featureFlags, setFeatureFlags] = useState<Record<string, boolean>>({})
+  const [implementedIdeas, setImplementedIdeas] = useState<Record<string, ImplementedIdeaRecord>>({})
   const [isSavingFlags, setIsSavingFlags] = useState(false)
   const [flagsLoaded, setFlagsLoaded] = useState(false)
 
@@ -322,8 +334,23 @@ export function AdminPanel({
       const data = await res.json()
       if (data.value) setFeatureFlags({ ...getDefaultFeatureFlags(), ...JSON.parse(data.value) })
       else setFeatureFlags(getDefaultFeatureFlags())
+      const implementedRes = await fetch('/api/settings?key=implemented_ideas')
+      const implementedData = await implementedRes.json()
+      setImplementedIdeas(implementedData.value ? JSON.parse(implementedData.value) : {})
     } catch { /* silent */ }
     setFlagsLoaded(true)
+  }
+
+  useEffect(() => {
+    loadFeatureFlags()
+  }, [])
+
+  const isIdeaImplemented = (flagKey: string) => Boolean(featureFlags[flagKey])
+
+  const isIdeaVisible = (flagKey: string) => {
+    if (!featureFlags[flagKey]) return false
+    const scope = implementedIdeas[flagKey]?.scope || 'all_pages'
+    return scope !== 'developer_admin' || isDevAdmin
   }
 
   const saveFeatureFlags = async (flags: Record<string, boolean>) => {
@@ -363,6 +390,7 @@ export function AdminPanel({
   const [currentIdea, setCurrentIdea] = useState<typeof AI_IDEAS[0] | null>(null)
   const [isGeneratingIdea, setIsGeneratingIdea] = useState(false)
   const [isImplementingIdea, setIsImplementingIdea] = useState(false)
+  const [pendingIdea, setPendingIdea] = useState<typeof AI_IDEAS[0] | null>(null)
   const [shownIdeas, setShownIdeas] = useState<Set<number>>(new Set())
 
   const generateIdea = () => {
@@ -377,17 +405,19 @@ export function AdminPanel({
     }, 800)
   }
 
-  const implementIdea = async (idea: typeof AI_IDEAS[0]) => {
+  const implementIdea = async (idea: typeof AI_IDEAS[0], scope: IdeaImplementationScope) => {
     setIsImplementingIdea(true)
     try {
       const res = await fetch('/api/ai-ideas/implement', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ flagKey: idea.flagKey })
+        body: JSON.stringify({ flagKey: idea.flagKey, scope })
       })
       const data = await res.json()
       if (!res.ok || !data.success) throw new Error(data.error || 'Failed to implement idea')
       setFeatureFlags(data.featureFlags || { ...featureFlags, [idea.flagKey]: true })
+      setImplementedIdeas(data.implementedIdeas || { ...implementedIdeas, [idea.flagKey]: data.idea })
+      setPendingIdea(null)
       toast.success(`${idea.icon} تم تنفيذ "${idea.title}" فعليًا وحفظها — ستجده في ${idea.tabLabel}`)
       await new Promise(r => setTimeout(r, 700))
       handleTabChange(idea.tab)
@@ -2942,7 +2972,7 @@ const handleSaveSettings = async () => {
 
         {/* ── Live Places Hub Tab ── */}
         <TabsContent value="live" className="space-y-4">
-          {featureFlags['idea_branch_ctrl'] && (
+          {isIdeaVisible('idea_branch_ctrl') && (
             <div className="rounded-2xl p-4 space-y-3" style={{ background: 'rgba(232,121,249,0.07)', border: '1px solid rgba(232,121,249,0.25)' }}>
               <div className="flex items-center gap-2 mb-1">
                 <span className="text-lg">🌐</span>
@@ -3669,7 +3699,7 @@ const handleSaveSettings = async () => {
         </TabsContent>
 
         <TabsContent value="drinks" className="space-y-6">
-          {featureFlags['idea_drink_custom'] && (
+          {isIdeaVisible('idea_drink_custom') && (
             <div className="rounded-2xl p-4 space-y-3" style={{ background: 'rgba(244,114,182,0.07)', border: '1px solid rgba(244,114,182,0.25)' }}>
               <div className="flex items-center gap-2">
                 <span className="text-lg">🎛️</span>
@@ -4097,7 +4127,7 @@ const handleSaveSettings = async () => {
 
         {/* Inventory Tab */}
         <TabsContent value="inventory" className="space-y-4">
-          {featureFlags['idea_auto_hide'] && (
+          {isIdeaVisible('idea_auto_hide') && (
             <div className="rounded-2xl p-4 space-y-3" style={{ background: 'rgba(245,158,11,0.07)', border: '1px solid rgba(245,158,11,0.25)' }}>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
@@ -5135,7 +5165,7 @@ const handleSaveSettings = async () => {
         </TabsContent>
 
         <TabsContent value="staff" className="space-y-4">
-          {featureFlags['idea_staff_perf'] && (
+          {isIdeaVisible('idea_staff_perf') && (
             <div className="rounded-2xl p-4 space-y-3" style={{ background: 'rgba(251,191,36,0.07)', border: '1px solid rgba(251,191,36,0.25)' }}>
               <div className="flex items-center gap-2">
                 <span className="text-lg">🏅</span>
@@ -5422,7 +5452,7 @@ const handleSaveSettings = async () => {
         </TabsContent>
 
         <TabsContent value="settings" className="space-y-4">
-          {featureFlags['idea_waitlist'] && (
+          {isIdeaVisible('idea_waitlist') && (
             <div className="rounded-2xl p-4 space-y-3" style={{ background: 'rgba(96,165,250,0.07)', border: '1px solid rgba(96,165,250,0.25)' }}>
               <div className="flex items-center gap-2">
                 <span className="text-lg">⏳</span>
@@ -5455,7 +5485,7 @@ const handleSaveSettings = async () => {
             </div>
           )}
 
-          {featureFlags['idea_loyalty'] && (
+          {isIdeaVisible('idea_loyalty') && (
             <div className="rounded-2xl p-4 space-y-3" style={{ background: 'rgba(251,146,60,0.07)', border: '1px solid rgba(251,146,60,0.25)' }}>
               <div className="flex items-center gap-2">
                 <span className="text-lg">🏆</span>
@@ -5478,7 +5508,7 @@ const handleSaveSettings = async () => {
             </div>
           )}
 
-          {featureFlags['idea_voice_announce'] && (
+          {isIdeaVisible('idea_voice_announce') && (
             <div className="rounded-2xl p-4 space-y-3" style={{ background: 'rgba(99,102,241,0.07)', border: '1px solid rgba(99,102,241,0.25)' }}>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
@@ -8014,7 +8044,7 @@ const handleSaveSettings = async () => {
 
         {/* ─── Cashier Tab (all admins) ─────── */}
         <TabsContent value="cashier" className="space-y-4">
-          {featureFlags['idea_table_map'] && (
+          {isIdeaVisible('idea_table_map') && (
             <div className="rounded-2xl p-4 space-y-3" style={{ background: 'rgba(52,211,153,0.07)', border: '1px solid rgba(52,211,153,0.25)' }}>
               <div className="flex items-center gap-2">
                 <span className="text-lg">🗺️</span>
@@ -8043,7 +8073,7 @@ const handleSaveSettings = async () => {
             </div>
           )}
 
-          {featureFlags['idea_table_timer'] && (
+          {isIdeaVisible('idea_table_timer') && (
             <div className="rounded-2xl p-4 space-y-3" style={{ background: 'rgba(248,113,113,0.07)', border: '1px solid rgba(248,113,113,0.25)' }}>
               <div className="flex items-center gap-2">
                 <span className="text-lg">⏱️</span>
@@ -8065,7 +8095,7 @@ const handleSaveSettings = async () => {
             </div>
           )}
 
-          {featureFlags['idea_split_bill'] && (
+          {isIdeaVisible('idea_split_bill') && (
             <div className="rounded-2xl p-4 space-y-3" style={{ background: 'rgba(167,139,250,0.07)', border: '1px solid rgba(167,139,250,0.25)' }}>
               <div className="flex items-center gap-2">
                 <span className="text-lg">💳</span>
@@ -8763,14 +8793,14 @@ const handleSaveSettings = async () => {
                       📍 {currentIdea.tabLabel}
                     </span>
                     <button
-                      onClick={() => implementIdea(currentIdea)}
-                      disabled={isImplementingIdea || featureFlags[currentIdea.flagKey]}
+                      onClick={() => setPendingIdea(currentIdea)}
+                      disabled={isImplementingIdea || isIdeaImplemented(currentIdea.flagKey)}
                       className="flex-1 flex items-center justify-center gap-1.5 rounded-full py-1.5 text-[12px] font-black transition-all duration-200 active:scale-95"
-                      style={{ background: isImplementingIdea || featureFlags[currentIdea.flagKey] ? 'rgba(255,255,255,0.06)' : `${currentIdea.color}`, color: isImplementingIdea || featureFlags[currentIdea.flagKey] ? 'rgba(255,255,255,0.55)' : '#000', boxShadow: isImplementingIdea || featureFlags[currentIdea.flagKey] ? 'none' : `0 0 16px ${currentIdea.color}60` }}
+                      style={{ background: isImplementingIdea || isIdeaImplemented(currentIdea.flagKey) ? 'rgba(255,255,255,0.06)' : `${currentIdea.color}`, color: isImplementingIdea || isIdeaImplemented(currentIdea.flagKey) ? 'rgba(255,255,255,0.55)' : '#000', boxShadow: isImplementingIdea || isIdeaImplemented(currentIdea.flagKey) ? 'none' : `0 0 16px ${currentIdea.color}60` }}
                     >
                       {isImplementingIdea ? (
                         <><Loader2 className="h-3 w-3 animate-spin" /> جارٍ التنفيذ...</>
-                      ) : featureFlags[currentIdea.flagKey] ? (
+                      ) : isIdeaImplemented(currentIdea.flagKey) ? (
                         <><CheckCircle2 className="h-3 w-3" /> مطبقة بالفعل</>
                       ) : (
                         <><Wrench className="h-3 w-3" /> نفّذ الفكرة ←</>
@@ -8788,11 +8818,41 @@ const handleSaveSettings = async () => {
               )}
             </div>
           </div>
+          <Dialog open={!!pendingIdea} onOpenChange={(open) => { if (!open && !isImplementingIdea) setPendingIdea(null) }}>
+            <DialogContent className="max-w-sm border-border bg-card text-right" dir="rtl">
+              <DialogHeader>
+                <DialogTitle className="text-base">أين تريد تنفيذ الفكرة؟</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-3">
+                <p className="text-sm text-muted-foreground">
+                  {pendingIdea ? `اختر نطاق تنفيذ "${pendingIdea.title}" حتى تظل محفوظة وتظهر في المكان الصحيح بعد إغلاق البرنامج.` : ''}
+                </p>
+                <button
+                  onClick={() => pendingIdea && implementIdea(pendingIdea, 'developer_admin')}
+                  disabled={isImplementingIdea}
+                  className="w-full rounded-xl p-3 text-right transition-all hover:opacity-90 disabled:opacity-50"
+                  style={{ background: 'rgba(99,102,241,0.12)', border: '1px solid rgba(99,102,241,0.3)' }}
+                >
+                  <div className="font-bold text-sm text-foreground">الأدمن المطور فقط</div>
+                  <div className="text-[11px] text-muted-foreground mt-1">تظهر الميزة داخل لوحة الأدمن المطور فقط.</div>
+                </button>
+                <button
+                  onClick={() => pendingIdea && implementIdea(pendingIdea, 'all_pages')}
+                  disabled={isImplementingIdea}
+                  className="w-full rounded-xl p-3 text-right transition-all hover:opacity-90 disabled:opacity-50"
+                  style={{ background: 'rgba(52,211,153,0.12)', border: '1px solid rgba(52,211,153,0.3)' }}
+                >
+                  <div className="font-bold text-sm text-foreground">كل الصفحات المتاحة</div>
+                  <div className="text-[11px] text-muted-foreground mt-1">تظهر في لوحة المطور وأي صفحة/لوحة مناسبة للفكرة.</div>
+                </button>
+              </div>
+            </DialogContent>
+          </Dialog>
         </TabsContent>
 
         {/* ─── Analytics / Reports Tab ─────────────────────────── */}
         <TabsContent value="analytics" className="space-y-5">
-          {featureFlags['idea_order_rating'] && (
+          {isIdeaVisible('idea_order_rating') && (
             <div className="rounded-2xl p-4 space-y-3" style={{ background: 'rgba(251,191,36,0.07)', border: '1px solid rgba(251,191,36,0.25)' }}>
               <div className="flex items-center gap-2">
                 <span className="text-lg">⭐</span>
@@ -8816,7 +8876,7 @@ const handleSaveSettings = async () => {
             </div>
           )}
 
-          {featureFlags['idea_pdf_reports'] && (
+          {isIdeaVisible('idea_pdf_reports') && (
             <div className="rounded-2xl p-4 space-y-3" style={{ background: 'rgba(52,211,153,0.07)', border: '1px solid rgba(52,211,153,0.25)' }}>
               <div className="flex items-center gap-2">
                 <span className="text-lg">📄</span>

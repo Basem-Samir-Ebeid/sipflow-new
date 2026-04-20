@@ -8,6 +8,8 @@ type IdeaSetup = {
   setup: () => Promise<string[]>
 }
 
+type ImplementationScope = 'developer_admin' | 'all_pages'
+
 const sql = getSql()
 
 const defaultFeatureFlags: Record<string, boolean> = {
@@ -230,10 +232,11 @@ const ideaSetups: Record<string, IdeaSetup> = {
 
 export async function POST(request: Request) {
   try {
-    const { flagKey } = await request.json()
+    const { flagKey, scope } = await request.json()
     if (!flagKey || typeof flagKey !== 'string') {
       return NextResponse.json({ error: 'Idea key required' }, { status: 400 })
     }
+    const implementationScope: ImplementationScope = scope === 'developer_admin' ? 'developer_admin' : 'all_pages'
 
     const idea = ideaSetups[flagKey]
     if (!idea) {
@@ -251,6 +254,7 @@ export async function POST(request: Request) {
       title: idea.title,
       tab: idea.tab,
       tabLabel: idea.tabLabel,
+      scope: implementationScope,
       implementedAt: new Date().toISOString(),
       steps,
     }
@@ -263,6 +267,7 @@ export async function POST(request: Request) {
         title: idea.title,
         tab: idea.tab,
         tabLabel: idea.tabLabel,
+        scope: implementationScope,
       },
       featureFlags,
       implementedIdeas,

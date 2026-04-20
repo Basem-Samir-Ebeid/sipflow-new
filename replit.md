@@ -110,6 +110,7 @@ The workflow runs `npm run dev` which starts Next.js on port 5000 at `0.0.0.0`.
 
 ## Recent UI Update
 - The AI Ideas "نفّذ الفكرة" action now calls a server-side implementation endpoint instead of only toggling UI state. Implementing an idea creates/updates the required persistent database tables, columns, and `app_settings` records, saves the enabled feature flag in `feature_flags`, records details in `implemented_ideas`, and then routes the admin to the relevant tab.
+- AI Ideas now load `feature_flags` and `implemented_ideas` when the admin panel mounts, so implemented ideas remain visible after closing/reopening the app. The implementation flow prompts for scope (`developer_admin` or `all_pages`) and stores it with the idea, then gates each idea UI section by that saved scope.
 - The entrance screen system status card was redesigned into a dark "لوحة التشغيل الهادئ / CONTROL MODE" panel with private mode, readiness status, secure entry, smart routing, and instant operation indicators.
 - The entrance screen Developer Admin button was restyled as a professional glass pill, moved slightly lower from the top-left edge, and aligned with the dark indigo landing design.
 
