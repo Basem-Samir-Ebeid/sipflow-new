@@ -110,6 +110,7 @@ The workflow runs `npm run dev` which starts Next.js on port 5000 at `0.0.0.0`.
 
 ## Recent UI Update
 - The entrance screen system status card was redesigned into a dark "لوحة التشغيل الهادئ / CONTROL MODE" panel with private mode, readiness status, secure entry, smart routing, and instant operation indicators.
+- The entrance screen Developer Admin button was restyled as a professional glass pill, moved slightly lower from the top-left edge, and aligned with the dark indigo landing design.
 
 ## Key Features
 - **Multi-tenant:** Each café is isolated by `place_id` throughout entire stack

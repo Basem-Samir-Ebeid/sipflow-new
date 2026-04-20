@@ -1961,14 +1961,24 @@ export default function HomePage() {
 
         {/* Developer bar */}
         <div className="relative w-full py-1.5" style={{ background: 'rgba(255,255,255,0.025)', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-          {/* Logo button — top-left — Dev Admin entry */}
           <button
             onClick={(e) => { e.stopPropagation(); setShowAdminLogin(true) }}
-            className="absolute left-2.5 top-1/2 -translate-y-1/2 rounded-lg overflow-hidden transition-all active:scale-90 hover:ring-2 hover:ring-white/15 focus:outline-none"
-            style={{ width: 26, height: 26, border: '1px solid rgba(255,255,255,0.1)', boxShadow: '0 2px 8px rgba(0,0,0,0.5)' }}
+            className="absolute left-4 top-[calc(100%+10px)] z-20 flex items-center gap-2 rounded-2xl px-2.5 py-2 transition-all duration-300 active:scale-95 hover:-translate-y-0.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-300/60"
+            style={{
+              background: 'linear-gradient(135deg, rgba(15,23,42,0.92), rgba(49,46,129,0.78))',
+              border: '1px solid rgba(165,180,252,0.26)',
+              boxShadow: '0 14px 34px rgba(0,0,0,0.38), 0 0 24px rgba(99,102,241,0.16), inset 0 1px 0 rgba(255,255,255,0.08)',
+              backdropFilter: 'blur(14px)',
+            }}
             title="Developer Admin"
           >
-            <Image src="/images/sipflow-logo.jpg" alt="SîpFlõw" width={26} height={26} className="object-cover w-full h-full" />
+            <span className="relative flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-xl" style={{ border: '1px solid rgba(255,255,255,0.14)', boxShadow: '0 0 18px rgba(129,140,248,0.28)' }}>
+              <Image src="/images/sipflow-logo.jpg" alt="SîpFlõw" width={32} height={32} className="h-full w-full object-cover" />
+            </span>
+            <span className="hidden sm:flex flex-col items-start leading-none">
+              <span className="text-[9px] font-bold uppercase tracking-[0.22em]" style={{ color: 'rgba(199,210,254,0.72)' }}>Developer</span>
+              <span className="text-[11px] font-black tracking-wide text-white">Admin</span>
+            </span>
           </button>
           <div className="flex items-center justify-center gap-2">
             <div className="h-px w-8" style={{ background: 'rgba(148,163,184,0.2)' }} />
