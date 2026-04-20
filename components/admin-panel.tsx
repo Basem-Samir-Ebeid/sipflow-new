@@ -272,6 +272,11 @@ export function AdminPanel({
     { key: 'flag_simulator',         label: 'محاكي الطلبات',       desc: 'أداة اختبار تدفق الطلبات للمطور',         color: '#6366f1' },
     { key: 'flag_multi_place',       label: 'تعدد الفروع',         desc: 'دعم إدارة أكثر من مكان في آن واحد',       color: '#e879f9' },
   ]
+  const getDefaultFeatureFlags = () => {
+    const defaults: Record<string, boolean> = {}
+    FLAG_DEFS.forEach(f => { defaults[f.key] = true })
+    return defaults
+  }
   const [featureFlags, setFeatureFlags] = useState<Record<string, boolean>>({})
   const [isSavingFlags, setIsSavingFlags] = useState(false)
   const [flagsLoaded, setFlagsLoaded] = useState(false)
@@ -315,12 +320,8 @@ export function AdminPanel({
     try {
       const res = await fetch('/api/settings?key=feature_flags')
       const data = await res.json()
-      if (data.value) setFeatureFlags(JSON.parse(data.value))
-      else {
-        const defaults: Record<string, boolean> = {}
-        FLAG_DEFS.forEach(f => { defaults[f.key] = true })
-        setFeatureFlags(defaults)
-      }
+      if (data.value) setFeatureFlags({ ...getDefaultFeatureFlags(), ...JSON.parse(data.value) })
+      else setFeatureFlags(getDefaultFeatureFlags())
     } catch { /* silent */ }
     setFlagsLoaded(true)
   }
@@ -379,15 +380,15 @@ export function AdminPanel({
   const implementIdea = async (idea: typeof AI_IDEAS[0]) => {
     setIsImplementingIdea(true)
     try {
-      const updated = { ...featureFlags, [idea.flagKey]: true }
-      setFeatureFlags(updated)
-      await fetch('/api/settings', {
+      const res = await fetch('/api/ai-ideas/implement', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ key: 'feature_flags', value: JSON.stringify(updated) })
+        body: JSON.stringify({ flagKey: idea.flagKey })
       })
-      await new Promise(r => setTimeout(r, 400))
-      toast.success(`${idea.icon} تم تفعيل "${idea.title}" — ستجده في ${idea.tabLabel}`)
+      const data = await res.json()
+      if (!res.ok || !data.success) throw new Error(data.error || 'Failed to implement idea')
+      setFeatureFlags(data.featureFlags || { ...featureFlags, [idea.flagKey]: true })
+      toast.success(`${idea.icon} تم تنفيذ "${idea.title}" فعليًا وحفظها — ستجده في ${idea.tabLabel}`)
       await new Promise(r => setTimeout(r, 700))
       handleTabChange(idea.tab)
     } catch { toast.error('تعذر التنفيذ') }
@@ -8763,12 +8764,14 @@ const handleSaveSettings = async () => {
                     </span>
                     <button
                       onClick={() => implementIdea(currentIdea)}
-                      disabled={isImplementingIdea}
+                      disabled={isImplementingIdea || featureFlags[currentIdea.flagKey]}
                       className="flex-1 flex items-center justify-center gap-1.5 rounded-full py-1.5 text-[12px] font-black transition-all duration-200 active:scale-95"
-                      style={{ background: isImplementingIdea ? 'rgba(255,255,255,0.06)' : `${currentIdea.color}`, color: isImplementingIdea ? 'rgba(255,255,255,0.4)' : '#000', boxShadow: isImplementingIdea ? 'none' : `0 0 16px ${currentIdea.color}60` }}
+                      style={{ background: isImplementingIdea || featureFlags[currentIdea.flagKey] ? 'rgba(255,255,255,0.06)' : `${currentIdea.color}`, color: isImplementingIdea || featureFlags[currentIdea.flagKey] ? 'rgba(255,255,255,0.55)' : '#000', boxShadow: isImplementingIdea || featureFlags[currentIdea.flagKey] ? 'none' : `0 0 16px ${currentIdea.color}60` }}
                     >
                       {isImplementingIdea ? (
                         <><Loader2 className="h-3 w-3 animate-spin" /> جارٍ التنفيذ...</>
+                      ) : featureFlags[currentIdea.flagKey] ? (
+                        <><CheckCircle2 className="h-3 w-3" /> مطبقة بالفعل</>
                       ) : (
                         <><Wrench className="h-3 w-3" /> نفّذ الفكرة ←</>
                       )}
