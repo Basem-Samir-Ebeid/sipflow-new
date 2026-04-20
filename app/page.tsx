@@ -2039,38 +2039,38 @@ export default function HomePage() {
             {/* Inner ambient */}
             <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300" style={{ background: 'radial-gradient(ellipse at 50% 0%, rgba(99,102,241,0.08) 0%, transparent 70%)' }} />
 
-            <div className="relative flex items-center gap-4 px-5 py-5">
+            <div className="relative flex items-center gap-3 px-4 py-3.5">
               {/* Animated icon */}
               <div className="relative shrink-0">
-                <div className="h-14 w-14 rounded-2xl flex items-center justify-center" style={{
+                <div className="h-10 w-10 rounded-xl flex items-center justify-center" style={{
                   background: 'linear-gradient(135deg, rgba(99,102,241,0.18), rgba(139,92,246,0.12))',
                   border: '1px solid rgba(139,92,246,0.3)',
                   boxShadow: '0 0 24px rgba(99,102,241,0.2), inset 0 1px 0 rgba(255,255,255,0.06)'
                 }}>
                   {isLoadingPlaces
-                    ? <Loader2 className="h-6 w-6 animate-spin text-indigo-400" />
-                    : <MapPin className="h-6 w-6 text-indigo-300" />}
+                    ? <Loader2 className="h-5 w-5 animate-spin text-indigo-400" />
+                    : <MapPin className="h-5 w-5 text-indigo-300" />}
                 </div>
                 {!isLoadingPlaces && (
-                  <div className="absolute inset-0 rounded-2xl animate-ping" style={{ background: 'rgba(99,102,241,0.15)', animationDuration: '2.5s' }} />
+                  <div className="absolute inset-0 rounded-xl animate-ping" style={{ background: 'rgba(99,102,241,0.15)', animationDuration: '2.5s' }} />
                 )}
               </div>
 
               {/* Text */}
               <div className="text-right flex-1 min-w-0">
-                <p className="text-lg font-black text-white leading-tight tracking-tight">
+                <p className="text-base font-black text-white leading-tight tracking-tight">
                   {isLoadingPlaces ? 'جاري التحميل...' : 'اختار مكانك'}
                 </p>
                 {!isLoadingPlaces && (
-                  <p className="text-xs mt-1 leading-relaxed" style={{ color: 'rgba(148,163,184,0.5)' }}>
+                  <p className="text-[11px] mt-0.5 leading-tight" style={{ color: 'rgba(148,163,184,0.5)' }}>
                     استكشف الأماكن المتاحة واختر وجهتك
                   </p>
                 )}
               </div>
 
               {/* Arrow */}
-              <div className="shrink-0 flex items-center justify-center h-8 w-8 rounded-xl transition-all group-hover:-translate-x-0.5" style={{ background: 'rgba(99,102,241,0.12)', border: '1px solid rgba(99,102,241,0.2)' }}>
-                <ChevronLeft className="h-4 w-4 text-indigo-400" />
+              <div className="shrink-0 flex items-center justify-center h-7 w-7 rounded-lg transition-all group-hover:-translate-x-0.5" style={{ background: 'rgba(99,102,241,0.12)', border: '1px solid rgba(99,102,241,0.2)' }}>
+                <ChevronLeft className="h-3.5 w-3.5 text-indigo-400" />
               </div>
             </div>
 
