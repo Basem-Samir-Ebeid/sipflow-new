@@ -37,6 +37,7 @@ type DevAdminRole = 'super_developer' | 'support_admin' | 'sales_admin' | 'finan
 export default function HomePage() {
   const [mounted, setMounted] = useState(false)
   const [showStars, setShowStars] = useState(false)
+  const [systemLogoUrl, setSystemLogoUrl] = useState('/images/sipflow-logo.jpg')
   const [currentPlace, setCurrentPlace] = useState<Place | null>(null)
   const [placeCode, setPlaceCode] = useState('')
   const [placeLookupLoading, setPlaceLookupLoading] = useState(false)
@@ -355,6 +356,14 @@ export default function HomePage() {
     fetch('/api/settings?key=dev_admin_photo_url')
       .then(r => r.json())
       .then(d => { if (d.value) setWelcomePhotoUrl(d.value) })
+      .catch(() => {})
+  }, [])
+
+  // Fetch system logo URL
+  useEffect(() => {
+    fetch('/api/settings?key=system_logo_url')
+      .then(r => r.json())
+      .then(d => { if (d.value) setSystemLogoUrl(d.value) })
       .catch(() => {})
   }, [])
 
@@ -1830,7 +1839,7 @@ export default function HomePage() {
             }`}
             style={activeTab === 'menu' ? { boxShadow: '0 0 10px rgba(212,160,23,0.5)' } : {}}
           >
-            <img src="/images/sipflow-logo.jpg" alt="SîpFlõw" className="h-full w-full object-cover" />
+            <img src={systemLogoUrl} alt="SîpFlõw" className="h-full w-full object-cover" />
           </button>
           <button
             onClick={() => { setActiveTab('board'); if (isDevAdmin) fetchBoardPlaces().then(list => { if (list.length > 0) { const pid = list[0].id; setBoardDevPlaceId(prev => { const chosen = prev || pid; fetchBoardOrdersForPlace(chosen); return chosen }) } }) }}
@@ -1933,7 +1942,7 @@ export default function HomePage() {
           >
             <span className="text-lg font-bold text-foreground">SîpFlõw</span>
             <div className="flex h-11 w-11 items-center justify-center rounded-full overflow-hidden bg-black border-2" style={{ borderColor: '#D4A017' }}>
-              <img src="/images/sipflow-logo.jpg" alt="SîpFlõw" className="h-full w-full object-cover" />
+              <img src={systemLogoUrl} alt="SîpFlõw" className="h-full w-full object-cover" />
             </div>
           </button>
         </div>
@@ -1979,7 +1988,7 @@ export default function HomePage() {
             title="Developer Admin"
           >
             <span className="relative flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-xl" style={{ border: '1px solid rgba(255,255,255,0.14)', boxShadow: '0 0 18px rgba(129,140,248,0.28)' }}>
-              <Image src="/images/sipflow-logo.jpg" alt="SîpFlõw" width={32} height={32} className="h-full w-full object-cover" />
+              <Image src={systemLogoUrl} alt="SîpFlõw" width={32} height={32} className="h-full w-full object-cover" />
             </span>
             <span className="hidden sm:flex flex-col items-start leading-none">
               <span className="text-[9px] font-bold uppercase tracking-[0.22em]" style={{ color: 'rgba(199,210,254,0.72)' }}>Developer</span>
@@ -2004,7 +2013,7 @@ export default function HomePage() {
               <div className="absolute" style={{ inset: '-8px', borderRadius: '1.75rem', border: '1px solid rgba(139,92,246,0.15)', boxShadow: '0 0 40px rgba(99,102,241,0.12)' }} />
               {/* Logo */}
               <div className="relative rounded-3xl overflow-hidden" style={{ width: 100, height: 100, border: '1px solid rgba(255,255,255,0.1)', boxShadow: '0 8px 40px rgba(0,0,0,0.5), 0 0 0 1px rgba(99,102,241,0.2)' }}>
-                <Image src="/images/sipflow-logo.jpg" alt="SîpFlõw" fill sizes="100px" loading="eager" style={{ objectFit: 'cover', objectPosition: 'center' }} />
+                <Image src={systemLogoUrl} alt="SîpFlõw" fill sizes="100px" loading="eager" style={{ objectFit: 'cover', objectPosition: 'center' }} />
                 <div className="absolute inset-0" style={{ background: 'linear-gradient(135deg, rgba(99,102,241,0.1) 0%, transparent 60%)' }} />
               </div>
               {/* Badge */}
@@ -2442,7 +2451,7 @@ export default function HomePage() {
               <div className="text-center mb-7">
                 <div className="relative mx-auto mb-5 h-20 w-20">
                   <div className="h-20 w-20 rounded-2xl overflow-hidden border border-violet-500/30 shadow-lg shadow-violet-500/15">
-                    <Image src="/images/sipflow-logo.jpg" alt="SîpFlõw" width={80} height={80} className="object-cover w-full h-full" />
+                    <Image src={systemLogoUrl} alt="SîpFlõw" width={80} height={80} className="object-cover w-full h-full" />
                   </div>
                   <div className="absolute -bottom-2 -left-2 flex h-7 w-7 items-center justify-center rounded-full"
                     style={{ background: 'linear-gradient(135deg, #a855f7, #7c3aed)', boxShadow: '0 0 10px rgba(168,85,247,0.5)' }}>
@@ -2495,7 +2504,7 @@ export default function HomePage() {
               <div className="text-center mb-7">
                 <div className="relative mx-auto mb-5 h-20 w-20">
                   <div className="h-20 w-20 rounded-2xl overflow-hidden shadow-lg" style={{ border: '1px solid rgba(212,160,23,0.35)', boxShadow: '0 4px 20px rgba(212,160,23,0.15)' }}>
-                    <Image src="/images/sipflow-logo.jpg" alt="SîpFlõw" width={80} height={80} className="object-cover w-full h-full" />
+                    <Image src={systemLogoUrl} alt="SîpFlõw" width={80} height={80} className="object-cover w-full h-full" />
                   </div>
                   <div className="absolute -bottom-2 -left-2 flex h-7 w-7 items-center justify-center rounded-full"
                     style={{ background: 'linear-gradient(135deg, #D4A017, #b8860b)', boxShadow: '0 0 10px rgba(212,160,23,0.5)' }}>
@@ -2707,7 +2716,7 @@ export default function HomePage() {
                 {/* Circular logo */}
                 <div className="absolute rounded-full overflow-hidden bg-black shadow-lg" style={{ width: 128, height: 128, zIndex: 1 }}>
                   <Image
-                    src="/images/sipflow-logo.jpg"
+                    src={systemLogoUrl}
                     alt="SîpFlõw"
                     fill
                     sizes="128px"
@@ -2933,7 +2942,7 @@ export default function HomePage() {
               <div className="text-center mb-7">
                 <div className="relative mx-auto mb-5 h-20 w-20">
                   <div className="h-20 w-20 rounded-2xl overflow-hidden shadow-lg" style={{ border: '1px solid rgba(212,160,23,0.35)', boxShadow: '0 4px 20px rgba(212,160,23,0.15)' }}>
-                    <Image src="/images/sipflow-logo.jpg" alt="SîpFlõw" width={80} height={80} className="object-cover w-full h-full" />
+                    <Image src={systemLogoUrl} alt="SîpFlõw" width={80} height={80} className="object-cover w-full h-full" />
                   </div>
                   <div className="absolute -bottom-2 -left-2 flex h-7 w-7 items-center justify-center rounded-full"
                     style={{ background: 'linear-gradient(135deg, #D4A017, #b8860b)', boxShadow: '0 0 10px rgba(212,160,23,0.5)' }}>
@@ -2990,6 +2999,7 @@ export default function HomePage() {
         currentUser={currentUser}
         currentPlace={currentPlace}
         onLogout={handleLogout}
+        systemLogoUrl={systemLogoUrl}
       />
     )
   }
@@ -3186,7 +3196,7 @@ export default function HomePage() {
             <div className="mb-4 flex justify-center">
               <div className="relative h-20 w-20 overflow-hidden rounded-full bg-black">
                 <Image 
-                  src="/images/sipflow-logo.jpg" 
+                  src={systemLogoUrl} 
                   alt="SîpFlõw" 
                   fill 
                   style={{ objectFit: 'cover', objectPosition: 'center' }}
@@ -4990,6 +5000,8 @@ export default function HomePage() {
             devAdminRole={savedDevRole}
             currentPlace={currentPlace}
             placeId={currentUser?.place_id || currentPlace?.id || null}
+            systemLogoUrl={systemLogoUrl}
+            onSystemLogoChange={(url) => setSystemLogoUrl(url)}
           />
         )}
       </div>
@@ -5116,7 +5128,7 @@ export default function HomePage() {
             <div className="text-center mb-7">
               <div className="relative mx-auto mb-5 h-20 w-20">
                 <div className="h-20 w-20 rounded-2xl overflow-hidden shadow-lg" style={{ border: '1px solid rgba(212,160,23,0.35)', boxShadow: '0 4px 20px rgba(212,160,23,0.15)' }}>
-                  <Image src="/images/sipflow-logo.jpg" alt="SîpFlõw" width={80} height={80} className="object-cover w-full h-full" />
+                  <Image src={systemLogoUrl} alt="SîpFlõw" width={80} height={80} className="object-cover w-full h-full" />
                 </div>
                 <div className="absolute -bottom-2 -left-2 flex h-7 w-7 items-center justify-center rounded-full"
                   style={{ background: 'linear-gradient(135deg, #D4A017, #b8860b)', boxShadow: '0 0 10px rgba(212,160,23,0.5)' }}>

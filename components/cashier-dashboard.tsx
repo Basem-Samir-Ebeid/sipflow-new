@@ -72,6 +72,7 @@ interface CashierDashboardProps {
   currentUser: User
   currentPlace: Place
   onLogout: () => void
+  systemLogoUrl?: string
 }
 
 /* ─────────────────────── Constants ─────────────────────── */
@@ -92,7 +93,7 @@ const genInvoiceNum = () => {
 const pmLabel = (m: PaymentMethod) => PAYMENT_METHODS.find(p => p.key === m)?.label ?? m
 
 /* ─────────────────────── Main Component ─────────────────────── */
-export function CashierDashboard({ currentUser, currentPlace, onLogout }: CashierDashboardProps) {
+export function CashierDashboard({ currentUser, currentPlace, onLogout, systemLogoUrl = '/images/sipflow-logo.jpg' }: CashierDashboardProps) {
   /* ── Core state ── */
   const [orders, setOrders] = useState<OrderWithDetails[]>([])
   const [isFetching, setIsFetching] = useState(false)
@@ -540,7 +541,7 @@ export function CashierDashboard({ currentUser, currentPlace, onLogout }: Cashie
     const change = Math.max(0, r.splitPayments.reduce((s, p) => s + p.amount, 0) - r.total)
     return `
     <div style="text-align:center;margin-bottom:6px">
-      <img src="${window.location.origin}/images/sipflow-logo.jpg" alt="SîpFlõw" style="width:80px;height:80px;object-fit:contain;display:block;margin:0 auto 4px"/>
+      <img src="${systemLogoUrl.startsWith('http') ? systemLogoUrl : window.location.origin + systemLogoUrl}" alt="SîpFlõw" style="width:80px;height:80px;object-fit:contain;display:block;margin:0 auto 4px"/>
       <div style="font-size:18px;font-weight:900;letter-spacing:2px">${r.place}</div>
       <div style="font-size:10px;letter-spacing:2px;color:#666;margin:2px 0 8px">— SîpFlõw POS —</div>
     </div>
@@ -1421,7 +1422,7 @@ export function CashierDashboard({ currentUser, currentPlace, onLogout }: Cashie
             <div className="overflow-y-auto bg-gray-100" style={{ maxHeight: '75vh' }}>
               <div className="bg-white mx-auto shadow-md" style={{ maxWidth: '300px', padding: '16px 12px', fontFamily: 'Arial, sans-serif', fontSize: '13px', direction: 'rtl' }}>
                 <div style={{ textAlign: 'center', marginBottom: '8px' }}>
-                  <img src="/images/sipflow-logo.jpg" alt="SîpFlõw" style={{ width: '70px', height: '70px', objectFit: 'contain', margin: '0 auto 4px' }} />
+                  <img src={systemLogoUrl} alt="SîpFlõw" style={{ width: '70px', height: '70px', objectFit: 'contain', margin: '0 auto 4px' }} />
                   <div style={{ fontSize: '16px', fontWeight: 900 }}>{receiptPreview.place}</div>
                   <div style={{ fontSize: '10px', color: '#666', marginBottom: '6px' }}>— SîpFlõw POS —</div>
                 </div>

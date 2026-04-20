@@ -61,6 +61,8 @@ interface AdminPanelProps {
   devAdminRole?: DevAdminRole
   currentPlace?: { id: string; name: string; code: string } | null
   placeId?: string | null
+  systemLogoUrl?: string
+  onSystemLogoChange?: (url: string) => void
 }
 
 const formatDisplayName = (name: string | null | undefined, tableNumber: string | null | undefined): string => {
@@ -85,7 +87,9 @@ export function AdminPanel({
   isDevAdmin = false,
   devAdminRole = 'super_developer',
   currentPlace = null,
-  placeId = null
+  placeId = null,
+  systemLogoUrl: externalSystemLogoUrl,
+  onSystemLogoChange,
 }: AdminPanelProps) {
   const devRoleMeta: Record<DevAdminRole, { label: string; description: string; homeTab: string; tabs: string[] }> = {
     super_developer: {
@@ -760,6 +764,11 @@ export function AdminPanel({
   const [adminPhotoHover, setAdminPhotoHover] = useState(false)
   const adminPhotoInputRef = useRef<HTMLInputElement>(null)
 
+  // ── System logo state (super_developer only) ──
+  const [systemLogoInputUrl, setSystemLogoInputUrl] = useState('')
+  const [systemLogoUploading, setSystemLogoUploading] = useState(false)
+  const systemLogoInputRef = useRef<HTMLInputElement>(null)
+
   useEffect(() => {
     fetch('/api/settings?key=dev_admin_photo_url')
       .then(r => r.json())
@@ -792,6 +801,60 @@ export function AdminPanel({
     } finally {
       setAdminPhotoUploading(false)
       if (adminPhotoInputRef.current) adminPhotoInputRef.current.value = ''
+    }
+  }
+
+  const handleSystemLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setSystemLogoUploading(true)
+    try {
+      const form = new FormData()
+      form.append('file', file)
+      const res = await fetch('/api/upload', { method: 'POST', body: form })
+      const data = await res.json()
+      if (data.url) {
+        setSystemLogoInputUrl(data.url)
+      } else {
+        toast.error(data.error || 'فشل رفع الصورة')
+      }
+    } catch {
+      toast.error('حدث خطأ أثناء رفع الصورة')
+    } finally {
+      setSystemLogoUploading(false)
+      if (systemLogoInputRef.current) systemLogoInputRef.current.value = ''
+    }
+  }
+
+  const handleSystemLogoSave = async () => {
+    const url = systemLogoInputUrl.trim()
+    if (!url) { toast.error('أدخل رابط اللوجو أو ارفع صورة'); return }
+    try {
+      await fetch('/api/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ key: 'system_logo_url', value: url }),
+      })
+      onSystemLogoChange?.(url)
+      toast.success('تم تغيير لوجو النظام بنجاح ✅')
+    } catch {
+      toast.error('حدث خطأ أثناء حفظ اللوجو')
+    }
+  }
+
+  const handleSystemLogoReset = async () => {
+    const defaultUrl = '/images/sipflow-logo.jpg'
+    try {
+      await fetch('/api/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ key: 'system_logo_url', value: defaultUrl }),
+      })
+      setSystemLogoInputUrl('')
+      onSystemLogoChange?.(defaultUrl)
+      toast.success('تم إعادة اللوجو للافتراضي')
+    } catch {
+      toast.error('حدث خطأ')
     }
   }
 
@@ -5145,6 +5208,73 @@ const handleSaveSettings = async () => {
                   </Button>
                 </div>
               )}
+            </div>
+          )}
+
+          {/* System Logo Setting — super_developer only */}
+          {isDevAdmin && devAdminRole === 'super_developer' && (
+            <div className="relative rounded-2xl overflow-hidden p-5 space-y-4" style={{ background: 'linear-gradient(170deg, rgba(139,92,246,0.06) 0%, rgba(15,15,25,0.95) 100%)', border: '1px solid rgba(139,92,246,0.15)', boxShadow: '0 4px 20px rgba(0,0,0,0.2)' }}>
+              <div className="absolute inset-0 pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle at 0% 100%, rgba(139,92,246,0.04) 0%, transparent 50%)' }} />
+              <div className="relative flex items-center gap-3 pb-3" style={{ borderBottom: '1px solid rgba(139,92,246,0.1)' }}>
+                <div className="flex items-center justify-center w-9 h-9 rounded-xl" style={{ background: 'linear-gradient(135deg, rgba(139,92,246,0.2), rgba(99,102,241,0.15))', border: '1px solid rgba(139,92,246,0.2)' }}>
+                  <Upload className="h-4 w-4" style={{ color: '#a78bfa' }} />
+                </div>
+                <div>
+                  <h3 className="font-bold text-white text-sm">لوجو النظام</h3>
+                  <p className="text-[10px]" style={{ color: 'rgba(167,139,250,0.6)' }}>تغيير اللوجو في كل أجزاء التطبيق فوراً</p>
+                </div>
+              </div>
+              <div className="relative space-y-3">
+                <div className="flex items-center gap-4">
+                  <div className="shrink-0 h-20 w-20 rounded-2xl border-2 border-dashed overflow-hidden flex items-center justify-center text-2xl" style={{ borderColor: (systemLogoInputUrl || externalSystemLogoUrl) ? 'rgba(139,92,246,0.5)' : 'rgba(139,92,246,0.2)', background: 'rgba(139,92,246,0.04)' }}>
+                    {(systemLogoInputUrl || externalSystemLogoUrl) ? (
+                      <img src={systemLogoInputUrl || externalSystemLogoUrl} alt="معاينة اللوجو" className="h-full w-full object-cover" onError={e => { (e.target as HTMLImageElement).style.display = 'none' }} />
+                    ) : (
+                      <span style={{ color: 'rgba(139,92,246,0.4)' }}>🖼️</span>
+                    )}
+                  </div>
+                  <div className="flex-1 space-y-2">
+                    <input ref={systemLogoInputRef} type="file" accept="image/*" className="hidden" onChange={handleSystemLogoUpload} />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="w-full h-9 text-xs rounded-xl"
+                      style={{ borderColor: 'rgba(139,92,246,0.3)', color: '#a78bfa', background: 'rgba(139,92,246,0.06)' }}
+                      disabled={systemLogoUploading}
+                      onClick={() => systemLogoInputRef.current?.click()}
+                    >
+                      {systemLogoUploading ? <Loader2 className="h-3.5 w-3.5 animate-spin ml-1" /> : <Upload className="h-3.5 w-3.5 ml-1" />}
+                      {systemLogoUploading ? 'جاري الرفع...' : 'رفع صورة'}
+                    </Button>
+                    <p className="text-[10px] text-center" style={{ color: 'rgba(255,255,255,0.3)' }}>أو</p>
+                    <Input
+                      placeholder="رابط الصورة (URL)"
+                      value={systemLogoInputUrl.startsWith('/api/') || systemLogoInputUrl.startsWith('/images/') || systemLogoInputUrl.startsWith('http') ? systemLogoInputUrl : systemLogoInputUrl}
+                      onChange={e => setSystemLogoInputUrl(e.target.value)}
+                      className="h-9 text-xs rounded-xl text-white placeholder:text-white/25"
+                      style={{ background: 'rgba(139,92,246,0.06)', border: '1px solid rgba(139,92,246,0.15)' }}
+                    />
+                  </div>
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    className="flex-1 h-10 rounded-xl text-sm font-bold"
+                    style={{ background: 'linear-gradient(135deg, #7c3aed, #6366f1)', color: '#fff', boxShadow: '0 4px 15px rgba(124,58,237,0.3)' }}
+                    disabled={systemLogoUploading || !systemLogoInputUrl.trim()}
+                    onClick={handleSystemLogoSave}
+                  >
+                    حفظ اللوجو
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="h-10 rounded-xl text-xs"
+                    style={{ borderColor: 'rgba(139,92,246,0.2)', color: 'rgba(167,139,250,0.7)' }}
+                    onClick={handleSystemLogoReset}
+                  >
+                    إعادة الافتراضي
+                  </Button>
+                </div>
+              </div>
             </div>
           )}
 
