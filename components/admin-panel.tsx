@@ -311,21 +311,22 @@ export function AdminPanel({
 
   // AI Ideas state
   const AI_IDEAS = [
-    { title: 'نظام تقييم الطلب', desc: 'بعد تسليم الطلب، تظهر للزبون نافذة صغيرة يقيّم فيها تجربته بالنجوم مع تعليق اختياري. التقييمات تظهر في لوحة الأدمن مع إحصاءات.', icon: '⭐', color: '#fbbf24' },
-    { title: 'خريطة الطاولات التفاعلية', desc: 'مخطط بصري للمكان يعرض حالة كل طاولة بالألوان — فارغة / نشطة / تنتظر الحساب. الكاشير يضغط على الطاولة لإدارتها مباشرة.', icon: '🗺️', color: '#34d399' },
-    { title: 'قائمة انتظار ذكية', desc: 'لما المكان يمتلئ، الزبون يسجل نفسه بـ QR عند المدخل. بمجرد تحرر طاولة يوصله إشعار فوري.', icon: '⏳', color: '#60a5fa' },
-    { title: 'تخصيص المشروب', desc: 'الزبون يختار مستوى السكر والثلج والإضافات لكل منتج. الخيارات تُحدد من الأدمن لكل منتج وتصل للبار واضحة.', icon: '🎛️', color: '#f472b6' },
-    { title: 'إخفاء المنتج تلقائياً', desc: 'لما الكمية توصل الصفر يختفي المنتج من قائمة الزبائن تلقائياً ويرجع لما يرجع المخزون، مع تنبيه مسبق للأدمن.', icon: '📦', color: '#f59e0b' },
-    { title: 'تقسيم الحساب', desc: 'الكاشير يقسّم فاتورة الطاولة بالتساوي أو حسب كل شخص وطلبه. كل جزء ينطبع كفاتورة مستقلة.', icon: '💳', color: '#a78bfa' },
-    { title: 'بطاقة الولاء الرقمية', desc: 'الزبون يجمع نقاطاً تلقائياً على كل طلب. لما يوصل لعتبة معينة يحصل على مكافأة يحددها الأدمن.', icon: '🏆', color: '#fb923c' },
-    { title: 'مؤقت الطاولة', desc: 'كل طاولة تعرض للكاشير كم وقت مضى عليها. لما تتجاوز الحد تتلوّن باللون الأحمر تلقائياً.', icon: '⏱️', color: '#f87171' },
-    { title: 'إعلان صوتي للطلب', desc: 'لما البار يضغط جاهز، المتحدث يعلن باسم الطاولة تلقائياً بدون صياح. الأدمن يختار الصوت والنبرة.', icon: '🔊', color: '#6366f1' },
-    { title: 'تقارير PDF يومية', desc: 'الكاشير يصدّر تقرير اليوم بضغطة واحدة — مبيعات، أكثر المنتجات طلباً، وصافي الإيراد.', icon: '📄', color: '#34d399' },
-    { title: 'لوحة أداء الموظفين', desc: 'إحصاءات لكل موظف — كم طلب خدم، متوسط وقت التحضير، أعلى ساعات إنتاجية. مع ترتيب شهري.', icon: '🏅', color: '#fbbf24' },
-    { title: 'مركز تحكم الفروع', desc: 'لوحة واحدة تعرض كل الفروع في وقت واحد — مبيعات لحظية، طلبات نشطة، مخزون. مع تنبيهات فورية.', icon: '🌐', color: '#e879f9' },
+    { title: 'نظام تقييم الطلب',       desc: 'بعد تسليم الطلب، تظهر للزبون نافذة صغيرة يقيّم فيها تجربته بالنجوم مع تعليق اختياري. التقييمات تظهر في لوحة الأدمن مع إحصاءات.', icon: '⭐', color: '#fbbf24', tab: 'analytics',   tabLabel: 'التقارير'      },
+    { title: 'خريطة الطاولات التفاعلية', desc: 'مخطط بصري للمكان يعرض حالة كل طاولة بالألوان — فارغة / نشطة / تنتظر الحساب. الكاشير يضغط على الطاولة لإدارتها مباشرة.', icon: '🗺️', color: '#34d399', tab: 'cashier',    tabLabel: 'الكاشير'       },
+    { title: 'قائمة انتظار ذكية',       desc: 'لما المكان يمتلئ، الزبون يسجل نفسه بـ QR عند المدخل. بمجرد تحرر طاولة يوصله إشعار فوري.', icon: '⏳', color: '#60a5fa', tab: 'settings',   tabLabel: 'الإعدادات'     },
+    { title: 'تخصيص المشروب',           desc: 'الزبون يختار مستوى السكر والثلج والإضافات لكل منتج. الخيارات تُحدد من الأدمن لكل منتج وتصل للبار واضحة.', icon: '🎛️', color: '#f472b6', tab: 'drinks',     tabLabel: 'المشاريب'      },
+    { title: 'إخفاء المنتج تلقائياً',   desc: 'لما الكمية توصل الصفر يختفي المنتج من قائمة الزبائن تلقائياً ويرجع لما يرجع المخزون، مع تنبيه مسبق للأدمن.', icon: '📦', color: '#f59e0b', tab: 'inventory',  tabLabel: 'المخزون'       },
+    { title: 'تقسيم الحساب',            desc: 'الكاشير يقسّم فاتورة الطاولة بالتساوي أو حسب كل شخص وطلبه. كل جزء ينطبع كفاتورة مستقلة.', icon: '💳', color: '#a78bfa', tab: 'cashier',    tabLabel: 'الكاشير'       },
+    { title: 'بطاقة الولاء الرقمية',    desc: 'الزبون يجمع نقاطاً تلقائياً على كل طلب. لما يوصل لعتبة معينة يحصل على مكافأة يحددها الأدمن.', icon: '🏆', color: '#fb923c', tab: 'settings',   tabLabel: 'الإعدادات'     },
+    { title: 'مؤقت الطاولة',            desc: 'كل طاولة تعرض للكاشير كم وقت مضى عليها. لما تتجاوز الحد تتلوّن باللون الأحمر تلقائياً.', icon: '⏱️', color: '#f87171', tab: 'cashier',    tabLabel: 'الكاشير'       },
+    { title: 'إعلان صوتي للطلب',        desc: 'لما البار يضغط جاهز، المتحدث يعلن باسم الطاولة تلقائياً بدون صياح. الأدمن يختار الصوت والنبرة.', icon: '🔊', color: '#6366f1', tab: 'settings',   tabLabel: 'الإعدادات'     },
+    { title: 'تقارير PDF يومية',         desc: 'الكاشير يصدّر تقرير اليوم بضغطة واحدة — مبيعات، أكثر المنتجات طلباً، وصافي الإيراد.', icon: '📄', color: '#34d399', tab: 'analytics',  tabLabel: 'التقارير'      },
+    { title: 'لوحة أداء الموظفين',      desc: 'إحصاءات لكل موظف — كم طلب خدم، متوسط وقت التحضير، أعلى ساعات إنتاجية. مع ترتيب شهري.', icon: '🏅', color: '#fbbf24', tab: 'staff',      tabLabel: 'الموظفين'      },
+    { title: 'مركز تحكم الفروع',        desc: 'لوحة واحدة تعرض كل الفروع في وقت واحد — مبيعات لحظية، طلبات نشطة، مخزون. مع تنبيهات فورية.', icon: '🌐', color: '#e879f9', tab: 'live',       tabLabel: 'البث المباشر'  },
   ]
   const [currentIdea, setCurrentIdea] = useState<typeof AI_IDEAS[0] | null>(null)
   const [isGeneratingIdea, setIsGeneratingIdea] = useState(false)
+  const [isImplementingIdea, setIsImplementingIdea] = useState(false)
   const [shownIdeas, setShownIdeas] = useState<Set<number>>(new Set())
 
   const generateIdea = () => {
@@ -338,6 +339,27 @@ export function AdminPanel({
       setCurrentIdea(AI_IDEAS[idx])
       setIsGeneratingIdea(false)
     }, 800)
+  }
+
+  const implementIdea = async (idea: typeof AI_IDEAS[0]) => {
+    setIsImplementingIdea(true)
+    try {
+      const timestamp = new Date().toLocaleDateString('ar-EG', { day: '2-digit', month: '2-digit', year: 'numeric' })
+      const noteEntry = `\n\n━━━━━━━━━━━━━━━━━━━━━━\n💡 فكرة مطلوب تنفيذها — ${timestamp}\n${idea.icon} ${idea.title}\n${idea.desc}\n📍 القسم المناسب: ${idea.tabLabel}\n━━━━━━━━━━━━━━━━━━━━━━`
+      const noteRes = await fetch('/api/settings?key=dev_notes')
+      const noteData = await noteRes.json()
+      const existingNote = noteData.value || ''
+      await fetch('/api/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ key: 'dev_notes', value: existingNote + noteEntry })
+      })
+      await new Promise(r => setTimeout(r, 600))
+      toast.success(`✅ تم حفظ الفكرة في المذكرة — جارٍ الانتقال إلى ${idea.tabLabel}`)
+      await new Promise(r => setTimeout(r, 800))
+      handleTabChange(idea.tab)
+    } catch { toast.error('تعذر التنفيذ') }
+    setIsImplementingIdea(false)
   }
 
   // Smart Alerts state
@@ -8439,10 +8461,22 @@ const handleSaveSettings = async () => {
                     <h4 className="text-base font-black text-white">{currentIdea.title}</h4>
                   </div>
                   <p className="text-[13px] leading-relaxed" style={{ color: 'rgba(255,255,255,0.7)' }}>{currentIdea.desc}</p>
-                  <div className="flex items-center gap-2 pt-1">
+                  <div className="flex items-center gap-2 pt-2">
                     <span className="text-[11px] font-semibold px-2.5 py-1 rounded-full" style={{ background: `${currentIdea.color}20`, color: currentIdea.color, border: `1px solid ${currentIdea.color}40` }}>
-                      جاهزة للتطبيق
+                      📍 {currentIdea.tabLabel}
                     </span>
+                    <button
+                      onClick={() => implementIdea(currentIdea)}
+                      disabled={isImplementingIdea}
+                      className="flex-1 flex items-center justify-center gap-1.5 rounded-full py-1.5 text-[12px] font-black transition-all duration-200 active:scale-95"
+                      style={{ background: isImplementingIdea ? 'rgba(255,255,255,0.06)' : `${currentIdea.color}`, color: isImplementingIdea ? 'rgba(255,255,255,0.4)' : '#000', boxShadow: isImplementingIdea ? 'none' : `0 0 16px ${currentIdea.color}60` }}
+                    >
+                      {isImplementingIdea ? (
+                        <><Loader2 className="h-3 w-3 animate-spin" /> جارٍ التنفيذ...</>
+                      ) : (
+                        <><Wrench className="h-3 w-3" /> نفّذ الفكرة ←</>
+                      )}
+                    </button>
                   </div>
                 </div>
               )}
