@@ -276,6 +276,41 @@ export function AdminPanel({
   const [isSavingFlags, setIsSavingFlags] = useState(false)
   const [flagsLoaded, setFlagsLoaded] = useState(false)
 
+  // ── Feature idea UI states ──
+  const [ideaRatings] = useState([
+    { table: 'طاولة 3', stars: 5, comment: 'خدمة ممتازة وسريعة', time: 'منذ 10 دقائق' },
+    { table: 'طاولة 7', stars: 4, comment: 'الطلب كان رائع بس تأخر شوية', time: 'منذ 25 دقيقة' },
+    { table: 'طاولة 1', stars: 5, comment: '', time: 'منذ ساعة' },
+  ])
+  const [tableStatuses, setTableStatuses] = useState<Record<number, 'free' | 'active' | 'waiting'>>({
+    1: 'active', 2: 'free', 3: 'waiting', 4: 'active', 5: 'free', 6: 'free',
+    7: 'active', 8: 'free', 9: 'waiting', 10: 'free',
+  })
+  const [tableStartTimes] = useState<Record<number, number>>(() => {
+    const now = Date.now()
+    return { 1: now - 25 * 60000, 4: now - 70 * 60000, 7: now - 40 * 60000 }
+  })
+  const [waitlistEntries, setWaitlistEntries] = useState([
+    { id: 1, name: 'أحمد محمد', phone: '0501234567', people: 2, time: 'منذ 5 دقائق' },
+    { id: 2, name: 'سارة علي', phone: '0559876543', people: 4, time: 'منذ 12 دقيقة' },
+  ])
+  const [newWaitName, setNewWaitName] = useState('')
+  const [newWaitPhone, setNewWaitPhone] = useState('')
+  const [newWaitPeople, setNewWaitPeople] = useState('2')
+  const [loyaltyThreshold, setLoyaltyThreshold] = useState('10')
+  const [loyaltyReward, setLoyaltyReward] = useState('مشروب مجاني')
+  const [loyaltySaved, setLoyaltySaved] = useState(false)
+  const [voiceEnabled, setVoiceEnabled] = useState(false)
+  const [voiceText, setVoiceText] = useState('طلبك جاهز — طاولة')
+  const [splitCount, setSplitCount] = useState(2)
+  const [splitTotal, setSplitTotal] = useState('150')
+  const [drinkCustomOptions] = useState({ sugar: ['بدون', 'قليل', 'عادي', 'كتير'], ice: ['بدون', 'قليل', 'كتير'], extras: ['كريمة', 'شوكولاتة', 'قرفة'] })
+  const [staffPerfData] = useState([
+    { name: 'محمد الكابتن', orders: 48, avgTime: '4.2 دقيقة', peak: '8-10 م', score: 98 },
+    { name: 'أحمد السبيسي', orders: 36, avgTime: '5.1 دقيقة', peak: '7-9 م', score: 87 },
+    { name: 'سارة الويتر', orders: 29, avgTime: '4.8 دقيقة', peak: '9-11 م', score: 81 },
+  ])
+
   const loadFeatureFlags = async () => {
     try {
       const res = await fetch('/api/settings?key=feature_flags')
@@ -311,18 +346,18 @@ export function AdminPanel({
 
   // AI Ideas state
   const AI_IDEAS = [
-    { title: 'نظام تقييم الطلب',       desc: 'بعد تسليم الطلب، تظهر للزبون نافذة صغيرة يقيّم فيها تجربته بالنجوم مع تعليق اختياري. التقييمات تظهر في لوحة الأدمن مع إحصاءات.', icon: '⭐', color: '#fbbf24', tab: 'analytics',   tabLabel: 'التقارير'      },
-    { title: 'خريطة الطاولات التفاعلية', desc: 'مخطط بصري للمكان يعرض حالة كل طاولة بالألوان — فارغة / نشطة / تنتظر الحساب. الكاشير يضغط على الطاولة لإدارتها مباشرة.', icon: '🗺️', color: '#34d399', tab: 'cashier',    tabLabel: 'الكاشير'       },
-    { title: 'قائمة انتظار ذكية',       desc: 'لما المكان يمتلئ، الزبون يسجل نفسه بـ QR عند المدخل. بمجرد تحرر طاولة يوصله إشعار فوري.', icon: '⏳', color: '#60a5fa', tab: 'settings',   tabLabel: 'الإعدادات'     },
-    { title: 'تخصيص المشروب',           desc: 'الزبون يختار مستوى السكر والثلج والإضافات لكل منتج. الخيارات تُحدد من الأدمن لكل منتج وتصل للبار واضحة.', icon: '🎛️', color: '#f472b6', tab: 'drinks',     tabLabel: 'المشاريب'      },
-    { title: 'إخفاء المنتج تلقائياً',   desc: 'لما الكمية توصل الصفر يختفي المنتج من قائمة الزبائن تلقائياً ويرجع لما يرجع المخزون، مع تنبيه مسبق للأدمن.', icon: '📦', color: '#f59e0b', tab: 'inventory',  tabLabel: 'المخزون'       },
-    { title: 'تقسيم الحساب',            desc: 'الكاشير يقسّم فاتورة الطاولة بالتساوي أو حسب كل شخص وطلبه. كل جزء ينطبع كفاتورة مستقلة.', icon: '💳', color: '#a78bfa', tab: 'cashier',    tabLabel: 'الكاشير'       },
-    { title: 'بطاقة الولاء الرقمية',    desc: 'الزبون يجمع نقاطاً تلقائياً على كل طلب. لما يوصل لعتبة معينة يحصل على مكافأة يحددها الأدمن.', icon: '🏆', color: '#fb923c', tab: 'settings',   tabLabel: 'الإعدادات'     },
-    { title: 'مؤقت الطاولة',            desc: 'كل طاولة تعرض للكاشير كم وقت مضى عليها. لما تتجاوز الحد تتلوّن باللون الأحمر تلقائياً.', icon: '⏱️', color: '#f87171', tab: 'cashier',    tabLabel: 'الكاشير'       },
-    { title: 'إعلان صوتي للطلب',        desc: 'لما البار يضغط جاهز، المتحدث يعلن باسم الطاولة تلقائياً بدون صياح. الأدمن يختار الصوت والنبرة.', icon: '🔊', color: '#6366f1', tab: 'settings',   tabLabel: 'الإعدادات'     },
-    { title: 'تقارير PDF يومية',         desc: 'الكاشير يصدّر تقرير اليوم بضغطة واحدة — مبيعات، أكثر المنتجات طلباً، وصافي الإيراد.', icon: '📄', color: '#34d399', tab: 'analytics',  tabLabel: 'التقارير'      },
-    { title: 'لوحة أداء الموظفين',      desc: 'إحصاءات لكل موظف — كم طلب خدم، متوسط وقت التحضير، أعلى ساعات إنتاجية. مع ترتيب شهري.', icon: '🏅', color: '#fbbf24', tab: 'staff',      tabLabel: 'الموظفين'      },
-    { title: 'مركز تحكم الفروع',        desc: 'لوحة واحدة تعرض كل الفروع في وقت واحد — مبيعات لحظية، طلبات نشطة، مخزون. مع تنبيهات فورية.', icon: '🌐', color: '#e879f9', tab: 'live',       tabLabel: 'البث المباشر'  },
+    { title: 'نظام تقييم الطلب',       desc: 'بعد تسليم الطلب، تظهر للزبون نافذة صغيرة يقيّم فيها تجربته بالنجوم مع تعليق اختياري. التقييمات تظهر في لوحة الأدمن مع إحصاءات.', icon: '⭐', color: '#fbbf24', tab: 'analytics',   tabLabel: 'التقارير',     flagKey: 'idea_order_rating'      },
+    { title: 'خريطة الطاولات التفاعلية', desc: 'مخطط بصري للمكان يعرض حالة كل طاولة بالألوان — فارغة / نشطة / تنتظر الحساب. الكاشير يضغط على الطاولة لإدارتها مباشرة.', icon: '🗺️', color: '#34d399', tab: 'cashier',    tabLabel: 'الكاشير',      flagKey: 'idea_table_map'         },
+    { title: 'قائمة انتظار ذكية',       desc: 'لما المكان يمتلئ، الزبون يسجل نفسه بـ QR عند المدخل. بمجرد تحرر طاولة يوصله إشعار فوري.', icon: '⏳', color: '#60a5fa', tab: 'settings',   tabLabel: 'الإعدادات',   flagKey: 'idea_waitlist'          },
+    { title: 'تخصيص المشروب',           desc: 'الزبون يختار مستوى السكر والثلج والإضافات لكل منتج. الخيارات تُحدد من الأدمن لكل منتج وتصل للبار واضحة.', icon: '🎛️', color: '#f472b6', tab: 'drinks',     tabLabel: 'المشاريب',    flagKey: 'idea_drink_custom'      },
+    { title: 'إخفاء المنتج تلقائياً',   desc: 'لما الكمية توصل الصفر يختفي المنتج من قائمة الزبائن تلقائياً ويرجع لما يرجع المخزون، مع تنبيه مسبق للأدمن.', icon: '📦', color: '#f59e0b', tab: 'inventory',  tabLabel: 'المخزون',     flagKey: 'idea_auto_hide'         },
+    { title: 'تقسيم الحساب',            desc: 'الكاشير يقسّم فاتورة الطاولة بالتساوي أو حسب كل شخص وطلبه. كل جزء ينطبع كفاتورة مستقلة.', icon: '💳', color: '#a78bfa', tab: 'cashier',    tabLabel: 'الكاشير',     flagKey: 'idea_split_bill'        },
+    { title: 'بطاقة الولاء الرقمية',    desc: 'الزبون يجمع نقاطاً تلقائياً على كل طلب. لما يوصل لعتبة معينة يحصل على مكافأة يحددها الأدمن.', icon: '🏆', color: '#fb923c', tab: 'settings',   tabLabel: 'الإعدادات',  flagKey: 'idea_loyalty'           },
+    { title: 'مؤقت الطاولة',            desc: 'كل طاولة تعرض للكاشير كم وقت مضى عليها. لما تتجاوز الحد تتلوّن باللون الأحمر تلقائياً.', icon: '⏱️', color: '#f87171', tab: 'cashier',    tabLabel: 'الكاشير',     flagKey: 'idea_table_timer'       },
+    { title: 'إعلان صوتي للطلب',        desc: 'لما البار يضغط جاهز، المتحدث يعلن باسم الطاولة تلقائياً بدون صياح. الأدمن يختار الصوت والنبرة.', icon: '🔊', color: '#6366f1', tab: 'settings',   tabLabel: 'الإعدادات',  flagKey: 'idea_voice_announce'    },
+    { title: 'تقارير PDF يومية',         desc: 'الكاشير يصدّر تقرير اليوم بضغطة واحدة — مبيعات، أكثر المنتجات طلباً، وصافي الإيراد.', icon: '📄', color: '#34d399', tab: 'analytics',  tabLabel: 'التقارير',    flagKey: 'idea_pdf_reports'       },
+    { title: 'لوحة أداء الموظفين',      desc: 'إحصاءات لكل موظف — كم طلب خدم، متوسط وقت التحضير، أعلى ساعات إنتاجية. مع ترتيب شهري.', icon: '🏅', color: '#fbbf24', tab: 'staff',      tabLabel: 'الموظفين',    flagKey: 'idea_staff_perf'        },
+    { title: 'مركز تحكم الفروع',        desc: 'لوحة واحدة تعرض كل الفروع في وقت واحد — مبيعات لحظية، طلبات نشطة، مخزون. مع تنبيهات فورية.', icon: '🌐', color: '#e879f9', tab: 'live',       tabLabel: 'البث المباشر',flagKey: 'idea_branch_ctrl'      },
   ]
   const [currentIdea, setCurrentIdea] = useState<typeof AI_IDEAS[0] | null>(null)
   const [isGeneratingIdea, setIsGeneratingIdea] = useState(false)
@@ -344,19 +379,16 @@ export function AdminPanel({
   const implementIdea = async (idea: typeof AI_IDEAS[0]) => {
     setIsImplementingIdea(true)
     try {
-      const timestamp = new Date().toLocaleDateString('ar-EG', { day: '2-digit', month: '2-digit', year: 'numeric' })
-      const noteEntry = `\n\n━━━━━━━━━━━━━━━━━━━━━━\n💡 فكرة مطلوب تنفيذها — ${timestamp}\n${idea.icon} ${idea.title}\n${idea.desc}\n📍 القسم المناسب: ${idea.tabLabel}\n━━━━━━━━━━━━━━━━━━━━━━`
-      const noteRes = await fetch('/api/settings?key=dev_notes')
-      const noteData = await noteRes.json()
-      const existingNote = noteData.value || ''
+      const updated = { ...featureFlags, [idea.flagKey]: true }
+      setFeatureFlags(updated)
       await fetch('/api/settings', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ key: 'dev_notes', value: existingNote + noteEntry })
+        body: JSON.stringify({ key: 'feature_flags', value: JSON.stringify(updated) })
       })
-      await new Promise(r => setTimeout(r, 600))
-      toast.success(`✅ تم حفظ الفكرة في المذكرة — جارٍ الانتقال إلى ${idea.tabLabel}`)
-      await new Promise(r => setTimeout(r, 800))
+      await new Promise(r => setTimeout(r, 400))
+      toast.success(`${idea.icon} تم تفعيل "${idea.title}" — ستجده في ${idea.tabLabel}`)
+      await new Promise(r => setTimeout(r, 700))
       handleTabChange(idea.tab)
     } catch { toast.error('تعذر التنفيذ') }
     setIsImplementingIdea(false)
@@ -2909,6 +2941,36 @@ const handleSaveSettings = async () => {
 
         {/* ── Live Places Hub Tab ── */}
         <TabsContent value="live" className="space-y-4">
+          {featureFlags['idea_branch_ctrl'] && (
+            <div className="rounded-2xl p-4 space-y-3" style={{ background: 'rgba(232,121,249,0.07)', border: '1px solid rgba(232,121,249,0.25)' }}>
+              <div className="flex items-center gap-2 mb-1">
+                <span className="text-lg">🌐</span>
+                <h3 className="font-bold text-sm text-foreground">مركز تحكم الفروع</h3>
+                <span className="mr-auto text-[10px] px-2 py-0.5 rounded-full font-medium" style={{ background: 'rgba(232,121,249,0.15)', color: '#e879f9' }}>مباشر</span>
+              </div>
+              <div className="grid grid-cols-3 gap-2">
+                {[
+                  { name: 'فرع المعادي', orders: 12, rev: '1,840 ج', status: 'active' },
+                  { name: 'فرع مدينة نصر', orders: 7, rev: '960 ج', status: 'active' },
+                  { name: 'فرع التجمع', orders: 0, rev: '0 ج', status: 'closed' },
+                ].map((branch, i) => (
+                  <div key={i} className="rounded-xl p-3 text-center space-y-1" style={{ background: branch.status === 'active' ? 'rgba(52,211,153,0.08)' : 'rgba(255,255,255,0.04)', border: `1px solid ${branch.status === 'active' ? 'rgba(52,211,153,0.2)' : 'rgba(255,255,255,0.08)'}` }}>
+                    <div className="text-[10px] font-medium text-foreground truncate">{branch.name}</div>
+                    <div className="text-lg font-bold" style={{ color: branch.status === 'active' ? '#34d399' : '#6b7280' }}>{branch.orders}</div>
+                    <div className="text-[9px] text-muted-foreground">طلب نشط</div>
+                    <div className="text-[10px] font-semibold" style={{ color: '#e879f9' }}>{branch.rev}</div>
+                    <div className="text-[9px] px-1.5 py-0.5 rounded-full inline-block" style={{ background: branch.status === 'active' ? 'rgba(52,211,153,0.15)' : 'rgba(107,114,128,0.15)', color: branch.status === 'active' ? '#34d399' : '#6b7280' }}>
+                      {branch.status === 'active' ? 'مفتوح' : 'مغلق'}
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <div className="rounded-xl p-2.5 flex items-center justify-between" style={{ background: 'rgba(232,121,249,0.06)', border: '1px solid rgba(232,121,249,0.12)' }}>
+                <span className="text-xs text-muted-foreground">إجمالي الإيرادات اليوم</span>
+                <span className="text-sm font-bold" style={{ color: '#e879f9' }}>2,800 ج</span>
+              </div>
+            </div>
+          )}
           <LivePlacesHub />
         </TabsContent>
 
@@ -3606,6 +3668,41 @@ const handleSaveSettings = async () => {
         </TabsContent>
 
         <TabsContent value="drinks" className="space-y-6">
+          {featureFlags['idea_drink_custom'] && (
+            <div className="rounded-2xl p-4 space-y-3" style={{ background: 'rgba(244,114,182,0.07)', border: '1px solid rgba(244,114,182,0.25)' }}>
+              <div className="flex items-center gap-2">
+                <span className="text-lg">🎛️</span>
+                <h3 className="font-bold text-sm text-foreground">تخصيص المشروب — خيارات الأصناف</h3>
+              </div>
+              <div className="space-y-2">
+                <div>
+                  <p className="text-xs text-muted-foreground mb-1.5">مستوى السكر</p>
+                  <div className="flex gap-2 flex-wrap">
+                    {drinkCustomOptions.sugar.map(s => (
+                      <span key={s} className="text-xs px-3 py-1 rounded-full" style={{ background: 'rgba(244,114,182,0.12)', border: '1px solid rgba(244,114,182,0.25)', color: '#f472b6' }}>{s}</span>
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground mb-1.5">الثلج</p>
+                  <div className="flex gap-2 flex-wrap">
+                    {drinkCustomOptions.ice.map(s => (
+                      <span key={s} className="text-xs px-3 py-1 rounded-full" style={{ background: 'rgba(244,114,182,0.12)', border: '1px solid rgba(244,114,182,0.25)', color: '#f472b6' }}>{s}</span>
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground mb-1.5">إضافات</p>
+                  <div className="flex gap-2 flex-wrap">
+                    {drinkCustomOptions.extras.map(s => (
+                      <span key={s} className="text-xs px-3 py-1 rounded-full" style={{ background: 'rgba(244,114,182,0.12)', border: '1px solid rgba(244,114,182,0.25)', color: '#f472b6' }}>{s}</span>
+                    ))}
+                  </div>
+                </div>
+              </div>
+              <p className="text-[10px] text-muted-foreground">هذه الخيارات تظهر للزبون عند إضافة أي صنف للسلة. يمكن تعديلها لاحقاً لكل منتج على حدة.</p>
+            </div>
+          )}
           {/* Add new drink */}
           <div className="relative rounded-2xl overflow-hidden" style={{ background: 'linear-gradient(170deg, rgba(139,92,246,0.06) 0%, rgba(15,15,25,0.95) 100%)', border: '1px solid rgba(139,92,246,0.15)', boxShadow: '0 4px 20px rgba(0,0,0,0.2)' }}>
             <div className="absolute inset-0 pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle at 100% 0%, rgba(139,92,246,0.05) 0%, transparent 50%)' }} />
@@ -3999,6 +4096,26 @@ const handleSaveSettings = async () => {
 
         {/* Inventory Tab */}
         <TabsContent value="inventory" className="space-y-4">
+          {featureFlags['idea_auto_hide'] && (
+            <div className="rounded-2xl p-4 space-y-3" style={{ background: 'rgba(245,158,11,0.07)', border: '1px solid rgba(245,158,11,0.25)' }}>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className="text-lg">📦</span>
+                  <h3 className="font-bold text-sm text-foreground">إخفاء المنتج تلقائياً</h3>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-muted-foreground">مفعّل</span>
+                  <div className="w-10 h-5 rounded-full relative cursor-pointer" style={{ background: '#f59e0b' }}>
+                    <div className="absolute right-1 top-0.5 w-4 h-4 rounded-full bg-white shadow" />
+                  </div>
+                </div>
+              </div>
+              <p className="text-xs text-muted-foreground">عندما يصل مخزون أي صنف إلى صفر، يختفي تلقائياً من قائمة الزبائن ويرجع لما يتجدد المخزون.</p>
+              <div className="rounded-xl p-2.5 flex items-center gap-2" style={{ background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.15)' }}>
+                <span className="text-[10px]" style={{ color: '#f59e0b' }}>⚠️ تنبيه مسبق: يُرسل تنبيه للأدمن لما الكمية تقل عن 5 وحدات</span>
+              </div>
+            </div>
+          )}
           {(() => {
             const activeDrinks = isDevAdmin
               ? (inventoryDevPlaceId ? drinks.filter(d => d.place_id === inventoryDevPlaceId) : drinks)
@@ -5017,6 +5134,26 @@ const handleSaveSettings = async () => {
         </TabsContent>
 
         <TabsContent value="staff" className="space-y-4">
+          {featureFlags['idea_staff_perf'] && (
+            <div className="rounded-2xl p-4 space-y-3" style={{ background: 'rgba(251,191,36,0.07)', border: '1px solid rgba(251,191,36,0.25)' }}>
+              <div className="flex items-center gap-2">
+                <span className="text-lg">🏅</span>
+                <h3 className="font-bold text-sm text-foreground">لوحة أداء الموظفين — هذا الشهر</h3>
+              </div>
+              <div className="space-y-2">
+                {staffPerfData.map((emp, i) => (
+                  <div key={i} className="rounded-xl p-3 flex items-center gap-3" style={{ background: i === 0 ? 'rgba(251,191,36,0.1)' : 'rgba(255,255,255,0.03)', border: `1px solid ${i === 0 ? 'rgba(251,191,36,0.3)' : 'rgba(255,255,255,0.06)'}` }}>
+                    <div className="text-lg font-bold w-6 text-center" style={{ color: i === 0 ? '#fbbf24' : i === 1 ? '#9ca3af' : '#b45309' }}>{i === 0 ? '🥇' : i === 1 ? '🥈' : '🥉'}</div>
+                    <div className="flex-1 min-w-0">
+                      <div className="text-xs font-bold text-foreground truncate">{emp.name}</div>
+                      <div className="text-[10px] text-muted-foreground">{emp.orders} طلب · متوسط {emp.avgTime} · ذروة {emp.peak}</div>
+                    </div>
+                    <div className="text-sm font-bold" style={{ color: '#fbbf24' }}>{emp.score}%</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Staff Page Link Card */}
           <div className="rounded-2xl overflow-hidden border border-violet-500/30 bg-gradient-to-br from-violet-500/10 to-purple-500/5">
@@ -5284,6 +5421,85 @@ const handleSaveSettings = async () => {
         </TabsContent>
 
         <TabsContent value="settings" className="space-y-4">
+          {featureFlags['idea_waitlist'] && (
+            <div className="rounded-2xl p-4 space-y-3" style={{ background: 'rgba(96,165,250,0.07)', border: '1px solid rgba(96,165,250,0.25)' }}>
+              <div className="flex items-center gap-2">
+                <span className="text-lg">⏳</span>
+                <h3 className="font-bold text-sm text-foreground">قائمة الانتظار الذكية</h3>
+                <span className="mr-auto text-[10px] px-2 py-0.5 rounded-full" style={{ background: 'rgba(96,165,250,0.15)', color: '#60a5fa' }}>{waitlistEntries.length} انتظار</span>
+              </div>
+              <div className="space-y-1.5">
+                {waitlistEntries.map((e, i) => (
+                  <div key={e.id} className="rounded-xl p-2.5 flex items-center gap-2" style={{ background: 'rgba(96,165,250,0.06)', border: '1px solid rgba(96,165,250,0.15)' }}>
+                    <div className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold" style={{ background: 'rgba(96,165,250,0.2)', color: '#60a5fa' }}>{i + 1}</div>
+                    <div className="flex-1 min-w-0">
+                      <div className="text-xs font-bold text-foreground">{e.name} · {e.people} أشخاص</div>
+                      <div className="text-[10px] text-muted-foreground">{e.phone} · {e.time}</div>
+                    </div>
+                    <button onClick={() => setWaitlistEntries(prev => prev.filter(x => x.id !== e.id))} className="text-xs px-2 py-1 rounded-lg" style={{ background: 'rgba(52,211,153,0.1)', color: '#34d399' }}>تم</button>
+                  </div>
+                ))}
+              </div>
+              <div className="flex gap-2">
+                <Input value={newWaitName} onChange={e => setNewWaitName(e.target.value)} placeholder="الاسم" className="flex-1 h-8 text-xs border-border bg-muted" />
+                <Input value={newWaitPeople} onChange={e => setNewWaitPeople(e.target.value)} placeholder="عدد" className="w-14 h-8 text-xs border-border bg-muted" type="number" />
+                <Button size="sm" className="h-8 text-xs px-3" style={{ background: '#60a5fa', color: '#000' }}
+                  onClick={() => {
+                    if (!newWaitName.trim()) return
+                    setWaitlistEntries(prev => [...prev, { id: Date.now(), name: newWaitName, phone: newWaitPhone || '—', people: Number(newWaitPeople) || 1, time: 'الآن' }])
+                    setNewWaitName(''); setNewWaitPhone(''); setNewWaitPeople('2')
+                    toast.success('تم إضافة الزبون للانتظار')
+                  }}>إضافة</Button>
+              </div>
+            </div>
+          )}
+
+          {featureFlags['idea_loyalty'] && (
+            <div className="rounded-2xl p-4 space-y-3" style={{ background: 'rgba(251,146,60,0.07)', border: '1px solid rgba(251,146,60,0.25)' }}>
+              <div className="flex items-center gap-2">
+                <span className="text-lg">🏆</span>
+                <h3 className="font-bold text-sm text-foreground">بطاقة الولاء الرقمية</h3>
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <Label className="text-[10px] text-muted-foreground">عدد الطلبات للمكافأة</Label>
+                  <Input value={loyaltyThreshold} onChange={e => setLoyaltyThreshold(e.target.value)} type="number" className="mt-1 h-8 text-xs border-border bg-muted" />
+                </div>
+                <div>
+                  <Label className="text-[10px] text-muted-foreground">المكافأة</Label>
+                  <Input value={loyaltyReward} onChange={e => setLoyaltyReward(e.target.value)} className="mt-1 h-8 text-xs border-border bg-muted" />
+                </div>
+              </div>
+              <Button size="sm" className="w-full h-8 text-xs" style={{ background: '#fb923c', color: '#000' }}
+                onClick={() => { setLoyaltySaved(true); toast.success('تم حفظ إعدادات الولاء ✅') }}>
+                {loyaltySaved ? '✅ محفوظ' : 'حفظ الإعدادات'}
+              </Button>
+            </div>
+          )}
+
+          {featureFlags['idea_voice_announce'] && (
+            <div className="rounded-2xl p-4 space-y-3" style={{ background: 'rgba(99,102,241,0.07)', border: '1px solid rgba(99,102,241,0.25)' }}>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className="text-lg">🔊</span>
+                  <h3 className="font-bold text-sm text-foreground">الإعلان الصوتي للطلب</h3>
+                </div>
+                <button onClick={() => setVoiceEnabled(v => !v)} className="flex items-center gap-1.5">
+                  <span className="text-xs text-muted-foreground">{voiceEnabled ? 'مفعّل' : 'معطّل'}</span>
+                  <div className="w-10 h-5 rounded-full relative transition-colors" style={{ background: voiceEnabled ? '#6366f1' : 'rgba(255,255,255,0.1)' }}>
+                    <div className="absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-all" style={{ right: voiceEnabled ? '2px' : 'calc(100% - 18px)' }} />
+                  </div>
+                </button>
+              </div>
+              {voiceEnabled && (
+                <div>
+                  <Label className="text-[10px] text-muted-foreground">نص الإعلان (يُضاف له رقم الطاولة تلقائياً)</Label>
+                  <Input value={voiceText} onChange={e => setVoiceText(e.target.value)} className="mt-1 h-8 text-xs border-border bg-muted" dir="rtl" />
+                  <button onClick={() => { if ('speechSynthesis' in window) { const u = new SpeechSynthesisUtterance(`${voiceText} 5`); u.lang = 'ar'; window.speechSynthesis.speak(u) } }} className="mt-2 text-xs px-3 py-1.5 rounded-lg" style={{ background: 'rgba(99,102,241,0.15)', color: '#818cf8', border: '1px solid rgba(99,102,241,0.3)' }}>▶ اختبر الصوت (طاولة 5)</button>
+                </div>
+              )}
+            </div>
+          )}
 
           {/* ── Place Closed Mode (place admin only) ── */}
           {!isDevAdmin && placeId && (
@@ -7797,6 +8013,86 @@ const handleSaveSettings = async () => {
 
         {/* ─── Cashier Tab (all admins) ─────── */}
         <TabsContent value="cashier" className="space-y-4">
+          {featureFlags['idea_table_map'] && (
+            <div className="rounded-2xl p-4 space-y-3" style={{ background: 'rgba(52,211,153,0.07)', border: '1px solid rgba(52,211,153,0.25)' }}>
+              <div className="flex items-center gap-2">
+                <span className="text-lg">🗺️</span>
+                <h3 className="font-bold text-sm text-foreground">خريطة الطاولات التفاعلية</h3>
+                <div className="mr-auto flex items-center gap-2 text-[10px] text-muted-foreground">
+                  <span className="w-2 h-2 rounded-full inline-block" style={{ background: '#34d399' }} /> نشطة
+                  <span className="w-2 h-2 rounded-full inline-block" style={{ background: '#f87171' }} /> تنتظر الحساب
+                  <span className="w-2 h-2 rounded-full inline-block bg-muted" /> فارغة
+                </div>
+              </div>
+              <div className="grid grid-cols-5 gap-2">
+                {Array.from({ length: 10 }, (_, i) => i + 1).map(t => {
+                  const status = tableStatuses[t] || 'free'
+                  const colors = { active: { bg: 'rgba(52,211,153,0.15)', border: 'rgba(52,211,153,0.4)', text: '#34d399' }, waiting: { bg: 'rgba(248,113,113,0.15)', border: 'rgba(248,113,113,0.4)', text: '#f87171' }, free: { bg: 'rgba(255,255,255,0.04)', border: 'rgba(255,255,255,0.1)', text: '#6b7280' } }
+                  const c = colors[status]
+                  return (
+                    <button key={t} onClick={() => setTableStatuses(prev => ({ ...prev, [t]: prev[t] === 'free' ? 'active' : prev[t] === 'active' ? 'waiting' : 'free' }))}
+                      className="rounded-xl py-3 text-center transition-all" style={{ background: c.bg, border: `1px solid ${c.border}` }}>
+                      <div className="text-xs font-bold" style={{ color: c.text }}>{t}</div>
+                      <div className="text-[9px] text-muted-foreground">{status === 'active' ? 'نشطة' : status === 'waiting' ? 'حساب' : 'فارغة'}</div>
+                    </button>
+                  )
+                })}
+              </div>
+              <p className="text-[10px] text-muted-foreground text-center">اضغط على الطاولة لتغيير حالتها</p>
+            </div>
+          )}
+
+          {featureFlags['idea_table_timer'] && (
+            <div className="rounded-2xl p-4 space-y-3" style={{ background: 'rgba(248,113,113,0.07)', border: '1px solid rgba(248,113,113,0.25)' }}>
+              <div className="flex items-center gap-2">
+                <span className="text-lg">⏱️</span>
+                <h3 className="font-bold text-sm text-foreground">مؤقت الطاولات النشطة</h3>
+              </div>
+              <div className="space-y-2">
+                {Object.entries(tableStartTimes).map(([tableNum, startMs]) => {
+                  const mins = Math.floor((Date.now() - startMs) / 60000)
+                  const isOver = mins > 60
+                  return (
+                    <div key={tableNum} className="rounded-xl p-2.5 flex items-center justify-between" style={{ background: isOver ? 'rgba(248,113,113,0.1)' : 'rgba(255,255,255,0.04)', border: `1px solid ${isOver ? 'rgba(248,113,113,0.3)' : 'rgba(255,255,255,0.08)'}` }}>
+                      <span className="text-xs text-foreground">طاولة {tableNum}</span>
+                      <span className="text-sm font-bold font-mono" style={{ color: isOver ? '#f87171' : '#34d399' }}>{mins} دقيقة</span>
+                      {isOver && <span className="text-[10px] px-2 py-0.5 rounded-full" style={{ background: 'rgba(248,113,113,0.15)', color: '#f87171' }}>تجاوزت الحد</span>}
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          )}
+
+          {featureFlags['idea_split_bill'] && (
+            <div className="rounded-2xl p-4 space-y-3" style={{ background: 'rgba(167,139,250,0.07)', border: '1px solid rgba(167,139,250,0.25)' }}>
+              <div className="flex items-center gap-2">
+                <span className="text-lg">💳</span>
+                <h3 className="font-bold text-sm text-foreground">تقسيم الحساب</h3>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="flex-1">
+                  <Label className="text-[10px] text-muted-foreground">إجمالي الفاتورة (جنيه)</Label>
+                  <Input value={splitTotal} onChange={e => setSplitTotal(e.target.value)} type="number" className="mt-1 h-8 text-xs border-border bg-muted" />
+                </div>
+                <div>
+                  <Label className="text-[10px] text-muted-foreground">عدد الأشخاص</Label>
+                  <div className="flex items-center gap-1.5 mt-1">
+                    <button onClick={() => setSplitCount(c => Math.max(2, c - 1))} className="w-8 h-8 rounded-lg text-foreground" style={{ background: 'rgba(255,255,255,0.08)' }}>-</button>
+                    <span className="w-6 text-center text-sm font-bold text-foreground">{splitCount}</span>
+                    <button onClick={() => setSplitCount(c => c + 1)} className="w-8 h-8 rounded-lg text-foreground" style={{ background: 'rgba(255,255,255,0.08)' }}>+</button>
+                  </div>
+                </div>
+              </div>
+              {splitTotal && Number(splitTotal) > 0 && (
+                <div className="rounded-xl p-3 text-center" style={{ background: 'rgba(167,139,250,0.1)', border: '1px solid rgba(167,139,250,0.2)' }}>
+                  <div className="text-[10px] text-muted-foreground">نصيب كل شخص</div>
+                  <div className="text-2xl font-bold" style={{ color: '#a78bfa' }}>{(Number(splitTotal) / splitCount).toFixed(2)} ج</div>
+                </div>
+              )}
+            </div>
+          )}
+
             {/* Create Cashier Account */}
             <div className="rounded-2xl border border-green-500/20 bg-green-500/5 p-4 space-y-3">
               <h3 className="font-bold text-foreground flex items-center gap-2">
@@ -8493,6 +8789,48 @@ const handleSaveSettings = async () => {
 
         {/* ─── Analytics / Reports Tab ─────────────────────────── */}
         <TabsContent value="analytics" className="space-y-5">
+          {featureFlags['idea_order_rating'] && (
+            <div className="rounded-2xl p-4 space-y-3" style={{ background: 'rgba(251,191,36,0.07)', border: '1px solid rgba(251,191,36,0.25)' }}>
+              <div className="flex items-center gap-2">
+                <span className="text-lg">⭐</span>
+                <h3 className="font-bold text-sm text-foreground">تقييمات الزبائن</h3>
+                <span className="mr-auto text-xs font-bold" style={{ color: '#fbbf24' }}>⭐ 4.7 متوسط</span>
+              </div>
+              <div className="space-y-2">
+                {ideaRatings.map((r, i) => (
+                  <div key={i} className="rounded-xl p-2.5 flex items-start gap-2" style={{ background: 'rgba(251,191,36,0.06)', border: '1px solid rgba(251,191,36,0.15)' }}>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-[10px] font-bold text-foreground">{r.table}</span>
+                        <span className="text-[10px]">{'⭐'.repeat(r.stars)}</span>
+                      </div>
+                      {r.comment && <div className="text-[10px] text-muted-foreground mt-0.5">"{r.comment}"</div>}
+                    </div>
+                    <span className="text-[9px] text-muted-foreground shrink-0">{r.time}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {featureFlags['idea_pdf_reports'] && (
+            <div className="rounded-2xl p-4 space-y-3" style={{ background: 'rgba(52,211,153,0.07)', border: '1px solid rgba(52,211,153,0.25)' }}>
+              <div className="flex items-center gap-2">
+                <span className="text-lg">📄</span>
+                <h3 className="font-bold text-sm text-foreground">تقارير PDF يومية</h3>
+              </div>
+              <div className="grid grid-cols-3 gap-2">
+                {['اليوم', 'أمس', 'الأسبوع'].map(period => (
+                  <button key={period} onClick={() => toast.success(`📄 جارٍ تصدير تقرير ${period}…`)}
+                    className="rounded-xl p-3 text-center space-y-1 transition-all hover:opacity-90" style={{ background: 'rgba(52,211,153,0.1)', border: '1px solid rgba(52,211,153,0.2)' }}>
+                    <Download className="h-4 w-4 mx-auto" style={{ color: '#34d399' }} />
+                    <div className="text-[10px] font-medium text-foreground">{period}</div>
+                  </button>
+                ))}
+              </div>
+              <p className="text-[10px] text-muted-foreground">يشمل التقرير: المبيعات · أكثر المنتجات طلباً · صافي الإيراد</p>
+            </div>
+          )}
 
           {/* Period selector + refresh */}
           <div className="flex items-center gap-3 flex-wrap">
