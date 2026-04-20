@@ -1955,10 +1955,15 @@ export default function HomePage() {
   // Place Selection Screen
   if (!currentPlace && !isAdmin) {
     return (
-      <main className="relative min-h-[100dvh] overflow-x-hidden overflow-y-auto flex flex-col items-center p-0" dir="rtl" onClick={handleGlobalClick} suppressHydrationWarning style={{ background: 'linear-gradient(160deg, #0f1117 0%, #13151e 60%, #0f1117 100%)' }}>
+      <main className="relative min-h-[100dvh] overflow-x-hidden overflow-y-auto flex flex-col items-center p-0" dir="rtl" onClick={handleGlobalClick} suppressHydrationWarning style={{ background: '#07050f' }}>
         <Toaster position="top-center" richColors toastOptions={{ style: { direction: 'rtl' } }} />
-        {/* Subtle background texture */}
-        <div className="pointer-events-none absolute inset-0" style={{ backgroundImage: 'radial-gradient(circle at 30% 20%, rgba(99,102,241,0.04) 0%, transparent 50%), radial-gradient(circle at 70% 80%, rgba(148,163,184,0.03) 0%, transparent 50%)' }} />
+        {/* Rich ambient background */}
+        <div className="pointer-events-none fixed inset-0 overflow-hidden">
+          <div style={{ position: 'absolute', top: '-15%', left: '-10%', width: '55%', height: '55%', borderRadius: '50%', background: 'radial-gradient(ellipse at center, rgba(99,102,241,0.12) 0%, transparent 65%)' }} />
+          <div style={{ position: 'absolute', bottom: '-20%', right: '-15%', width: '60%', height: '60%', borderRadius: '50%', background: 'radial-gradient(ellipse at center, rgba(139,92,246,0.1) 0%, transparent 65%)' }} />
+          <div style={{ position: 'absolute', top: '40%', right: '5%', width: '30%', height: '30%', borderRadius: '50%', background: 'radial-gradient(ellipse at center, rgba(6,182,212,0.06) 0%, transparent 65%)' }} />
+          <div style={{ position: 'absolute', inset: 0, backgroundImage: 'radial-gradient(circle, rgba(255,255,255,0.018) 1px, transparent 1px)', backgroundSize: '32px 32px' }} />
+        </div>
 
         {/* Developer bar */}
         <div className="relative w-full py-1.5" style={{ background: 'rgba(255,255,255,0.025)', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
@@ -1989,57 +1994,88 @@ export default function HomePage() {
           </div>
         </div>
 
-        <div className="w-full max-w-sm space-y-4 px-5 pt-8 pb-10">
+        <div className="relative w-full max-w-sm space-y-5 px-5 pt-8 pb-10">
           {/* Logo + Branding */}
-          <div className="flex flex-col items-center space-y-4 pb-2">
-            <div className="relative">
-              <div className="relative rounded-2xl overflow-hidden" style={{ width: 88, height: 88, border: '1px solid rgba(255,255,255,0.08)', boxShadow: '0 8px 32px rgba(0,0,0,0.4)' }}>
-                <Image src="/images/sipflow-logo.jpg" alt="SîpFlõw" fill sizes="88px" loading="eager" style={{ objectFit: 'cover', objectPosition: 'center' }} />
+          <div className="flex flex-col items-center space-y-5 pb-1">
+            <div className="relative flex items-center justify-center" style={{ width: 110, height: 110 }}>
+              {/* Outer pulse ring */}
+              <div className="absolute inset-0 rounded-3xl animate-pulse" style={{ background: 'rgba(99,102,241,0.08)', border: '1px solid rgba(99,102,241,0.15)' }} />
+              {/* Middle glow ring */}
+              <div className="absolute" style={{ inset: '-8px', borderRadius: '1.75rem', border: '1px solid rgba(139,92,246,0.15)', boxShadow: '0 0 40px rgba(99,102,241,0.12)' }} />
+              {/* Logo */}
+              <div className="relative rounded-3xl overflow-hidden" style={{ width: 100, height: 100, border: '1px solid rgba(255,255,255,0.1)', boxShadow: '0 8px 40px rgba(0,0,0,0.5), 0 0 0 1px rgba(99,102,241,0.2)' }}>
+                <Image src="/images/sipflow-logo.jpg" alt="SîpFlõw" fill sizes="100px" loading="eager" style={{ objectFit: 'cover', objectPosition: 'center' }} />
+                <div className="absolute inset-0" style={{ background: 'linear-gradient(135deg, rgba(99,102,241,0.1) 0%, transparent 60%)' }} />
               </div>
-              <div className="absolute -bottom-1.5 -right-1.5 flex h-6 w-6 items-center justify-center rounded-lg" style={{ background: 'rgba(99,102,241,0.9)', border: '2px solid rgba(15,17,23,1)', boxShadow: '0 2px 8px rgba(99,102,241,0.4)' }}>
-                <Coffee className="h-3 w-3 text-white" />
+              {/* Badge */}
+              <div className="absolute -bottom-2 -right-2 flex h-7 w-7 items-center justify-center rounded-xl" style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6)', border: '2px solid #07050f', boxShadow: '0 4px 12px rgba(99,102,241,0.5)' }}>
+                <Coffee className="h-3.5 w-3.5 text-white" />
               </div>
             </div>
-            <div className="text-center space-y-1">
-              <h1 className="text-2xl font-bold tracking-tight text-white">SîpFlõw</h1>
-              <p className="text-[11px] tracking-[0.18em] uppercase font-medium" style={{ color: 'rgba(148,163,184,0.5)' }}>Order Management System</p>
+
+            <div className="text-center space-y-1.5">
+              <h1 className="text-3xl font-black tracking-tight text-white" style={{ textShadow: '0 0 30px rgba(99,102,241,0.3)' }}>SîpFlõw</h1>
+              <div className="flex items-center justify-center gap-2">
+                <div className="h-px w-6" style={{ background: 'linear-gradient(90deg, transparent, rgba(99,102,241,0.5))' }} />
+                <p className="text-[10px] tracking-[0.22em] uppercase font-semibold" style={{ color: 'rgba(148,163,184,0.45)' }}>Order Management System</p>
+                <div className="h-px w-6" style={{ background: 'linear-gradient(90deg, rgba(99,102,241,0.5), transparent)' }} />
+              </div>
             </div>
           </div>
 
-          {/* Welcome Banner */}
-          <div className="rounded-xl px-4 py-3 text-center" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
-            <p className="text-sm leading-relaxed" style={{ color: 'rgba(226,232,240,0.7)' }}>
-              أهلاً وسهلاً · نتمنى لكم يوماً رائعاً في{' '}
-              <span className="font-semibold text-indigo-400">SîpFlõw</span> ☕
-            </p>
-          </div>
-
-          {/* Place Picker Button */}
+          {/* Place Picker Hero Button */}
           <button
             onClick={handleOpenPlacesPicker}
             disabled={isLoadingPlaces}
-            className="w-full rounded-xl flex items-center justify-between px-4 py-3.5 transition-all active:scale-[0.98] disabled:opacity-50 group focus-visible:ring-2 focus-visible:ring-indigo-500/50 focus-visible:outline-none"
+            className="relative w-full rounded-2xl overflow-hidden transition-all active:scale-[0.97] disabled:opacity-50 group focus-visible:outline-none"
             style={{
-              background: 'rgba(99,102,241,0.1)',
-              border: '1px solid rgba(99,102,241,0.25)',
+              background: 'linear-gradient(135deg, rgba(12,8,28,0.98) 0%, rgba(22,14,50,0.98) 50%, rgba(18,10,40,0.98) 100%)',
+              border: '1px solid rgba(139,92,246,0.3)',
+              boxShadow: '0 0 0 1px rgba(99,102,241,0.08), 0 12px 40px rgba(99,102,241,0.15), 0 0 80px rgba(139,92,246,0.06)',
             }}
           >
-            <div className="flex items-center gap-3">
-              <div className="flex h-9 w-9 items-center justify-center rounded-lg shrink-0" style={{ background: 'rgba(99,102,241,0.15)' }}>
-                {isLoadingPlaces
-                  ? <Loader2 className="h-4 w-4 animate-spin text-indigo-400" />
-                  : <MapPin className="h-4 w-4 text-indigo-400" />}
+            {/* Top gradient line */}
+            <div className="absolute inset-x-0 top-0 h-px" style={{ background: 'linear-gradient(90deg, transparent 5%, #6366f1 35%, #a855f7 65%, transparent 95%)' }} />
+            {/* Inner ambient */}
+            <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300" style={{ background: 'radial-gradient(ellipse at 50% 0%, rgba(99,102,241,0.08) 0%, transparent 70%)' }} />
+
+            <div className="relative flex items-center gap-4 px-5 py-5">
+              {/* Animated icon */}
+              <div className="relative shrink-0">
+                <div className="h-14 w-14 rounded-2xl flex items-center justify-center" style={{
+                  background: 'linear-gradient(135deg, rgba(99,102,241,0.18), rgba(139,92,246,0.12))',
+                  border: '1px solid rgba(139,92,246,0.3)',
+                  boxShadow: '0 0 24px rgba(99,102,241,0.2), inset 0 1px 0 rgba(255,255,255,0.06)'
+                }}>
+                  {isLoadingPlaces
+                    ? <Loader2 className="h-6 w-6 animate-spin text-indigo-400" />
+                    : <MapPin className="h-6 w-6 text-indigo-300" />}
+                </div>
+                {!isLoadingPlaces && (
+                  <div className="absolute inset-0 rounded-2xl animate-ping" style={{ background: 'rgba(99,102,241,0.15)', animationDuration: '2.5s' }} />
+                )}
               </div>
-              <div className="text-right">
-                <p className="text-sm font-semibold text-white leading-tight">
+
+              {/* Text */}
+              <div className="text-right flex-1 min-w-0">
+                <p className="text-lg font-black text-white leading-tight tracking-tight">
                   {isLoadingPlaces ? 'جاري التحميل...' : 'اختار مكانك'}
                 </p>
                 {!isLoadingPlaces && (
-                  <p className="text-[11px] leading-tight mt-0.5" style={{ color: 'rgba(148,163,184,0.5)' }}>اضغط لعرض الأماكن المتاحة</p>
+                  <p className="text-xs mt-1 leading-relaxed" style={{ color: 'rgba(148,163,184,0.5)' }}>
+                    استكشف الأماكن المتاحة واختر وجهتك
+                  </p>
                 )}
               </div>
+
+              {/* Arrow */}
+              <div className="shrink-0 flex items-center justify-center h-8 w-8 rounded-xl transition-all group-hover:-translate-x-0.5" style={{ background: 'rgba(99,102,241,0.12)', border: '1px solid rgba(99,102,241,0.2)' }}>
+                <ChevronLeft className="h-4 w-4 text-indigo-400" />
+              </div>
             </div>
-            <ChevronLeft className="h-4 w-4 shrink-0 text-indigo-400/50 transition-transform group-hover:-translate-x-0.5" />
+
+            {/* Bottom gradient line */}
+            <div className="absolute inset-x-0 bottom-0 h-px" style={{ background: 'linear-gradient(90deg, transparent 5%, rgba(139,92,246,0.3) 35%, rgba(99,102,241,0.3) 65%, transparent 95%)' }} />
           </button>
 
           {/* Separator */}
@@ -2516,49 +2552,94 @@ export default function HomePage() {
         {showPlacesPicker && (
           <>
             {/* Backdrop */}
-            <div className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm" onClick={() => setShowPlacesPicker(false)} />
+            <div className="fixed inset-0 z-40 bg-black/75 backdrop-blur-md" onClick={() => setShowPlacesPicker(false)} />
             {/* Sheet */}
-            <div className="fixed bottom-0 left-0 right-0 z-50 rounded-t-3xl pb-safe" dir="rtl"
-              style={{ background: 'linear-gradient(180deg, #111 0%, #0a0a0a 100%)', border: '1px solid rgba(212,160,23,0.2)', borderBottom: 'none' }}>
+            <div className="fixed bottom-0 left-0 right-0 z-50 rounded-t-[2rem] flex flex-col" dir="rtl"
+              style={{
+                background: 'linear-gradient(180deg, #0d0a1f 0%, #080613 100%)',
+                border: '1px solid rgba(139,92,246,0.2)',
+                borderBottom: 'none',
+                boxShadow: '0 -20px 60px rgba(0,0,0,0.7), 0 -1px 0 rgba(139,92,246,0.1)',
+                maxHeight: '78vh',
+              }}>
+
+              {/* Top glow line */}
+              <div className="absolute inset-x-0 top-0 h-px rounded-full" style={{ background: 'linear-gradient(90deg, transparent 5%, #6366f1 30%, #a855f7 50%, #06b6d4 70%, transparent 95%)' }} />
+              {/* Ambient top glow */}
+              <div className="pointer-events-none absolute top-0 left-1/2 -translate-x-1/2 rounded-full" style={{ width: '60%', height: '100px', background: 'radial-gradient(ellipse at center top, rgba(99,102,241,0.12) 0%, transparent 70%)' }} />
+
               {/* Handle bar */}
-              <div className="flex justify-center pt-3 pb-1">
-                <div className="h-1 w-10 rounded-full bg-white/20" />
+              <div className="flex justify-center pt-3.5 pb-1">
+                <div className="h-1 w-12 rounded-full" style={{ background: 'rgba(139,92,246,0.35)' }} />
               </div>
+
               {/* Header */}
-              <div className="flex items-center justify-between px-4 py-2">
-                <p className="font-bold text-white text-sm">اختر مكانك</p>
+              <div className="relative flex items-center justify-between px-5 pt-2 pb-4" style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
                 <button onClick={() => setShowPlacesPicker(false)}
-                  className="flex h-7 w-7 items-center justify-center rounded-full bg-white/10 text-gray-400 hover:text-white transition-colors">
-                  <X className="h-3.5 w-3.5" />
+                  className="flex h-8 w-8 items-center justify-center rounded-xl transition-all active:scale-95"
+                  style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.08)', color: '#94a3b8' }}>
+                  <X className="h-4 w-4" />
                 </button>
+                <div className="text-center">
+                  <p className="font-black text-white text-base tracking-tight">اختر مكانك</p>
+                  <p className="text-[9px] tracking-[0.22em] uppercase mt-0.5 font-medium" style={{ color: 'rgba(148,163,184,0.4)' }}>Choose Your Destination</p>
+                </div>
+                <div className="flex h-8 w-8 items-center justify-center rounded-xl" style={{ background: 'rgba(99,102,241,0.1)', border: '1px solid rgba(99,102,241,0.15)' }}>
+                  <MapPin className="h-4 w-4 text-indigo-400" />
+                </div>
               </div>
-              {/* Horizontal scroll strip */}
-              <div className="px-4 pb-6 pt-2">
+
+              {/* Content */}
+              <div className="flex-1 overflow-y-auto px-4 py-4" style={{ scrollbarWidth: 'none' }}>
                 {isLoadingPlaces ? (
-                  <div className="flex items-center justify-center gap-2 py-8">
-                    <div className="h-5 w-5 rounded-full border-2 border-amber-500/30 border-t-amber-500 animate-spin" />
-                    <p className="text-sm text-gray-500">جاري التحميل...</p>
+                  <div className="flex flex-col items-center justify-center gap-3 py-14">
+                    <div className="h-8 w-8 rounded-full border-2 border-violet-500/20 border-t-violet-500 animate-spin" />
+                    <p className="text-sm font-medium" style={{ color: 'rgba(148,163,184,0.5)' }}>جاري تحميل الأماكن...</p>
                   </div>
                 ) : allActivePlaces.length === 0 ? (
-                  <div className="flex items-center justify-center gap-2 py-8">
-                    <span className="text-2xl">🏪</span>
-                    <p className="text-sm text-gray-500">لا توجد أماكن متاحة</p>
+                  <div className="flex flex-col items-center justify-center gap-3 py-14">
+                    <span className="text-5xl">🏪</span>
+                    <p className="text-sm font-medium" style={{ color: 'rgba(148,163,184,0.5)' }}>لا توجد أماكن متاحة حالياً</p>
                   </div>
                 ) : (
-                  <div className="flex gap-3 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none' }}>
+                  <div className="grid grid-cols-2 gap-3 pb-4">
                     {allActivePlaces.map(place => (
                       <button
                         key={place.id}
                         onClick={() => handleSelectPlaceFromPicker(place)}
-                        className="flex flex-col items-center gap-2 rounded-2xl p-3 shrink-0 w-28 text-center transition-all active:scale-95"
-                        style={{ background: 'rgba(212,160,23,0.08)', border: '1px solid rgba(212,160,23,0.25)' }}
+                        className="relative group flex flex-col items-center gap-3 rounded-2xl p-4 text-center transition-all active:scale-95 overflow-hidden focus-visible:outline-none"
+                        style={{
+                          background: 'linear-gradient(145deg, rgba(14,10,30,0.95), rgba(24,14,50,0.95))',
+                          border: '1px solid rgba(139,92,246,0.2)',
+                          boxShadow: '0 4px 20px rgba(0,0,0,0.35)',
+                        }}
                       >
-                        <div className="h-14 w-14 rounded-xl overflow-hidden border border-white/10 bg-white/5 flex items-center justify-center text-2xl">
+                        {/* Hover glow */}
+                        <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300" style={{ background: 'radial-gradient(ellipse at 50% 0%, rgba(99,102,241,0.08) 0%, transparent 70%)' }} />
+                        {/* Top accent line */}
+                        <div className="absolute inset-x-0 top-0 h-px opacity-0 group-hover:opacity-100 transition-opacity" style={{ background: 'linear-gradient(90deg, transparent, rgba(139,92,246,0.6), transparent)' }} />
+
+                        {/* Logo */}
+                        <div className="relative h-16 w-16 rounded-2xl overflow-hidden flex items-center justify-center text-3xl"
+                          style={{ border: '1px solid rgba(139,92,246,0.25)', background: 'rgba(99,102,241,0.08)', boxShadow: '0 0 16px rgba(99,102,241,0.1)' }}>
                           {place.logo_url
                             ? <img src={place.logo_url} alt={place.name} className="h-full w-full object-cover" onError={e => { (e.target as HTMLImageElement).style.display = 'none' }} />
-                            : '🏪'}
+                            : <span style={{ fontSize: '28px' }}>🏪</span>}
                         </div>
-                        <p className="text-xs font-semibold text-white leading-tight line-clamp-2">{place.name}</p>
+
+                        {/* Name */}
+                        <div className="w-full">
+                          <p className="text-sm font-bold text-white leading-tight line-clamp-2">{place.name}</p>
+                          {(place as any).code && (
+                            <p className="text-[9px] mt-1 font-mono tracking-wider" style={{ color: 'rgba(139,92,246,0.55)' }}>{(place as any).code}</p>
+                          )}
+                        </div>
+
+                        {/* Select hint */}
+                        <div className="flex items-center justify-center gap-1 rounded-full px-2.5 py-1 w-full" style={{ background: 'rgba(99,102,241,0.08)', border: '1px solid rgba(99,102,241,0.14)' }}>
+                          <MapPin className="h-2.5 w-2.5 text-indigo-400/70" />
+                          <span className="text-[9px] font-semibold tracking-wider uppercase text-indigo-400/70">اختر</span>
+                        </div>
                       </button>
                     ))}
                   </div>
