@@ -1811,14 +1811,15 @@ export default function HomePage() {
   const Header = () => (
     <header className="sticky top-0 z-40 bg-black/95 backdrop-blur-md" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
       {/* Creative developer attribution bar */}
-      <div className="relative overflow-hidden py-[5px]" style={{ background: 'linear-gradient(90deg, #1a0a00, #3d1f00, #6b3a00, #D4A017, #6b3a00, #3d1f00, #1a0a00)' }}>
-        <div className="flex items-center justify-center gap-2">
-          <span className="text-[10px] tracking-widest uppercase text-amber-200/60 font-medium">✦</span>
-          <span className="text-[11px] font-semibold tracking-[0.18em] uppercase" style={{ color: '#ffe8a0', textShadow: '0 0 12px rgba(212,160,23,0.8), 0 0 24px rgba(212,160,23,0.4)' }}>
-            Developed by Basem Samir Ebeid
-          </span>
-          <span className="text-[10px] tracking-widest uppercase text-amber-200/60 font-medium">✦</span>
+      <div className="relative overflow-hidden py-[8px]" style={{ background: 'linear-gradient(90deg, #020617 0%, #0c0920 25%, #150a2e 50%, #0c0920 75%, #020617 100%)' }}>
+        <div className="absolute inset-x-0 top-0 h-px" style={{ background: 'linear-gradient(90deg, transparent 0%, #6366f1 20%, #a855f7 50%, #06b6d4 80%, transparent 100%)' }} />
+        <div className="flex items-center justify-center gap-3">
+          <span style={{ color: 'rgba(99,102,241,0.55)', fontSize: '7px', lineHeight: 1 }}>◆</span>
+          <span style={{ fontSize: '9px', letterSpacing: '0.22em', fontWeight: 400, color: 'rgba(148,163,184,0.4)', fontFamily: 'ui-monospace, monospace', textTransform: 'uppercase' }}>Developed by</span>
+          <span style={{ fontSize: '11px', letterSpacing: '0.14em', fontWeight: 700, color: '#c4b5fd', textShadow: '0 0 16px rgba(167,139,250,0.85), 0 0 32px rgba(139,92,246,0.4)', textTransform: 'uppercase' }}>Basem Samir Ebeid</span>
+          <span style={{ color: 'rgba(99,102,241,0.55)', fontSize: '7px', lineHeight: 1 }}>◆</span>
         </div>
+        <div className="absolute inset-x-0 bottom-0 h-px" style={{ background: 'linear-gradient(90deg, transparent 0%, rgba(99,102,241,0.3) 30%, rgba(99,102,241,0.3) 70%, transparent 100%)' }} />
       </div>
       <div className="mx-auto flex max-w-2xl items-center justify-between px-4 py-3">
         <div className="flex items-center gap-2">
@@ -1980,12 +1981,11 @@ export default function HomePage() {
               <span className="text-[11px] font-black tracking-wide text-white">Admin</span>
             </span>
           </button>
-          <div className="flex items-center justify-center gap-2">
-            <div className="h-px w-8" style={{ background: 'rgba(148,163,184,0.2)' }} />
-            <span className="text-[10px] tracking-[0.22em] uppercase font-medium" style={{ color: 'rgba(148,163,184,0.45)' }}>
-              Developed by Basem Samir Ebeid
-            </span>
-            <div className="h-px w-8" style={{ background: 'rgba(148,163,184,0.2)' }} />
+          <div className="flex items-center justify-center gap-3">
+            <div className="h-px w-6" style={{ background: 'linear-gradient(90deg, transparent, rgba(99,102,241,0.4))' }} />
+            <span style={{ fontSize: '9px', letterSpacing: '0.18em', fontWeight: 400, color: 'rgba(148,163,184,0.35)', fontFamily: 'ui-monospace, monospace', textTransform: 'uppercase' }}>Developed by</span>
+            <span style={{ fontSize: '10px', letterSpacing: '0.12em', fontWeight: 700, color: '#a78bfa', textShadow: '0 0 12px rgba(167,139,250,0.6)', textTransform: 'uppercase' }}>Basem Samir Ebeid</span>
+            <div className="h-px w-6" style={{ background: 'linear-gradient(90deg, rgba(99,102,241,0.4), transparent)' }} />
           </div>
         </div>
 
@@ -2389,9 +2389,12 @@ export default function HomePage() {
               </div>
 
               {/* Footer */}
-              <p className="text-[10px] text-zinc-700 font-mono text-center pb-2">
-                Developed by Basem Samir Ebeid · SîpFlõw &copy; {new Date().getFullYear()}
-              </p>
+              <div className="flex items-center justify-center gap-2 pb-2">
+                <span style={{ color: 'rgba(99,102,241,0.4)', fontSize: '6px' }}>◆</span>
+                <span style={{ fontSize: '9px', letterSpacing: '0.12em', fontFamily: 'ui-monospace, monospace', color: 'rgba(148,163,184,0.3)' }}>Developed by</span>
+                <span style={{ fontSize: '9px', letterSpacing: '0.1em', fontWeight: 600, color: '#a78bfa', fontFamily: 'ui-monospace, monospace', textShadow: '0 0 10px rgba(167,139,250,0.5)' }}>Basem Samir Ebeid</span>
+                <span style={{ color: 'rgba(148,163,184,0.25)', fontSize: '9px', fontFamily: 'ui-monospace, monospace' }}>· SîpFlõw © {new Date().getFullYear()}</span>
+              </div>
             </div>
           </div>
         )}
@@ -2573,14 +2576,15 @@ export default function HomePage() {
     return (
       <main className="relative min-h-[100dvh] bg-black overflow-hidden" dir="ltr" onClick={handleGlobalClick}>
         {/* Developer attribution bar */}
-        <div className="relative overflow-hidden py-[5px]" style={{ background: 'linear-gradient(90deg, #1a0a00, #3d1f00, #6b3a00, #D4A017, #6b3a00, #3d1f00, #1a0a00)' }}>
-          <div className="flex items-center justify-center gap-2">
-            <span className="text-[10px] tracking-widest uppercase text-amber-200/60 font-medium">✦</span>
-            <span className="text-[11px] font-semibold tracking-[0.18em] uppercase" style={{ color: '#ffe8a0', textShadow: '0 0 12px rgba(212,160,23,0.8), 0 0 24px rgba(212,160,23,0.4)' }}>
-              Developed by Basem Samir Ebeid
-            </span>
-            <span className="text-[10px] tracking-widest uppercase text-amber-200/60 font-medium">✦</span>
+        <div className="relative overflow-hidden py-[8px]" style={{ background: 'linear-gradient(90deg, #020617 0%, #0c0920 25%, #150a2e 50%, #0c0920 75%, #020617 100%)' }}>
+          <div className="absolute inset-x-0 top-0 h-px" style={{ background: 'linear-gradient(90deg, transparent 0%, #6366f1 20%, #a855f7 50%, #06b6d4 80%, transparent 100%)' }} />
+          <div className="flex items-center justify-center gap-3">
+            <span style={{ color: 'rgba(99,102,241,0.55)', fontSize: '7px', lineHeight: 1 }}>◆</span>
+            <span style={{ fontSize: '9px', letterSpacing: '0.22em', fontWeight: 400, color: 'rgba(148,163,184,0.4)', fontFamily: 'ui-monospace, monospace', textTransform: 'uppercase' }}>Developed by</span>
+            <span style={{ fontSize: '11px', letterSpacing: '0.14em', fontWeight: 700, color: '#c4b5fd', textShadow: '0 0 16px rgba(167,139,250,0.85), 0 0 32px rgba(139,92,246,0.4)', textTransform: 'uppercase' }}>Basem Samir Ebeid</span>
+            <span style={{ color: 'rgba(99,102,241,0.55)', fontSize: '7px', lineHeight: 1 }}>◆</span>
           </div>
+          <div className="absolute inset-x-0 bottom-0 h-px" style={{ background: 'linear-gradient(90deg, transparent 0%, rgba(99,102,241,0.3) 30%, rgba(99,102,241,0.3) 70%, transparent 100%)' }} />
         </div>
         {/* Version tag */}
         <div className="w-full flex items-center justify-end px-4 py-2">

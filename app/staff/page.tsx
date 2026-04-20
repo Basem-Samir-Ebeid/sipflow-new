@@ -55,14 +55,15 @@ const VIOLET_DIM = 'rgba(168,85,247,0.15)'
 const VIOLET_BORDER = 'rgba(168,85,247,0.25)'
 
 const DevBar = () => (
-  <div className="relative overflow-hidden py-[5px]" style={{ background: 'linear-gradient(90deg, #100820, #2a0a50, #4a1080, #a855f7, #4a1080, #2a0a50, #100820)' }}>
-    <div className="flex items-center justify-center gap-2">
-      <span className="text-[10px] tracking-widest uppercase text-violet-200/50 font-medium">✦</span>
-      <span className="text-[11px] font-semibold tracking-[0.18em] uppercase" style={{ color: '#e9d5ff', textShadow: '0 0 12px rgba(168,85,247,0.8), 0 0 24px rgba(168,85,247,0.4)' }}>
-        Developed by Basem Samir Ebeid
-      </span>
-      <span className="text-[10px] tracking-widest uppercase text-violet-200/50 font-medium">✦</span>
+  <div className="relative overflow-hidden py-[8px]" style={{ background: 'linear-gradient(90deg, #020617 0%, #0c0920 25%, #150a2e 50%, #0c0920 75%, #020617 100%)' }}>
+    <div className="absolute inset-x-0 top-0 h-px" style={{ background: 'linear-gradient(90deg, transparent 0%, #6366f1 20%, #a855f7 50%, #06b6d4 80%, transparent 100%)' }} />
+    <div className="flex items-center justify-center gap-3">
+      <span style={{ color: 'rgba(99,102,241,0.55)', fontSize: '7px', lineHeight: 1 }}>◆</span>
+      <span style={{ fontSize: '9px', letterSpacing: '0.22em', fontWeight: 400, color: 'rgba(148,163,184,0.4)', fontFamily: 'ui-monospace, monospace', textTransform: 'uppercase' }}>Developed by</span>
+      <span style={{ fontSize: '11px', letterSpacing: '0.14em', fontWeight: 700, color: '#c4b5fd', textShadow: '0 0 16px rgba(167,139,250,0.85), 0 0 32px rgba(139,92,246,0.4)', textTransform: 'uppercase' }}>Basem Samir Ebeid</span>
+      <span style={{ color: 'rgba(99,102,241,0.55)', fontSize: '7px', lineHeight: 1 }}>◆</span>
     </div>
+    <div className="absolute inset-x-0 bottom-0 h-px" style={{ background: 'linear-gradient(90deg, transparent 0%, rgba(99,102,241,0.3) 30%, rgba(99,102,241,0.3) 70%, transparent 100%)' }} />
   </div>
 )
 
