@@ -38,6 +38,7 @@ export default function HomePage() {
   const [mounted, setMounted] = useState(false)
   const [showStars, setShowStars] = useState(false)
   const [systemLogoUrl, setSystemLogoUrl] = useState('/images/sipflow-logo.jpg')
+  const [appName, setAppName] = useState('SîpFlõw')
   const [buttonIcons, setButtonIcons] = useState<Record<string, string>>({
     placeAdmin: '⚙️',
     cashier: '🧾',
@@ -370,6 +371,14 @@ export default function HomePage() {
     fetch('/api/settings?key=system_logo_url')
       .then(r => r.json())
       .then(d => { if (d.value) setSystemLogoUrl(d.value) })
+      .catch(() => {})
+  }, [])
+
+  // Fetch app name
+  useEffect(() => {
+    fetch('/api/settings?key=app_name')
+      .then(r => r.json())
+      .then(d => { if (d.value) setAppName(d.value) })
       .catch(() => {})
   }, [])
 
@@ -1956,9 +1965,9 @@ export default function HomePage() {
           <button
             onClick={handleLogoClick}
             className="flex items-center gap-2 cursor-pointer select-none active:scale-95 transition-transform"
-            title="SîpFlõw"
+            title={appName}
           >
-            <span className="text-lg font-bold text-foreground">SîpFlõw</span>
+            <span className="text-lg font-bold text-foreground">{appName}</span>
             <div className="flex h-11 w-11 items-center justify-center rounded-full overflow-hidden bg-black border-2" style={{ borderColor: '#D4A017' }}>
               <img src={systemLogoUrl} alt="SîpFlõw" className="h-full w-full object-cover" />
             </div>
@@ -2041,7 +2050,7 @@ export default function HomePage() {
             </div>
 
             <div className="text-center space-y-1.5">
-              <h1 className="text-3xl font-black tracking-tight text-white" style={{ textShadow: '0 0 30px rgba(99,102,241,0.3)' }}>SîpFlõw</h1>
+              <h1 className="text-3xl font-black tracking-tight text-white" style={{ textShadow: '0 0 30px rgba(99,102,241,0.3)' }}>{appName}</h1>
               <div className="flex items-center justify-center gap-2">
                 <div className="h-px w-6" style={{ background: 'linear-gradient(90deg, transparent, rgba(99,102,241,0.5))' }} />
                 <p className="text-[10px] tracking-[0.22em] uppercase font-semibold" style={{ color: 'rgba(148,163,184,0.45)' }}>Order Management System</p>
@@ -5022,6 +5031,8 @@ export default function HomePage() {
             onSystemLogoChange={(url) => setSystemLogoUrl(url)}
             buttonIcons={buttonIcons}
             onButtonIconsChange={(icons) => setButtonIcons(prev => ({ ...prev, ...icons }))}
+            appName={appName}
+            onAppNameChange={(name) => setAppName(name)}
           />
         )}
       </div>

@@ -65,6 +65,8 @@ interface AdminPanelProps {
   onSystemLogoChange?: (url: string) => void
   buttonIcons?: Record<string, string>
   onButtonIconsChange?: (icons: Record<string, string>) => void
+  appName?: string
+  onAppNameChange?: (name: string) => void
 }
 
 const formatDisplayName = (name: string | null | undefined, tableNumber: string | null | undefined): string => {
@@ -94,13 +96,15 @@ export function AdminPanel({
   onSystemLogoChange,
   buttonIcons: externalButtonIcons,
   onButtonIconsChange,
+  appName: externalAppName,
+  onAppNameChange,
 }: AdminPanelProps) {
   const devRoleMeta: Record<DevAdminRole, { label: string; description: string; homeTab: string; tabs: string[] }> = {
     super_developer: {
       label: 'Super Developer',
       description: 'صلاحية كاملة لكل أجزاء النظام',
       homeTab: 'analytics',
-      tabs: ['alerts', 'analytics', 'notes', 'drinks', 'inventory', 'cashier', 'reservations', 'place-admins', 'staff', 'places', 'subscriptions', 'messages', 'settings', 'danger', 'live', 'permissions', 'simulator', 'templates'],
+      tabs: ['alerts', 'analytics', 'notes', 'drinks', 'inventory', 'cashier', 'reservations', 'place-admins', 'staff', 'places', 'subscriptions', 'messages', 'settings', 'branding', 'danger', 'live', 'permissions', 'simulator', 'templates'],
     },
     support_admin: {
       label: 'Support Admin',
@@ -787,6 +791,10 @@ export function AdminPanel({
     { key: 'bar',       label: 'Bar',           options: ['☕','🍵','🥤','🍺','🍹','🧋','🫖','🍶','🧃','🥛','🍷','🎂'] },
   ]
 
+  // ── App name state (super_developer only) ──
+  const [localAppName, setLocalAppName] = useState(externalAppName || 'SîpFlõw')
+  const [isSavingAppName, setIsSavingAppName] = useState(false)
+
   useEffect(() => {
     fetch('/api/settings?key=dev_admin_photo_url')
       .then(r => r.json())
@@ -819,6 +827,44 @@ export function AdminPanel({
     } finally {
       setAdminPhotoUploading(false)
       if (adminPhotoInputRef.current) adminPhotoInputRef.current.value = ''
+    }
+  }
+
+  const handleSaveAppName = async () => {
+    const name = localAppName.trim()
+    if (!name) { toast.error('أدخل اسم التطبيق'); return }
+    setIsSavingAppName(true)
+    try {
+      await fetch('/api/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ key: 'app_name', value: name }),
+      })
+      onAppNameChange?.(name)
+      toast.success('تم تغيير اسم التطبيق بنجاح ✅')
+    } catch {
+      toast.error('حدث خطأ أثناء الحفظ')
+    } finally {
+      setIsSavingAppName(false)
+    }
+  }
+
+  const handleResetAppName = async () => {
+    const defaultName = 'SîpFlõw'
+    setIsSavingAppName(true)
+    try {
+      await fetch('/api/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ key: 'app_name', value: defaultName }),
+      })
+      setLocalAppName(defaultName)
+      onAppNameChange?.(defaultName)
+      toast.success('تم إعادة الاسم للافتراضي')
+    } catch {
+      toast.error('حدث خطأ')
+    } finally {
+      setIsSavingAppName(false)
     }
   }
 
@@ -2498,23 +2544,25 @@ const handleSaveSettings = async () => {
                   {[
                     { tab: 'messages',    icon: <MessageSquare className="h-3.5 w-3.5" />, label: 'Messages',    ac: '#0284c7', badge: devNotifsUnread > 0 ? devNotifsUnread : 0 },
                     { tab: 'settings',    icon: <Settings2 className="h-3.5 w-3.5" />,     label: 'Settings',    ac: '#0284c7', badge: 0 },
+                    { tab: 'branding',    icon: <span className="text-[13px] leading-none">🎨</span>, label: 'Branding', ac: '#a855f7', badge: 0 },
                     { tab: 'permissions', icon: <ShieldCheck className="h-3.5 w-3.5" />,   label: 'Permissions', ac: '#0284c7', badge: 0 },
                     { tab: 'danger',      icon: <Trash2 className="h-3.5 w-3.5" />,        label: 'Danger',      ac: '#dc2626', badge: 0 },
                   ].filter(item => canAccessDevTab(item.tab)).map(item => (
                     <button key={item.tab} onClick={() => handleTabChange(item.tab)}
                       className="relative flex flex-col items-center gap-1 rounded-xl py-2.5 px-1 transition-all duration-150 hover:scale-105 active:scale-95"
-                      style={{
-                        background: activeAdminTab === item.tab
-                          ? item.tab === 'danger' ? 'rgba(220,38,38,0.25)' : 'rgba(2,132,199,0.25)'
-                          : 'rgba(255,255,255,0.03)',
-                        border: `1px solid ${activeAdminTab === item.tab
-                          ? item.tab === 'danger' ? 'rgba(220,38,38,0.55)' : 'rgba(2,132,199,0.55)'
-                          : 'rgba(255,255,255,0.06)'}`,
-                        boxShadow: activeAdminTab === item.tab ? `0 0 10px ${item.tab === 'danger' ? 'rgba(220,38,38,0.18)' : 'rgba(2,132,199,0.18)'}` : 'none',
-                        color: activeAdminTab === item.tab
-                          ? item.tab === 'danger' ? '#fca5a5' : '#7dd3fc'
-                          : '#5b4a8a'
-                      }}>
+                      style={(() => {
+                        const isActive = activeAdminTab === item.tab
+                        const ac = item.ac
+                        const acAlpha25 = ac + '40'
+                        const acAlpha55 = ac + '8c'
+                        const acAlpha18 = ac + '2e'
+                        return {
+                          background: isActive ? (item.tab === 'danger' ? 'rgba(220,38,38,0.25)' : acAlpha25) : 'rgba(255,255,255,0.03)',
+                          border: `1px solid ${isActive ? (item.tab === 'danger' ? 'rgba(220,38,38,0.55)' : acAlpha55) : 'rgba(255,255,255,0.06)'}`,
+                          boxShadow: isActive ? `0 0 10px ${item.tab === 'danger' ? 'rgba(220,38,38,0.18)' : acAlpha18}` : 'none',
+                          color: isActive ? (item.tab === 'danger' ? '#fca5a5' : (item.tab === 'branding' ? '#d8b4fe' : '#7dd3fc')) : '#5b4a8a',
+                        }
+                      })()}>
                       {item.icon}
                       <span className="text-[10px] font-semibold">{item.label}</span>
                       {item.badge > 0 && (
@@ -5264,142 +5312,6 @@ const handleSaveSettings = async () => {
             </div>
           )}
 
-          {/* Button Icons Setting — super_developer only */}
-          {isDevAdmin && devAdminRole === 'super_developer' && (
-            <div className="relative rounded-2xl overflow-hidden p-5 space-y-4" style={{ background: 'linear-gradient(170deg, rgba(139,92,246,0.06) 0%, rgba(15,15,25,0.95) 100%)', border: '1px solid rgba(139,92,246,0.15)', boxShadow: '0 4px 20px rgba(0,0,0,0.2)' }}>
-              <div className="absolute inset-0 pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle at 100% 0%, rgba(139,92,246,0.05) 0%, transparent 50%)' }} />
-              <div className="relative flex items-center gap-3 pb-3" style={{ borderBottom: '1px solid rgba(139,92,246,0.1)' }}>
-                <div className="flex items-center justify-center w-9 h-9 rounded-xl text-lg" style={{ background: 'linear-gradient(135deg, rgba(139,92,246,0.2), rgba(99,102,241,0.15))', border: '1px solid rgba(139,92,246,0.2)' }}>
-                  🎨
-                </div>
-                <div>
-                  <h3 className="font-bold text-white text-sm">أيقونات الزراير</h3>
-                  <p className="text-[10px]" style={{ color: 'rgba(167,139,250,0.6)' }}>تخصيص أيقونات زراير الأدوار في الصفحة الرئيسية</p>
-                </div>
-              </div>
-              <div className="relative space-y-4">
-                {BUTTON_ICON_DEFS.map(({ key, label, options }) => (
-                  <div key={key} className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs font-semibold" style={{ color: 'rgba(167,139,250,0.85)' }}>{label}</span>
-                      <span className="text-xl leading-none">{localButtonIcons[key]}</span>
-                    </div>
-                    <div className="flex flex-wrap gap-1.5">
-                      {options.map(emoji => (
-                        <button
-                          key={emoji}
-                          type="button"
-                          onClick={() => setLocalButtonIcons(prev => ({ ...prev, [key]: emoji }))}
-                          className="h-9 w-9 rounded-xl text-lg transition-all hover:scale-110 active:scale-95 flex items-center justify-center"
-                          style={{
-                            background: localButtonIcons[key] === emoji
-                              ? 'rgba(139,92,246,0.3)'
-                              : 'rgba(255,255,255,0.04)',
-                            border: localButtonIcons[key] === emoji
-                              ? '1.5px solid rgba(139,92,246,0.7)'
-                              : '1px solid rgba(255,255,255,0.07)',
-                            boxShadow: localButtonIcons[key] === emoji
-                              ? '0 0 10px rgba(139,92,246,0.35)'
-                              : 'none',
-                          }}
-                        >
-                          {emoji}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                ))}
-                <div className="flex gap-2 pt-1">
-                  <Button
-                    className="flex-1 h-10 rounded-xl text-sm font-bold"
-                    style={{ background: 'linear-gradient(135deg, #7c3aed, #6366f1)', color: '#fff', boxShadow: '0 4px 15px rgba(124,58,237,0.3)' }}
-                    disabled={isSavingButtonIcons}
-                    onClick={handleSaveButtonIcons}
-                  >
-                    {isSavingButtonIcons ? <Loader2 className="h-4 w-4 animate-spin ml-1" /> : null}
-                    حفظ الأيقونات
-                  </Button>
-                  <Button
-                    variant="outline"
-                    className="h-10 rounded-xl text-xs"
-                    style={{ borderColor: 'rgba(139,92,246,0.2)', color: 'rgba(167,139,250,0.7)' }}
-                    disabled={isSavingButtonIcons}
-                    onClick={handleResetButtonIcons}
-                  >
-                    إعادة الافتراضي
-                  </Button>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* System Logo Setting — super_developer only */}
-          {isDevAdmin && devAdminRole === 'super_developer' && (
-            <div className="relative rounded-2xl overflow-hidden p-5 space-y-4" style={{ background: 'linear-gradient(170deg, rgba(139,92,246,0.06) 0%, rgba(15,15,25,0.95) 100%)', border: '1px solid rgba(139,92,246,0.15)', boxShadow: '0 4px 20px rgba(0,0,0,0.2)' }}>
-              <div className="absolute inset-0 pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle at 0% 100%, rgba(139,92,246,0.04) 0%, transparent 50%)' }} />
-              <div className="relative flex items-center gap-3 pb-3" style={{ borderBottom: '1px solid rgba(139,92,246,0.1)' }}>
-                <div className="flex items-center justify-center w-9 h-9 rounded-xl" style={{ background: 'linear-gradient(135deg, rgba(139,92,246,0.2), rgba(99,102,241,0.15))', border: '1px solid rgba(139,92,246,0.2)' }}>
-                  <Upload className="h-4 w-4" style={{ color: '#a78bfa' }} />
-                </div>
-                <div>
-                  <h3 className="font-bold text-white text-sm">لوجو النظام</h3>
-                  <p className="text-[10px]" style={{ color: 'rgba(167,139,250,0.6)' }}>تغيير اللوجو في كل أجزاء التطبيق فوراً</p>
-                </div>
-              </div>
-              <div className="relative space-y-3">
-                <div className="flex items-center gap-4">
-                  <div className="shrink-0 h-20 w-20 rounded-2xl border-2 border-dashed overflow-hidden flex items-center justify-center text-2xl" style={{ borderColor: (systemLogoInputUrl || externalSystemLogoUrl) ? 'rgba(139,92,246,0.5)' : 'rgba(139,92,246,0.2)', background: 'rgba(139,92,246,0.04)' }}>
-                    {(systemLogoInputUrl || externalSystemLogoUrl) ? (
-                      <img src={systemLogoInputUrl || externalSystemLogoUrl} alt="معاينة اللوجو" className="h-full w-full object-cover" onError={e => { (e.target as HTMLImageElement).style.display = 'none' }} />
-                    ) : (
-                      <span style={{ color: 'rgba(139,92,246,0.4)' }}>🖼️</span>
-                    )}
-                  </div>
-                  <div className="flex-1 space-y-2">
-                    <input ref={systemLogoInputRef} type="file" accept="image/*" className="hidden" onChange={handleSystemLogoUpload} />
-                    <Button
-                      type="button"
-                      variant="outline"
-                      className="w-full h-9 text-xs rounded-xl"
-                      style={{ borderColor: 'rgba(139,92,246,0.3)', color: '#a78bfa', background: 'rgba(139,92,246,0.06)' }}
-                      disabled={systemLogoUploading}
-                      onClick={() => systemLogoInputRef.current?.click()}
-                    >
-                      {systemLogoUploading ? <Loader2 className="h-3.5 w-3.5 animate-spin ml-1" /> : <Upload className="h-3.5 w-3.5 ml-1" />}
-                      {systemLogoUploading ? 'جاري الرفع...' : 'رفع صورة'}
-                    </Button>
-                    <p className="text-[10px] text-center" style={{ color: 'rgba(255,255,255,0.3)' }}>أو</p>
-                    <Input
-                      placeholder="رابط الصورة (URL)"
-                      value={systemLogoInputUrl.startsWith('/api/') || systemLogoInputUrl.startsWith('/images/') || systemLogoInputUrl.startsWith('http') ? systemLogoInputUrl : systemLogoInputUrl}
-                      onChange={e => setSystemLogoInputUrl(e.target.value)}
-                      className="h-9 text-xs rounded-xl text-white placeholder:text-white/25"
-                      style={{ background: 'rgba(139,92,246,0.06)', border: '1px solid rgba(139,92,246,0.15)' }}
-                    />
-                  </div>
-                </div>
-                <div className="flex gap-2">
-                  <Button
-                    className="flex-1 h-10 rounded-xl text-sm font-bold"
-                    style={{ background: 'linear-gradient(135deg, #7c3aed, #6366f1)', color: '#fff', boxShadow: '0 4px 15px rgba(124,58,237,0.3)' }}
-                    disabled={systemLogoUploading || !systemLogoInputUrl.trim()}
-                    onClick={handleSystemLogoSave}
-                  >
-                    حفظ اللوجو
-                  </Button>
-                  <Button
-                    variant="outline"
-                    className="h-10 rounded-xl text-xs"
-                    style={{ borderColor: 'rgba(139,92,246,0.2)', color: 'rgba(167,139,250,0.7)' }}
-                    onClick={handleSystemLogoReset}
-                  >
-                    إعادة الافتراضي
-                  </Button>
-                </div>
-              </div>
-            </div>
-          )}
-
           {/* Archive Password Setting — dev admin only */}
           {isDevAdmin && (
             <div className="relative rounded-2xl overflow-hidden p-5 space-y-4" style={{ background: 'linear-gradient(170deg, rgba(139,92,246,0.06) 0%, rgba(15,15,25,0.95) 100%)', border: '1px solid rgba(139,92,246,0.15)', boxShadow: '0 4px 20px rgba(0,0,0,0.2)' }}>
@@ -5803,6 +5715,194 @@ const handleSaveSettings = async () => {
               })()}
             </div>
           )}
+        </TabsContent>
+
+        {/* ─── Branding Tab (super_developer only) ─── */}
+        <TabsContent value="branding" className="space-y-4">
+          {/* Header */}
+          <div className="relative rounded-2xl overflow-hidden p-4" style={{ background: 'linear-gradient(135deg, rgba(168,85,247,0.12) 0%, rgba(99,102,241,0.08) 100%)', border: '1px solid rgba(168,85,247,0.2)' }}>
+            <div className="absolute inset-0 pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle at 0% 0%, rgba(168,85,247,0.08) 0%, transparent 60%)' }} />
+            <div className="relative flex items-center gap-3">
+              <span className="text-2xl">🎨</span>
+              <div>
+                <h2 className="font-black text-white text-sm tracking-wide">Branding Studio</h2>
+                <p className="text-[10px] mt-0.5" style={{ color: 'rgba(216,180,254,0.55)' }}>تخصيص هوية التطبيق — لوجو، أيقونات، اسم</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Card 1 — System Logo */}
+          <div className="relative rounded-2xl overflow-hidden p-5 space-y-4" style={{ background: 'linear-gradient(170deg, rgba(139,92,246,0.07) 0%, rgba(15,15,25,0.95) 100%)', border: '1px solid rgba(139,92,246,0.18)', boxShadow: '0 4px 24px rgba(0,0,0,0.22)' }}>
+            <div className="absolute inset-0 pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle at 0% 100%, rgba(139,92,246,0.05) 0%, transparent 50%)' }} />
+            <div className="relative flex items-center gap-3 pb-3" style={{ borderBottom: '1px solid rgba(139,92,246,0.12)' }}>
+              <div className="flex items-center justify-center w-9 h-9 rounded-xl" style={{ background: 'linear-gradient(135deg, rgba(139,92,246,0.22), rgba(99,102,241,0.15))', border: '1px solid rgba(139,92,246,0.22)' }}>
+                <Upload className="h-4 w-4" style={{ color: '#a78bfa' }} />
+              </div>
+              <div>
+                <h3 className="font-bold text-white text-sm">لوجو النظام</h3>
+                <p className="text-[10px]" style={{ color: 'rgba(167,139,250,0.6)' }}>تغيير اللوجو في كل أجزاء التطبيق فوراً</p>
+              </div>
+            </div>
+            <div className="relative space-y-3">
+              <div className="flex items-center gap-4">
+                <div className="shrink-0 h-20 w-20 rounded-2xl border-2 border-dashed overflow-hidden flex items-center justify-center text-2xl" style={{ borderColor: (systemLogoInputUrl || externalSystemLogoUrl) ? 'rgba(139,92,246,0.5)' : 'rgba(139,92,246,0.2)', background: 'rgba(139,92,246,0.04)' }}>
+                  {(systemLogoInputUrl || externalSystemLogoUrl) ? (
+                    <img src={systemLogoInputUrl || externalSystemLogoUrl} alt="معاينة اللوجو" className="h-full w-full object-cover" onError={e => { (e.target as HTMLImageElement).style.display = 'none' }} />
+                  ) : (
+                    <span style={{ color: 'rgba(139,92,246,0.4)' }}>🖼️</span>
+                  )}
+                </div>
+                <div className="flex-1 space-y-2">
+                  <input ref={systemLogoInputRef} type="file" accept="image/*" className="hidden" onChange={handleSystemLogoUpload} />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="w-full h-9 text-xs rounded-xl"
+                    style={{ borderColor: 'rgba(139,92,246,0.3)', color: '#a78bfa', background: 'rgba(139,92,246,0.06)' }}
+                    disabled={systemLogoUploading}
+                    onClick={() => systemLogoInputRef.current?.click()}
+                  >
+                    {systemLogoUploading ? <Loader2 className="h-3.5 w-3.5 animate-spin ml-1" /> : <Upload className="h-3.5 w-3.5 ml-1" />}
+                    {systemLogoUploading ? 'جاري الرفع...' : 'رفع صورة'}
+                  </Button>
+                  <p className="text-[10px] text-center" style={{ color: 'rgba(255,255,255,0.3)' }}>أو</p>
+                  <Input
+                    placeholder="رابط الصورة (URL)"
+                    value={systemLogoInputUrl}
+                    onChange={e => setSystemLogoInputUrl(e.target.value)}
+                    className="h-9 text-xs rounded-xl text-white placeholder:text-white/25"
+                    style={{ background: 'rgba(139,92,246,0.06)', border: '1px solid rgba(139,92,246,0.15)' }}
+                  />
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  className="flex-1 h-10 rounded-xl text-sm font-bold"
+                  style={{ background: 'linear-gradient(135deg, #7c3aed, #6366f1)', color: '#fff', boxShadow: '0 4px 15px rgba(124,58,237,0.3)' }}
+                  disabled={systemLogoUploading || !systemLogoInputUrl.trim()}
+                  onClick={handleSystemLogoSave}
+                >
+                  حفظ اللوجو
+                </Button>
+                <Button
+                  variant="outline"
+                  className="h-10 rounded-xl text-xs"
+                  style={{ borderColor: 'rgba(139,92,246,0.2)', color: 'rgba(167,139,250,0.7)' }}
+                  onClick={handleSystemLogoReset}
+                >
+                  إعادة الافتراضي
+                </Button>
+              </div>
+            </div>
+          </div>
+
+          {/* Card 2 — App Name */}
+          <div className="relative rounded-2xl overflow-hidden p-5 space-y-4" style={{ background: 'linear-gradient(170deg, rgba(168,85,247,0.07) 0%, rgba(15,15,25,0.95) 100%)', border: '1px solid rgba(168,85,247,0.18)', boxShadow: '0 4px 24px rgba(0,0,0,0.22)' }}>
+            <div className="absolute inset-0 pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle at 100% 0%, rgba(168,85,247,0.05) 0%, transparent 50%)' }} />
+            <div className="relative flex items-center gap-3 pb-3" style={{ borderBottom: '1px solid rgba(168,85,247,0.12)' }}>
+              <div className="flex items-center justify-center w-9 h-9 rounded-xl text-lg" style={{ background: 'linear-gradient(135deg, rgba(168,85,247,0.22), rgba(139,92,246,0.15))', border: '1px solid rgba(168,85,247,0.22)' }}>
+                ✏️
+              </div>
+              <div>
+                <h3 className="font-bold text-white text-sm">اسم التطبيق</h3>
+                <p className="text-[10px]" style={{ color: 'rgba(216,180,254,0.55)' }}>يظهر في الرأس والصفحة الرئيسية فوراً</p>
+              </div>
+            </div>
+            <div className="relative space-y-3">
+              <div className="flex items-center gap-3 p-3 rounded-xl" style={{ background: 'rgba(168,85,247,0.06)', border: '1px solid rgba(168,85,247,0.12)' }}>
+                <span className="text-xs font-medium" style={{ color: 'rgba(216,180,254,0.5)' }}>معاينة:</span>
+                <span className="text-base font-black text-white tracking-tight">{localAppName || 'SîpFlõw'}</span>
+              </div>
+              <Input
+                placeholder="مثال: CaféPro أو مطعم النيل"
+                value={localAppName}
+                onChange={e => setLocalAppName(e.target.value)}
+                className="h-10 text-sm rounded-xl text-white placeholder:text-white/25"
+                style={{ background: 'rgba(168,85,247,0.06)', border: '1px solid rgba(168,85,247,0.15)' }}
+              />
+              <div className="flex gap-2">
+                <Button
+                  className="flex-1 h-10 rounded-xl text-sm font-bold"
+                  style={{ background: 'linear-gradient(135deg, #a855f7, #7c3aed)', color: '#fff', boxShadow: '0 4px 15px rgba(168,85,247,0.3)' }}
+                  disabled={isSavingAppName || !localAppName.trim()}
+                  onClick={handleSaveAppName}
+                >
+                  {isSavingAppName ? <Loader2 className="h-4 w-4 animate-spin ml-1" /> : null}
+                  حفظ الاسم
+                </Button>
+                <Button
+                  variant="outline"
+                  className="h-10 rounded-xl text-xs"
+                  style={{ borderColor: 'rgba(168,85,247,0.2)', color: 'rgba(216,180,254,0.7)' }}
+                  disabled={isSavingAppName}
+                  onClick={handleResetAppName}
+                >
+                  إعادة الافتراضي
+                </Button>
+              </div>
+            </div>
+          </div>
+
+          {/* Card 3 — Button Icons */}
+          <div className="relative rounded-2xl overflow-hidden p-5 space-y-4" style={{ background: 'linear-gradient(170deg, rgba(99,102,241,0.07) 0%, rgba(15,15,25,0.95) 100%)', border: '1px solid rgba(99,102,241,0.18)', boxShadow: '0 4px 24px rgba(0,0,0,0.22)' }}>
+            <div className="absolute inset-0 pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle at 0% 100%, rgba(99,102,241,0.05) 0%, transparent 50%)' }} />
+            <div className="relative flex items-center gap-3 pb-3" style={{ borderBottom: '1px solid rgba(99,102,241,0.12)' }}>
+              <div className="flex items-center justify-center w-9 h-9 rounded-xl text-lg" style={{ background: 'linear-gradient(135deg, rgba(99,102,241,0.22), rgba(139,92,246,0.15))', border: '1px solid rgba(99,102,241,0.22)' }}>
+                🔳
+              </div>
+              <div>
+                <h3 className="font-bold text-white text-sm">أيقونات الزراير</h3>
+                <p className="text-[10px]" style={{ color: 'rgba(165,180,252,0.55)' }}>تخصيص أيقونات زراير الأدوار في الصفحة الرئيسية</p>
+              </div>
+            </div>
+            <div className="relative space-y-4">
+              {BUTTON_ICON_DEFS.map(({ key, label, options }) => (
+                <div key={key} className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-semibold" style={{ color: 'rgba(165,180,252,0.8)' }}>{label}</span>
+                    <span className="text-xl leading-none">{localButtonIcons[key]}</span>
+                  </div>
+                  <div className="flex flex-wrap gap-1.5">
+                    {options.map(emoji => (
+                      <button
+                        key={emoji}
+                        type="button"
+                        onClick={() => setLocalButtonIcons(prev => ({ ...prev, [key]: emoji }))}
+                        className="h-9 w-9 rounded-xl text-lg transition-all hover:scale-110 active:scale-95 flex items-center justify-center"
+                        style={{
+                          background: localButtonIcons[key] === emoji ? 'rgba(99,102,241,0.3)' : 'rgba(255,255,255,0.04)',
+                          border: localButtonIcons[key] === emoji ? '1.5px solid rgba(99,102,241,0.7)' : '1px solid rgba(255,255,255,0.07)',
+                          boxShadow: localButtonIcons[key] === emoji ? '0 0 10px rgba(99,102,241,0.35)' : 'none',
+                        }}
+                      >
+                        {emoji}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ))}
+              <div className="flex gap-2 pt-1">
+                <Button
+                  className="flex-1 h-10 rounded-xl text-sm font-bold"
+                  style={{ background: 'linear-gradient(135deg, #6366f1, #4f46e5)', color: '#fff', boxShadow: '0 4px 15px rgba(99,102,241,0.3)' }}
+                  disabled={isSavingButtonIcons}
+                  onClick={handleSaveButtonIcons}
+                >
+                  {isSavingButtonIcons ? <Loader2 className="h-4 w-4 animate-spin ml-1" /> : null}
+                  حفظ الأيقونات
+                </Button>
+                <Button
+                  variant="outline"
+                  className="h-10 rounded-xl text-xs"
+                  style={{ borderColor: 'rgba(99,102,241,0.2)', color: 'rgba(165,180,252,0.7)' }}
+                  disabled={isSavingButtonIcons}
+                  onClick={handleResetButtonIcons}
+                >
+                  إعادة الافتراضي
+                </Button>
+              </div>
+            </div>
+          </div>
         </TabsContent>
 
         <TabsContent value="danger" className="space-y-4">
