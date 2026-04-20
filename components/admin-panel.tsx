@@ -104,7 +104,7 @@ export function AdminPanel({
       label: 'Super Developer',
       description: 'صلاحية كاملة لكل أجزاء النظام',
       homeTab: 'analytics',
-      tabs: ['alerts', 'analytics', 'notes', 'drinks', 'inventory', 'cashier', 'reservations', 'place-admins', 'staff', 'places', 'subscriptions', 'messages', 'settings', 'branding', 'danger', 'live', 'permissions', 'simulator', 'templates'],
+      tabs: ['alerts', 'analytics', 'notes', 'drinks', 'inventory', 'cashier', 'reservations', 'place-admins', 'staff', 'places', 'subscriptions', 'messages', 'settings', 'branding', 'danger', 'live', 'permissions', 'simulator', 'templates', 'feature-flags', 'ai-ideas'],
     },
     support_admin: {
       label: 'Support Admin',
@@ -260,6 +260,85 @@ export function AdminPanel({
   const [devNote, setDevNote] = useState('')
   const [isSavingNote, setIsSavingNote] = useState(false)
   const [noteSavedMsg, setNoteSavedMsg] = useState('')
+
+  // Feature Flags state
+  const FLAG_DEFS = [
+    { key: 'flag_reservations',      label: 'الحجوزات',            desc: 'تفعيل نظام حجز الطاولات للزبائن',         color: '#34d399' },
+    { key: 'flag_order_tracking',    label: 'تتبع الطلب',          desc: 'عرض حالة الطلب للزبون لحظة بلحظة',        color: '#60a5fa' },
+    { key: 'flag_inventory_alerts',  label: 'تنبيهات المخزون',     desc: 'إرسال تنبيه عند انخفاض الكمية',           color: '#f59e0b' },
+    { key: 'flag_analytics',         label: 'الإحصاءات',           desc: 'لوحة تحليلات المبيعات والأداء',            color: '#a78bfa' },
+    { key: 'flag_waiter_calls',      label: 'استدعاء الكابتن',     desc: 'زر طلب المساعدة من الطاولة',              color: '#f472b6' },
+    { key: 'flag_global_banner',     label: 'الإعلان العلوي',      desc: 'شريط الإعلانات في رأس الصفحة',            color: '#fb923c' },
+    { key: 'flag_simulator',         label: 'محاكي الطلبات',       desc: 'أداة اختبار تدفق الطلبات للمطور',         color: '#6366f1' },
+    { key: 'flag_multi_place',       label: 'تعدد الفروع',         desc: 'دعم إدارة أكثر من مكان في آن واحد',       color: '#e879f9' },
+  ]
+  const [featureFlags, setFeatureFlags] = useState<Record<string, boolean>>({})
+  const [isSavingFlags, setIsSavingFlags] = useState(false)
+  const [flagsLoaded, setFlagsLoaded] = useState(false)
+
+  const loadFeatureFlags = async () => {
+    try {
+      const res = await fetch('/api/settings?key=feature_flags')
+      const data = await res.json()
+      if (data.value) setFeatureFlags(JSON.parse(data.value))
+      else {
+        const defaults: Record<string, boolean> = {}
+        FLAG_DEFS.forEach(f => { defaults[f.key] = true })
+        setFeatureFlags(defaults)
+      }
+    } catch { /* silent */ }
+    setFlagsLoaded(true)
+  }
+
+  const saveFeatureFlags = async (flags: Record<string, boolean>) => {
+    setIsSavingFlags(true)
+    try {
+      await fetch('/api/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ key: 'feature_flags', value: JSON.stringify(flags) })
+      })
+      toast.success('تم حفظ الإعدادات ✅')
+    } catch { toast.error('تعذر الحفظ') }
+    setIsSavingFlags(false)
+  }
+
+  const toggleFlag = (key: string) => {
+    const updated = { ...featureFlags, [key]: !featureFlags[key] }
+    setFeatureFlags(updated)
+    saveFeatureFlags(updated)
+  }
+
+  // AI Ideas state
+  const AI_IDEAS = [
+    { title: 'نظام تقييم الطلب', desc: 'بعد تسليم الطلب، تظهر للزبون نافذة صغيرة يقيّم فيها تجربته بالنجوم مع تعليق اختياري. التقييمات تظهر في لوحة الأدمن مع إحصاءات.', icon: '⭐', color: '#fbbf24' },
+    { title: 'خريطة الطاولات التفاعلية', desc: 'مخطط بصري للمكان يعرض حالة كل طاولة بالألوان — فارغة / نشطة / تنتظر الحساب. الكاشير يضغط على الطاولة لإدارتها مباشرة.', icon: '🗺️', color: '#34d399' },
+    { title: 'قائمة انتظار ذكية', desc: 'لما المكان يمتلئ، الزبون يسجل نفسه بـ QR عند المدخل. بمجرد تحرر طاولة يوصله إشعار فوري.', icon: '⏳', color: '#60a5fa' },
+    { title: 'تخصيص المشروب', desc: 'الزبون يختار مستوى السكر والثلج والإضافات لكل منتج. الخيارات تُحدد من الأدمن لكل منتج وتصل للبار واضحة.', icon: '🎛️', color: '#f472b6' },
+    { title: 'إخفاء المنتج تلقائياً', desc: 'لما الكمية توصل الصفر يختفي المنتج من قائمة الزبائن تلقائياً ويرجع لما يرجع المخزون، مع تنبيه مسبق للأدمن.', icon: '📦', color: '#f59e0b' },
+    { title: 'تقسيم الحساب', desc: 'الكاشير يقسّم فاتورة الطاولة بالتساوي أو حسب كل شخص وطلبه. كل جزء ينطبع كفاتورة مستقلة.', icon: '💳', color: '#a78bfa' },
+    { title: 'بطاقة الولاء الرقمية', desc: 'الزبون يجمع نقاطاً تلقائياً على كل طلب. لما يوصل لعتبة معينة يحصل على مكافأة يحددها الأدمن.', icon: '🏆', color: '#fb923c' },
+    { title: 'مؤقت الطاولة', desc: 'كل طاولة تعرض للكاشير كم وقت مضى عليها. لما تتجاوز الحد تتلوّن باللون الأحمر تلقائياً.', icon: '⏱️', color: '#f87171' },
+    { title: 'إعلان صوتي للطلب', desc: 'لما البار يضغط جاهز، المتحدث يعلن باسم الطاولة تلقائياً بدون صياح. الأدمن يختار الصوت والنبرة.', icon: '🔊', color: '#6366f1' },
+    { title: 'تقارير PDF يومية', desc: 'الكاشير يصدّر تقرير اليوم بضغطة واحدة — مبيعات، أكثر المنتجات طلباً، وصافي الإيراد.', icon: '📄', color: '#34d399' },
+    { title: 'لوحة أداء الموظفين', desc: 'إحصاءات لكل موظف — كم طلب خدم، متوسط وقت التحضير، أعلى ساعات إنتاجية. مع ترتيب شهري.', icon: '🏅', color: '#fbbf24' },
+    { title: 'مركز تحكم الفروع', desc: 'لوحة واحدة تعرض كل الفروع في وقت واحد — مبيعات لحظية، طلبات نشطة، مخزون. مع تنبيهات فورية.', icon: '🌐', color: '#e879f9' },
+  ]
+  const [currentIdea, setCurrentIdea] = useState<typeof AI_IDEAS[0] | null>(null)
+  const [isGeneratingIdea, setIsGeneratingIdea] = useState(false)
+  const [shownIdeas, setShownIdeas] = useState<Set<number>>(new Set())
+
+  const generateIdea = () => {
+    setIsGeneratingIdea(true)
+    setTimeout(() => {
+      let available = AI_IDEAS.map((_, i) => i).filter(i => !shownIdeas.has(i))
+      if (available.length === 0) { setShownIdeas(new Set()); available = AI_IDEAS.map((_, i) => i) }
+      const idx = available[Math.floor(Math.random() * available.length)]
+      setShownIdeas(prev => new Set([...prev, idx]))
+      setCurrentIdea(AI_IDEAS[idx])
+      setIsGeneratingIdea(false)
+    }, 800)
+  }
 
   // Smart Alerts state
   const [smartAlerts, setSmartAlerts] = useState<{
@@ -2205,6 +2284,7 @@ const handleSaveSettings = async () => {
       else if (placeId) { setAnalyticsPlaceId(placeId); fetchAnalytics({ placeId }) }
     }
     if (v === 'count' && isDevAdmin) fetchPlaces().then(list => { if (list.length > 0) setCountPlaceId(prev => { const chosen = prev || list[0].id; fetchCountForPlace(chosen); return chosen }) })
+    if (v === 'feature-flags' && !flagsLoaded) loadFeatureFlags()
   }
 
   return (
@@ -2518,8 +2598,10 @@ const handleSaveSettings = async () => {
                   <p className="text-[9px] font-semibold uppercase tracking-widest px-1 mb-1" style={{ color: '#6366f1' }}>Dev Tools</p>
                   <div className="grid grid-cols-2 gap-1.5">
                     {[
-                      { tab: 'simulator', icon: <span className="text-sm">🎮</span>, label: 'Simulator', ac: '#6366f1' },
-                      { tab: 'templates', icon: <span className="text-sm">📦</span>, label: 'Templates',  ac: '#a855f7' },
+                      { tab: 'simulator',     icon: <span className="text-sm">🎮</span>, label: 'Simulator',     ac: '#6366f1' },
+                      { tab: 'templates',     icon: <span className="text-sm">📦</span>, label: 'Templates',     ac: '#a855f7' },
+                      { tab: 'feature-flags', icon: <span className="text-sm">🚩</span>, label: 'Flags',          ac: '#10b981' },
+                      { tab: 'ai-ideas',      icon: <span className="text-sm">💡</span>, label: 'AI Ideas',       ac: '#f59e0b' },
                     ].map(item => (
                       <button key={item.tab} onClick={() => handleTabChange(item.tab)}
                         className="flex flex-col items-center gap-1 rounded-xl py-2.5 px-1 transition-all duration-150 hover:scale-105 active:scale-95"
@@ -2671,6 +2753,8 @@ const handleSaveSettings = async () => {
               ['permissions', 'Permissions'],
               ['danger', 'Danger'],
               ['live', 'Live'],
+              ['feature-flags', 'Feature Flags'],
+              ['ai-ideas', 'AI Ideas'],
             ].filter(([value]) => canAccessDevTab(value)).map(([value, label]) => (
               <TabsTrigger key={value} value={value}>{label}</TabsTrigger>
             ))}
@@ -8278,6 +8362,99 @@ const handleSaveSettings = async () => {
         {/* ─── Place Templates Tab ─────────────────────────── */}
         <TabsContent value="templates" className="space-y-4">
           <PlaceTemplates places={places} />
+        </TabsContent>
+
+        {/* ─── Feature Flags Tab ─────────────────────────── */}
+        <TabsContent value="feature-flags" className="space-y-4">
+          <div className="rounded-2xl overflow-hidden" style={{ background: 'linear-gradient(135deg, rgba(16,185,129,0.06), rgba(6,182,212,0.04))', border: '1px solid rgba(16,185,129,0.18)' }}>
+            <div className="p-4 border-b" style={{ borderColor: 'rgba(16,185,129,0.12)' }}>
+              <div className="flex items-center gap-2">
+                <span className="text-lg">🚩</span>
+                <div>
+                  <h3 className="text-sm font-bold text-white">Feature Flags</h3>
+                  <p className="text-[11px]" style={{ color: '#6ee7b7' }}>تحكم في تفعيل وتعطيل ميزات النظام فوراً بدون نشر كود جديد</p>
+                </div>
+              </div>
+            </div>
+            <div className="p-4 space-y-3">
+              {!flagsLoaded ? (
+                <div className="flex items-center justify-center py-8">
+                  <Loader2 className="h-6 w-6 animate-spin" style={{ color: '#34d399' }} />
+                </div>
+              ) : (
+                FLAG_DEFS.map(flag => (
+                  <div key={flag.key} className="flex items-center justify-between rounded-xl px-4 py-3 transition-all duration-200"
+                    style={{ background: featureFlags[flag.key] ? `${flag.color}12` : 'rgba(255,255,255,0.03)', border: `1px solid ${featureFlags[flag.key] ? `${flag.color}30` : 'rgba(255,255,255,0.06)'}` }}>
+                    <div className="flex flex-col gap-0.5">
+                      <span className="text-sm font-semibold text-white">{flag.label}</span>
+                      <span className="text-[11px]" style={{ color: 'rgba(255,255,255,0.35)' }}>{flag.desc}</span>
+                    </div>
+                    <button
+                      onClick={() => toggleFlag(flag.key)}
+                      disabled={isSavingFlags}
+                      className="relative shrink-0 w-11 h-6 rounded-full transition-all duration-300 focus:outline-none"
+                      style={{ background: featureFlags[flag.key] ? flag.color : 'rgba(255,255,255,0.1)', boxShadow: featureFlags[flag.key] ? `0 0 10px ${flag.color}60` : 'none' }}
+                    >
+                      <span className="absolute top-0.5 left-0.5 h-5 w-5 rounded-full bg-white transition-all duration-300 shadow"
+                        style={{ transform: featureFlags[flag.key] ? 'translateX(20px)' : 'translateX(0px)' }} />
+                    </button>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        </TabsContent>
+
+        {/* ─── AI Ideas Tab ─────────────────────────── */}
+        <TabsContent value="ai-ideas" className="space-y-4">
+          <div className="rounded-2xl overflow-hidden" style={{ background: 'linear-gradient(135deg, rgba(245,158,11,0.06), rgba(251,191,36,0.03))', border: '1px solid rgba(245,158,11,0.2)' }}>
+            <div className="p-4 border-b" style={{ borderColor: 'rgba(245,158,11,0.12)' }}>
+              <div className="flex items-center gap-2">
+                <span className="text-lg">💡</span>
+                <div>
+                  <h3 className="text-sm font-bold text-white">مولّد الأفكار</h3>
+                  <p className="text-[11px]" style={{ color: '#fcd34d' }}>اضغط الزر واحصل على فكرة جاهزة للتطبيق في المشروع</p>
+                </div>
+              </div>
+            </div>
+            <div className="p-4 space-y-4">
+              <button
+                onClick={generateIdea}
+                disabled={isGeneratingIdea}
+                className="w-full flex items-center justify-center gap-2 rounded-xl py-3.5 font-bold text-sm transition-all duration-200 active:scale-95"
+                style={{ background: 'linear-gradient(135deg, rgba(245,158,11,0.25), rgba(251,191,36,0.15))', border: '1px solid rgba(245,158,11,0.4)', color: '#fbbf24', boxShadow: '0 0 20px rgba(245,158,11,0.1)' }}
+              >
+                {isGeneratingIdea ? (
+                  <><Loader2 className="h-4 w-4 animate-spin" /> جارٍ التفكير...</>
+                ) : (
+                  <><BrainCircuit className="h-4 w-4" /> {currentIdea ? 'فكرة ثانية ←' : 'اقترح لي فكرة'}</>
+                )}
+              </button>
+
+              {currentIdea && !isGeneratingIdea && (
+                <div className="rounded-xl p-4 space-y-3 transition-all duration-300"
+                  style={{ background: `${currentIdea.color}10`, border: `1px solid ${currentIdea.color}35` }}>
+                  <div className="flex items-center gap-2">
+                    <span className="text-2xl">{currentIdea.icon}</span>
+                    <h4 className="text-base font-black text-white">{currentIdea.title}</h4>
+                  </div>
+                  <p className="text-[13px] leading-relaxed" style={{ color: 'rgba(255,255,255,0.7)' }}>{currentIdea.desc}</p>
+                  <div className="flex items-center gap-2 pt-1">
+                    <span className="text-[11px] font-semibold px-2.5 py-1 rounded-full" style={{ background: `${currentIdea.color}20`, color: currentIdea.color, border: `1px solid ${currentIdea.color}40` }}>
+                      جاهزة للتطبيق
+                    </span>
+                  </div>
+                </div>
+              )}
+
+              {!currentIdea && !isGeneratingIdea && (
+                <div className="flex flex-col items-center justify-center py-8 gap-2" style={{ color: 'rgba(255,255,255,0.2)' }}>
+                  <BrainCircuit className="h-10 w-10" />
+                  <p className="text-sm">اضغط الزر لتوليد فكرة</p>
+                </div>
+              )}
+            </div>
+          </div>
         </TabsContent>
 
         {/* ─── Analytics / Reports Tab ─────────────────────────── */}
