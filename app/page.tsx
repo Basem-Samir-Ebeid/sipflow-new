@@ -1961,6 +1961,15 @@ export default function HomePage() {
 
         {/* Developer bar */}
         <div className="relative w-full py-1.5" style={{ background: 'rgba(255,255,255,0.025)', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+          {/* Logo button — top-left — Dev Admin entry */}
+          <button
+            onClick={(e) => { e.stopPropagation(); setShowAdminLogin(true) }}
+            className="absolute left-2.5 top-1/2 -translate-y-1/2 rounded-lg overflow-hidden transition-all active:scale-90 hover:ring-2 hover:ring-white/15 focus:outline-none"
+            style={{ width: 26, height: 26, border: '1px solid rgba(255,255,255,0.1)', boxShadow: '0 2px 8px rgba(0,0,0,0.5)' }}
+            title="Developer Admin"
+          >
+            <Image src="/images/sipflow-logo.jpg" alt="SîpFlõw" width={26} height={26} className="object-cover w-full h-full" />
+          </button>
           <div className="flex items-center justify-center gap-2">
             <div className="h-px w-8" style={{ background: 'rgba(148,163,184,0.2)' }} />
             <span className="text-[10px] tracking-[0.22em] uppercase font-medium" style={{ color: 'rgba(148,163,184,0.45)' }}>
@@ -2032,27 +2041,6 @@ export default function HomePage() {
 
           {/* Admin Buttons */}
           <div className="flex flex-col gap-2 w-full">
-            {/* Dev Admin */}
-            <button
-              onClick={() => setShowAdminLogin(true)}
-              className="w-full rounded-xl py-3 px-4 flex items-center justify-between transition-all hover:bg-[rgba(99,102,241,0.12)] active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-violet-500/40 focus-visible:outline-none"
-              style={{
-                background: 'rgba(99,102,241,0.07)',
-                border: '1px solid rgba(99,102,241,0.18)',
-              }}
-            >
-              <div className="flex items-center gap-3">
-                <div className="flex h-9 w-9 items-center justify-center rounded-lg shrink-0 text-base" style={{ background: 'rgba(99,102,241,0.12)' }}>
-                  👑
-                </div>
-                <div className="text-right">
-                  <p className="text-sm font-semibold text-white leading-tight">Developer Admin</p>
-                  <p className="text-[11px] mt-0.5" style={{ color: 'rgba(148,163,184,0.4)' }}>لوحة التحكم الرئيسية</p>
-                </div>
-              </div>
-              <span className="text-[10px] font-bold px-2 py-0.5 rounded-md" style={{ background: 'rgba(99,102,241,0.15)', color: '#818cf8', border: '1px solid rgba(99,102,241,0.2)' }}>VIP</span>
-            </button>
-
             {/* Role buttons 2x2 */}
             <div className="grid grid-cols-2 gap-2">
               {[
