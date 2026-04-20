@@ -338,7 +338,7 @@ export default function StaffPage() {
 
   if (!mounted) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ background: '#080808' }}>
+      <div className="min-h-[100dvh] flex items-center justify-center" style={{ background: '#080808' }}>
         <div className="w-8 h-8 border-2 rounded-full animate-spin" style={{ borderColor: VIOLET_DIM, borderTopColor: VIOLET }} />
       </div>
     )
@@ -347,7 +347,8 @@ export default function StaffPage() {
   /* ─── LOGIN ─── */
   if (!staffUser) {
     return (
-      <div className="min-h-screen flex flex-col" dir="rtl" style={{ background: '#080808' }}>
+      <div className="min-h-[100dvh] flex flex-col" dir="rtl" style={{ background: '#080808' }}>
+        <Toaster position="top-center" richColors />
         <DevBar />
         <div className="px-4 pt-4">
           <button onClick={() => { window.location.href = '/' }}
@@ -551,7 +552,7 @@ export default function StaffPage() {
 
   /* ─── MAIN UI ─── */
   return (
-    <div className="min-h-screen" dir="rtl" style={{ background: '#080808' }}>
+    <div className="min-h-[100dvh]" dir="rtl" style={{ background: '#080808' }}>
       <Toaster position="top-center" richColors />
 
       {/* ── HEADER ── */}

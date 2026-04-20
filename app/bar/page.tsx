@@ -9,7 +9,7 @@ import {
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { toast } from 'sonner'
+import { toast, Toaster } from 'sonner'
 import Image from 'next/image'
 
 interface StaffUser {
@@ -284,7 +284,8 @@ export default function BarPage() {
 
   if (!mounted) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ background: '#080808' }}>
+      <div className="min-h-[100dvh] flex items-center justify-center" style={{ background: '#080808' }}>
+        <Toaster position="top-center" richColors />
         <div className="w-8 h-8 border-2 border-sky-500/30 border-t-sky-500 rounded-full animate-spin" />
       </div>
     )
@@ -292,7 +293,8 @@ export default function BarPage() {
 
   if (!staffUser) {
     return (
-      <div className="min-h-screen flex flex-col" dir="rtl" style={{ background: '#080808' }}>
+      <div className="min-h-[100dvh] flex flex-col" dir="rtl" style={{ background: '#080808' }}>
+        <Toaster position="top-center" richColors />
         <DevBar />
         <div className="px-4 pt-4">
           <button onClick={() => { window.location.href = '/' }}
@@ -450,7 +452,8 @@ export default function BarPage() {
   }
 
   return (
-    <div className="min-h-screen" dir="rtl" style={{ background: '#080808' }}>
+    <div className="min-h-[100dvh]" dir="rtl" style={{ background: '#080808' }}>
+      <Toaster position="top-center" richColors />
 
       {/* Alarm Banner */}
       {alarmActive && (

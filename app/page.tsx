@@ -1943,7 +1943,7 @@ export default function HomePage() {
   // Prevent hydration mismatch - don't render until client-side mount
   if (!mounted) {
     return (
-      <main className="min-h-screen bg-black flex items-center justify-center" dir="rtl" onClick={handleGlobalClick} suppressHydrationWarning>
+      <main className="min-h-[100dvh] bg-black flex items-center justify-center" dir="rtl" onClick={handleGlobalClick} suppressHydrationWarning>
         <div className="flex flex-col items-center gap-3">
           <div className="w-8 h-8 border-2 border-amber-500/40 border-t-amber-500 rounded-full animate-spin" />
         </div>
@@ -1954,7 +1954,8 @@ export default function HomePage() {
   // Place Selection Screen
   if (!currentPlace && !isAdmin) {
     return (
-      <main className="relative min-h-screen overflow-x-hidden overflow-y-auto flex flex-col items-center p-0" dir="rtl" onClick={handleGlobalClick} suppressHydrationWarning style={{ background: 'linear-gradient(160deg, #0f1117 0%, #13151e 60%, #0f1117 100%)' }}>
+      <main className="relative min-h-[100dvh] overflow-x-hidden overflow-y-auto flex flex-col items-center p-0" dir="rtl" onClick={handleGlobalClick} suppressHydrationWarning style={{ background: 'linear-gradient(160deg, #0f1117 0%, #13151e 60%, #0f1117 100%)' }}>
+        <Toaster position="top-center" richColors toastOptions={{ style: { direction: 'rtl' } }} />
         {/* Subtle background texture */}
         <div className="pointer-events-none absolute inset-0" style={{ backgroundImage: 'radial-gradient(circle at 30% 20%, rgba(99,102,241,0.04) 0%, transparent 50%), radial-gradient(circle at 70% 80%, rgba(148,163,184,0.03) 0%, transparent 50%)' }} />
 
@@ -2572,7 +2573,7 @@ export default function HomePage() {
   // Login Screen
   if (!currentUser && !isDevAdmin && (isAdmin || showAdminLogin)) {
     return (
-      <main className="relative min-h-screen bg-black overflow-hidden" dir="ltr" onClick={handleGlobalClick}>
+      <main className="relative min-h-[100dvh] bg-black overflow-hidden" dir="ltr" onClick={handleGlobalClick}>
         {/* Developer attribution bar */}
         <div className="relative overflow-hidden py-[5px]" style={{ background: 'linear-gradient(90deg, #1a0a00, #3d1f00, #6b3a00, #D4A017, #6b3a00, #3d1f00, #1a0a00)' }}>
           <div className="flex items-center justify-center gap-2">
@@ -2914,7 +2915,7 @@ export default function HomePage() {
   // Company Employee Login Screen
   if (currentPlace?.place_type === 'company' && !currentEmployee && !isDevAdmin && !isAdmin) {
     return (
-      <main className="relative min-h-screen bg-black flex flex-col items-center justify-center p-4" dir="rtl">
+      <main className="relative min-h-[100dvh] bg-black flex flex-col items-center justify-center p-4" dir="rtl">
         <div className="w-full max-w-sm space-y-6">
           {/* Logo */}
           <div className="flex flex-col items-center gap-3">
@@ -2985,7 +2986,7 @@ export default function HomePage() {
   }
 
   return (
-    <main className="relative min-h-screen bg-zinc-900 overflow-hidden" onClick={handleGlobalClick} suppressHydrationWarning>
+    <main className="relative min-h-[100dvh] bg-zinc-900 overflow-hidden" onClick={handleGlobalClick} suppressHydrationWarning>
       {/* Background decorative shapes */}
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute -top-20 -right-20 h-72 w-72 rounded-full bg-primary/20 blur-3xl" />

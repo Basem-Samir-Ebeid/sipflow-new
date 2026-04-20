@@ -77,7 +77,7 @@ export default function ReservePage({ params }: { params: Promise<{ placeCode: s
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#0a0a0a]">
+      <div className="min-h-[100dvh] flex items-center justify-center bg-[#0a0a0a]">
         <p className="text-amber-400 text-lg animate-pulse">جاري التحميل...</p>
       </div>
     )
@@ -85,7 +85,7 @@ export default function ReservePage({ params }: { params: Promise<{ placeCode: s
 
   if (notFound) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-[#0a0a0a] gap-4 p-6">
+      <div className="min-h-[100dvh] flex flex-col items-center justify-center bg-[#0a0a0a] gap-4 p-6">
         <p className="text-4xl">😕</p>
         <h1 className="text-xl font-bold text-white">المكان غير موجود</h1>
         <p className="text-gray-400 text-sm text-center">تأكد من الرابط وحاول مرة أخرى</p>
@@ -95,7 +95,7 @@ export default function ReservePage({ params }: { params: Promise<{ placeCode: s
 
   if (disabled) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-[#0a0a0a] gap-4 p-6">
+      <div className="min-h-[100dvh] flex flex-col items-center justify-center bg-[#0a0a0a] gap-4 p-6">
         <p className="text-4xl">🔒</p>
         <h1 className="text-xl font-bold text-white">الحجز غير متاح</h1>
         <p className="text-gray-400 text-sm text-center">{place?.name} — الحجز المسبق غير مفعّل حالياً</p>
@@ -105,7 +105,7 @@ export default function ReservePage({ params }: { params: Promise<{ placeCode: s
 
   if (success) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-[#0a0a0a] gap-6 p-6" dir="rtl">
+      <div className="min-h-[100dvh] flex flex-col items-center justify-center bg-[#0a0a0a] gap-6 p-6" dir="rtl">
         <div className="w-20 h-20 rounded-full bg-amber-500/20 flex items-center justify-center">
           <span className="text-4xl">✅</span>
         </div>
@@ -127,7 +127,7 @@ export default function ReservePage({ params }: { params: Promise<{ placeCode: s
   const today = new Date().toISOString().split('T')[0]
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] text-white" dir="rtl">
+    <div className="min-h-[100dvh] bg-[#0a0a0a] text-white" dir="rtl">
       <div className="max-w-md mx-auto px-4 py-10 space-y-8">
         {/* Back button */}
         <button

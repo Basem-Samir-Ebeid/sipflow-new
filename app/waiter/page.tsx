@@ -343,14 +343,14 @@ export default function WaiterPage() {
     new Date(d).toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit', hour12: true })
 
   if (!mounted) return (
-    <div className="min-h-screen flex items-center justify-center" style={{ background: '#080808' }}>
+    <div className="min-h-[100dvh] flex items-center justify-center" style={{ background: '#080808' }}>
       <div className="w-8 h-8 border-2 border-amber-500/30 border-t-amber-500 rounded-full animate-spin" />
     </div>
   )
 
   /* ── Login ── */
   if (!staffUser) return (
-    <div className="min-h-screen flex flex-col" dir="rtl" style={{ background: '#080808' }}>
+    <div className="min-h-[100dvh] flex flex-col" dir="rtl" style={{ background: '#080808' }}>
       <DevBar />
       <Toaster position="top-center" richColors />
       <div className="px-4 pt-4">
@@ -416,7 +416,7 @@ export default function WaiterPage() {
   const activeCallCount = waiterCalls.filter(c => !dismissedCallIds.has(c.id)).length
 
   return (
-    <div className="min-h-screen" dir="rtl" style={{ background: '#080808' }}>
+    <div className="min-h-[100dvh]" dir="rtl" style={{ background: '#080808' }}>
       <Toaster position="top-center" richColors />
 
       {/* Alarm Banner */}
