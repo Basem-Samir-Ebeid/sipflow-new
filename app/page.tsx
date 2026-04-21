@@ -4006,83 +4006,236 @@ export default function HomePage() {
           )
         })()}
 
-        {showTableModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
-            <div className="w-full max-w-sm rounded-2xl border border-border bg-card p-6 shadow-xl text-center" dir="rtl">
-              <div className="mb-4 flex justify-center">
-                <div className={`flex h-16 w-16 items-center justify-center rounded-full text-4xl ${currentPlace?.place_type === 'company' ? 'bg-blue-500/20' : 'bg-amber-500/20'}`}>
-                  {currentPlace?.place_type === 'company' ? '🏢' : '🪑'}
+        {showTableModal && (() => {
+          const isCompany = currentPlace?.place_type === 'company'
+          const accent = isCompany ? '#3b82f6' : '#D4A017'
+          const accentMid = isCompany ? '#2563eb' : '#b8860b'
+          const accentFaint = isCompany ? 'rgba(59,130,246,0.18)' : 'rgba(212,160,23,0.18)'
+          const accentBorder = isCompany ? 'rgba(59,130,246,0.35)' : 'rgba(212,160,23,0.35)'
+          const accentGlow = isCompany ? 'rgba(59,130,246,0.22)' : 'rgba(212,160,23,0.22)'
+          const accentText = isCompany ? '#93c5fd' : '#fcd34d'
+          return (
+            <div
+              className="fixed inset-0 z-50 flex items-center justify-center p-4"
+              style={{ background: 'rgba(0,0,0,0.78)', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)' }}
+            >
+              <div
+                dir="rtl"
+                className="w-full max-w-sm relative overflow-hidden"
+                style={{
+                  borderRadius: '20px',
+                  background: 'linear-gradient(170deg, rgba(22,18,10,0.98) 0%, rgba(14,12,8,0.99) 55%, rgba(10,9,6,1) 100%)',
+                  border: `1px solid ${accentBorder}`,
+                  boxShadow: `0 0 0 1px rgba(255,255,255,0.04), 0 8px 40px rgba(0,0,0,0.7), 0 0 60px ${accentGlow}`,
+                  animation: 'orderModalIn 0.22s cubic-bezier(0.34,1.56,0.64,1) both',
+                }}
+              >
+                <style>{`
+                  @keyframes orderModalIn {
+                    from { opacity: 0; transform: scale(0.88); }
+                    to   { opacity: 1; transform: scale(1); }
+                  }
+                `}</style>
+
+                {/* shimmer bar */}
+                <div style={{ height: '2px', background: `linear-gradient(90deg, transparent, ${accent}, transparent)`, opacity: 0.7 }} />
+
+                <div className="px-6 pt-7 pb-6">
+                  {/* icon */}
+                  <div className="flex justify-center mb-5 relative">
+                    <div style={{
+                      position: 'absolute',
+                      top: '-18px',
+                      width: '80px',
+                      height: '80px',
+                      borderRadius: '50%',
+                      background: `radial-gradient(circle, ${accentFaint} 0%, transparent 70%)`,
+                      filter: 'blur(12px)',
+                    }} />
+                    <div className="relative" style={{
+                      width: '64px',
+                      height: '64px',
+                      borderRadius: '16px',
+                      background: `linear-gradient(145deg, ${accentFaint}, rgba(0,0,0,0.4))`,
+                      border: `1px solid ${accentBorder}`,
+                      boxShadow: `0 0 20px ${accentGlow}`,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: '28px',
+                    }}>
+                      {isCompany ? '🏢' : '🪑'}
+                      <div style={{
+                        position: 'absolute',
+                        bottom: '-5px',
+                        left: '-5px',
+                        width: '20px',
+                        height: '20px',
+                        borderRadius: '50%',
+                        background: `linear-gradient(135deg, ${accent}, ${accentMid})`,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: '10px',
+                        boxShadow: `0 2px 8px ${accentGlow}`,
+                        border: '1.5px solid rgba(0,0,0,0.5)',
+                      }}>✓</div>
+                    </div>
+                  </div>
+
+                  {/* title */}
+                  <h2 className="text-center text-xl font-bold mb-1" style={{ color: '#f5f0e8' }}>تأكيد الطلب</h2>
+                  <p className="text-center text-sm mb-6" style={{ color: 'rgba(255,255,255,0.38)' }}>
+                    {isCompany ? 'حدد الإدارة التابع لها' : 'أدخل اسمك ورقم الطربيزة'}
+                  </p>
+
+                  {isCompany ? (
+                    <>
+                      {currentEmployee && (
+                        <div className="mb-4 px-4 py-2.5 text-right" style={{ borderRadius: '12px', background: 'rgba(59,130,246,0.08)', border: '1px solid rgba(59,130,246,0.2)' }}>
+                          <p className="text-xs font-semibold" style={{ color: '#93c5fd' }}>{currentEmployee.name}</p>
+                          <p className="text-[11px]" style={{ color: 'rgba(255,255,255,0.35)' }}>{currentEmployee.email}</p>
+                        </div>
+                      )}
+                      <div className="flex items-center justify-between mb-1.5">
+                        <span className="text-xs font-semibold" style={{ color: accentText }}>الإدارة التابع لها</span>
+                        <span className="text-[10px] px-1.5 py-0.5 rounded" style={{ background: accentFaint, color: accentText }}>مطلوب</span>
+                      </div>
+                      <div className="relative mb-5">
+                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-base" style={{ pointerEvents: 'none' }}>🏢</span>
+                        <Input
+                          value={pendingTableNumber}
+                          onChange={(e) => { setPendingTableNumber(e.target.value); setTableModalError('') }}
+                          onKeyDown={(e) => e.key === 'Enter' && handleConfirmTableAndSubmit()}
+                          placeholder="مثال: الموارد البشرية"
+                          autoFocus
+                          style={{
+                            height: '48px',
+                            paddingRight: '38px',
+                            textAlign: 'right',
+                            fontSize: '15px',
+                            fontWeight: 700,
+                            background: 'rgba(255,255,255,0.04)',
+                            border: `1.5px solid ${accentBorder}`,
+                            borderRadius: '12px',
+                            color: '#f5f0e8',
+                            outline: 'none',
+                          }}
+                        />
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      {/* name field */}
+                      <div className="flex items-center justify-between mb-1.5">
+                        <span className="text-xs font-semibold" style={{ color: accentText }}>اسمك</span>
+                        <span className="text-[10px] px-1.5 py-0.5 rounded" style={{ background: accentFaint, color: accentText }}>1 / 2</span>
+                      </div>
+                      <div className="relative mb-4">
+                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-base" style={{ pointerEvents: 'none' }}>👤</span>
+                        <Input
+                          value={pendingCustomerName}
+                          onChange={(e) => { setPendingCustomerName(e.target.value); setTableModalError('') }}
+                          onKeyDown={(e) => e.key === 'Enter' && handleConfirmTableAndSubmit()}
+                          placeholder="مثال: أحمد"
+                          style={{
+                            height: '48px',
+                            paddingRight: '38px',
+                            textAlign: 'right',
+                            fontSize: '15px',
+                            fontWeight: 700,
+                            background: 'rgba(255,255,255,0.04)',
+                            border: `1.5px solid ${accentBorder}`,
+                            borderRadius: '12px',
+                            color: '#f5f0e8',
+                            outline: 'none',
+                          }}
+                        />
+                      </div>
+                      {/* table field */}
+                      <div className="flex items-center justify-between mb-1.5">
+                        <span className="text-xs font-semibold" style={{ color: accentText }}>رقم الطربيزة</span>
+                        <span className="text-[10px] px-1.5 py-0.5 rounded" style={{ background: accentFaint, color: accentText }}>2 / 2</span>
+                      </div>
+                      <div className="relative mb-5">
+                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-base" style={{ pointerEvents: 'none' }}>🪑</span>
+                        <Input
+                          value={pendingTableNumber}
+                          onChange={(e) => { setPendingTableNumber(e.target.value); setTableModalError('') }}
+                          onKeyDown={(e) => e.key === 'Enter' && handleConfirmTableAndSubmit()}
+                          placeholder="مثال: 5"
+                          style={{
+                            height: '48px',
+                            paddingRight: '38px',
+                            textAlign: 'right',
+                            fontSize: '15px',
+                            fontWeight: 700,
+                            background: 'rgba(255,255,255,0.04)',
+                            border: `1.5px solid ${accentBorder}`,
+                            borderRadius: '12px',
+                            color: '#f5f0e8',
+                            outline: 'none',
+                          }}
+                        />
+                      </div>
+                    </>
+                  )}
+
+                  {tableModalError && (
+                    <p className="text-sm text-red-400 mb-3 text-center">{tableModalError}</p>
+                  )}
+
+                  {/* primary button */}
+                  <button
+                    onClick={() => handleConfirmTableAndSubmit()}
+                    disabled={isSubmittingOrder}
+                    className="w-full flex items-center justify-center gap-2 font-bold text-base mb-3 relative overflow-hidden"
+                    style={{
+                      height: '50px',
+                      borderRadius: '13px',
+                      background: isSubmittingOrder
+                        ? `linear-gradient(135deg, ${accentMid}, rgba(0,0,0,0.3))`
+                        : `linear-gradient(135deg, ${accent} 0%, ${accentMid} 100%)`,
+                      color: isCompany ? '#fff' : '#0a0800',
+                      border: 'none',
+                      boxShadow: `0 4px 20px ${accentGlow}, inset 0 1px 0 rgba(255,255,255,0.18)`,
+                      cursor: isSubmittingOrder ? 'not-allowed' : 'pointer',
+                      opacity: isSubmittingOrder ? 0.75 : 1,
+                      transition: 'opacity 0.2s',
+                    }}
+                  >
+                    {isSubmittingOrder ? (
+                      <Loader2 className="h-5 w-5 animate-spin" />
+                    ) : (
+                      <>
+                        <span>تأكيد وإرسال الطلب</span>
+                        <span style={{ fontSize: '16px' }}>←</span>
+                      </>
+                    )}
+                  </button>
+
+                  {/* cancel button */}
+                  <button
+                    onClick={() => setShowTableModal(false)}
+                    disabled={isSubmittingOrder}
+                    className="w-full font-medium text-sm"
+                    style={{
+                      height: '38px',
+                      borderRadius: '10px',
+                      background: 'rgba(255,255,255,0.05)',
+                      border: '1px solid rgba(255,255,255,0.08)',
+                      color: 'rgba(255,255,255,0.4)',
+                      cursor: isSubmittingOrder ? 'not-allowed' : 'pointer',
+                      transition: 'background 0.15s',
+                    }}
+                  >
+                    إلغاء
+                  </button>
                 </div>
               </div>
-              <h2 className="mb-1 text-xl font-bold text-foreground">تأكيد الطلب</h2>
-              <p className="mb-5 text-sm text-muted-foreground">
-                {currentPlace?.place_type === 'company' ? 'حدد الإدارة التابع لها' : 'أدخل اسمك ورقم الطربيزة'}
-              </p>
-
-              {currentPlace?.place_type === 'company' ? (
-                <>
-                  {/* Company: show employee name as readonly + department input */}
-                  {currentEmployee && (
-                    <div className="mb-4 rounded-xl bg-blue-500/10 border border-blue-500/20 px-4 py-2 text-right">
-                      <p className="text-xs text-blue-400 font-medium">{currentEmployee.name}</p>
-                      <p className="text-[11px] text-muted-foreground">{currentEmployee.email}</p>
-                    </div>
-                  )}
-                  <label className="block text-right text-sm font-semibold mb-2 text-muted-foreground">الإدارة التابع لها</label>
-                  <Input
-                    value={pendingTableNumber}
-                    onChange={(e) => { setPendingTableNumber(e.target.value); setTableModalError('') }}
-                    onKeyDown={(e) => e.key === 'Enter' && handleConfirmTableAndSubmit()}
-                    placeholder="مثال: الموارد البشرية"
-                    className="h-12 text-center text-lg font-bold border-2 border-blue-500/40 bg-background focus:ring-2 focus:ring-blue-500 rounded-xl mb-4"
-                    autoFocus
-                  />
-                </>
-              ) : (
-                <>
-                  {/* Cafe: show name + table */}
-                  <label className="block text-right text-sm font-semibold mb-2 text-muted-foreground">اسمك</label>
-                  <Input
-                    value={pendingCustomerName}
-                    onChange={(e) => { setPendingCustomerName(e.target.value); setTableModalError('') }}
-                    onKeyDown={(e) => e.key === 'Enter' && handleConfirmTableAndSubmit()}
-                    placeholder="مثال: أحمد"
-                    className="h-12 text-center text-lg font-bold border-2 border-amber-500/40 bg-background focus:ring-2 focus:ring-amber-500 rounded-xl mb-4"
-                  />
-                  <label className="block text-right text-sm font-semibold mb-2 text-muted-foreground">رقم الطربيزة</label>
-                  <Input
-                    value={pendingTableNumber}
-                    onChange={(e) => { setPendingTableNumber(e.target.value); setTableModalError('') }}
-                    onKeyDown={(e) => e.key === 'Enter' && handleConfirmTableAndSubmit()}
-                    placeholder="مثال: 5"
-                    className="h-12 text-center text-lg font-bold border-2 border-amber-500/40 bg-background focus:ring-2 focus:ring-amber-500 rounded-xl mb-4"
-                  />
-                </>
-              )}
-
-              {tableModalError && (
-                <p className="text-sm text-red-400 mb-3">{tableModalError}</p>
-              )}
-              <div className="flex gap-3">
-                <Button
-                  className={`flex-1 h-12 font-bold rounded-xl text-base ${currentPlace?.place_type === 'company' ? 'bg-blue-500 hover:bg-blue-600 text-white' : 'bg-amber-500 hover:bg-amber-600 text-black'}`}
-                  onClick={() => handleConfirmTableAndSubmit()}
-                  disabled={isSubmittingOrder}
-                >
-                  {isSubmittingOrder ? 'جاري الإرسال...' : 'تأكيد وإرسال الطلب'}
-                </Button>
-                <Button
-                  variant="outline"
-                  className="h-12 px-4 rounded-xl"
-                  onClick={() => setShowTableModal(false)}
-                  disabled={isSubmittingOrder}
-                >
-                  إلغاء
-                </Button>
-              </div>
             </div>
-          </div>
-        )}
+          )
+        })()}
 
 
         {/* Menu Tab */}
