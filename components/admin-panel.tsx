@@ -587,6 +587,27 @@ export function AdminPanel({
   const [removingIdeaKey, setRemovingIdeaKey] = useState<string | null>(null)
   const [pendingRemoveIdea, setPendingRemoveIdea] = useState<typeof AI_IDEAS[0] | null>(null)
 
+  const renderDeleteFeatureBtn = (flagKey: string) => {
+    if (!isDevAdmin) return null
+    const idea = AI_IDEAS.find(i => i.flagKey === flagKey)
+    if (!idea) return null
+    return (
+      <button
+        onClick={(e) => { e.stopPropagation(); setPendingRemoveIdea(idea) }}
+        disabled={removingIdeaKey === flagKey}
+        title="حذف هذه الميزة من المشروع (للمطور فقط)"
+        className="ms-auto shrink-0 flex items-center gap-1 rounded-lg px-2 py-1 text-[10px] font-bold transition-all active:scale-95"
+        style={{ background: 'rgba(244,63,94,0.12)', border: '1px solid rgba(244,63,94,0.3)', color: '#fda4af' }}
+      >
+        {removingIdeaKey === flagKey ? (
+          <Loader2 className="h-3 w-3 animate-spin" />
+        ) : (
+          <><Trash2 className="h-3 w-3" /> حذف</>
+        )}
+      </button>
+    )
+  }
+
   const removeIdea = async (idea: typeof AI_IDEAS[0]) => {
     setRemovingIdeaKey(idea.flagKey)
     try {
@@ -3095,6 +3116,7 @@ const handleSaveSettings = async () => {
                 <span className="text-lg">🌐</span>
                 <h3 className="font-bold text-sm text-foreground">مركز تحكم الفروع</h3>
                 <span className="mr-auto text-[10px] px-2 py-0.5 rounded-full font-medium" style={{ background: 'rgba(232,121,249,0.15)', color: '#e879f9' }}>مباشر</span>
+                {renderDeleteFeatureBtn('idea_branch_ctrl')}
               </div>
               <div className="grid grid-cols-3 gap-2">
                 {[
@@ -3821,6 +3843,7 @@ const handleSaveSettings = async () => {
               <div className="flex items-center gap-2">
                 <span className="text-lg">🎛️</span>
                 <h3 className="font-bold text-sm text-foreground">تخصيص المشروب — خيارات الأصناف</h3>
+                {renderDeleteFeatureBtn('idea_drink_custom')}
               </div>
               <div className="space-y-2">
                 <div>
@@ -4250,6 +4273,7 @@ const handleSaveSettings = async () => {
                 <div className="flex items-center gap-2">
                   <span className="text-lg">📦</span>
                   <h3 className="font-bold text-sm text-foreground">إخفاء المنتج تلقائياً</h3>
+                  {renderDeleteFeatureBtn('idea_auto_hide')}
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="text-xs text-muted-foreground">مفعّل</span>
@@ -5287,6 +5311,7 @@ const handleSaveSettings = async () => {
               <div className="flex items-center gap-2">
                 <span className="text-lg">🏅</span>
                 <h3 className="font-bold text-sm text-foreground">لوحة أداء الموظفين — هذا الشهر</h3>
+                {renderDeleteFeatureBtn('idea_staff_perf')}
               </div>
               <div className="space-y-2">
                 {staffPerfData.map((emp, i) => (
@@ -5575,6 +5600,7 @@ const handleSaveSettings = async () => {
                 <span className="text-lg">⏳</span>
                 <h3 className="font-bold text-sm text-foreground">قائمة الانتظار الذكية</h3>
                 <span className="mr-auto text-[10px] px-2 py-0.5 rounded-full" style={{ background: 'rgba(96,165,250,0.15)', color: '#60a5fa' }}>{waitlistEntries.length} انتظار</span>
+                {renderDeleteFeatureBtn('idea_waitlist')}
               </div>
               <div className="space-y-1.5">
                 {waitlistEntries.map((e, i) => (
@@ -5607,6 +5633,7 @@ const handleSaveSettings = async () => {
               <div className="flex items-center gap-2">
                 <span className="text-lg">🏆</span>
                 <h3 className="font-bold text-sm text-foreground">بطاقة الولاء الرقمية</h3>
+                {renderDeleteFeatureBtn('idea_loyalty')}
               </div>
               <div className="grid grid-cols-2 gap-2">
                 <div>
@@ -5631,6 +5658,7 @@ const handleSaveSettings = async () => {
                 <div className="flex items-center gap-2">
                   <span className="text-lg">🔊</span>
                   <h3 className="font-bold text-sm text-foreground">الإعلان الصوتي للطلب</h3>
+                  {renderDeleteFeatureBtn('idea_voice_announce')}
                 </div>
                 <button onClick={() => setVoiceEnabled(v => !v)} className="flex items-center gap-1.5">
                   <span className="text-xs text-muted-foreground">{voiceEnabled ? 'مفعّل' : 'معطّل'}</span>
@@ -8296,6 +8324,7 @@ const handleSaveSettings = async () => {
               <div className="flex items-center gap-2">
                 <span className="text-lg">🗺️</span>
                 <h3 className="font-bold text-sm text-foreground">خريطة الطاولات التفاعلية</h3>
+                {renderDeleteFeatureBtn('idea_table_map')}
                 <div className="mr-auto flex items-center gap-2 text-[10px] text-muted-foreground">
                   <span className="w-2 h-2 rounded-full inline-block" style={{ background: '#34d399' }} /> نشطة
                   <span className="w-2 h-2 rounded-full inline-block" style={{ background: '#f87171' }} /> تنتظر الحساب
@@ -8325,6 +8354,7 @@ const handleSaveSettings = async () => {
               <div className="flex items-center gap-2">
                 <span className="text-lg">⏱️</span>
                 <h3 className="font-bold text-sm text-foreground">مؤقت الطاولات النشطة</h3>
+                {renderDeleteFeatureBtn('idea_table_timer')}
               </div>
               <div className="space-y-2">
                 {Object.entries(tableStartTimes).map(([tableNum, startMs]) => {
@@ -8347,6 +8377,7 @@ const handleSaveSettings = async () => {
               <div className="flex items-center gap-2">
                 <span className="text-lg">💳</span>
                 <h3 className="font-bold text-sm text-foreground">تقسيم الحساب</h3>
+                {renderDeleteFeatureBtn('idea_split_bill')}
               </div>
               <div className="flex items-center gap-3">
                 <div className="flex-1">
@@ -9185,6 +9216,7 @@ const handleSaveSettings = async () => {
                 <span className="text-lg">⭐</span>
                 <h3 className="font-bold text-sm text-foreground">تقييمات الزبائن</h3>
                 <span className="mr-auto text-xs font-bold" style={{ color: '#fbbf24' }}>⭐ 4.7 متوسط</span>
+                {renderDeleteFeatureBtn('idea_order_rating')}
               </div>
               <div className="space-y-2">
                 {ideaRatings.map((r, i) => (
@@ -9208,6 +9240,7 @@ const handleSaveSettings = async () => {
               <div className="flex items-center gap-2">
                 <span className="text-lg">📄</span>
                 <h3 className="font-bold text-sm text-foreground">تقارير PDF يومية</h3>
+                {renderDeleteFeatureBtn('idea_pdf_reports')}
               </div>
               <div className="grid grid-cols-3 gap-2">
                 {['اليوم', 'أمس', 'الأسبوع'].map(period => (
