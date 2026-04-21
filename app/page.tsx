@@ -1857,7 +1857,7 @@ export default function HomePage() {
         </div>
         <div className="absolute inset-x-0 bottom-0 h-px" style={{ background: 'linear-gradient(90deg, transparent 0%, rgba(99,102,241,0.3) 30%, rgba(99,102,241,0.3) 70%, transparent 100%)' }} />
       </div>
-      <div className="flex w-full items-center justify-between px-4 py-3">
+      <div className="mx-auto flex w-full max-w-5xl items-center justify-between px-4 py-3">
         <div className="flex items-center gap-2">
           <button
             onClick={() => { setActiveTab('menu'); if (isDevAdmin) fetchBoardPlaces().then(list => { if (list.length > 0) setMenuDevPlaceId(prev => prev || list[0].id) }) }}
@@ -2030,7 +2030,7 @@ export default function HomePage() {
           </div>
         </div>
 
-        <div className="relative w-full space-y-5 px-5 pt-8 pb-10">
+        <div className="relative w-full max-w-5xl mx-auto space-y-5 px-5 pt-8 pb-10">
           {/* Logo + Branding */}
           <div className="flex flex-col items-center space-y-5 pb-1">
             <div className="relative flex items-center justify-center" style={{ width: 110, height: 110 }}>
@@ -3122,7 +3122,7 @@ export default function HomePage() {
       {/* Update Banner */}
       {showUpdateBanner && (
         <div className="sticky top-0 z-40 w-full" style={{ background: 'linear-gradient(90deg, #1a3a1a, #1f5c1f, #2a7a2a, #1f5c1f, #1a3a1a)' }}>
-          <div className="flex items-center justify-between px-4 py-2.5 w-full">
+          <div className="mx-auto flex w-full max-w-5xl items-center justify-between px-4 py-2.5">
             <button
               onClick={() => { setShowUpdateBanner(false); localStorage.setItem('qa3da_app_version', APP_VERSION) }}
               className="text-green-200/60 hover:text-white transition-colors"
@@ -3147,7 +3147,7 @@ export default function HomePage() {
             'linear-gradient(90deg,rgba(10,80,30,0.95),rgba(20,130,50,0.95),rgba(10,80,30,0.95))',
           borderBottom: `1px solid ${globalBannerColor === 'amber' ? 'rgba(212,160,23,0.4)' : globalBannerColor === 'red' ? 'rgba(239,68,68,0.4)' : globalBannerColor === 'blue' ? 'rgba(59,130,246,0.4)' : 'rgba(34,197,94,0.4)'}`
         }}>
-          <div className="flex items-center justify-between gap-3 px-4 py-2.5 w-full">
+          <div className="mx-auto flex w-full max-w-5xl items-center justify-between gap-3 px-4 py-2.5">
             <span className="text-sm">📢</span>
             <p className="flex-1 text-center text-sm font-medium" style={{
               color: globalBannerColor === 'amber' ? '#fde68a' : globalBannerColor === 'red' ? '#fca5a5' : globalBannerColor === 'blue' ? '#bfdbfe' : '#bbf7d0'
@@ -3630,7 +3630,7 @@ export default function HomePage() {
         </div>
       )}
 
-      <div className="relative z-10 w-full p-4">
+      <div className="relative z-10 mx-auto w-full max-w-5xl p-4">
         {/* Surprise Me Modal */}
         {showSurpriseModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-md p-4" onClick={() => !isSurprising && setShowSurpriseModal(false)}>
