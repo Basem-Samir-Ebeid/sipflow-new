@@ -2,6 +2,7 @@
 
 import { OrderWithDetails, User, Drink } from '@/lib/types'
 import { X, Printer, Coffee, Users, Receipt } from 'lucide-react'
+import { printHTML } from '@/lib/print'
 import { Button } from '@/components/ui/button'
 import { useRef, useState } from 'react'
 
@@ -244,10 +245,7 @@ export function ReceiptModal({ orders, drinks, currentUser, onClose }: ReceiptMo
   const handlePrint = () => {
     const printContent = printRef.current
     if (!printContent) return
-    const printWindow = window.open('', '_blank')
-    if (!printWindow) return
-    printWindow.document.write(`<!DOCTYPE html><html dir="rtl" lang="ar"><head><meta charset="UTF-8"><title>${receiptNo}</title><style>${PRINT_STYLES}</style></head><body>${printContent.innerHTML}<script>window.onload=function(){window.print();window.onafterprint=function(){window.close();};};<\/script></body></html>`)
-    printWindow.document.close()
+    printHTML(`<!DOCTYPE html><html dir="rtl" lang="ar"><head><meta charset="UTF-8"><title>${receiptNo}</title><style>${PRINT_STYLES}</style></head><body>${printContent.innerHTML}</body></html>`)
   }
 
   const ItemRows = ({ itemOrders }: { itemOrders: OrderWithDetails[] }) => (

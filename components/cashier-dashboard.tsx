@@ -10,6 +10,7 @@ import {
   Receipt, ChevronDown, Minus, Plus, RefreshCcw
 } from 'lucide-react'
 import { toast, Toaster } from 'sonner'
+import { printHTML } from '@/lib/print'
 
 /* ─────────────────────── Types ─────────────────────── */
 type PaymentMethod = 'cash' | 'visa' | 'instapay' | 'vodafone'
@@ -581,37 +582,15 @@ export function CashierDashboard({ currentUser, currentPlace, onLogout, systemLo
   }
 
   const triggerPrint = (r: ReceiptData) => {
-    const win = window.open('', '_blank', 'width=380,height=750')
-    if (!win) { toast.error('يرجى السماح بالنوافذ المنبثقة لطباعة الفاتورة'); return }
-    win.document.write(`<!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8"><title>فاتورة ${r.invoiceNum}</title><style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:Arial,sans-serif;font-size:13px;max-width:300px;margin:0 auto;padding:16px 10px}@media print{body{padding:4px}button{display:none}}</style></head><body>${buildReceiptHTML(r)}<script>
-      var imgs = document.images;
-      var loaded = 0;
-      function tryPrint() {
-        loaded++;
-        if (loaded >= imgs.length) { window.print(); }
-      }
-      if (imgs.length === 0) {
-        window.print();
-      } else {
-        for (var i = 0; i < imgs.length; i++) {
-          if (imgs[i].complete) { tryPrint(); }
-          else { imgs[i].onload = tryPrint; imgs[i].onerror = tryPrint; }
-        }
-      }
-      window.onafterprint = function() { window.close(); };
-    <\/script></body></html>`)
-    win.document.close()
-    win.focus()
+    printHTML(`<!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8"><title>فاتورة ${r.invoiceNum}</title><style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:Arial,sans-serif;font-size:13px;max-width:300px;margin:0 auto;padding:16px 10px}@media print{body{padding:4px}button{display:none}}</style></head><body>${buildReceiptHTML(r)}</body></html>`)
   }
 
   const printShiftReport = () => {
     const t = shiftTotals()
-    const win = window.open('', '_blank', 'width=380,height=750')
-    if (!win) { toast.error('يرجى السماح بالنوافذ المنبثقة لطباعة التقرير'); return }
     const pmRows = PAYMENT_METHODS.map(pm =>
       t.byMethod[pm.key] > 0 ? `<div style="display:flex;justify-content:space-between;margin:4px 0"><span>${pm.label}:</span><span style="font-weight:700">${t.byMethod[pm.key].toFixed(2)} ج.م</span></div>` : ''
     ).join('')
-    win.document.write(`<!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8"><title>تقرير الوردية</title><style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:Arial,sans-serif;font-size:13px;max-width:300px;margin:0 auto;padding:16px 10px}</style></head><body>
+    printHTML(`<!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8"><title>تقرير الوردية</title><style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:Arial,sans-serif;font-size:13px;max-width:300px;margin:0 auto;padding:16px 10px}</style></head><body>
       <div style="text-align:center;font-size:16px;font-weight:900;margin-bottom:8px">${currentPlace.name}</div>
       <div style="text-align:center;font-size:12px;color:#666">تقرير الوردية — ${new Date().toLocaleDateString('ar-EG')}</div>
       <div style="text-align:center;font-size:11px;color:#999">الكاشير: ${currentUser.name}</div>
@@ -623,10 +602,7 @@ export function CashierDashboard({ currentUser, currentPlace, onLogout, systemLo
       ${pmRows}
       <div style="border-top:1px dashed #aaa;margin:8px 0"></div>
       <div style="display:flex;justify-content:space-between;font-size:14px;font-weight:900;background:#1a1a2e;color:#fff;padding:8px;border-radius:2px"><span>الإجمالي:</span><span>${t.total.toFixed(2)} ج.م</span></div>
-      <script>window.print();window.onafterprint=function(){window.close()};<\/script>
     </body></html>`)
-    win.document.close()
-    win.focus()
   }
 
   /* ─────────── Filtered tables ─────────── */

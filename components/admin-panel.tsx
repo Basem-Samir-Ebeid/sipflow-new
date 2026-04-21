@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { toast } from 'sonner'
 import { Drink, User, OrderWithDetails, Place, Reservation } from '@/lib/types'
+import { printHTML } from '@/lib/print'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -6087,11 +6088,8 @@ const handleSaveSettings = async () => {
                     <button
                       onClick={() => {
                         const sorted = [...placeTableUsers].sort((a, b) => (parseInt(a.table_number || '0') || 9999) - (parseInt(b.table_number || '0') || 9999))
-                        const win = window.open('', '_blank')
-                        if (!win) return
-                        const html = `<!DOCTYPE html><html dir="rtl"><head><meta charset="utf-8"><title>QR طاولات ${currentPlace.name}</title><style>body{font-family:Arial,sans-serif;background:#fff;padding:20px}h1{text-align:center;margin-bottom:30px}.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:20px}.card{border:2px solid #ddd;border-radius:12px;padding:16px;text-align:center;page-break-inside:avoid}.card h2{font-size:18px;margin:0 0 12px}.card img{width:150px;height:150px}@media print{.no-print{display:none}}</style></head><body><h1>${currentPlace.name} — QR الطاولات</h1><div class="no-print" style="text-align:center;margin-bottom:20px"><button onclick="window.print()" style="padding:10px 24px;background:#7c3aed;color:#fff;border:none;border-radius:8px;font-size:16px;cursor:pointer">🖨️ طباعة الكل</button></div><div class="grid">${sorted.map(u => `<div class="card"><h2>طاولة ${u.table_number}</h2><img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(window.location.origin + '/?place=' + currentPlace.code + '&table=' + u.table_number)}" /></div>`).join('')}</div></body></html>`
-                        win.document.write(html)
-                        win.document.close()
+                        const html = `<!DOCTYPE html><html dir="rtl"><head><meta charset="utf-8"><title>QR طاولات ${currentPlace.name}</title><style>body{font-family:Arial,sans-serif;background:#fff;padding:20px}h1{text-align:center;margin-bottom:30px}.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:20px}.card{border:2px solid #ddd;border-radius:12px;padding:16px;text-align:center;page-break-inside:avoid}.card h2{font-size:18px;margin:0 0 12px}.card img{width:150px;height:150px}@media print{.no-print{display:none}}</style></head><body><h1>${currentPlace.name} — QR الطاولات</h1><div class="grid">${sorted.map(u => `<div class="card"><h2>طاولة ${u.table_number}</h2><img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(window.location.origin + '/?place=' + currentPlace.code + '&table=' + u.table_number)}" /></div>`).join('')}</div></body></html>`
+                        printHTML(html)
                       }}
                       className="w-full flex items-center justify-center gap-2 rounded-xl border border-purple-500/30 bg-purple-600/10 hover:bg-purple-600/20 text-purple-300 py-2 text-sm transition-colors"
                     >
@@ -6868,12 +6866,7 @@ const handleSaveSettings = async () => {
                 '─'.repeat(40),
                 `إجمالي الأصناف المسلّمة: ${totalDelivered}`,
               ].join('\n')
-              const win = window.open('', '_blank')
-              if (win) {
-                win.document.write(`<pre dir="rtl" style="font-family:monospace;font-size:14px;padding:20px">${lines}</pre>`)
-                win.document.close()
-                win.print()
-              }
+              printHTML(`<!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8"><title>حصر</title></head><body><pre dir="rtl" style="font-family:monospace;font-size:14px;padding:20px">${lines}</pre></body></html>`)
             }
 
             return (

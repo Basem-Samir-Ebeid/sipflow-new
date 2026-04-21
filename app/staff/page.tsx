@@ -11,6 +11,7 @@ import {
 import { Input } from '@/components/ui/input'
 import { toast, Toaster } from 'sonner'
 import Image from 'next/image'
+import { printHTML } from '@/lib/print'
 
 interface StaffUser {
   id: string
@@ -329,12 +330,7 @@ export default function StaffPage() {
       `إجمالي الطلبات: ${allOrders.length}`,
       `إجمالي الإيراد: ${todayRevenue.toFixed(0)} ج.م`,
     ].join('\n')
-    const win = window.open('', '_blank')
-    if (win) {
-      win.document.write(`<pre dir="rtl" style="font-family:monospace;font-size:14px;padding:20px">${lines}</pre>`)
-      win.document.close()
-      win.print()
-    }
+    printHTML(`<!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8"><title>تقرير</title></head><body><pre dir="rtl" style="font-family:monospace;font-size:14px;padding:20px">${lines}</pre></body></html>`)
   }
 
   if (!mounted) {
