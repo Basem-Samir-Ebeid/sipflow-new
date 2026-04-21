@@ -378,6 +378,7 @@ export const db = {
       await sql`ALTER TABLE orders ADD COLUMN IF NOT EXISTS table_number TEXT`
     } catch {}
     
+    await this.setupCompanyEmployees().catch(() => {})
     return await sql`
       SELECT 
         o.*,
@@ -393,10 +394,19 @@ export const db = {
           'name', u.name,
           'table_number', u.table_number,
           'role', u.role
-        ) as user
+        ) as user,
+        CASE WHEN ce.id IS NULL THEN NULL ELSE json_build_object(
+          'id', ce.id,
+          'name', ce.name,
+          'email', ce.email,
+          'avatar_url', ce.avatar_url,
+          'department', ce.department,
+          'title', ce.title
+        ) END as employee
       FROM orders o
       LEFT JOIN drinks d ON o.drink_id = d.id
       LEFT JOIN users u ON o.user_id = u.id
+      LEFT JOIN company_employees ce ON o.employee_id = ce.id
       WHERE o.session_id = ${sessionId}
       ORDER BY o.created_at DESC
     `
@@ -681,6 +691,9 @@ export const db = {
         UNIQUE(place_id, email)
       )
     `.catch(() => {})
+    await sql`ALTER TABLE company_employees ADD COLUMN IF NOT EXISTS avatar_url TEXT`.catch(() => {})
+    await sql`ALTER TABLE company_employees ADD COLUMN IF NOT EXISTS department TEXT`.catch(() => {})
+    await sql`ALTER TABLE company_employees ADD COLUMN IF NOT EXISTS title TEXT`.catch(() => {})
     await sql`ALTER TABLE orders ADD COLUMN IF NOT EXISTS employee_id UUID REFERENCES company_employees(id) ON DELETE SET NULL`.catch(() => {})
   },
 
@@ -695,23 +708,27 @@ export const db = {
     return result[0] || null
   },
 
-  async createCompanyEmployee(data: { place_id: string; name: string; email: string; password: string }) {
+  async createCompanyEmployee(data: { place_id: string; name: string; email: string; password: string; avatar_url?: string | null; department?: string | null; title?: string | null }) {
     await this.setupCompanyEmployees()
     const result = await sql`
-      INSERT INTO company_employees (place_id, name, email, password)
-      VALUES (${data.place_id}, ${data.name}, ${data.email}, ${data.password})
+      INSERT INTO company_employees (place_id, name, email, password, avatar_url, department, title)
+      VALUES (${data.place_id}, ${data.name}, ${data.email}, ${data.password}, ${data.avatar_url || null}, ${data.department || null}, ${data.title || null})
       RETURNING *
     `
     return result[0]
   },
 
-  async updateCompanyEmployee(id: string, data: { name?: string; email?: string; password?: string; is_active?: boolean }) {
+  async updateCompanyEmployee(id: string, data: { name?: string; email?: string; password?: string; is_active?: boolean; avatar_url?: string | null; department?: string | null; title?: string | null }) {
+    await this.setupCompanyEmployees()
     const result = await sql`
       UPDATE company_employees
       SET name = COALESCE(${data.name ?? null}, name),
           email = COALESCE(${data.email ?? null}, email),
           password = COALESCE(${data.password ?? null}, password),
           is_active = COALESCE(${data.is_active ?? null}, is_active),
+          avatar_url = CASE WHEN ${data.avatar_url !== undefined} THEN ${data.avatar_url ?? null} ELSE avatar_url END,
+          department = CASE WHEN ${data.department !== undefined} THEN ${data.department ?? null} ELSE department END,
+          title = CASE WHEN ${data.title !== undefined} THEN ${data.title ?? null} ELSE title END,
           updated_at = NOW()
       WHERE id = ${id}
       RETURNING *

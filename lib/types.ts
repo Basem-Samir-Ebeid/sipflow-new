@@ -30,6 +30,9 @@ export interface CompanyEmployee {
   email: string
   password: string
   is_active: boolean
+  avatar_url: string | null
+  department: string | null
+  title: string | null
   created_at: string
   updated_at: string
 }
@@ -136,6 +139,15 @@ export interface Order {
 export interface OrderWithDetails extends Order {
   drink: Drink
   user: User
+  employee_id?: string | null
+  employee?: {
+    id: string
+    name: string
+    email: string
+    avatar_url: string | null
+    department: string | null
+    title: string | null
+  } | null
 }
 
 export interface AdminMessage {

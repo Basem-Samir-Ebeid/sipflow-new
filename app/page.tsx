@@ -65,7 +65,9 @@ export default function HomePage() {
   const [loginError, setLoginError] = useState('')
 
   // Company employee login
-  const [currentEmployee, setCurrentEmployee] = useState<{ id: string; name: string; email: string; place_id: string } | null>(null)
+  const [currentEmployee, setCurrentEmployee] = useState<{ id: string; name: string; email: string; place_id: string; avatar_url?: string | null; department?: string | null; title?: string | null } | null>(null)
+  const [showEmployeeOrderSuccess, setShowEmployeeOrderSuccess] = useState(false)
+  const [employeeOrderSummary, setEmployeeOrderSummary] = useState<{ items: number; total: number } | null>(null)
   const [employeeEmail, setEmployeeEmail] = useState('')
   const [employeePassword, setEmployeePassword] = useState('')
   const [employeeLoginError, setEmployeeLoginError] = useState('')
@@ -1087,6 +1089,13 @@ export default function HomePage() {
       return
     }
 
+    // Company employee — submit directly without asking for any info
+    if (currentEmployee && currentPlace?.place_type === 'company') {
+      const dept = (currentEmployee.department || 'الإدارة').trim()
+      handleConfirmTableAndSubmit(dept)
+      return
+    }
+
     // Show table number modal — pre-fill employee name if employee is logged in
     setPendingTableNumber('')
     setPendingCustomerName(currentEmployee?.name || '')
@@ -1320,7 +1329,18 @@ export default function HomePage() {
       if (anyFailed) {
         toast.error('في مشكلة في بعض الطلبات، تواصل مع الكاشير')
       } else {
-        toast.success('تم إرسال طلبك بنجاح!')
+        // Beautiful modal for company employees instead of plain toast
+        if (currentEmployee && currentPlace?.place_type === 'company') {
+          const totalItems = cartItems.reduce((s, [, q]) => s + (q as number), 0)
+          const totalAmt = cartItems.reduce((s, [drinkId, q]) => {
+            const dr = drinks.find(d => d.id === drinkId)
+            return s + ((Number(dr?.price) || 0) * (q as number))
+          }, 0)
+          setEmployeeOrderSummary({ items: totalItems, total: totalAmt })
+          setShowEmployeeOrderSuccess(true)
+        } else {
+          toast.success('تم إرسال طلبك بنجاح!')
+        }
         // Show tracker widget if tracking is enabled for this place
         if (currentPlace?.order_tracking_enabled !== false && !isDevAdmin) {
           setShowTracker(true)
@@ -4006,6 +4026,114 @@ export default function HomePage() {
           )
         })()}
 
+        {showEmployeeOrderSuccess && currentEmployee && (
+          <div
+            className="fixed inset-0 z-[60] flex items-center justify-center p-4"
+            style={{ background: 'rgba(0,0,0,0.82)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)' }}
+            onClick={() => setShowEmployeeOrderSuccess(false)}
+          >
+            <div
+              dir="rtl"
+              className="w-full max-w-sm relative overflow-hidden text-center"
+              onClick={(e) => e.stopPropagation()}
+              style={{
+                borderRadius: '24px',
+                background: 'linear-gradient(170deg, rgba(15,23,42,0.98) 0%, rgba(8,15,30,1) 100%)',
+                border: '1px solid rgba(59,130,246,0.4)',
+                boxShadow: '0 0 0 1px rgba(255,255,255,0.04), 0 12px 50px rgba(0,0,0,0.7), 0 0 80px rgba(59,130,246,0.25)',
+                animation: 'orderModalIn 0.3s cubic-bezier(0.34,1.56,0.64,1) both',
+              }}
+            >
+              <style>{`
+                @keyframes orderModalIn {
+                  from { opacity: 0; transform: scale(0.85); }
+                  to   { opacity: 1; transform: scale(1); }
+                }
+                @keyframes successPulse {
+                  0%, 100% { transform: scale(1); box-shadow: 0 0 30px rgba(34,197,94,0.4); }
+                  50% { transform: scale(1.05); box-shadow: 0 0 50px rgba(34,197,94,0.7); }
+                }
+              `}</style>
+
+              <div style={{ height: '3px', background: 'linear-gradient(90deg, transparent, #22c55e, transparent)' }} />
+
+              <div className="px-6 pt-8 pb-7 space-y-4">
+                {/* Animated check icon */}
+                <div className="flex justify-center">
+                  <div
+                    className="h-20 w-20 rounded-full flex items-center justify-center text-4xl"
+                    style={{
+                      background: 'linear-gradient(145deg, rgba(34,197,94,0.25), rgba(22,163,74,0.15))',
+                      border: '2px solid rgba(34,197,94,0.5)',
+                      animation: 'successPulse 1.6s ease-in-out infinite',
+                    }}
+                  >
+                    ✓
+                  </div>
+                </div>
+
+                <div>
+                  <h2 className="text-2xl font-bold mb-1" style={{ color: '#f5f0e8' }}>تم استلام طلبك! 🎉</h2>
+                  <p className="text-sm" style={{ color: 'rgba(255,255,255,0.55)' }}>
+                    شكراً لك يا {currentEmployee.name}، البار شغال على طلبك دلوقتي
+                  </p>
+                </div>
+
+                {/* Employee badge */}
+                <div className="flex items-center gap-3 rounded-2xl px-4 py-3"
+                  style={{ background: 'rgba(59,130,246,0.08)', border: '1px solid rgba(59,130,246,0.25)' }}>
+                  <div className="h-12 w-12 rounded-full overflow-hidden border-2 flex items-center justify-center text-lg shrink-0"
+                    style={{ borderColor: 'rgba(59,130,246,0.4)', background: 'rgba(59,130,246,0.15)' }}>
+                    {currentEmployee.avatar_url
+                      ? <img src={currentEmployee.avatar_url} alt={currentEmployee.name} className="h-full w-full object-cover" />
+                      : <span>👤</span>}
+                  </div>
+                  <div className="flex-1 text-right min-w-0">
+                    <p className="text-sm font-bold truncate" style={{ color: '#93c5fd' }}>{currentEmployee.name}</p>
+                    {(currentEmployee.title || currentEmployee.department) && (
+                      <p className="text-[11px] truncate" style={{ color: 'rgba(255,255,255,0.5)' }}>
+                        {[currentEmployee.title, currentEmployee.department].filter(Boolean).join(' • ')}
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Order summary */}
+                {employeeOrderSummary && (
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="rounded-xl px-3 py-2.5"
+                      style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
+                      <p className="text-[10px] text-muted-foreground">عدد المشروبات</p>
+                      <p className="text-lg font-bold" style={{ color: '#f5f0e8' }}>{employeeOrderSummary.items}</p>
+                    </div>
+                    <div className="rounded-xl px-3 py-2.5"
+                      style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
+                      <p className="text-[10px] text-muted-foreground">الإجمالي</p>
+                      <p className="text-lg font-bold" style={{ color: '#f5f0e8' }}>{employeeOrderSummary.total.toFixed(2)} ج.م</p>
+                    </div>
+                  </div>
+                )}
+
+                <button
+                  onClick={() => setShowEmployeeOrderSuccess(false)}
+                  className="w-full font-bold text-base"
+                  style={{
+                    height: '48px',
+                    borderRadius: '13px',
+                    background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
+                    color: '#fff',
+                    border: 'none',
+                    boxShadow: '0 4px 20px rgba(59,130,246,0.35), inset 0 1px 0 rgba(255,255,255,0.18)',
+                    cursor: 'pointer',
+                  }}
+                >
+                  تمام ✓
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {showTableModal && (() => {
           const isCompany = currentPlace?.place_type === 'company'
           const accent = isCompany ? '#3b82f6' : '#D4A017'
@@ -4303,11 +4431,22 @@ export default function HomePage() {
               <div className="rounded-xl px-4 py-3 space-y-2"
                 style={{ background: 'rgba(59,130,246,0.1)', border: '1px solid rgba(59,130,246,0.3)' }}>
                 <div className="flex items-center justify-between gap-3">
-                  <div className="flex items-center gap-2">
-                    <span className="text-base">👤</span>
-                    <div>
-                      <p className="text-sm font-semibold text-blue-300">{currentEmployee.name}</p>
-                      <p className="text-xs text-muted-foreground">{currentEmployee.email}</p>
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="h-10 w-10 rounded-full overflow-hidden border-2 flex items-center justify-center text-base shrink-0"
+                      style={{ borderColor: 'rgba(59,130,246,0.4)', background: 'rgba(59,130,246,0.15)' }}>
+                      {currentEmployee.avatar_url
+                        ? <img src={currentEmployee.avatar_url} alt={currentEmployee.name} className="h-full w-full object-cover" />
+                        : <span>👤</span>}
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-sm font-semibold text-blue-300 truncate">{currentEmployee.name}</p>
+                      {(currentEmployee.title || currentEmployee.department) ? (
+                        <p className="text-[11px] text-blue-400/80 truncate">
+                          {[currentEmployee.title, currentEmployee.department].filter(Boolean).join(' • ')}
+                        </p>
+                      ) : (
+                        <p className="text-xs text-muted-foreground truncate">{currentEmployee.email}</p>
+                      )}
                     </div>
                   </div>
                   <button

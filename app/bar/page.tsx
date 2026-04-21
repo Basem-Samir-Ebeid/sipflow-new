@@ -26,6 +26,14 @@ interface UserOrderGroup {
   userName: string
   tableNumber?: string
   customerPhone?: string
+  employee?: {
+    id: string
+    name: string
+    email: string
+    avatar_url: string | null
+    department: string | null
+    title: string | null
+  } | null
   orders: OrderWithDetails[]
   totalPrice: number
   earliestTime: string
@@ -170,10 +178,14 @@ export default function BarPage() {
             userName: displayName,
             tableNumber: tableStr,
             customerPhone: order.customer_phone || undefined,
+            employee: order.employee || null,
             orders: [],
             totalPrice: 0,
             earliestTime: order.created_at,
           }
+        }
+        if (order.employee && !acc[groupKey].employee) {
+          acc[groupKey].employee = order.employee
         }
         if (order.customer_phone && !acc[groupKey].customerPhone) {
           acc[groupKey].customerPhone = order.customer_phone
@@ -381,18 +393,46 @@ export default function BarPage() {
               <span className="text-xs text-zinc-400 font-medium">{totalItems}</span>
             </div>
           </div>
-          <div className="text-right">
-            <p className="font-bold text-sm" style={{ color: isVip ? '#fbbf24' : '#f4f4f5' }}>
-              {group.orders[0]?.customer_name && group.tableNumber
-                ? `${group.orders[0].customer_name} - طاولة ${group.tableNumber}`
-                : group.orders[0]?.customer_name
-                  ? group.orders[0].customer_name
-                  : group.tableNumber
-                    ? `طاولة ${group.tableNumber}`
-                    : group.userName}
-            </p>
+          <div className="text-right flex items-center gap-2.5">
+            {group.employee ? (
+              <>
+                <div className="text-right">
+                  <p className="font-bold text-sm" style={{ color: '#93c5fd' }}>{group.employee.name}</p>
+                  {(group.employee.title || group.employee.department) && (
+                    <p className="text-[11px]" style={{ color: 'rgba(147,197,253,0.7)' }}>
+                      {[group.employee.title, group.employee.department].filter(Boolean).join(' • ')}
+                    </p>
+                  )}
+                </div>
+                <div className="h-10 w-10 rounded-full overflow-hidden border-2 flex items-center justify-center text-base shrink-0"
+                  style={{ borderColor: 'rgba(59,130,246,0.5)', background: 'rgba(59,130,246,0.15)' }}>
+                  {group.employee.avatar_url
+                    ? <img src={group.employee.avatar_url} alt={group.employee.name} className="h-full w-full object-cover" />
+                    : <span>👤</span>}
+                </div>
+              </>
+            ) : (
+              <p className="font-bold text-sm" style={{ color: isVip ? '#fbbf24' : '#f4f4f5' }}>
+                {group.orders[0]?.customer_name && group.tableNumber
+                  ? `${group.orders[0].customer_name} - طاولة ${group.tableNumber}`
+                  : group.orders[0]?.customer_name
+                    ? group.orders[0].customer_name
+                    : group.tableNumber
+                      ? `طاولة ${group.tableNumber}`
+                      : group.userName}
+              </p>
+            )}
           </div>
         </div>
+
+        {/* Employee details ribbon for company orders */}
+        {group.employee && (
+          <div className="px-4 py-2 flex items-center justify-between gap-2"
+            style={{ background: 'rgba(59,130,246,0.08)', borderBottom: '1px solid rgba(59,130,246,0.18)' }}>
+            <span className="text-[11px] font-semibold" style={{ color: '#93c5fd' }}>🏢 موظف شركة</span>
+            <span className="text-[11px] truncate" style={{ color: 'rgba(255,255,255,0.55)' }}>{group.employee.email}</span>
+          </div>
+        )}
 
         {/* Order Items */}
         <div className="px-4 py-3 space-y-2.5">

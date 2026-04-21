@@ -19,7 +19,10 @@ export async function POST(request: Request) {
       id: employee.id,
       name: employee.name,
       email: employee.email,
-      place_id: employee.place_id
+      place_id: employee.place_id,
+      avatar_url: employee.avatar_url ?? null,
+      department: employee.department ?? null,
+      title: employee.title ?? null,
     })
   } catch (error) {
     console.error('Error employee login:', error)

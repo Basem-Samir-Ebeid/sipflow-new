@@ -2076,9 +2076,29 @@ const handleSaveSettings = async () => {
   const [newEmpName, setNewEmpName] = useState('')
   const [newEmpEmail, setNewEmpEmail] = useState('')
   const [newEmpPassword, setNewEmpPassword] = useState('')
+  const [newEmpDepartment, setNewEmpDepartment] = useState('')
+  const [newEmpTitle, setNewEmpTitle] = useState('')
+  const [newEmpAvatarUrl, setNewEmpAvatarUrl] = useState('')
+  const [isUploadingEmpAvatar, setIsUploadingEmpAvatar] = useState(false)
   const [empError, setEmpError] = useState('')
   const [isAddingEmp, setIsAddingEmp] = useState(false)
   const [showEmpPass, setShowEmpPass] = useState(false)
+
+  const handleUploadEmpAvatar = async (file: File) => {
+    setIsUploadingEmpAvatar(true)
+    try {
+      const form = new FormData()
+      form.append('file', file)
+      const res = await fetch('/api/upload', { method: 'POST', body: form })
+      const data = await res.json()
+      if (data.url) {
+        setNewEmpAvatarUrl(data.url)
+      } else {
+        toast.error(data.error || 'فشل رفع الصورة')
+      }
+    } catch { toast.error('فشل رفع الصورة') }
+    finally { setIsUploadingEmpAvatar(false) }
+  }
 
   // ─── Employee Reports state ───────────────────────────
   const [reportsPlace, setReportsPlace] = useState<string | null>(null)
@@ -2113,11 +2133,20 @@ const handleSaveSettings = async () => {
       const res = await fetch('/api/company-employees', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ place_id: companyEmpPlace, name: newEmpName.trim(), email: newEmpEmail.trim(), password: newEmpPassword })
+        body: JSON.stringify({
+          place_id: companyEmpPlace,
+          name: newEmpName.trim(),
+          email: newEmpEmail.trim(),
+          password: newEmpPassword,
+          avatar_url: newEmpAvatarUrl || null,
+          department: newEmpDepartment.trim() || null,
+          title: newEmpTitle.trim() || null,
+        })
       })
       const data = await res.json()
       if (!res.ok) { setEmpError(data.error || 'حدث خطأ'); return }
       setNewEmpName(''); setNewEmpEmail(''); setNewEmpPassword('')
+      setNewEmpDepartment(''); setNewEmpTitle(''); setNewEmpAvatarUrl('')
       fetchCompanyEmployees(companyEmpPlace)
       toast.success('تم إضافة الموظف ✅')
     } catch { setEmpError('حدث خطأ') } finally { setIsAddingEmp(false) }
@@ -7310,6 +7339,33 @@ const handleSaveSettings = async () => {
                       {/* Add employee form */}
                       <div className="space-y-2 rounded-lg border border-blue-500/20 bg-blue-500/5 p-2">
                         <p className="text-[11px] text-blue-300/70 font-medium">➕ إضافة موظف جديد</p>
+
+                        {/* Avatar upload */}
+                        <div className="flex items-center gap-3">
+                          <div className="h-14 w-14 rounded-full overflow-hidden border-2 border-blue-500/30 bg-blue-500/10 flex items-center justify-center text-xl shrink-0">
+                            {newEmpAvatarUrl
+                              ? <img src={newEmpAvatarUrl} alt="avatar" className="h-full w-full object-cover" />
+                              : <span>👤</span>}
+                          </div>
+                          <div className="flex-1">
+                            <Label className="text-xs text-muted-foreground">صورة الموظف</Label>
+                            <div className="flex gap-1.5 mt-1">
+                              <label className="flex-1 h-8 px-2 rounded-md border border-border bg-muted hover:bg-muted/70 cursor-pointer text-xs text-foreground flex items-center justify-center gap-1">
+                                {isUploadingEmpAvatar ? 'جاري الرفع...' : '📷 رفع صورة'}
+                                <input type="file" accept="image/*" className="hidden"
+                                  onChange={e => { const f = e.target.files?.[0]; if (f) handleUploadEmpAvatar(f); e.target.value = '' }}
+                                  disabled={isUploadingEmpAvatar} />
+                              </label>
+                              {newEmpAvatarUrl && (
+                                <button type="button" onClick={() => setNewEmpAvatarUrl('')}
+                                  className="h-8 px-2 rounded-md border border-destructive/30 text-destructive text-xs hover:bg-destructive/10">
+                                  حذف
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+
                         <div className="grid grid-cols-2 gap-2">
                           <div>
                             <Label className="text-xs text-muted-foreground">الاسم</Label>
@@ -7320,6 +7376,18 @@ const handleSaveSettings = async () => {
                             <Label className="text-xs text-muted-foreground">الإيميل</Label>
                             <Input value={newEmpEmail} onChange={e => setNewEmpEmail(e.target.value)}
                               placeholder="email@company.com" className="mt-1 h-9 border-border bg-muted text-foreground text-sm" />
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-2 gap-2">
+                          <div>
+                            <Label className="text-xs text-muted-foreground">الإدارة / القسم</Label>
+                            <Input value={newEmpDepartment} onChange={e => setNewEmpDepartment(e.target.value)}
+                              placeholder="مثال: الموارد البشرية" className="mt-1 h-9 border-border bg-muted text-foreground text-sm" />
+                          </div>
+                          <div>
+                            <Label className="text-xs text-muted-foreground">المسمى الوظيفي</Label>
+                            <Input value={newEmpTitle} onChange={e => setNewEmpTitle(e.target.value)}
+                              placeholder="مثال: محاسب" className="mt-1 h-9 border-border bg-muted text-foreground text-sm" />
                           </div>
                         </div>
                         <div>
@@ -7347,9 +7415,19 @@ const handleSaveSettings = async () => {
                         <div className="space-y-1.5">
                           {companyEmployees.map((emp: any) => (
                             <div key={emp.id} className="flex items-center gap-2 rounded-lg border border-border/40 bg-muted/30 px-2.5 py-1.5">
+                              <div className="h-9 w-9 rounded-full overflow-hidden border border-blue-500/30 bg-blue-500/10 flex items-center justify-center text-sm shrink-0">
+                                {emp.avatar_url
+                                  ? <img src={emp.avatar_url} alt={emp.name} className="h-full w-full object-cover" />
+                                  : <span>👤</span>}
+                              </div>
                               <div className="flex-1 min-w-0">
                                 <p className="text-xs font-medium text-foreground truncate">{emp.name}</p>
                                 <p className="text-[10px] text-muted-foreground truncate">{emp.email}</p>
+                                {(emp.department || emp.title) && (
+                                  <p className="text-[10px] text-blue-400/80 truncate">
+                                    {[emp.title, emp.department].filter(Boolean).join(' • ')}
+                                  </p>
+                                )}
                               </div>
                               <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${emp.is_active ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}`}>
                                 {emp.is_active ? 'مفعّل' : 'موقوف'}

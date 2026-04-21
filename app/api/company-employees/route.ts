@@ -17,11 +17,11 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     const body = await request.json()
-    const { place_id, name, email, password } = body
+    const { place_id, name, email, password, avatar_url, department, title } = body
     if (!place_id || !name || !email || !password) {
       return NextResponse.json({ error: 'place_id, name, email, password are required' }, { status: 400 })
     }
-    const employee = await db.createCompanyEmployee({ place_id, name, email, password })
+    const employee = await db.createCompanyEmployee({ place_id, name, email, password, avatar_url, department, title })
     return NextResponse.json(employee)
   } catch (error: any) {
     if (error.code === '23505') {
