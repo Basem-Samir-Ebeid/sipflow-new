@@ -117,7 +117,7 @@ export function AdminPanel({
       label: 'Super Developer',
       description: 'صلاحية كاملة لكل أجزاء النظام',
       homeTab: 'analytics',
-      tabs: ['alerts', 'analytics', 'notes', 'drinks', 'inventory', 'cashier', 'reservations', 'place-admins', 'staff', 'places', 'subscriptions', 'messages', 'settings', 'branding', 'danger', 'live', 'permissions', 'simulator', 'templates', 'feature-flags', 'ai-ideas'],
+      tabs: ['alerts', 'analytics', 'notes', 'drinks', 'inventory', 'cashier', 'reservations', 'place-admins', 'staff', 'places', 'subscriptions', 'messages', 'settings', 'branding', 'danger', 'live', 'permissions', 'simulator', 'templates', 'feature-flags', 'ai-ideas', 'implemented-ideas'],
     },
     support_admin: {
       label: 'Support Admin',
@@ -2887,7 +2887,8 @@ const handleSaveSettings = async () => {
                       { tab: 'simulator',     icon: <span className="text-sm">🎮</span>, label: 'Simulator',     ac: '#6366f1' },
                       { tab: 'templates',     icon: <span className="text-sm">📦</span>, label: 'Templates',     ac: '#a855f7' },
                       { tab: 'feature-flags', icon: <span className="text-sm">🚩</span>, label: 'Flags',          ac: '#10b981' },
-                      { tab: 'ai-ideas',      icon: <span className="text-sm">💡</span>, label: 'AI Ideas',       ac: '#f59e0b' },
+                      { tab: 'ai-ideas',           icon: <span className="text-sm">💡</span>, label: 'AI Ideas',          ac: '#f59e0b' },
+                      { tab: 'implemented-ideas',  icon: <span className="text-sm">✅</span>, label: 'Implemented',       ac: '#f43f5e' },
                     ].map(item => (
                       <button key={item.tab} onClick={() => handleTabChange(item.tab)}
                         className="flex flex-col items-center gap-1 rounded-xl py-2.5 px-1 transition-all duration-150 hover:scale-105 active:scale-95"
@@ -3041,6 +3042,7 @@ const handleSaveSettings = async () => {
               ['live', 'Live'],
               ['feature-flags', 'Feature Flags'],
               ['ai-ideas', 'AI Ideas'],
+              ['implemented-ideas', 'Implemented Ideas'],
             ].filter(([value]) => canAccessDevTab(value)).map(([value, label]) => (
               <TabsTrigger key={value} value={value}>{label}</TabsTrigger>
             ))}
@@ -9097,19 +9099,52 @@ const handleSaveSettings = async () => {
             </div>
           </div>
 
-          {/* ── المزايا المُفعّلة (إدارة وحذف) ── */}
+          <Dialog open={!!pendingIdea} onOpenChange={(open) => { if (!open && !isImplementingIdea) setPendingIdea(null) }}>
+            <DialogContent className="max-w-sm border-border bg-card text-right" dir="rtl">
+              <DialogHeader>
+                <DialogTitle className="text-base">أين تريد تنفيذ الفكرة؟</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-3">
+                <p className="text-sm text-muted-foreground">
+                  {pendingIdea ? `اختر نطاق تنفيذ "${pendingIdea.title}" حتى تظل محفوظة وتظهر في المكان الصحيح بعد إغلاق البرنامج.` : ''}
+                </p>
+                <button
+                  onClick={() => pendingIdea && implementIdea(pendingIdea, 'developer_admin')}
+                  disabled={isImplementingIdea}
+                  className="w-full rounded-xl p-3 text-right transition-all hover:opacity-90 disabled:opacity-50"
+                  style={{ background: 'rgba(99,102,241,0.12)', border: '1px solid rgba(99,102,241,0.3)' }}
+                >
+                  <div className="font-bold text-sm text-foreground">الأدمن المطور فقط</div>
+                  <div className="text-[11px] text-muted-foreground mt-1">تظهر الميزة داخل لوحة الأدمن المطور فقط.</div>
+                </button>
+                <button
+                  onClick={() => pendingIdea && implementIdea(pendingIdea, 'all_pages')}
+                  disabled={isImplementingIdea}
+                  className="w-full rounded-xl p-3 text-right transition-all hover:opacity-90 disabled:opacity-50"
+                  style={{ background: 'rgba(52,211,153,0.12)', border: '1px solid rgba(52,211,153,0.3)' }}
+                >
+                  <div className="font-bold text-sm text-foreground">كل الصفحات المتاحة</div>
+                  <div className="text-[11px] text-muted-foreground mt-1">تظهر في لوحة المطور وأي صفحة/لوحة مناسبة للفكرة.</div>
+                </button>
+              </div>
+            </DialogContent>
+          </Dialog>
+        </TabsContent>
+
+        {/* ─── Implemented Ideas Tab ─────────────────────────── */}
+        <TabsContent value="implemented-ideas" className="space-y-4">
           {(() => {
             const activeIdeas = AI_IDEAS.filter(i => isIdeaImplemented(i.flagKey))
             return (
               <div className="rounded-2xl overflow-hidden" style={{ background: 'linear-gradient(135deg, rgba(244,63,94,0.06), rgba(236,72,153,0.03))', border: '1px solid rgba(244,63,94,0.2)' }}>
                 <div className="p-4 border-b" style={{ borderColor: 'rgba(244,63,94,0.12)' }}>
                   <div className="flex items-center gap-2">
-                    <span className="text-lg">🗑️</span>
+                    <span className="text-lg">✅</span>
                     <div className="flex-1">
-                      <h3 className="text-sm font-bold text-white">المزايا المُفعّلة</h3>
+                      <h3 className="text-sm font-bold text-white">المزايا المُفعّلة (Implemented Ideas)</h3>
                       <p className="text-[11px]" style={{ color: '#fda4af' }}>
                         {activeIdeas.length === 0
-                          ? 'لا توجد مزايا مُفعّلة حالياً'
+                          ? 'لا توجد مزايا مُفعّلة حالياً — اذهب إلى تبويب AI Ideas لتوليد فكرة وتنفيذها'
                           : `${activeIdeas.length} ميزة مُفعّلة — اضغط 🗑️ لحذف أي منها من المشروع`}
                       </p>
                     </div>
@@ -9145,67 +9180,6 @@ const handleSaveSettings = async () => {
               </div>
             )
           })()}
-
-          <AlertDialog open={!!pendingRemoveIdea} onOpenChange={(open) => { if (!open && !removingIdeaKey) setPendingRemoveIdea(null) }}>
-            <AlertDialogContent dir="rtl" className="text-right">
-              <AlertDialogHeader>
-                <AlertDialogTitle className="flex items-center gap-2">
-                  <Trash2 className="h-5 w-5 text-rose-400" />
-                  حذف الميزة من المشروع؟
-                </AlertDialogTitle>
-                <AlertDialogDescription>
-                  {pendingRemoveIdea ? (
-                    <>
-                      ستُحذف ميزة <span className="font-bold text-foreground">"{pendingRemoveIdea.title}"</span> ولن تظهر في أي صفحة من صفحات التطبيق.
-                      <br />
-                      <span className="text-[11px] text-muted-foreground">ملاحظة: البيانات المحفوظة في قاعدة البيانات لن تُحذف — فقط الميزة ستُخفى. يمكنك إعادة تفعيلها لاحقاً من مولّد الأفكار.</span>
-                    </>
-                  ) : null}
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel disabled={!!removingIdeaKey}>إلغاء</AlertDialogCancel>
-                <AlertDialogAction
-                  onClick={(e) => { e.preventDefault(); if (pendingRemoveIdea) removeIdea(pendingRemoveIdea) }}
-                  disabled={!!removingIdeaKey}
-                  className="bg-rose-600 hover:bg-rose-700 text-white"
-                >
-                  {removingIdeaKey ? 'جارٍ الحذف...' : 'نعم، احذفها'}
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
-
-          <Dialog open={!!pendingIdea} onOpenChange={(open) => { if (!open && !isImplementingIdea) setPendingIdea(null) }}>
-            <DialogContent className="max-w-sm border-border bg-card text-right" dir="rtl">
-              <DialogHeader>
-                <DialogTitle className="text-base">أين تريد تنفيذ الفكرة؟</DialogTitle>
-              </DialogHeader>
-              <div className="space-y-3">
-                <p className="text-sm text-muted-foreground">
-                  {pendingIdea ? `اختر نطاق تنفيذ "${pendingIdea.title}" حتى تظل محفوظة وتظهر في المكان الصحيح بعد إغلاق البرنامج.` : ''}
-                </p>
-                <button
-                  onClick={() => pendingIdea && implementIdea(pendingIdea, 'developer_admin')}
-                  disabled={isImplementingIdea}
-                  className="w-full rounded-xl p-3 text-right transition-all hover:opacity-90 disabled:opacity-50"
-                  style={{ background: 'rgba(99,102,241,0.12)', border: '1px solid rgba(99,102,241,0.3)' }}
-                >
-                  <div className="font-bold text-sm text-foreground">الأدمن المطور فقط</div>
-                  <div className="text-[11px] text-muted-foreground mt-1">تظهر الميزة داخل لوحة الأدمن المطور فقط.</div>
-                </button>
-                <button
-                  onClick={() => pendingIdea && implementIdea(pendingIdea, 'all_pages')}
-                  disabled={isImplementingIdea}
-                  className="w-full rounded-xl p-3 text-right transition-all hover:opacity-90 disabled:opacity-50"
-                  style={{ background: 'rgba(52,211,153,0.12)', border: '1px solid rgba(52,211,153,0.3)' }}
-                >
-                  <div className="font-bold text-sm text-foreground">كل الصفحات المتاحة</div>
-                  <div className="text-[11px] text-muted-foreground mt-1">تظهر في لوحة المطور وأي صفحة/لوحة مناسبة للفكرة.</div>
-                </button>
-              </div>
-            </DialogContent>
-          </Dialog>
         </TabsContent>
 
         {/* ─── Analytics / Reports Tab ─────────────────────────── */}
@@ -9564,6 +9538,37 @@ const handleSaveSettings = async () => {
         </TabsContent>
 
       </Tabs>
+
+      {/* Remove Implemented Idea — global confirmation (works from any tab) */}
+      <AlertDialog open={!!pendingRemoveIdea} onOpenChange={(open) => { if (!open && !removingIdeaKey) setPendingRemoveIdea(null) }}>
+        <AlertDialogContent dir="rtl" className="text-right">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <Trash2 className="h-5 w-5 text-rose-400" />
+              حذف الميزة من المشروع؟
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {pendingRemoveIdea ? (
+                <>
+                  ستُحذف ميزة <span className="font-bold text-foreground">"{pendingRemoveIdea.title}"</span> ولن تظهر في أي صفحة من صفحات التطبيق.
+                  <br />
+                  <span className="text-[11px] text-muted-foreground">ملاحظة: البيانات المحفوظة في قاعدة البيانات لن تُحذف — فقط الميزة ستُخفى. يمكنك إعادة تفعيلها لاحقاً من مولّد الأفكار.</span>
+                </>
+              ) : null}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={!!removingIdeaKey}>إلغاء</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => { e.preventDefault(); if (pendingRemoveIdea) removeIdea(pendingRemoveIdea) }}
+              disabled={!!removingIdeaKey}
+              className="bg-rose-600 hover:bg-rose-700 text-white"
+            >
+              {removingIdeaKey ? 'جارٍ الحذف...' : 'نعم، احذفها'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* QR Code Dialog */}
       {qrDialogOpen && qrTableInfo && (
