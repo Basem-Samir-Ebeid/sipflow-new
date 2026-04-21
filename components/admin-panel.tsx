@@ -584,6 +584,27 @@ export function AdminPanel({
     setIsImplementingIdea(false)
   }
 
+  const [removingIdeaKey, setRemovingIdeaKey] = useState<string | null>(null)
+  const [pendingRemoveIdea, setPendingRemoveIdea] = useState<typeof AI_IDEAS[0] | null>(null)
+
+  const removeIdea = async (idea: typeof AI_IDEAS[0]) => {
+    setRemovingIdeaKey(idea.flagKey)
+    try {
+      const res = await fetch('/api/ai-ideas/remove', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ flagKey: idea.flagKey })
+      })
+      const data = await res.json()
+      if (!res.ok || !data.success) throw new Error(data.error || 'Failed to remove idea')
+      setFeatureFlags(data.featureFlags || { ...featureFlags, [idea.flagKey]: false })
+      setImplementedIdeas(data.implementedIdeas || {})
+      setPendingRemoveIdea(null)
+      toast.success(`🗑️ تم حذف "${idea.title}" من المشروع`)
+    } catch { toast.error('تعذر الحذف') }
+    setRemovingIdeaKey(null)
+  }
+
   // Smart Alerts state
   const [smartAlerts, setSmartAlerts] = useState<{
     id: string; place_id: string; place_name: string; type: string;
@@ -9044,6 +9065,86 @@ const handleSaveSettings = async () => {
               )}
             </div>
           </div>
+
+          {/* ── المزايا المُفعّلة (إدارة وحذف) ── */}
+          {(() => {
+            const activeIdeas = AI_IDEAS.filter(i => isIdeaImplemented(i.flagKey))
+            return (
+              <div className="rounded-2xl overflow-hidden" style={{ background: 'linear-gradient(135deg, rgba(244,63,94,0.06), rgba(236,72,153,0.03))', border: '1px solid rgba(244,63,94,0.2)' }}>
+                <div className="p-4 border-b" style={{ borderColor: 'rgba(244,63,94,0.12)' }}>
+                  <div className="flex items-center gap-2">
+                    <span className="text-lg">🗑️</span>
+                    <div className="flex-1">
+                      <h3 className="text-sm font-bold text-white">المزايا المُفعّلة</h3>
+                      <p className="text-[11px]" style={{ color: '#fda4af' }}>
+                        {activeIdeas.length === 0
+                          ? 'لا توجد مزايا مُفعّلة حالياً'
+                          : `${activeIdeas.length} ميزة مُفعّلة — اضغط 🗑️ لحذف أي منها من المشروع`}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+                {activeIdeas.length > 0 && (
+                  <div className="p-4 space-y-2">
+                    {activeIdeas.map(idea => (
+                      <div key={idea.flagKey}
+                        className="rounded-xl p-3 flex items-center gap-3"
+                        style={{ background: `${idea.color}08`, border: `1px solid ${idea.color}25` }}>
+                        <span className="text-2xl shrink-0">{idea.icon}</span>
+                        <div className="flex-1 min-w-0">
+                          <div className="text-sm font-bold text-white truncate">{idea.title}</div>
+                          <div className="text-[11px]" style={{ color: idea.color }}>📍 {idea.tabLabel}</div>
+                        </div>
+                        <button
+                          onClick={() => setPendingRemoveIdea(idea)}
+                          disabled={removingIdeaKey === idea.flagKey}
+                          className="shrink-0 flex items-center gap-1.5 rounded-lg px-3 py-2 text-[12px] font-bold transition-all active:scale-95"
+                          style={{ background: 'rgba(244,63,94,0.15)', border: '1px solid rgba(244,63,94,0.35)', color: '#fda4af' }}
+                        >
+                          {removingIdeaKey === idea.flagKey ? (
+                            <><Loader2 className="h-3.5 w-3.5 animate-spin" /> جارٍ الحذف...</>
+                          ) : (
+                            <><Trash2 className="h-3.5 w-3.5" /> حذف</>
+                          )}
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )
+          })()}
+
+          <AlertDialog open={!!pendingRemoveIdea} onOpenChange={(open) => { if (!open && !removingIdeaKey) setPendingRemoveIdea(null) }}>
+            <AlertDialogContent dir="rtl" className="text-right">
+              <AlertDialogHeader>
+                <AlertDialogTitle className="flex items-center gap-2">
+                  <Trash2 className="h-5 w-5 text-rose-400" />
+                  حذف الميزة من المشروع؟
+                </AlertDialogTitle>
+                <AlertDialogDescription>
+                  {pendingRemoveIdea ? (
+                    <>
+                      ستُحذف ميزة <span className="font-bold text-foreground">"{pendingRemoveIdea.title}"</span> ولن تظهر في أي صفحة من صفحات التطبيق.
+                      <br />
+                      <span className="text-[11px] text-muted-foreground">ملاحظة: البيانات المحفوظة في قاعدة البيانات لن تُحذف — فقط الميزة ستُخفى. يمكنك إعادة تفعيلها لاحقاً من مولّد الأفكار.</span>
+                    </>
+                  ) : null}
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel disabled={!!removingIdeaKey}>إلغاء</AlertDialogCancel>
+                <AlertDialogAction
+                  onClick={(e) => { e.preventDefault(); if (pendingRemoveIdea) removeIdea(pendingRemoveIdea) }}
+                  disabled={!!removingIdeaKey}
+                  className="bg-rose-600 hover:bg-rose-700 text-white"
+                >
+                  {removingIdeaKey ? 'جارٍ الحذف...' : 'نعم، احذفها'}
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+
           <Dialog open={!!pendingIdea} onOpenChange={(open) => { if (!open && !isImplementingIdea) setPendingIdea(null) }}>
             <DialogContent className="max-w-sm border-border bg-card text-right" dir="rtl">
               <DialogHeader>
