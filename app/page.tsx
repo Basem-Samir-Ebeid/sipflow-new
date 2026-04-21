@@ -4399,14 +4399,15 @@ export default function HomePage() {
 
             <div className="text-center space-y-3">
               {(() => {
-                const logoUrl = isDevAdmin
+                const placeLogo = isDevAdmin
                   ? boardDevPlaces.find(p => p.id === menuDevPlaceId)?.logo_url
                   : currentPlace?.logo_url
+                const logoUrl = placeLogo || systemLogoUrl
                 if (!logoUrl) return null
                 return (
                   <div className="flex justify-center">
                     <div className="relative h-[72px] w-[72px] rounded-2xl overflow-hidden" style={{ border: '2px solid rgba(212,160,23,0.35)', boxShadow: '0 4px 16px rgba(212,160,23,0.1)' }}>
-                      <img src={logoUrl} alt="place logo" className="h-full w-full object-cover" />
+                      <img src={logoUrl} alt="logo" className="h-full w-full object-cover" />
                     </div>
                   </div>
                 )
