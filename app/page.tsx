@@ -1991,7 +1991,7 @@ export default function HomePage() {
   // Place Selection Screen
   if (!currentPlace && !isAdmin) {
     return (
-      <main className="relative min-h-[100dvh] overflow-x-hidden overflow-y-auto flex flex-col items-center p-0" dir="rtl" onClick={handleGlobalClick} suppressHydrationWarning style={{ background: '#07050f' }}>
+      <main className="relative min-h-[100dvh] w-full overflow-x-hidden overflow-y-auto flex flex-col p-0" dir="rtl" onClick={handleGlobalClick} suppressHydrationWarning style={{ background: '#07050f' }}>
         <Toaster position="top-center" richColors toastOptions={{ style: { direction: 'rtl' } }} />
         {/* Rich ambient background */}
         <div className="pointer-events-none fixed inset-0 overflow-hidden">
