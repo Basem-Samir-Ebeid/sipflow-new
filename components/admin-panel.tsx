@@ -25,7 +25,8 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Plus, Trash2, Pencil, Upload, RefreshCw, Users, Coffee, Key, BarChart3, TrendingUp, Award, Clock, Send, MessageSquare, Settings2, Hash, UserPlus, UserCog, Minus, Package, Banknote, CheckCircle2, Hourglass, TableProperties, Copy, ExternalLink, Link2, Eye, EyeOff, QrCode, CalendarDays, CalendarCheck, CalendarX, Download, Loader2, Activity, ShieldCheck, ChevronLeft, Radio, Camera, UserCircle, Bell, AlertTriangle, BrainCircuit, Siren, FileText, GripVertical, Wrench } from 'lucide-react'
+import { Plus, Trash2, Pencil, Upload, RefreshCw, Users, Coffee, Key, BarChart3, TrendingUp, Award, Clock, Send, MessageSquare, Settings2, Hash, UserPlus, UserCog, Minus, Package, Banknote, CheckCircle2, Hourglass, TableProperties, Copy, ExternalLink, Link2, Eye, EyeOff, QrCode, CalendarDays, CalendarCheck, CalendarX, Download, Loader2, Activity, ShieldCheck, ChevronLeft, Radio, Camera, UserCircle, Bell, AlertTriangle, BrainCircuit, Siren, FileText, GripVertical, Wrench, ArrowUp, ArrowDown, Palette } from 'lucide-react'
+import { THEME_VAR_KEYS, emitThemeChange, type ThemeColors, THEME_STORAGE_KEY } from '@/components/theme-applier'
 import { Checkbox } from '@/components/ui/checkbox'
 import Image from 'next/image'
 import { LivePlacesHub } from '@/components/LivePlacesHub'
@@ -290,6 +291,163 @@ export function AdminPanel({
   }
   const [featureFlags, setFeatureFlags] = useState<Record<string, boolean>>({})
   const [implementedIdeas, setImplementedIdeas] = useState<Record<string, ImplementedIdeaRecord>>({})
+
+  // ── UI Customization (theme colors + tab labels + tab order) ──
+  const DEFAULT_THEME_COLORS: ThemeColors = {
+    primary: '#fbbf24',
+    accent: '#fbbf24',
+    background: '#0b0b14',
+    card: '#15151f',
+    foreground: '#f5f5f5',
+    border: '#2a2a35',
+    muted: '#1a1a24',
+    ring: '#fbbf24',
+    destructive: '#ef4444',
+  }
+  const THEME_LABELS_AR: Record<string, string> = {
+    primary: 'اللون الأساسي',
+    accent: 'لون التمييز',
+    background: 'الخلفية',
+    card: 'البطاقات',
+    foreground: 'النص',
+    border: 'الإطار',
+    muted: 'الخلفية الهادئة',
+    ring: 'حلقة التركيز',
+    destructive: 'لون الحذف',
+  }
+  const DEFAULT_TAB_LABELS: Record<string, string> = {
+    stats: 'الإحصاءات', tables: 'الطاولات', cashier: 'الكاشير', reservations: 'الحجوزات',
+    drinks: 'المشاريب', inventory: 'المخزون', analytics: 'التقارير',
+    staff: 'الموظفين', messages: 'الرسائل', settings: 'الإعدادات', danger: 'الخطر',
+  }
+  const DEFAULT_TAB_ORDER: Record<string, string[]> = {
+    operations: ['stats', 'tables', 'cashier', 'reservations'],
+    menu: ['drinks', 'inventory', 'analytics'],
+    system: ['staff', 'messages', 'settings', 'danger'],
+  }
+  const TAB_GROUP_LABELS_AR: Record<string, string> = {
+    operations: 'العمليات',
+    menu: 'القائمة',
+    system: 'النظام',
+  }
+  const [themeColors, setThemeColors] = useState<ThemeColors>(DEFAULT_THEME_COLORS)
+  const [draftThemeColors, setDraftThemeColors] = useState<ThemeColors>(DEFAULT_THEME_COLORS)
+  const [tabLabels, setTabLabels] = useState<Record<string, string>>(DEFAULT_TAB_LABELS)
+  const [draftTabLabels, setDraftTabLabels] = useState<Record<string, string>>(DEFAULT_TAB_LABELS)
+  const [tabOrder, setTabOrder] = useState<Record<string, string[]>>(DEFAULT_TAB_ORDER)
+  const [draftTabOrder, setDraftTabOrder] = useState<Record<string, string[]>>(DEFAULT_TAB_ORDER)
+  const [isSavingTheme, setIsSavingTheme] = useState(false)
+  const [isSavingTabConfig, setIsSavingTabConfig] = useState(false)
+
+  const getTabLabel = (key: string) => tabLabels[key] || DEFAULT_TAB_LABELS[key] || key
+  const moveTabInGroup = (group: string, index: number, dir: -1 | 1) => {
+    setDraftTabOrder(prev => {
+      const arr = [...(prev[group] || DEFAULT_TAB_ORDER[group] || [])]
+      const j = index + dir
+      if (j < 0 || j >= arr.length) return prev
+      ;[arr[index], arr[j]] = [arr[j], arr[index]]
+      return { ...prev, [group]: arr }
+    })
+  }
+
+  useEffect(() => {
+    if (!isDevAdmin) {
+      // Place admins only need read of saved customization
+    }
+    fetch('/api/settings?key=' + THEME_STORAGE_KEY).then(r => r.json()).then(d => {
+      if (d?.value) {
+        try {
+          const parsed = { ...DEFAULT_THEME_COLORS, ...JSON.parse(d.value) }
+          setThemeColors(parsed); setDraftThemeColors(parsed)
+        } catch { /* ignore */ }
+      }
+    }).catch(() => {})
+    fetch('/api/settings?key=ui_tab_labels').then(r => r.json()).then(d => {
+      if (d?.value) {
+        try {
+          const parsed = { ...DEFAULT_TAB_LABELS, ...JSON.parse(d.value) }
+          setTabLabels(parsed); setDraftTabLabels(parsed)
+        } catch { /* ignore */ }
+      }
+    }).catch(() => {})
+    fetch('/api/settings?key=ui_tab_order').then(r => r.json()).then(d => {
+      if (d?.value) {
+        try {
+          const saved = JSON.parse(d.value) as Record<string, string[]>
+          const merged: Record<string, string[]> = {}
+          Object.keys(DEFAULT_TAB_ORDER).forEach(g => {
+            const def = DEFAULT_TAB_ORDER[g]
+            const sg = Array.isArray(saved[g]) ? saved[g].filter(t => def.includes(t)) : []
+            const missing = def.filter(t => !sg.includes(t))
+            merged[g] = [...sg, ...missing]
+          })
+          setTabOrder(merged); setDraftTabOrder(merged)
+        } catch { /* ignore */ }
+      }
+    }).catch(() => {})
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  const saveThemeColors = async () => {
+    setIsSavingTheme(true)
+    try {
+      const value = JSON.stringify(draftThemeColors)
+      const res = await fetch('/api/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ key: THEME_STORAGE_KEY, value })
+      })
+      if (!res.ok) throw new Error()
+      setThemeColors(draftThemeColors)
+      emitThemeChange(draftThemeColors)
+      toast.success('تم حفظ ألوان النظام ✅')
+    } catch { toast.error('تعذر حفظ الألوان') }
+    setIsSavingTheme(false)
+  }
+
+  const resetThemeColors = async () => {
+    setIsSavingTheme(true)
+    try {
+      await fetch('/api/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ key: THEME_STORAGE_KEY, value: JSON.stringify(DEFAULT_THEME_COLORS) })
+      })
+      setThemeColors(DEFAULT_THEME_COLORS)
+      setDraftThemeColors(DEFAULT_THEME_COLORS)
+      emitThemeChange(DEFAULT_THEME_COLORS)
+      toast.success('تمت العودة للألوان الافتراضية')
+    } catch { toast.error('تعذر إعادة الضبط') }
+    setIsSavingTheme(false)
+  }
+
+  const saveTabConfig = async () => {
+    setIsSavingTabConfig(true)
+    try {
+      await Promise.all([
+        fetch('/api/settings', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ key: 'ui_tab_labels', value: JSON.stringify(draftTabLabels) }) }),
+        fetch('/api/settings', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ key: 'ui_tab_order', value: JSON.stringify(draftTabOrder) }) }),
+      ])
+      setTabLabels(draftTabLabels)
+      setTabOrder(draftTabOrder)
+      toast.success('تم حفظ الأسماء والترتيب ✅')
+    } catch { toast.error('تعذر الحفظ') }
+    setIsSavingTabConfig(false)
+  }
+
+  const resetTabConfig = async () => {
+    setIsSavingTabConfig(true)
+    try {
+      await Promise.all([
+        fetch('/api/settings', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ key: 'ui_tab_labels', value: JSON.stringify(DEFAULT_TAB_LABELS) }) }),
+        fetch('/api/settings', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ key: 'ui_tab_order', value: JSON.stringify(DEFAULT_TAB_ORDER) }) }),
+      ])
+      setTabLabels(DEFAULT_TAB_LABELS); setDraftTabLabels(DEFAULT_TAB_LABELS)
+      setTabOrder(DEFAULT_TAB_ORDER); setDraftTabOrder(DEFAULT_TAB_ORDER)
+      toast.success('تمت العودة للترتيب الافتراضي')
+    } catch { toast.error('تعذر إعادة الضبط') }
+    setIsSavingTabConfig(false)
+  }
   const [isSavingFlags, setIsSavingFlags] = useState(false)
   const [flagsLoaded, setFlagsLoaded] = useState(false)
 
@@ -2846,41 +3004,40 @@ const handleSaveSettings = async () => {
           </TabsList>
         ) : (
           /* ── Place Admin: modern grouped tab navigation ── */
-          <TabsList className="flex w-full h-auto flex-col gap-2 bg-transparent border-0 p-0 mb-3">
-            {/* Row 1 — Operations */}
-            <div className="flex items-center gap-1 w-full">
-              <span className="text-[9px] font-black tracking-widest shrink-0 px-1" style={{ color: 'rgba(212,160,23,0.35)' }}>Operations</span>
-              <div className="flex-1 h-px" style={{ background: 'rgba(212,160,23,0.1)' }} />
-            </div>
-            <div className="grid grid-cols-4 gap-1.5 w-full">
-              {[
-                {
-                  value: 'stats', icon: <BarChart3 className="h-4 w-4" />, label: 'Stats',
-                  active: 'rgba(251,191,36,0.2)', activeBorder: 'rgba(251,191,36,0.5)', activeText: '#fbbf24', dot: null
-                },
-                {
-                  value: 'tables', icon: <TableProperties className="h-4 w-4" />, label: 'Tables',
-                  active: 'rgba(251,191,36,0.2)', activeBorder: 'rgba(251,191,36,0.5)', activeText: '#fbbf24',
-                  dot: (() => { const n = new Set(orders.filter(o => o.table_number && o.status !== 'completed').map(o => o.table_number)).size; return n > 0 ? { color: '#34d399', label: n } : null })()
-                },
-                {
-                  value: 'cashier', icon: <Banknote className="h-4 w-4" />, label: 'Cashier',
-                  active: 'rgba(251,191,36,0.2)', activeBorder: 'rgba(251,191,36,0.5)', activeText: '#fbbf24', dot: null
-                },
-                {
-                  value: 'reservations', icon: <CalendarDays className="h-4 w-4" />, label: 'Reservations',
-                  active: 'rgba(251,191,36,0.2)', activeBorder: 'rgba(251,191,36,0.5)', activeText: '#fbbf24', dot: null
-                },
-              ].map(t => (
-                <TabsTrigger key={t.value} value={t.value} className="relative flex flex-col items-center gap-1 rounded-xl py-2.5 px-1 h-auto text-[10px] font-semibold transition-all duration-200 border"
+          (() => {
+            const placeTabsMeta: Record<string, { icon: React.ReactNode; active: string; activeBorder: string; activeText: string; dot?: { color: string; label: number } | null }> = {
+              stats:        { icon: <BarChart3 className="h-4 w-4" />,        active: 'rgba(251,191,36,0.2)',  activeBorder: 'rgba(251,191,36,0.5)',  activeText: '#fbbf24', dot: null },
+              tables:       { icon: <TableProperties className="h-4 w-4" />, active: 'rgba(251,191,36,0.2)',  activeBorder: 'rgba(251,191,36,0.5)',  activeText: '#fbbf24',
+                dot: (() => { const n = new Set(orders.filter(o => o.table_number && o.status !== 'completed').map(o => o.table_number)).size; return n > 0 ? { color: '#34d399', label: n } : null })() },
+              cashier:      { icon: <Banknote className="h-4 w-4" />,         active: 'rgba(251,191,36,0.2)',  activeBorder: 'rgba(251,191,36,0.5)',  activeText: '#fbbf24', dot: null },
+              reservations: { icon: <CalendarDays className="h-4 w-4" />,     active: 'rgba(251,191,36,0.2)',  activeBorder: 'rgba(251,191,36,0.5)',  activeText: '#fbbf24', dot: null },
+              drinks:       { icon: <Coffee className="h-4 w-4" />,           active: 'rgba(251,146,60,0.18)', activeBorder: 'rgba(251,146,60,0.45)', activeText: '#fb923c', dot: null },
+              inventory:    { icon: <Package className="h-4 w-4" />,          active: 'rgba(251,146,60,0.18)', activeBorder: 'rgba(251,146,60,0.45)', activeText: '#fb923c',
+                dot: (() => { const n = drinks.filter(d => (inventoryMap[d.id] ?? 0) < lowStockThreshold && (inventoryMap[d.id] ?? 0) >= 0).length; return n > 0 ? { color: '#f59e0b', label: n } : null })() },
+              analytics:    { icon: <TrendingUp className="h-4 w-4" />,       active: 'rgba(251,146,60,0.18)', activeBorder: 'rgba(251,146,60,0.45)', activeText: '#fb923c', dot: null },
+              staff:        { icon: <UserCog className="h-4 w-4" />,          active: 'rgba(52,211,153,0.15)', activeBorder: 'rgba(52,211,153,0.4)',  activeText: '#34d399', dot: null },
+              messages:     { icon: <MessageSquare className="h-4 w-4" />,    active: 'rgba(96,165,250,0.15)', activeBorder: 'rgba(96,165,250,0.4)',  activeText: '#60a5fa', dot: null },
+              settings:     { icon: <Settings2 className="h-4 w-4" />,        active: 'rgba(96,165,250,0.15)', activeBorder: 'rgba(96,165,250,0.4)',  activeText: '#60a5fa', dot: null },
+              danger:       { icon: <Trash2 className="h-4 w-4" />,           active: 'rgba(248,113,113,0.18)',activeBorder: 'rgba(248,113,113,0.45)',activeText: '#f87171', dot: null },
+            }
+            const groupOrder: Array<{ id: string; label: string; cols: number }> = [
+              { id: 'operations', label: 'Operations', cols: 4 },
+              { id: 'menu',       label: 'Menu',       cols: 3 },
+              { id: 'system',     label: 'System',     cols: 4 },
+            ]
+            const renderTab = (value: string) => {
+              const t = placeTabsMeta[value]
+              if (!t) return null
+              return (
+                <TabsTrigger key={value} value={value} className="relative flex flex-col items-center gap-1 rounded-xl py-2.5 px-1 h-auto text-[10px] font-semibold transition-all duration-200 border"
                   style={{
-                    background: activeAdminTab === t.value ? t.active : 'rgba(255,255,255,0.03)',
-                    borderColor: activeAdminTab === t.value ? t.activeBorder : 'rgba(255,255,255,0.06)',
-                    color: activeAdminTab === t.value ? t.activeText : 'rgba(255,255,255,0.35)',
-                    boxShadow: activeAdminTab === t.value ? `0 0 12px ${t.activeBorder}` : 'none',
+                    background: activeAdminTab === value ? t.active : 'rgba(255,255,255,0.03)',
+                    borderColor: activeAdminTab === value ? t.activeBorder : 'rgba(255,255,255,0.06)',
+                    color: activeAdminTab === value ? t.activeText : 'rgba(255,255,255,0.35)',
+                    boxShadow: activeAdminTab === value ? `0 0 12px ${t.activeBorder}` : 'none',
                   }}>
                   {t.icon}
-                  <span>{t.label}</span>
+                  <span>{getTabLabel(value)}</span>
                   {t.dot && (
                     <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full text-[8px] font-black text-black"
                       style={{ background: t.dot.color }}>
@@ -2888,86 +3045,24 @@ const handleSaveSettings = async () => {
                     </span>
                   )}
                 </TabsTrigger>
-              ))}
-            </div>
-
-            {/* Row 2 — Menu */}
-            <div className="flex items-center gap-1 w-full mt-1">
-              <span className="text-[9px] font-black tracking-widest shrink-0 px-1" style={{ color: 'rgba(212,160,23,0.35)' }}>Menu</span>
-              <div className="flex-1 h-px" style={{ background: 'rgba(212,160,23,0.1)' }} />
-            </div>
-            <div className="grid grid-cols-3 gap-1.5 w-full">
-              {[
-                {
-                  value: 'drinks', icon: <Coffee className="h-4 w-4" />, label: 'Drinks',
-                  active: 'rgba(251,146,60,0.18)', activeBorder: 'rgba(251,146,60,0.45)', activeText: '#fb923c', dot: null
-                },
-                {
-                  value: 'inventory', icon: <Package className="h-4 w-4" />, label: 'Inventory',
-                  active: 'rgba(251,146,60,0.18)', activeBorder: 'rgba(251,146,60,0.45)', activeText: '#fb923c',
-                  dot: (() => { const n = drinks.filter(d => (inventoryMap[d.id] ?? 0) < lowStockThreshold && (inventoryMap[d.id] ?? 0) >= 0).length; return n > 0 ? { color: '#f59e0b', label: n } : null })()
-                },
-                {
-                  value: 'analytics', icon: <TrendingUp className="h-4 w-4" />, label: 'Reports',
-                  active: 'rgba(251,146,60,0.18)', activeBorder: 'rgba(251,146,60,0.45)', activeText: '#fb923c', dot: null
-                },
-              ].map(t => (
-                <TabsTrigger key={t.value} value={t.value} className="relative flex flex-col items-center gap-1 rounded-xl py-2.5 px-1 h-auto text-[10px] font-semibold transition-all duration-200 border"
-                  style={{
-                    background: activeAdminTab === t.value ? t.active : 'rgba(255,255,255,0.03)',
-                    borderColor: activeAdminTab === t.value ? t.activeBorder : 'rgba(255,255,255,0.06)',
-                    color: activeAdminTab === t.value ? t.activeText : 'rgba(255,255,255,0.35)',
-                    boxShadow: activeAdminTab === t.value ? `0 0 12px ${t.activeBorder}` : 'none',
-                  }}>
-                  {t.icon}
-                  <span>{t.label}</span>
-                  {t.dot && (
-                    <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full text-[8px] font-black text-black"
-                      style={{ background: t.dot.color }}>
-                      {t.dot.label}
-                    </span>
-                  )}
-                </TabsTrigger>
-              ))}
-            </div>
-
-            {/* Row 3 — System */}
-            <div className="flex items-center gap-1 w-full mt-1">
-              <span className="text-[9px] font-black tracking-widest shrink-0 px-1" style={{ color: 'rgba(212,160,23,0.35)' }}>System</span>
-              <div className="flex-1 h-px" style={{ background: 'rgba(212,160,23,0.1)' }} />
-            </div>
-            <div className="grid grid-cols-4 gap-1.5 w-full">
-              {[
-                {
-                  value: 'staff', icon: <UserCog className="h-4 w-4" />, label: 'Employees',
-                  active: 'rgba(52,211,153,0.15)', activeBorder: 'rgba(52,211,153,0.4)', activeText: '#34d399', dot: null
-                },
-                {
-                  value: 'messages', icon: <MessageSquare className="h-4 w-4" />, label: 'Messages',
-                  active: 'rgba(96,165,250,0.15)', activeBorder: 'rgba(96,165,250,0.4)', activeText: '#60a5fa', dot: null
-                },
-                {
-                  value: 'settings', icon: <Settings2 className="h-4 w-4" />, label: 'Settings',
-                  active: 'rgba(96,165,250,0.15)', activeBorder: 'rgba(96,165,250,0.4)', activeText: '#60a5fa', dot: null
-                },
-                {
-                  value: 'danger', icon: <Trash2 className="h-4 w-4" />, label: 'Danger',
-                  active: 'rgba(248,113,113,0.18)', activeBorder: 'rgba(248,113,113,0.45)', activeText: '#f87171', dot: null
-                },
-              ].map(t => (
-                <TabsTrigger key={t.value} value={t.value} className="relative flex flex-col items-center gap-1 rounded-xl py-2.5 px-1 h-auto text-[10px] font-semibold transition-all duration-200 border"
-                  style={{
-                    background: activeAdminTab === t.value ? t.active : 'rgba(255,255,255,0.03)',
-                    borderColor: activeAdminTab === t.value ? t.activeBorder : 'rgba(255,255,255,0.06)',
-                    color: activeAdminTab === t.value ? t.activeText : 'rgba(255,255,255,0.35)',
-                    boxShadow: activeAdminTab === t.value ? `0 0 12px ${t.activeBorder}` : 'none',
-                  }}>
-                  {t.icon}
-                  <span>{t.label}</span>
-                </TabsTrigger>
-              ))}
-            </div>
-          </TabsList>
+              )
+            }
+            return (
+              <TabsList className="flex w-full h-auto flex-col gap-2 bg-transparent border-0 p-0 mb-3">
+                {groupOrder.map((g, idx) => (
+                  <div key={g.id} className="contents">
+                    <div className={'flex items-center gap-1 w-full' + (idx > 0 ? ' mt-1' : '')}>
+                      <span className="text-[9px] font-black tracking-widest shrink-0 px-1" style={{ color: 'rgba(212,160,23,0.35)' }}>{g.label}</span>
+                      <div className="flex-1 h-px" style={{ background: 'rgba(212,160,23,0.1)' }} />
+                    </div>
+                    <div className={`grid gap-1.5 w-full ${g.cols === 3 ? 'grid-cols-3' : g.cols === 4 ? 'grid-cols-4' : 'grid-cols-2'}`}>
+                      {(tabOrder[g.id] || DEFAULT_TAB_ORDER[g.id] || []).map(renderTab)}
+                    </div>
+                  </div>
+                ))}
+              </TabsList>
+            )
+          })()
         )}
 
         {/* ── Live Places Hub Tab ── */}
@@ -6254,6 +6349,144 @@ const handleSaveSettings = async () => {
                   إعادة الافتراضي
                 </Button>
               </div>
+            </div>
+          </div>
+
+          {/* Card 4 — Theme Colors (project-wide) */}
+          <div className="relative rounded-2xl overflow-hidden p-5 space-y-4" style={{ background: 'linear-gradient(170deg, rgba(34,197,94,0.06) 0%, rgba(15,15,25,0.95) 100%)', border: '1px solid rgba(34,197,94,0.18)', boxShadow: '0 4px 24px rgba(0,0,0,0.22)' }}>
+            <div className="relative flex items-center gap-3 pb-3" style={{ borderBottom: '1px solid rgba(34,197,94,0.12)' }}>
+              <div className="flex items-center justify-center w-9 h-9 rounded-xl" style={{ background: 'linear-gradient(135deg, rgba(34,197,94,0.22), rgba(16,185,129,0.15))', border: '1px solid rgba(34,197,94,0.22)' }}>
+                <Palette className="h-4 w-4" style={{ color: '#86efac' }} />
+              </div>
+              <div>
+                <h3 className="font-bold text-white text-sm">ألوان النظام</h3>
+                <p className="text-[10px]" style={{ color: 'rgba(134,239,172,0.6)' }}>تخصيص ألوان المشروع كله — يطبّق فوراً على كل الصفحات</p>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              {THEME_VAR_KEYS.map(k => (
+                <div key={k} className="space-y-1.5 rounded-xl p-2.5" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)' }}>
+                  <div className="flex items-center justify-between">
+                    <span className="text-[11px] font-semibold text-white/85">{THEME_LABELS_AR[k] || k}</span>
+                    <span className="text-[10px] font-mono" style={{ color: 'rgba(134,239,172,0.7)' }}>{(draftThemeColors[k] || '').toString()}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="color"
+                      value={(draftThemeColors[k] as string) || (DEFAULT_THEME_COLORS[k] as string) || '#000000'}
+                      onChange={e => setDraftThemeColors(prev => ({ ...prev, [k]: e.target.value }))}
+                      className="h-9 w-12 rounded-lg cursor-pointer bg-transparent border border-white/10"
+                    />
+                    <Input
+                      value={(draftThemeColors[k] as string) || ''}
+                      onChange={e => setDraftThemeColors(prev => ({ ...prev, [k]: e.target.value }))}
+                      placeholder={DEFAULT_THEME_COLORS[k] as string}
+                      className="h-9 text-xs font-mono rounded-lg text-white placeholder:text-white/25"
+                      style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)' }}
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className="flex gap-2 pt-1">
+              <Button
+                className="flex-1 h-10 rounded-xl text-sm font-bold"
+                style={{ background: 'linear-gradient(135deg, #16a34a, #059669)', color: '#fff', boxShadow: '0 4px 15px rgba(22,163,74,0.3)' }}
+                disabled={isSavingTheme}
+                onClick={saveThemeColors}
+              >
+                {isSavingTheme ? <Loader2 className="h-4 w-4 animate-spin ml-1" /> : null}
+                حفظ الألوان للمشروع
+              </Button>
+              <Button
+                variant="outline"
+                className="h-10 rounded-xl text-xs"
+                style={{ borderColor: 'rgba(34,197,94,0.25)', color: 'rgba(134,239,172,0.85)' }}
+                disabled={isSavingTheme}
+                onClick={resetThemeColors}
+              >
+                إعادة الافتراضي
+              </Button>
+            </div>
+          </div>
+
+          {/* Card 5 — Tab Labels & Order */}
+          <div className="relative rounded-2xl overflow-hidden p-5 space-y-4" style={{ background: 'linear-gradient(170deg, rgba(251,146,60,0.06) 0%, rgba(15,15,25,0.95) 100%)', border: '1px solid rgba(251,146,60,0.18)', boxShadow: '0 4px 24px rgba(0,0,0,0.22)' }}>
+            <div className="relative flex items-center gap-3 pb-3" style={{ borderBottom: '1px solid rgba(251,146,60,0.12)' }}>
+              <div className="flex items-center justify-center w-9 h-9 rounded-xl text-lg" style={{ background: 'linear-gradient(135deg, rgba(251,146,60,0.22), rgba(245,158,11,0.15))', border: '1px solid rgba(251,146,60,0.22)' }}>
+                🏷️
+              </div>
+              <div>
+                <h3 className="font-bold text-white text-sm">أسماء وترتيب أزرار لوحة الإدارة</h3>
+                <p className="text-[10px]" style={{ color: 'rgba(253,186,116,0.6)' }}>عدّل أسماء الأزرار وغيّر ترتيبها داخل كل مجموعة</p>
+              </div>
+            </div>
+            <div className="space-y-4">
+              {Object.keys(DEFAULT_TAB_ORDER).map(group => {
+                const list = draftTabOrder[group] || DEFAULT_TAB_ORDER[group]
+                return (
+                  <div key={group} className="rounded-xl p-3 space-y-2" style={{ background: 'rgba(251,146,60,0.04)', border: '1px solid rgba(251,146,60,0.12)' }}>
+                    <div className="flex items-center gap-2 pb-1">
+                      <span className="text-[11px] font-black tracking-widest" style={{ color: '#fb923c' }}>
+                        {TAB_GROUP_LABELS_AR[group]}
+                      </span>
+                      <div className="flex-1 h-px" style={{ background: 'rgba(251,146,60,0.15)' }} />
+                    </div>
+                    {list.map((tabKey, idx) => (
+                      <div key={tabKey} className="flex items-center gap-2 rounded-lg p-2" style={{ background: 'rgba(0,0,0,0.25)', border: '1px solid rgba(255,255,255,0.05)' }}>
+                        <div className="flex flex-col gap-0.5 shrink-0">
+                          <button
+                            type="button"
+                            disabled={idx === 0}
+                            onClick={() => moveTabInGroup(group, idx, -1)}
+                            className="h-5 w-5 rounded flex items-center justify-center disabled:opacity-30"
+                            style={{ background: 'rgba(251,146,60,0.12)', color: '#fb923c' }}
+                          >
+                            <ArrowUp className="h-3 w-3" />
+                          </button>
+                          <button
+                            type="button"
+                            disabled={idx === list.length - 1}
+                            onClick={() => moveTabInGroup(group, idx, 1)}
+                            className="h-5 w-5 rounded flex items-center justify-center disabled:opacity-30"
+                            style={{ background: 'rgba(251,146,60,0.12)', color: '#fb923c' }}
+                          >
+                            <ArrowDown className="h-3 w-3" />
+                          </button>
+                        </div>
+                        <span className="text-[10px] font-mono shrink-0 w-16 truncate" style={{ color: 'rgba(255,255,255,0.35)' }}>{tabKey}</span>
+                        <Input
+                          value={draftTabLabels[tabKey] ?? DEFAULT_TAB_LABELS[tabKey] ?? ''}
+                          onChange={e => setDraftTabLabels(prev => ({ ...prev, [tabKey]: e.target.value }))}
+                          placeholder={DEFAULT_TAB_LABELS[tabKey]}
+                          className="h-8 text-xs rounded-lg text-white placeholder:text-white/25"
+                          style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)' }}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                )
+              })}
+            </div>
+            <div className="flex gap-2 pt-1">
+              <Button
+                className="flex-1 h-10 rounded-xl text-sm font-bold"
+                style={{ background: 'linear-gradient(135deg, #ea580c, #c2410c)', color: '#fff', boxShadow: '0 4px 15px rgba(234,88,12,0.3)' }}
+                disabled={isSavingTabConfig}
+                onClick={saveTabConfig}
+              >
+                {isSavingTabConfig ? <Loader2 className="h-4 w-4 animate-spin ml-1" /> : null}
+                حفظ الأسماء والترتيب
+              </Button>
+              <Button
+                variant="outline"
+                className="h-10 rounded-xl text-xs"
+                style={{ borderColor: 'rgba(251,146,60,0.25)', color: 'rgba(253,186,116,0.85)' }}
+                disabled={isSavingTabConfig}
+                onClick={resetTabConfig}
+              >
+                إعادة الافتراضي
+              </Button>
             </div>
           </div>
         </TabsContent>

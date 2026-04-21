@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next'
 import { Geist, Geist_Mono } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
+import { ThemeApplier } from '@/components/theme-applier'
 import './globals.css'
 
 const _geist = Geist({ subsets: ["latin"] });
@@ -65,6 +66,7 @@ export default function RootLayout({
         <link rel="apple-touch-icon" sizes="512x512" href="/icon-512x512.png" />
       </head>
       <body className="font-sans antialiased">
+        <ThemeApplier />
         {children}
         <Analytics />
       </body>
