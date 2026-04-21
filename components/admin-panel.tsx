@@ -3112,37 +3112,6 @@ const handleSaveSettings = async () => {
 
         {/* ── Live Places Hub Tab ── */}
         <TabsContent value="live" className="space-y-4">
-          {isIdeaVisible('idea_branch_ctrl') && (
-            <div className="rounded-2xl p-4 space-y-3" style={{ background: 'rgba(232,121,249,0.07)', border: '1px solid rgba(232,121,249,0.25)' }}>
-              <div className="flex items-center gap-2 mb-1">
-                <span className="text-lg">🌐</span>
-                <h3 className="font-bold text-sm text-foreground">مركز تحكم الفروع</h3>
-                <span className="mr-auto text-[10px] px-2 py-0.5 rounded-full font-medium" style={{ background: 'rgba(232,121,249,0.15)', color: '#e879f9' }}>مباشر</span>
-                {renderDeleteFeatureBtn('idea_branch_ctrl')}
-              </div>
-              <div className="grid grid-cols-3 gap-2">
-                {[
-                  { name: 'فرع المعادي', orders: 12, rev: '1,840 ج', status: 'active' },
-                  { name: 'فرع مدينة نصر', orders: 7, rev: '960 ج', status: 'active' },
-                  { name: 'فرع التجمع', orders: 0, rev: '0 ج', status: 'closed' },
-                ].map((branch, i) => (
-                  <div key={i} className="rounded-xl p-3 text-center space-y-1" style={{ background: branch.status === 'active' ? 'rgba(52,211,153,0.08)' : 'rgba(255,255,255,0.04)', border: `1px solid ${branch.status === 'active' ? 'rgba(52,211,153,0.2)' : 'rgba(255,255,255,0.08)'}` }}>
-                    <div className="text-[10px] font-medium text-foreground truncate">{branch.name}</div>
-                    <div className="text-lg font-bold" style={{ color: branch.status === 'active' ? '#34d399' : '#6b7280' }}>{branch.orders}</div>
-                    <div className="text-[9px] text-muted-foreground">طلب نشط</div>
-                    <div className="text-[10px] font-semibold" style={{ color: '#e879f9' }}>{branch.rev}</div>
-                    <div className="text-[9px] px-1.5 py-0.5 rounded-full inline-block" style={{ background: branch.status === 'active' ? 'rgba(52,211,153,0.15)' : 'rgba(107,114,128,0.15)', color: branch.status === 'active' ? '#34d399' : '#6b7280' }}>
-                      {branch.status === 'active' ? 'مفتوح' : 'مغلق'}
-                    </div>
-                  </div>
-                ))}
-              </div>
-              <div className="rounded-xl p-2.5 flex items-center justify-between" style={{ background: 'rgba(232,121,249,0.06)', border: '1px solid rgba(232,121,249,0.12)' }}>
-                <span className="text-xs text-muted-foreground">إجمالي الإيرادات اليوم</span>
-                <span className="text-sm font-bold" style={{ color: '#e879f9' }}>2,800 ج</span>
-              </div>
-            </div>
-          )}
           <LivePlacesHub />
         </TabsContent>
 
@@ -3840,42 +3809,6 @@ const handleSaveSettings = async () => {
         </TabsContent>
 
         <TabsContent value="drinks" className="space-y-6">
-          {isIdeaVisible('idea_drink_custom') && (
-            <div className="rounded-2xl p-4 space-y-3" style={{ background: 'rgba(244,114,182,0.07)', border: '1px solid rgba(244,114,182,0.25)' }}>
-              <div className="flex items-center gap-2">
-                <span className="text-lg">🎛️</span>
-                <h3 className="font-bold text-sm text-foreground">تخصيص المشروب — خيارات الأصناف</h3>
-                {renderDeleteFeatureBtn('idea_drink_custom')}
-              </div>
-              <div className="space-y-2">
-                <div>
-                  <p className="text-xs text-muted-foreground mb-1.5">مستوى السكر</p>
-                  <div className="flex gap-2 flex-wrap">
-                    {drinkCustomOptions.sugar.map(s => (
-                      <span key={s} className="text-xs px-3 py-1 rounded-full" style={{ background: 'rgba(244,114,182,0.12)', border: '1px solid rgba(244,114,182,0.25)', color: '#f472b6' }}>{s}</span>
-                    ))}
-                  </div>
-                </div>
-                <div>
-                  <p className="text-xs text-muted-foreground mb-1.5">الثلج</p>
-                  <div className="flex gap-2 flex-wrap">
-                    {drinkCustomOptions.ice.map(s => (
-                      <span key={s} className="text-xs px-3 py-1 rounded-full" style={{ background: 'rgba(244,114,182,0.12)', border: '1px solid rgba(244,114,182,0.25)', color: '#f472b6' }}>{s}</span>
-                    ))}
-                  </div>
-                </div>
-                <div>
-                  <p className="text-xs text-muted-foreground mb-1.5">إضافات</p>
-                  <div className="flex gap-2 flex-wrap">
-                    {drinkCustomOptions.extras.map(s => (
-                      <span key={s} className="text-xs px-3 py-1 rounded-full" style={{ background: 'rgba(244,114,182,0.12)', border: '1px solid rgba(244,114,182,0.25)', color: '#f472b6' }}>{s}</span>
-                    ))}
-                  </div>
-                </div>
-              </div>
-              <p className="text-[10px] text-muted-foreground">هذه الخيارات تظهر للزبون عند إضافة أي صنف للسلة. يمكن تعديلها لاحقاً لكل منتج على حدة.</p>
-            </div>
-          )}
           {/* Add new drink */}
           <div className="relative rounded-2xl overflow-hidden" style={{ background: 'linear-gradient(170deg, rgba(139,92,246,0.06) 0%, rgba(15,15,25,0.95) 100%)', border: '1px solid rgba(139,92,246,0.15)', boxShadow: '0 4px 20px rgba(0,0,0,0.2)' }}>
             <div className="absolute inset-0 pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle at 100% 0%, rgba(139,92,246,0.05) 0%, transparent 50%)' }} />
@@ -4269,27 +4202,6 @@ const handleSaveSettings = async () => {
 
         {/* Inventory Tab */}
         <TabsContent value="inventory" className="space-y-4">
-          {isIdeaVisible('idea_auto_hide') && (
-            <div className="rounded-2xl p-4 space-y-3" style={{ background: 'rgba(245,158,11,0.07)', border: '1px solid rgba(245,158,11,0.25)' }}>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <span className="text-lg">📦</span>
-                  <h3 className="font-bold text-sm text-foreground">إخفاء المنتج تلقائياً</h3>
-                  {renderDeleteFeatureBtn('idea_auto_hide')}
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-xs text-muted-foreground">مفعّل</span>
-                  <div className="w-10 h-5 rounded-full relative cursor-pointer" style={{ background: '#f59e0b' }}>
-                    <div className="absolute right-1 top-0.5 w-4 h-4 rounded-full bg-white shadow" />
-                  </div>
-                </div>
-              </div>
-              <p className="text-xs text-muted-foreground">عندما يصل مخزون أي صنف إلى صفر، يختفي تلقائياً من قائمة الزبائن ويرجع لما يتجدد المخزون.</p>
-              <div className="rounded-xl p-2.5 flex items-center gap-2" style={{ background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.15)' }}>
-                <span className="text-[10px]" style={{ color: '#f59e0b' }}>⚠️ تنبيه مسبق: يُرسل تنبيه للأدمن لما الكمية تقل عن 5 وحدات</span>
-              </div>
-            </div>
-          )}
           {(() => {
             const activeDrinks = isDevAdmin
               ? (inventoryDevPlaceId ? drinks.filter(d => d.place_id === inventoryDevPlaceId) : drinks)
@@ -5308,27 +5220,6 @@ const handleSaveSettings = async () => {
         </TabsContent>
 
         <TabsContent value="staff" className="space-y-4">
-          {isIdeaVisible('idea_staff_perf') && (
-            <div className="rounded-2xl p-4 space-y-3" style={{ background: 'rgba(251,191,36,0.07)', border: '1px solid rgba(251,191,36,0.25)' }}>
-              <div className="flex items-center gap-2">
-                <span className="text-lg">🏅</span>
-                <h3 className="font-bold text-sm text-foreground">لوحة أداء الموظفين — هذا الشهر</h3>
-                {renderDeleteFeatureBtn('idea_staff_perf')}
-              </div>
-              <div className="space-y-2">
-                {staffPerfData.map((emp, i) => (
-                  <div key={i} className="rounded-xl p-3 flex items-center gap-3" style={{ background: i === 0 ? 'rgba(251,191,36,0.1)' : 'rgba(255,255,255,0.03)', border: `1px solid ${i === 0 ? 'rgba(251,191,36,0.3)' : 'rgba(255,255,255,0.06)'}` }}>
-                    <div className="text-lg font-bold w-6 text-center" style={{ color: i === 0 ? '#fbbf24' : i === 1 ? '#9ca3af' : '#b45309' }}>{i === 0 ? '🥇' : i === 1 ? '🥈' : '🥉'}</div>
-                    <div className="flex-1 min-w-0">
-                      <div className="text-xs font-bold text-foreground truncate">{emp.name}</div>
-                      <div className="text-[10px] text-muted-foreground">{emp.orders} طلب · متوسط {emp.avgTime} · ذروة {emp.peak}</div>
-                    </div>
-                    <div className="text-sm font-bold" style={{ color: '#fbbf24' }}>{emp.score}%</div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
 
           {/* Staff Page Link Card */}
           <div className="rounded-2xl overflow-hidden border border-violet-500/30 bg-gradient-to-br from-violet-500/10 to-purple-500/5">
@@ -5596,88 +5487,8 @@ const handleSaveSettings = async () => {
         </TabsContent>
 
         <TabsContent value="settings" className="space-y-4">
-          {isIdeaVisible('idea_waitlist') && (
-            <div className="rounded-2xl p-4 space-y-3" style={{ background: 'rgba(96,165,250,0.07)', border: '1px solid rgba(96,165,250,0.25)' }}>
-              <div className="flex items-center gap-2">
-                <span className="text-lg">⏳</span>
-                <h3 className="font-bold text-sm text-foreground">قائمة الانتظار الذكية</h3>
-                <span className="mr-auto text-[10px] px-2 py-0.5 rounded-full" style={{ background: 'rgba(96,165,250,0.15)', color: '#60a5fa' }}>{waitlistEntries.length} انتظار</span>
-                {renderDeleteFeatureBtn('idea_waitlist')}
-              </div>
-              <div className="space-y-1.5">
-                {waitlistEntries.map((e, i) => (
-                  <div key={e.id} className="rounded-xl p-2.5 flex items-center gap-2" style={{ background: 'rgba(96,165,250,0.06)', border: '1px solid rgba(96,165,250,0.15)' }}>
-                    <div className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold" style={{ background: 'rgba(96,165,250,0.2)', color: '#60a5fa' }}>{i + 1}</div>
-                    <div className="flex-1 min-w-0">
-                      <div className="text-xs font-bold text-foreground">{e.name} · {e.people} أشخاص</div>
-                      <div className="text-[10px] text-muted-foreground">{e.phone} · {e.time}</div>
-                    </div>
-                    <button onClick={() => setWaitlistEntries(prev => prev.filter(x => x.id !== e.id))} className="text-xs px-2 py-1 rounded-lg" style={{ background: 'rgba(52,211,153,0.1)', color: '#34d399' }}>تم</button>
-                  </div>
-                ))}
-              </div>
-              <div className="flex gap-2">
-                <Input value={newWaitName} onChange={e => setNewWaitName(e.target.value)} placeholder="الاسم" className="flex-1 h-8 text-xs border-border bg-muted" />
-                <Input value={newWaitPeople} onChange={e => setNewWaitPeople(e.target.value)} placeholder="عدد" className="w-14 h-8 text-xs border-border bg-muted" type="number" />
-                <Button size="sm" className="h-8 text-xs px-3" style={{ background: '#60a5fa', color: '#000' }}
-                  onClick={() => {
-                    if (!newWaitName.trim()) return
-                    setWaitlistEntries(prev => [...prev, { id: Date.now(), name: newWaitName, phone: newWaitPhone || '—', people: Number(newWaitPeople) || 1, time: 'الآن' }])
-                    setNewWaitName(''); setNewWaitPhone(''); setNewWaitPeople('2')
-                    toast.success('تم إضافة الزبون للانتظار')
-                  }}>إضافة</Button>
-              </div>
-            </div>
-          )}
 
-          {isIdeaVisible('idea_loyalty') && (
-            <div className="rounded-2xl p-4 space-y-3" style={{ background: 'rgba(251,146,60,0.07)', border: '1px solid rgba(251,146,60,0.25)' }}>
-              <div className="flex items-center gap-2">
-                <span className="text-lg">🏆</span>
-                <h3 className="font-bold text-sm text-foreground">بطاقة الولاء الرقمية</h3>
-                {renderDeleteFeatureBtn('idea_loyalty')}
-              </div>
-              <div className="grid grid-cols-2 gap-2">
-                <div>
-                  <Label className="text-[10px] text-muted-foreground">عدد الطلبات للمكافأة</Label>
-                  <Input value={loyaltyThreshold} onChange={e => setLoyaltyThreshold(e.target.value)} type="number" className="mt-1 h-8 text-xs border-border bg-muted" />
-                </div>
-                <div>
-                  <Label className="text-[10px] text-muted-foreground">المكافأة</Label>
-                  <Input value={loyaltyReward} onChange={e => setLoyaltyReward(e.target.value)} className="mt-1 h-8 text-xs border-border bg-muted" />
-                </div>
-              </div>
-              <Button size="sm" className="w-full h-8 text-xs" style={{ background: '#fb923c', color: '#000' }}
-                onClick={() => { setLoyaltySaved(true); toast.success('تم حفظ إعدادات الولاء ✅') }}>
-                {loyaltySaved ? '✅ محفوظ' : 'حفظ الإعدادات'}
-              </Button>
-            </div>
-          )}
 
-          {isIdeaVisible('idea_voice_announce') && (
-            <div className="rounded-2xl p-4 space-y-3" style={{ background: 'rgba(99,102,241,0.07)', border: '1px solid rgba(99,102,241,0.25)' }}>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <span className="text-lg">🔊</span>
-                  <h3 className="font-bold text-sm text-foreground">الإعلان الصوتي للطلب</h3>
-                  {renderDeleteFeatureBtn('idea_voice_announce')}
-                </div>
-                <button onClick={() => setVoiceEnabled(v => !v)} className="flex items-center gap-1.5">
-                  <span className="text-xs text-muted-foreground">{voiceEnabled ? 'مفعّل' : 'معطّل'}</span>
-                  <div className="w-10 h-5 rounded-full relative transition-colors" style={{ background: voiceEnabled ? '#6366f1' : 'rgba(255,255,255,0.1)' }}>
-                    <div className="absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-all" style={{ right: voiceEnabled ? '2px' : 'calc(100% - 18px)' }} />
-                  </div>
-                </button>
-              </div>
-              {voiceEnabled && (
-                <div>
-                  <Label className="text-[10px] text-muted-foreground">نص الإعلان (يُضاف له رقم الطاولة تلقائياً)</Label>
-                  <Input value={voiceText} onChange={e => setVoiceText(e.target.value)} className="mt-1 h-8 text-xs border-border bg-muted" dir="rtl" />
-                  <button onClick={() => { if ('speechSynthesis' in window) { const u = new SpeechSynthesisUtterance(`${voiceText} 5`); u.lang = 'ar'; window.speechSynthesis.speak(u) } }} className="mt-2 text-xs px-3 py-1.5 rounded-lg" style={{ background: 'rgba(99,102,241,0.15)', color: '#818cf8', border: '1px solid rgba(99,102,241,0.3)' }}>▶ اختبر الصوت (طاولة 5)</button>
-                </div>
-              )}
-            </div>
-          )}
 
           {/* ── Place Closed Mode (place admin only) ── */}
           {!isDevAdmin && placeId && (
@@ -8321,88 +8132,8 @@ const handleSaveSettings = async () => {
 
         {/* ─── Cashier Tab (all admins) ─────── */}
         <TabsContent value="cashier" className="space-y-4">
-          {isIdeaVisible('idea_table_map') && (
-            <div className="rounded-2xl p-4 space-y-3" style={{ background: 'rgba(52,211,153,0.07)', border: '1px solid rgba(52,211,153,0.25)' }}>
-              <div className="flex items-center gap-2">
-                <span className="text-lg">🗺️</span>
-                <h3 className="font-bold text-sm text-foreground">خريطة الطاولات التفاعلية</h3>
-                {renderDeleteFeatureBtn('idea_table_map')}
-                <div className="mr-auto flex items-center gap-2 text-[10px] text-muted-foreground">
-                  <span className="w-2 h-2 rounded-full inline-block" style={{ background: '#34d399' }} /> نشطة
-                  <span className="w-2 h-2 rounded-full inline-block" style={{ background: '#f87171' }} /> تنتظر الحساب
-                  <span className="w-2 h-2 rounded-full inline-block bg-muted" /> فارغة
-                </div>
-              </div>
-              <div className="grid grid-cols-5 gap-2">
-                {Array.from({ length: 10 }, (_, i) => i + 1).map(t => {
-                  const status = tableStatuses[t] || 'free'
-                  const colors = { active: { bg: 'rgba(52,211,153,0.15)', border: 'rgba(52,211,153,0.4)', text: '#34d399' }, waiting: { bg: 'rgba(248,113,113,0.15)', border: 'rgba(248,113,113,0.4)', text: '#f87171' }, free: { bg: 'rgba(255,255,255,0.04)', border: 'rgba(255,255,255,0.1)', text: '#6b7280' } }
-                  const c = colors[status]
-                  return (
-                    <button key={t} onClick={() => setTableStatuses(prev => ({ ...prev, [t]: prev[t] === 'free' ? 'active' : prev[t] === 'active' ? 'waiting' : 'free' }))}
-                      className="rounded-xl py-3 text-center transition-all" style={{ background: c.bg, border: `1px solid ${c.border}` }}>
-                      <div className="text-xs font-bold" style={{ color: c.text }}>{t}</div>
-                      <div className="text-[9px] text-muted-foreground">{status === 'active' ? 'نشطة' : status === 'waiting' ? 'حساب' : 'فارغة'}</div>
-                    </button>
-                  )
-                })}
-              </div>
-              <p className="text-[10px] text-muted-foreground text-center">اضغط على الطاولة لتغيير حالتها</p>
-            </div>
-          )}
 
-          {isIdeaVisible('idea_table_timer') && (
-            <div className="rounded-2xl p-4 space-y-3" style={{ background: 'rgba(248,113,113,0.07)', border: '1px solid rgba(248,113,113,0.25)' }}>
-              <div className="flex items-center gap-2">
-                <span className="text-lg">⏱️</span>
-                <h3 className="font-bold text-sm text-foreground">مؤقت الطاولات النشطة</h3>
-                {renderDeleteFeatureBtn('idea_table_timer')}
-              </div>
-              <div className="space-y-2">
-                {Object.entries(tableStartTimes).map(([tableNum, startMs]) => {
-                  const mins = Math.floor((Date.now() - startMs) / 60000)
-                  const isOver = mins > 60
-                  return (
-                    <div key={tableNum} className="rounded-xl p-2.5 flex items-center justify-between" style={{ background: isOver ? 'rgba(248,113,113,0.1)' : 'rgba(255,255,255,0.04)', border: `1px solid ${isOver ? 'rgba(248,113,113,0.3)' : 'rgba(255,255,255,0.08)'}` }}>
-                      <span className="text-xs text-foreground">طاولة {tableNum}</span>
-                      <span className="text-sm font-bold font-mono" style={{ color: isOver ? '#f87171' : '#34d399' }}>{mins} دقيقة</span>
-                      {isOver && <span className="text-[10px] px-2 py-0.5 rounded-full" style={{ background: 'rgba(248,113,113,0.15)', color: '#f87171' }}>تجاوزت الحد</span>}
-                    </div>
-                  )
-                })}
-              </div>
-            </div>
-          )}
 
-          {isIdeaVisible('idea_split_bill') && (
-            <div className="rounded-2xl p-4 space-y-3" style={{ background: 'rgba(167,139,250,0.07)', border: '1px solid rgba(167,139,250,0.25)' }}>
-              <div className="flex items-center gap-2">
-                <span className="text-lg">💳</span>
-                <h3 className="font-bold text-sm text-foreground">تقسيم الحساب</h3>
-                {renderDeleteFeatureBtn('idea_split_bill')}
-              </div>
-              <div className="flex items-center gap-3">
-                <div className="flex-1">
-                  <Label className="text-[10px] text-muted-foreground">إجمالي الفاتورة (جنيه)</Label>
-                  <Input value={splitTotal} onChange={e => setSplitTotal(e.target.value)} type="number" className="mt-1 h-8 text-xs border-border bg-muted" />
-                </div>
-                <div>
-                  <Label className="text-[10px] text-muted-foreground">عدد الأشخاص</Label>
-                  <div className="flex items-center gap-1.5 mt-1">
-                    <button onClick={() => setSplitCount(c => Math.max(2, c - 1))} className="w-8 h-8 rounded-lg text-foreground" style={{ background: 'rgba(255,255,255,0.08)' }}>-</button>
-                    <span className="w-6 text-center text-sm font-bold text-foreground">{splitCount}</span>
-                    <button onClick={() => setSplitCount(c => c + 1)} className="w-8 h-8 rounded-lg text-foreground" style={{ background: 'rgba(255,255,255,0.08)' }}>+</button>
-                  </div>
-                </div>
-              </div>
-              {splitTotal && Number(splitTotal) > 0 && (
-                <div className="rounded-xl p-3 text-center" style={{ background: 'rgba(167,139,250,0.1)', border: '1px solid rgba(167,139,250,0.2)' }}>
-                  <div className="text-[10px] text-muted-foreground">نصيب كل شخص</div>
-                  <div className="text-2xl font-bold" style={{ color: '#a78bfa' }}>{(Number(splitTotal) / splitCount).toFixed(2)} ج</div>
-                </div>
-              )}
-            </div>
-          )}
 
             {/* Create Cashier Account */}
             <div className="rounded-2xl border border-green-500/20 bg-green-500/5 p-4 space-y-3">
@@ -9135,56 +8866,310 @@ const handleSaveSettings = async () => {
         <TabsContent value="implemented-ideas" className="space-y-4">
           {(() => {
             const activeIdeas = AI_IDEAS.filter(i => isIdeaImplemented(i.flagKey))
+            if (activeIdeas.length === 0) {
+              return (
+                <div className="rounded-2xl p-6 text-center" style={{ background: 'linear-gradient(135deg, rgba(244,63,94,0.06), rgba(236,72,153,0.03))', border: '1px solid rgba(244,63,94,0.2)' }}>
+                  <div className="text-4xl mb-2">✨</div>
+                  <h3 className="text-sm font-bold text-white mb-1">لا توجد مزايا مُفعّلة</h3>
+                  <p className="text-[11px]" style={{ color: '#fda4af' }}>اذهب إلى تبويب AI Ideas لتوليد فكرة جديدة وتنفيذها</p>
+                </div>
+              )
+            }
             return (
-              <div className="rounded-2xl overflow-hidden" style={{ background: 'linear-gradient(135deg, rgba(244,63,94,0.06), rgba(236,72,153,0.03))', border: '1px solid rgba(244,63,94,0.2)' }}>
-                <div className="p-4 border-b" style={{ borderColor: 'rgba(244,63,94,0.12)' }}>
+              <>
+                <div className="rounded-2xl p-3" style={{ background: 'linear-gradient(135deg, rgba(244,63,94,0.06), rgba(236,72,153,0.03))', border: '1px solid rgba(244,63,94,0.2)' }}>
                   <div className="flex items-center gap-2">
                     <span className="text-lg">✅</span>
                     <div className="flex-1">
                       <h3 className="text-sm font-bold text-white">المزايا المُفعّلة (Implemented Ideas)</h3>
-                      <p className="text-[11px]" style={{ color: '#fda4af' }}>
-                        {activeIdeas.length === 0
-                          ? 'لا توجد مزايا مُفعّلة حالياً — اذهب إلى تبويب AI Ideas لتوليد فكرة وتنفيذها'
-                          : `${activeIdeas.length} ميزة مُفعّلة — اضغط 🗑️ لحذف أي منها من المشروع`}
-                      </p>
+                      <p className="text-[11px]" style={{ color: '#fda4af' }}>{activeIdeas.length} ميزة مُفعّلة — تظهر هنا فقط ولا تظهر في تبويباتها الأصلية</p>
                     </div>
                   </div>
                 </div>
-                {activeIdeas.length > 0 && (
-                  <div className="p-4 space-y-2">
-                    {activeIdeas.map(idea => (
-                      <div key={idea.flagKey}
-                        className="rounded-xl p-3 flex items-center gap-3"
-                        style={{ background: `${idea.color}08`, border: `1px solid ${idea.color}25` }}>
-                        <span className="text-2xl shrink-0">{idea.icon}</span>
-                        <div className="flex-1 min-w-0">
-                          <div className="text-sm font-bold text-white truncate">{idea.title}</div>
-                          <div className="text-[11px]" style={{ color: idea.color }}>📍 {idea.tabLabel}</div>
-                        </div>
-                        <button
-                          onClick={() => setPendingRemoveIdea(idea)}
-                          disabled={removingIdeaKey === idea.flagKey}
-                          className="shrink-0 flex items-center gap-1.5 rounded-lg px-3 py-2 text-[12px] font-bold transition-all active:scale-95"
-                          style={{ background: 'rgba(244,63,94,0.15)', border: '1px solid rgba(244,63,94,0.35)', color: '#fda4af' }}
-                        >
-                          {removingIdeaKey === idea.flagKey ? (
-                            <><Loader2 className="h-3.5 w-3.5 animate-spin" /> جارٍ الحذف...</>
-                          ) : (
-                            <><Trash2 className="h-3.5 w-3.5" /> حذف</>
-                          )}
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
+              </>
             )
           })()}
-        </TabsContent>
 
-        {/* ─── Analytics / Reports Tab ─────────────────────────── */}
-        <TabsContent value="analytics" className="space-y-5">
-          {isIdeaVisible('idea_order_rating') && (
+          {isIdeaImplemented('idea_branch_ctrl') && (
+            <div className="rounded-2xl p-4 space-y-3" style={{ background: 'rgba(232,121,249,0.07)', border: '1px solid rgba(232,121,249,0.25)' }}>
+              <div className="flex items-center gap-2 mb-1">
+                <span className="text-lg">🌐</span>
+                <h3 className="font-bold text-sm text-foreground">مركز تحكم الفروع</h3>
+                <span className="mr-auto text-[10px] px-2 py-0.5 rounded-full font-medium" style={{ background: 'rgba(232,121,249,0.15)', color: '#e879f9' }}>مباشر</span>
+                {renderDeleteFeatureBtn('idea_branch_ctrl')}
+              </div>
+              <div className="grid grid-cols-3 gap-2">
+                {[
+                  { name: 'فرع المعادي', orders: 12, rev: '1,840 ج', status: 'active' },
+                  { name: 'فرع مدينة نصر', orders: 7, rev: '960 ج', status: 'active' },
+                  { name: 'فرع التجمع', orders: 0, rev: '0 ج', status: 'closed' },
+                ].map((branch, i) => (
+                  <div key={i} className="rounded-xl p-3 text-center space-y-1" style={{ background: branch.status === 'active' ? 'rgba(52,211,153,0.08)' : 'rgba(255,255,255,0.04)', border: `1px solid ${branch.status === 'active' ? 'rgba(52,211,153,0.2)' : 'rgba(255,255,255,0.08)'}` }}>
+                    <div className="text-[10px] font-medium text-foreground truncate">{branch.name}</div>
+                    <div className="text-lg font-bold" style={{ color: branch.status === 'active' ? '#34d399' : '#6b7280' }}>{branch.orders}</div>
+                    <div className="text-[9px] text-muted-foreground">طلب نشط</div>
+                    <div className="text-[10px] font-semibold" style={{ color: '#e879f9' }}>{branch.rev}</div>
+                    <div className="text-[9px] px-1.5 py-0.5 rounded-full inline-block" style={{ background: branch.status === 'active' ? 'rgba(52,211,153,0.15)' : 'rgba(107,114,128,0.15)', color: branch.status === 'active' ? '#34d399' : '#6b7280' }}>
+                      {branch.status === 'active' ? 'مفتوح' : 'مغلق'}
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <div className="rounded-xl p-2.5 flex items-center justify-between" style={{ background: 'rgba(232,121,249,0.06)', border: '1px solid rgba(232,121,249,0.12)' }}>
+                <span className="text-xs text-muted-foreground">إجمالي الإيرادات اليوم</span>
+                <span className="text-sm font-bold" style={{ color: '#e879f9' }}>2,800 ج</span>
+              </div>
+            </div>
+          )}
+
+          {isIdeaImplemented('idea_drink_custom') && (
+            <div className="rounded-2xl p-4 space-y-3" style={{ background: 'rgba(244,114,182,0.07)', border: '1px solid rgba(244,114,182,0.25)' }}>
+              <div className="flex items-center gap-2">
+                <span className="text-lg">🎛️</span>
+                <h3 className="font-bold text-sm text-foreground">تخصيص المشروب — خيارات الأصناف</h3>
+                {renderDeleteFeatureBtn('idea_drink_custom')}
+              </div>
+              <div className="space-y-2">
+                <div>
+                  <p className="text-xs text-muted-foreground mb-1.5">مستوى السكر</p>
+                  <div className="flex gap-2 flex-wrap">
+                    {drinkCustomOptions.sugar.map(s => (
+                      <span key={s} className="text-xs px-3 py-1 rounded-full" style={{ background: 'rgba(244,114,182,0.12)', border: '1px solid rgba(244,114,182,0.25)', color: '#f472b6' }}>{s}</span>
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground mb-1.5">الثلج</p>
+                  <div className="flex gap-2 flex-wrap">
+                    {drinkCustomOptions.ice.map(s => (
+                      <span key={s} className="text-xs px-3 py-1 rounded-full" style={{ background: 'rgba(244,114,182,0.12)', border: '1px solid rgba(244,114,182,0.25)', color: '#f472b6' }}>{s}</span>
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground mb-1.5">إضافات</p>
+                  <div className="flex gap-2 flex-wrap">
+                    {drinkCustomOptions.extras.map(s => (
+                      <span key={s} className="text-xs px-3 py-1 rounded-full" style={{ background: 'rgba(244,114,182,0.12)', border: '1px solid rgba(244,114,182,0.25)', color: '#f472b6' }}>{s}</span>
+                    ))}
+                  </div>
+                </div>
+              </div>
+              <p className="text-[10px] text-muted-foreground">هذه الخيارات تظهر للزبون عند إضافة أي صنف للسلة. يمكن تعديلها لاحقاً لكل منتج على حدة.</p>
+            </div>
+          )}
+
+          {isIdeaImplemented('idea_auto_hide') && (
+            <div className="rounded-2xl p-4 space-y-3" style={{ background: 'rgba(245,158,11,0.07)', border: '1px solid rgba(245,158,11,0.25)' }}>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className="text-lg">📦</span>
+                  <h3 className="font-bold text-sm text-foreground">إخفاء المنتج تلقائياً</h3>
+                  {renderDeleteFeatureBtn('idea_auto_hide')}
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-muted-foreground">مفعّل</span>
+                  <div className="w-10 h-5 rounded-full relative cursor-pointer" style={{ background: '#f59e0b' }}>
+                    <div className="absolute right-1 top-0.5 w-4 h-4 rounded-full bg-white shadow" />
+                  </div>
+                </div>
+              </div>
+              <p className="text-xs text-muted-foreground">عندما يصل مخزون أي صنف إلى صفر، يختفي تلقائياً من قائمة الزبائن ويرجع لما يتجدد المخزون.</p>
+              <div className="rounded-xl p-2.5 flex items-center gap-2" style={{ background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.15)' }}>
+                <span className="text-[10px]" style={{ color: '#f59e0b' }}>⚠️ تنبيه مسبق: يُرسل تنبيه للأدمن لما الكمية تقل عن 5 وحدات</span>
+              </div>
+            </div>
+          )}
+
+          {isIdeaImplemented('idea_staff_perf') && (
+            <div className="rounded-2xl p-4 space-y-3" style={{ background: 'rgba(251,191,36,0.07)', border: '1px solid rgba(251,191,36,0.25)' }}>
+              <div className="flex items-center gap-2">
+                <span className="text-lg">🏅</span>
+                <h3 className="font-bold text-sm text-foreground">لوحة أداء الموظفين — هذا الشهر</h3>
+                {renderDeleteFeatureBtn('idea_staff_perf')}
+              </div>
+              <div className="space-y-2">
+                {staffPerfData.map((emp, i) => (
+                  <div key={i} className="rounded-xl p-3 flex items-center gap-3" style={{ background: i === 0 ? 'rgba(251,191,36,0.1)' : 'rgba(255,255,255,0.03)', border: `1px solid ${i === 0 ? 'rgba(251,191,36,0.3)' : 'rgba(255,255,255,0.06)'}` }}>
+                    <div className="text-lg font-bold w-6 text-center" style={{ color: i === 0 ? '#fbbf24' : i === 1 ? '#9ca3af' : '#b45309' }}>{i === 0 ? '🥇' : i === 1 ? '🥈' : '🥉'}</div>
+                    <div className="flex-1 min-w-0">
+                      <div className="text-xs font-bold text-foreground truncate">{emp.name}</div>
+                      <div className="text-[10px] text-muted-foreground">{emp.orders} طلب · متوسط {emp.avgTime} · ذروة {emp.peak}</div>
+                    </div>
+                    <div className="text-sm font-bold" style={{ color: '#fbbf24' }}>{emp.score}%</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {isIdeaImplemented('idea_waitlist') && (
+            <div className="rounded-2xl p-4 space-y-3" style={{ background: 'rgba(96,165,250,0.07)', border: '1px solid rgba(96,165,250,0.25)' }}>
+              <div className="flex items-center gap-2">
+                <span className="text-lg">⏳</span>
+                <h3 className="font-bold text-sm text-foreground">قائمة الانتظار الذكية</h3>
+                <span className="mr-auto text-[10px] px-2 py-0.5 rounded-full" style={{ background: 'rgba(96,165,250,0.15)', color: '#60a5fa' }}>{waitlistEntries.length} انتظار</span>
+                {renderDeleteFeatureBtn('idea_waitlist')}
+              </div>
+              <div className="space-y-1.5">
+                {waitlistEntries.map((e, i) => (
+                  <div key={e.id} className="rounded-xl p-2.5 flex items-center gap-2" style={{ background: 'rgba(96,165,250,0.06)', border: '1px solid rgba(96,165,250,0.15)' }}>
+                    <div className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold" style={{ background: 'rgba(96,165,250,0.2)', color: '#60a5fa' }}>{i + 1}</div>
+                    <div className="flex-1 min-w-0">
+                      <div className="text-xs font-bold text-foreground">{e.name} · {e.people} أشخاص</div>
+                      <div className="text-[10px] text-muted-foreground">{e.phone} · {e.time}</div>
+                    </div>
+                    <button onClick={() => setWaitlistEntries(prev => prev.filter(x => x.id !== e.id))} className="text-xs px-2 py-1 rounded-lg" style={{ background: 'rgba(52,211,153,0.1)', color: '#34d399' }}>تم</button>
+                  </div>
+                ))}
+              </div>
+              <div className="flex gap-2">
+                <Input value={newWaitName} onChange={e => setNewWaitName(e.target.value)} placeholder="الاسم" className="flex-1 h-8 text-xs border-border bg-muted" />
+                <Input value={newWaitPeople} onChange={e => setNewWaitPeople(e.target.value)} placeholder="عدد" className="w-14 h-8 text-xs border-border bg-muted" type="number" />
+                <Button size="sm" className="h-8 text-xs px-3" style={{ background: '#60a5fa', color: '#000' }}
+                  onClick={() => {
+                    if (!newWaitName.trim()) return
+                    setWaitlistEntries(prev => [...prev, { id: Date.now(), name: newWaitName, phone: newWaitPhone || '—', people: Number(newWaitPeople) || 1, time: 'الآن' }])
+                    setNewWaitName(''); setNewWaitPhone(''); setNewWaitPeople('2')
+                    toast.success('تم إضافة الزبون للانتظار')
+                  }}>إضافة</Button>
+              </div>
+            </div>
+          )}
+
+          {isIdeaImplemented('idea_loyalty') && (
+            <div className="rounded-2xl p-4 space-y-3" style={{ background: 'rgba(251,146,60,0.07)', border: '1px solid rgba(251,146,60,0.25)' }}>
+              <div className="flex items-center gap-2">
+                <span className="text-lg">🏆</span>
+                <h3 className="font-bold text-sm text-foreground">بطاقة الولاء الرقمية</h3>
+                {renderDeleteFeatureBtn('idea_loyalty')}
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <Label className="text-[10px] text-muted-foreground">عدد الطلبات للمكافأة</Label>
+                  <Input value={loyaltyThreshold} onChange={e => setLoyaltyThreshold(e.target.value)} type="number" className="mt-1 h-8 text-xs border-border bg-muted" />
+                </div>
+                <div>
+                  <Label className="text-[10px] text-muted-foreground">المكافأة</Label>
+                  <Input value={loyaltyReward} onChange={e => setLoyaltyReward(e.target.value)} className="mt-1 h-8 text-xs border-border bg-muted" />
+                </div>
+              </div>
+              <Button size="sm" className="w-full h-8 text-xs" style={{ background: '#fb923c', color: '#000' }}
+                onClick={() => { setLoyaltySaved(true); toast.success('تم حفظ إعدادات الولاء ✅') }}>
+                {loyaltySaved ? '✅ محفوظ' : 'حفظ الإعدادات'}
+              </Button>
+            </div>
+          )}
+
+          {isIdeaImplemented('idea_voice_announce') && (
+            <div className="rounded-2xl p-4 space-y-3" style={{ background: 'rgba(99,102,241,0.07)', border: '1px solid rgba(99,102,241,0.25)' }}>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className="text-lg">🔊</span>
+                  <h3 className="font-bold text-sm text-foreground">الإعلان الصوتي للطلب</h3>
+                  {renderDeleteFeatureBtn('idea_voice_announce')}
+                </div>
+                <button onClick={() => setVoiceEnabled(v => !v)} className="flex items-center gap-1.5">
+                  <span className="text-xs text-muted-foreground">{voiceEnabled ? 'مفعّل' : 'معطّل'}</span>
+                  <div className="w-10 h-5 rounded-full relative transition-colors" style={{ background: voiceEnabled ? '#6366f1' : 'rgba(255,255,255,0.1)' }}>
+                    <div className="absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-all" style={{ right: voiceEnabled ? '2px' : 'calc(100% - 18px)' }} />
+                  </div>
+                </button>
+              </div>
+              {voiceEnabled && (
+                <div>
+                  <Label className="text-[10px] text-muted-foreground">نص الإعلان (يُضاف له رقم الطاولة تلقائياً)</Label>
+                  <Input value={voiceText} onChange={e => setVoiceText(e.target.value)} className="mt-1 h-8 text-xs border-border bg-muted" dir="rtl" />
+                  <button onClick={() => { if ('speechSynthesis' in window) { const u = new SpeechSynthesisUtterance(`${voiceText} 5`); u.lang = 'ar'; window.speechSynthesis.speak(u) } }} className="mt-2 text-xs px-3 py-1.5 rounded-lg" style={{ background: 'rgba(99,102,241,0.15)', color: '#818cf8', border: '1px solid rgba(99,102,241,0.3)' }}>▶ اختبر الصوت (طاولة 5)</button>
+                </div>
+              )}
+            </div>
+          )}
+
+          {isIdeaImplemented('idea_table_map') && (
+            <div className="rounded-2xl p-4 space-y-3" style={{ background: 'rgba(52,211,153,0.07)', border: '1px solid rgba(52,211,153,0.25)' }}>
+              <div className="flex items-center gap-2">
+                <span className="text-lg">🗺️</span>
+                <h3 className="font-bold text-sm text-foreground">خريطة الطاولات التفاعلية</h3>
+                {renderDeleteFeatureBtn('idea_table_map')}
+                <div className="mr-auto flex items-center gap-2 text-[10px] text-muted-foreground">
+                  <span className="w-2 h-2 rounded-full inline-block" style={{ background: '#34d399' }} /> نشطة
+                  <span className="w-2 h-2 rounded-full inline-block" style={{ background: '#f87171' }} /> تنتظر الحساب
+                  <span className="w-2 h-2 rounded-full inline-block bg-muted" /> فارغة
+                </div>
+              </div>
+              <div className="grid grid-cols-5 gap-2">
+                {Array.from({ length: 10 }, (_, i) => i + 1).map(t => {
+                  const status = tableStatuses[t] || 'free'
+                  const colors = { active: { bg: 'rgba(52,211,153,0.15)', border: 'rgba(52,211,153,0.4)', text: '#34d399' }, waiting: { bg: 'rgba(248,113,113,0.15)', border: 'rgba(248,113,113,0.4)', text: '#f87171' }, free: { bg: 'rgba(255,255,255,0.04)', border: 'rgba(255,255,255,0.1)', text: '#6b7280' } }
+                  const c = colors[status]
+                  return (
+                    <button key={t} onClick={() => setTableStatuses(prev => ({ ...prev, [t]: prev[t] === 'free' ? 'active' : prev[t] === 'active' ? 'waiting' : 'free' }))}
+                      className="rounded-xl py-3 text-center transition-all" style={{ background: c.bg, border: `1px solid ${c.border}` }}>
+                      <div className="text-xs font-bold" style={{ color: c.text }}>{t}</div>
+                      <div className="text-[9px] text-muted-foreground">{status === 'active' ? 'نشطة' : status === 'waiting' ? 'حساب' : 'فارغة'}</div>
+                    </button>
+                  )
+                })}
+              </div>
+              <p className="text-[10px] text-muted-foreground text-center">اضغط على الطاولة لتغيير حالتها</p>
+            </div>
+          )}
+
+          {isIdeaImplemented('idea_table_timer') && (
+            <div className="rounded-2xl p-4 space-y-3" style={{ background: 'rgba(248,113,113,0.07)', border: '1px solid rgba(248,113,113,0.25)' }}>
+              <div className="flex items-center gap-2">
+                <span className="text-lg">⏱️</span>
+                <h3 className="font-bold text-sm text-foreground">مؤقت الطاولات النشطة</h3>
+                {renderDeleteFeatureBtn('idea_table_timer')}
+              </div>
+              <div className="space-y-2">
+                {Object.entries(tableStartTimes).map(([tableNum, startMs]) => {
+                  const mins = Math.floor((Date.now() - startMs) / 60000)
+                  const isOver = mins > 60
+                  return (
+                    <div key={tableNum} className="rounded-xl p-2.5 flex items-center justify-between" style={{ background: isOver ? 'rgba(248,113,113,0.1)' : 'rgba(255,255,255,0.04)', border: `1px solid ${isOver ? 'rgba(248,113,113,0.3)' : 'rgba(255,255,255,0.08)'}` }}>
+                      <span className="text-xs text-foreground">طاولة {tableNum}</span>
+                      <span className="text-sm font-bold font-mono" style={{ color: isOver ? '#f87171' : '#34d399' }}>{mins} دقيقة</span>
+                      {isOver && <span className="text-[10px] px-2 py-0.5 rounded-full" style={{ background: 'rgba(248,113,113,0.15)', color: '#f87171' }}>تجاوزت الحد</span>}
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          )}
+
+          {isIdeaImplemented('idea_split_bill') && (
+            <div className="rounded-2xl p-4 space-y-3" style={{ background: 'rgba(167,139,250,0.07)', border: '1px solid rgba(167,139,250,0.25)' }}>
+              <div className="flex items-center gap-2">
+                <span className="text-lg">💳</span>
+                <h3 className="font-bold text-sm text-foreground">تقسيم الحساب</h3>
+                {renderDeleteFeatureBtn('idea_split_bill')}
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="flex-1">
+                  <Label className="text-[10px] text-muted-foreground">إجمالي الفاتورة (جنيه)</Label>
+                  <Input value={splitTotal} onChange={e => setSplitTotal(e.target.value)} type="number" className="mt-1 h-8 text-xs border-border bg-muted" />
+                </div>
+                <div>
+                  <Label className="text-[10px] text-muted-foreground">عدد الأشخاص</Label>
+                  <div className="flex items-center gap-1.5 mt-1">
+                    <button onClick={() => setSplitCount(c => Math.max(2, c - 1))} className="w-8 h-8 rounded-lg text-foreground" style={{ background: 'rgba(255,255,255,0.08)' }}>-</button>
+                    <span className="w-6 text-center text-sm font-bold text-foreground">{splitCount}</span>
+                    <button onClick={() => setSplitCount(c => c + 1)} className="w-8 h-8 rounded-lg text-foreground" style={{ background: 'rgba(255,255,255,0.08)' }}>+</button>
+                  </div>
+                </div>
+              </div>
+              {splitTotal && Number(splitTotal) > 0 && (
+                <div className="rounded-xl p-3 text-center" style={{ background: 'rgba(167,139,250,0.1)', border: '1px solid rgba(167,139,250,0.2)' }}>
+                  <div className="text-[10px] text-muted-foreground">نصيب كل شخص</div>
+                  <div className="text-2xl font-bold" style={{ color: '#a78bfa' }}>{(Number(splitTotal) / splitCount).toFixed(2)} ج</div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {isIdeaImplemented('idea_order_rating') && (
             <div className="rounded-2xl p-4 space-y-3" style={{ background: 'rgba(251,191,36,0.07)', border: '1px solid rgba(251,191,36,0.25)' }}>
               <div className="flex items-center gap-2">
                 <span className="text-lg">⭐</span>
@@ -9209,7 +9194,7 @@ const handleSaveSettings = async () => {
             </div>
           )}
 
-          {isIdeaVisible('idea_pdf_reports') && (
+          {isIdeaImplemented('idea_pdf_reports') && (
             <div className="rounded-2xl p-4 space-y-3" style={{ background: 'rgba(52,211,153,0.07)', border: '1px solid rgba(52,211,153,0.25)' }}>
               <div className="flex items-center gap-2">
                 <span className="text-lg">📄</span>
@@ -9228,6 +9213,11 @@ const handleSaveSettings = async () => {
               <p className="text-[10px] text-muted-foreground">يشمل التقرير: المبيعات · أكثر المنتجات طلباً · صافي الإيراد</p>
             </div>
           )}
+                </TabsContent>
+
+        {/* ─── Analytics / Reports Tab ─────────────────────────── */}
+        <TabsContent value="analytics" className="space-y-5">
+
 
           {/* Period selector + refresh */}
           <div className="flex items-center gap-3 flex-wrap">
