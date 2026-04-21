@@ -369,8 +369,32 @@ export default function BarPage() {
     const isVip = group.orders.some(o => o.notes?.includes('مطور'))
     const totalItems = group.orders.reduce((s, o) => s + (o.quantity || 1), 0)
     return (
-      <div className={`rounded-2xl overflow-hidden transition-all${isVip ? ' ring-2 ring-amber-500/60' : ''}`}
-        style={{ background: '#131313', border: isVip ? '1px solid rgba(245,158,11,0.4)' : '1px solid rgba(255,255,255,0.07)', boxShadow: isVip ? '0 0 24px rgba(245,158,11,0.15)' : '0 2px 12px rgba(0,0,0,0.3)' }}>
+      <div className={`relative rounded-2xl overflow-hidden transition-all${isVip ? ' ring-2 ring-amber-500/60' : ''}`}
+        style={{
+          background: group.employee
+            ? 'linear-gradient(160deg, #0f1729 0%, #0b1220 55%, #0a0f1c 100%)'
+            : 'linear-gradient(160deg, #161616 0%, #111111 100%)',
+          border: isVip
+            ? '1px solid rgba(245,158,11,0.4)'
+            : group.employee
+              ? '1px solid rgba(59,130,246,0.22)'
+              : '1px solid rgba(255,255,255,0.06)',
+          boxShadow: isVip
+            ? '0 0 28px rgba(245,158,11,0.18)'
+            : group.employee
+              ? '0 8px 28px rgba(0,0,0,0.5), 0 0 0 1px rgba(59,130,246,0.05) inset'
+              : '0 4px 18px rgba(0,0,0,0.4)'
+        }}>
+
+        {/* Accent strip */}
+        <div className="absolute top-0 left-0 right-0 h-[2px]"
+          style={{
+            background: isVip
+              ? 'linear-gradient(90deg, transparent, #f59e0b, transparent)'
+              : group.employee
+                ? 'linear-gradient(90deg, transparent, #3b82f6, #60a5fa, #3b82f6, transparent)'
+                : 'linear-gradient(90deg, transparent, rgba(255,255,255,0.12), transparent)'
+          }} />
 
         {isVip && (
           <div className="flex items-center justify-center gap-1.5 py-1.5 text-[11px] font-bold"
@@ -381,38 +405,48 @@ export default function BarPage() {
         )}
 
         {/* Card Header */}
-        <div className="flex items-center justify-between px-4 py-3" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)', background: isVip ? 'rgba(245,158,11,0.06)' : 'rgba(255,255,255,0.02)' }}>
-          <div className="flex items-center gap-2">
-            <div className="flex items-center gap-1.5 rounded-full px-2.5 py-1"
-              style={{ background: 'rgba(56,189,248,0.1)', border: '1px solid rgba(56,189,248,0.2)' }}>
+        <div className="flex items-center justify-between px-4 pt-4 pb-3 gap-3">
+          <div className="flex items-center gap-2 shrink-0">
+            <div className="flex items-center gap-1.5 rounded-lg px-2.5 py-1.5"
+              style={{ background: 'rgba(56,189,248,0.08)', border: '1px solid rgba(56,189,248,0.18)' }}>
               <Clock className="h-3 w-3 text-sky-400" />
-              <span className="text-xs font-semibold text-sky-400">{formatTime(group.earliestTime)}</span>
+              <span className="text-[11px] font-bold text-sky-300 tabular-nums tracking-tight">{formatTime(group.earliestTime)}</span>
             </div>
-            <div className="flex items-center gap-1 rounded-full px-2 py-1" style={{ background: 'rgba(255,255,255,0.05)' }}>
+            <div className="flex items-center gap-1 rounded-lg px-2 py-1.5"
+              style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.06)' }}>
               <Package className="h-3 w-3 text-zinc-400" />
-              <span className="text-xs text-zinc-400 font-medium">{totalItems}</span>
+              <span className="text-[11px] text-zinc-300 font-bold tabular-nums">{totalItems}</span>
             </div>
           </div>
-          <div className="text-right flex items-center gap-2.5">
+          <div className="text-right flex items-center gap-3 min-w-0 flex-1 justify-end">
             {group.employee ? (
               <>
-                <div className="text-right">
-                  <p className="font-bold text-sm" style={{ color: '#93c5fd' }}>{group.employee.name}</p>
+                <div className="text-right min-w-0">
+                  <p className="font-bold text-[15px] truncate tracking-tight" style={{ color: '#e0eaff' }}>{group.employee.name}</p>
                   {(group.employee.title || group.employee.department) && (
-                    <p className="text-[11px]" style={{ color: 'rgba(147,197,253,0.7)' }}>
+                    <p className="text-[11px] mt-0.5 truncate" style={{ color: 'rgba(147,197,253,0.75)', letterSpacing: '0.01em' }}>
                       {[group.employee.title, group.employee.department].filter(Boolean).join(' • ')}
                     </p>
                   )}
                 </div>
-                <div className="h-10 w-10 rounded-full overflow-hidden border-2 flex items-center justify-center text-base shrink-0"
-                  style={{ borderColor: 'rgba(59,130,246,0.5)', background: 'rgba(59,130,246,0.15)' }}>
-                  {group.employee.avatar_url
-                    ? <img src={group.employee.avatar_url} alt={group.employee.name} className="h-full w-full object-cover" />
-                    : <span>👤</span>}
+                <div className="relative shrink-0">
+                  <div className="h-12 w-12 rounded-full overflow-hidden flex items-center justify-center text-base"
+                    style={{
+                      background: 'linear-gradient(135deg, rgba(59,130,246,0.25), rgba(96,165,250,0.15))',
+                      boxShadow: '0 0 0 2px #0a0f1c, 0 0 0 3.5px rgba(59,130,246,0.55), 0 4px 14px rgba(59,130,246,0.25)'
+                    }}>
+                    {group.employee.avatar_url
+                      ? <img src={group.employee.avatar_url} alt={group.employee.name} className="h-full w-full object-cover" />
+                      : <span>👤</span>}
+                  </div>
+                  <div className="absolute -bottom-0.5 -left-0.5 h-3.5 w-3.5 rounded-full flex items-center justify-center"
+                    style={{ background: '#0a0f1c', border: '1.5px solid #3b82f6' }}>
+                    <span className="text-[8px]">🏢</span>
+                  </div>
                 </div>
               </>
             ) : (
-              <p className="font-bold text-sm" style={{ color: isVip ? '#fbbf24' : '#f4f4f5' }}>
+              <p className="font-bold text-sm truncate" style={{ color: isVip ? '#fbbf24' : '#f4f4f5' }}>
                 {group.orders[0]?.customer_name && group.tableNumber
                   ? `${group.orders[0].customer_name} - طاولة ${group.tableNumber}`
                   : group.orders[0]?.customer_name
@@ -427,34 +461,40 @@ export default function BarPage() {
 
         {/* Employee details ribbon for company orders */}
         {group.employee && (
-          <div className="px-4 py-2 flex items-center justify-between gap-2"
-            style={{ background: 'rgba(59,130,246,0.08)', borderBottom: '1px solid rgba(59,130,246,0.18)' }}>
-            <span className="text-[11px] font-semibold" style={{ color: '#93c5fd' }}>🏢 موظف شركة</span>
-            <span className="text-[11px] truncate" style={{ color: 'rgba(255,255,255,0.55)' }}>{group.employee.email}</span>
+          <div className="mx-4 mb-3 px-3 py-2 rounded-lg flex items-center justify-between gap-2"
+            style={{ background: 'rgba(59,130,246,0.08)', border: '1px solid rgba(59,130,246,0.18)' }}>
+            <span className="text-[10px] font-bold uppercase tracking-wider flex items-center gap-1" style={{ color: '#93c5fd' }}>
+              <span className="text-[11px]">🏢</span> موظف شركة
+            </span>
+            <span className="text-[11px] truncate font-medium" style={{ color: 'rgba(224,234,255,0.7)' }}>{group.employee.email}</span>
           </div>
         )}
 
+        {/* Divider */}
+        <div className="mx-4 h-px" style={{ background: group.employee ? 'rgba(59,130,246,0.12)' : 'rgba(255,255,255,0.06)' }} />
+
         {/* Order Items */}
-        <div className="px-4 py-3 space-y-2.5">
+        <div className="px-4 py-3.5 space-y-2">
           {group.orders.map((order, idx) => (
-            <div key={order.id} className="flex items-start gap-3">
+            <div key={order.id} className="flex items-start gap-3 rounded-lg px-2.5 py-2 transition-colors"
+              style={{ background: 'rgba(255,255,255,0.025)' }}>
               <div className="flex-1 min-w-0 text-right">
                 <div className="flex items-center justify-end gap-2 flex-wrap">
                   {order.quantity > 1 && (
-                    <span className="rounded-full px-2.5 py-0.5 text-[11px] font-black"
-                      style={{ background: 'rgba(56,189,248,0.15)', color: '#38bdf8', border: '1px solid rgba(56,189,248,0.25)' }}>
+                    <span className="rounded-md px-2 py-0.5 text-[11px] font-black tabular-nums"
+                      style={{ background: 'rgba(56,189,248,0.15)', color: '#7dd3fc', border: '1px solid rgba(56,189,248,0.3)' }}>
                       × {order.quantity}
                     </span>
                   )}
                   <span className="font-semibold text-sm text-white">{order.drink?.name}</span>
-                  <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[10px] font-bold"
-                    style={{ background: 'rgba(255,255,255,0.08)', color: '#a1a1aa' }}>
+                  <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-md text-[10px] font-black tabular-nums"
+                    style={{ background: 'rgba(255,255,255,0.06)', color: '#d4d4d8', border: '1px solid rgba(255,255,255,0.08)' }}>
                     {idx + 1}
                   </span>
                 </div>
                 {order.notes && (
                   <div className="mt-1.5 flex items-center justify-end gap-1.5">
-                    <span className="text-xs text-zinc-500 italic">{order.notes}</span>
+                    <span className="text-xs italic" style={{ color: 'rgba(161,161,170,0.85)' }}>{order.notes}</span>
                     <MessageSquare className="h-3 w-3 shrink-0 text-zinc-600" />
                   </div>
                 )}
@@ -469,18 +509,30 @@ export default function BarPage() {
             <button
               onClick={() => markUserOrdersCompleted(group)}
               disabled={completingUserId === group.userId}
-              className="w-full h-11 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-all active:scale-[0.98] disabled:opacity-60"
-              style={{ background: completingUserId === group.userId ? 'rgba(56,189,248,0.3)' : 'linear-gradient(135deg, #38bdf8, #0284c7)', color: '#fff', boxShadow: '0 2px 16px rgba(56,189,248,0.3)' }}>
+              className="w-full h-12 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-all active:scale-[0.98] disabled:opacity-60 relative overflow-hidden group"
+              style={{
+                background: completingUserId === group.userId
+                  ? 'rgba(56,189,248,0.3)'
+                  : group.employee
+                    ? 'linear-gradient(135deg, #2563eb 0%, #3b82f6 50%, #60a5fa 100%)'
+                    : 'linear-gradient(135deg, #0ea5e9, #0284c7)',
+                color: '#fff',
+                boxShadow: group.employee
+                  ? '0 4px 20px rgba(59,130,246,0.4), 0 0 0 1px rgba(255,255,255,0.08) inset'
+                  : '0 4px 18px rgba(56,189,248,0.32), 0 0 0 1px rgba(255,255,255,0.08) inset'
+              }}>
+              <span className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                style={{ background: 'linear-gradient(135deg, rgba(255,255,255,0.08), transparent)' }} />
               {completingUserId === group.userId
-                ? <Loader2 className="h-4 w-4 animate-spin" />
-                : <CheckCircle className="h-4 w-4" />}
-              تم التجهيز
+                ? <Loader2 className="h-4 w-4 animate-spin relative" />
+                : <CheckCircle className="h-4 w-4 relative" />}
+              <span className="relative tracking-wide">تم التجهيز</span>
             </button>
           ) : (
-            <div className="w-full h-10 rounded-xl flex items-center justify-center gap-2"
-              style={{ background: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.2)' }}>
-              <CheckCircle className="h-4 w-4 text-emerald-500" />
-              <span className="font-semibold text-sm text-emerald-500">تم التجهيز</span>
+            <div className="w-full h-11 rounded-xl flex items-center justify-center gap-2"
+              style={{ background: 'rgba(34,197,94,0.08)', border: '1px solid rgba(34,197,94,0.22)' }}>
+              <CheckCircle className="h-4 w-4 text-emerald-400" />
+              <span className="font-bold text-sm text-emerald-400 tracking-wide">تم التجهيز</span>
             </div>
           )}
         </div>
