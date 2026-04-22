@@ -2891,6 +2891,7 @@ const handleSaveSettings = async () => {
                   {[
                     { tab: 'drinks',       icon: <Coffee className="h-3.5 w-3.5" />,      label: 'Drinks',       ac: '#d97706' },
                     { tab: 'inventory',    icon: <Package className="h-3.5 w-3.5" />,     label: 'Inventory',    ac: '#d97706' },
+                    { tab: 'ingredients',  icon: <Package className="h-3.5 w-3.5" />,     label: 'Ingredients',  ac: '#d97706' },
                     { tab: 'cashier',      icon: <Banknote className="h-3.5 w-3.5" />,    label: 'Cashier',      ac: '#d97706' },
                     { tab: 'reservations', icon: <CalendarDays className="h-3.5 w-3.5" />,label: 'Reservations', ac: '#d97706' },
                   ].filter(item => canAccessDevTab(item.tab)).map(item => (
