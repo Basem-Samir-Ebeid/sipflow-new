@@ -136,3 +136,23 @@ The workflow runs `npm run dev` which starts Next.js on port 5000 at `0.0.0.0`.
 - 1.7 — Dev admin login with name+password, place admin edit/delete, ⚙️ button restricted to place admins only, Admin VIP branding
 - 1.8 — Service charge & tax fees, SîpFlõw logo on receipt, dev admin notifications
 - 1.9 — QR code manager for tables + full table reservation system
+
+## Smart Ingredient-Based Inventory System (April 2026)
+
+A complete 4-phase inventory module added on top of the existing simple `inventory` table (additive, non-breaking).
+
+### Database (scripts/013_inventory_system.sql)
+- `ingredients` — items in g/ml/piece/kg/L with cost, reorder points, supplier, expiry, optional `place_id` (NULL = global)
+- `recipes` + `recipe_items` — bill-of-materials per drink/size/addon
+- `stock_movements` — full audit log (sale, waste, adjustment, count, receive, transfer)
+- `suppliers`, `purchase_orders`, `purchase_order_items` — full PO lifecycle (draft→sent→received with partial receive)
+
+### Backend
+- `lib/units.ts` — kg↔g, L↔ml conversion + Arabic category labels
+- `lib/inventory-engine.ts` — all CRUD, `deductForOrder()`, `dashboardKPIs()`, `forecast()`, `leakDetection()`, `profitability()`, `suggestPOs()`, schema bootstrap
+- 10 API routes under `/api/ingredients`, `/recipes`, `/stock-movements`, `/suppliers`, `/purchase-orders`, `/inventory-dashboard`
+- Auto-deduct hook in `/api/orders` POST (silent failure to never break order flow)
+
+### UI
+- `components/inventory-system.tsx` — single component with 8 sub-tabs (dashboard / library / recipes / movements / ops / suppliers / POs / smart features), Arabic RTL throughout
+- Wired into `components/admin-panel.tsx` as new `ingredients` tab in the `menu` group, available to super-developer and place-admin

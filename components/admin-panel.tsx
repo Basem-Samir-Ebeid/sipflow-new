@@ -33,6 +33,7 @@ import Image from 'next/image'
 import { LivePlacesHub } from '@/components/LivePlacesHub'
 import { OrderSimulator } from '@/components/order-simulator'
 import { PlaceTemplates } from '@/components/place-templates'
+import InventorySystem from '@/components/inventory-system'
 
 type DevAdminRole = 'super_developer' | 'support_admin' | 'sales_admin' | 'finance_admin'
 
@@ -117,7 +118,7 @@ export function AdminPanel({
       label: 'Super Developer',
       description: 'صلاحية كاملة لكل أجزاء النظام',
       homeTab: 'analytics',
-      tabs: ['alerts', 'analytics', 'notes', 'drinks', 'inventory', 'cashier', 'reservations', 'place-admins', 'staff', 'places', 'subscriptions', 'messages', 'settings', 'branding', 'danger', 'live', 'permissions', 'simulator', 'templates', 'feature-flags', 'ai-ideas', 'implemented-ideas'],
+      tabs: ['alerts', 'analytics', 'notes', 'drinks', 'inventory', 'ingredients', 'cashier', 'reservations', 'place-admins', 'staff', 'places', 'subscriptions', 'messages', 'settings', 'branding', 'danger', 'live', 'permissions', 'simulator', 'templates', 'feature-flags', 'ai-ideas', 'implemented-ideas'],
     },
     support_admin: {
       label: 'Support Admin',
@@ -320,10 +321,11 @@ export function AdminPanel({
     stats: 'الإحصاءات', tables: 'الطاولات', cashier: 'الكاشير', reservations: 'الحجوزات',
     drinks: 'المشاريب', inventory: 'المخزون', analytics: 'التقارير',
     staff: 'الموظفين', messages: 'الرسائل', settings: 'الإعدادات', danger: 'الخطر',
+    ingredients: 'المكونات الذكي',
   }
   const DEFAULT_TAB_ORDER: Record<string, string[]> = {
     operations: ['stats', 'tables', 'cashier', 'reservations'],
-    menu: ['drinks', 'inventory', 'analytics'],
+    menu: ['drinks', 'inventory', 'ingredients', 'analytics'],
     system: ['staff', 'messages', 'settings', 'danger'],
   }
   const TAB_GROUP_LABELS_AR: Record<string, string> = {
@@ -3111,6 +3113,7 @@ const handleSaveSettings = async () => {
               ['notes', 'المذكرة'],
               ['drinks', 'Drinks'],
               ['inventory', 'Inventory'],
+              ['ingredients', 'Smart Inventory'],
               ['cashier', 'Cashier'],
               ['reservations', 'Reservations'],
               ['place-admins', 'Admins'],
@@ -3141,6 +3144,7 @@ const handleSaveSettings = async () => {
               drinks:       { icon: <Coffee className="h-4 w-4" />,           active: 'rgba(251,146,60,0.18)', activeBorder: 'rgba(251,146,60,0.45)', activeText: '#fb923c', dot: null },
               inventory:    { icon: <Package className="h-4 w-4" />,          active: 'rgba(251,146,60,0.18)', activeBorder: 'rgba(251,146,60,0.45)', activeText: '#fb923c',
                 dot: (() => { const n = drinks.filter(d => (inventoryMap[d.id] ?? 0) < lowStockThreshold && (inventoryMap[d.id] ?? 0) >= 0).length; return n > 0 ? { color: '#f59e0b', label: n } : null })() },
+              ingredients:  { icon: <Package className="h-4 w-4" />,          active: 'rgba(168,85,247,0.18)', activeBorder: 'rgba(168,85,247,0.45)', activeText: '#a855f7', dot: null },
               analytics:    { icon: <TrendingUp className="h-4 w-4" />,       active: 'rgba(251,146,60,0.18)', activeBorder: 'rgba(251,146,60,0.45)', activeText: '#fb923c', dot: null },
               staff:        { icon: <UserCog className="h-4 w-4" />,          active: 'rgba(52,211,153,0.15)', activeBorder: 'rgba(52,211,153,0.4)',  activeText: '#34d399', dot: null },
               messages:     { icon: <MessageSquare className="h-4 w-4" />,    active: 'rgba(96,165,250,0.15)', activeBorder: 'rgba(96,165,250,0.4)',  activeText: '#60a5fa', dot: null },
@@ -4281,6 +4285,14 @@ const handleSaveSettings = async () => {
             </div>
           </DialogContent>
         </Dialog>
+
+        {/* Smart Ingredient-based Inventory Tab */}
+        <TabsContent value="ingredients" className="space-y-4">
+          <InventorySystem
+            placeId={isDevAdmin ? (inventoryDevPlaceId || null) : (placeId || null)}
+            isDevAdmin={isDevAdmin}
+          />
+        </TabsContent>
 
         {/* Inventory Tab */}
         <TabsContent value="inventory" className="space-y-4">
