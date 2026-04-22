@@ -12,6 +12,7 @@ import { Input } from '@/components/ui/input'
 import { toast, Toaster } from 'sonner'
 import Image from 'next/image'
 import { printHTML } from '@/lib/print'
+import { DevBar } from '@/components/dev-bar'
 
 interface StaffUser {
   id: string
@@ -46,19 +47,6 @@ interface DrinkReportItem {
 }
 
 type StaffTab = 'pending' | 'done' | 'count' | 'report'
-
-const DevBar = () => (
-  <div className="relative overflow-hidden py-[8px]" style={{ background: 'linear-gradient(90deg, #020617 0%, #0c0920 25%, #150a2e 50%, #0c0920 75%, #020617 100%)' }}>
-    <div className="absolute inset-x-0 top-0 h-px" style={{ background: 'linear-gradient(90deg, transparent 0%, #6366f1 20%, #a855f7 50%, #06b6d4 80%, transparent 100%)' }} />
-    <div className="flex items-center justify-center gap-3">
-      <span style={{ color: 'rgba(99,102,241,0.55)', fontSize: '7px', lineHeight: 1 }}>◆</span>
-      <span style={{ fontSize: '9px', letterSpacing: '0.22em', fontWeight: 400, color: 'rgba(148,163,184,0.4)', fontFamily: 'ui-monospace, monospace', textTransform: 'uppercase' }}>Developed by</span>
-      <span style={{ fontSize: '11px', letterSpacing: '0.14em', fontWeight: 700, color: '#c4b5fd', textShadow: '0 0 16px rgba(167,139,250,0.85), 0 0 32px rgba(139,92,246,0.4)', textTransform: 'uppercase' }}>Basem Samir Ebeid</span>
-      <span style={{ color: 'rgba(99,102,241,0.55)', fontSize: '7px', lineHeight: 1 }}>◆</span>
-    </div>
-    <div className="absolute inset-x-0 bottom-0 h-px" style={{ background: 'linear-gradient(90deg, transparent 0%, rgba(99,102,241,0.3) 30%, rgba(99,102,241,0.3) 70%, transparent 100%)' }} />
-  </div>
-)
 
 export default function BarPage() {
   const [mounted, setMounted] = useState(false)

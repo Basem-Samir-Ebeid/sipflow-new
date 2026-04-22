@@ -26,7 +26,7 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Plus, Trash2, Pencil, Upload, RefreshCw, Users, Coffee, Key, BarChart3, TrendingUp, Award, Clock, Send, MessageSquare, Settings2, Hash, UserPlus, UserCog, Minus, Package, Banknote, CheckCircle2, Hourglass, TableProperties, Copy, ExternalLink, Link2, Eye, EyeOff, QrCode, CalendarDays, CalendarCheck, CalendarX, Download, Loader2, Activity, ShieldCheck, ChevronLeft, Radio, Camera, UserCircle, Bell, AlertTriangle, BrainCircuit, Siren, FileText, GripVertical, Wrench, ArrowUp, ArrowDown, Palette } from 'lucide-react'
+import { Plus, Trash2, Pencil, Upload, RefreshCw, Users, Coffee, Key, BarChart3, TrendingUp, Award, Clock, Send, MessageSquare, Settings2, Hash, UserPlus, UserCog, Minus, Package, Banknote, CheckCircle2, Hourglass, TableProperties, Copy, ExternalLink, Link2, Eye, EyeOff, QrCode, CalendarDays, CalendarCheck, CalendarX, Download, Loader2, Activity, ShieldCheck, ChevronLeft, Radio, Camera, UserCircle, Bell, AlertTriangle, BrainCircuit, Siren, FileText, GripVertical, Wrench, ArrowUp, ArrowDown, Palette, Sparkles, CheckCircle } from 'lucide-react'
 import { THEME_VAR_KEYS, emitThemeChange, type ThemeColors, THEME_STORAGE_KEY } from '@/components/theme-applier'
 import { Checkbox } from '@/components/ui/checkbox'
 import Image from 'next/image'
@@ -1141,6 +1141,59 @@ export function AdminPanel({
   const [systemLogoInputUrl, setSystemLogoInputUrl] = useState('')
   const [systemLogoUploading, setSystemLogoUploading] = useState(false)
   const systemLogoInputRef = useRef<HTMLInputElement>(null)
+
+  // ── System version state (super_developer only) ──
+  const [systemVersion, setSystemVersion] = useState<string>('1.0.0')
+  const [systemVersionInput, setSystemVersionInput] = useState<string>('')
+  const [isSavingVersion, setIsSavingVersion] = useState(false)
+  useEffect(() => {
+    fetch('/api/settings?key=system_version')
+      .then(r => r.json())
+      .then(d => {
+        const v = d?.value ? String(d.value) : '1.0.0'
+        setSystemVersion(v)
+        setSystemVersionInput(v)
+      })
+      .catch(() => {})
+  }, [])
+
+  const bumpVersionPart = (current: string, part: 'patch' | 'minor' | 'major'): string => {
+    const parts = current.split('.').map(p => parseInt(p, 10))
+    while (parts.length < 3) parts.push(0)
+    let [maj, min, pat] = parts.map(n => Number.isFinite(n) ? n : 0)
+    if (part === 'major') { maj += 1; min = 0; pat = 0 }
+    else if (part === 'minor') { min += 1; pat = 0 }
+    else { pat += 1 }
+    return `${maj}.${min}.${pat}`
+  }
+
+  const saveSystemVersion = async (newVersion: string) => {
+    const v = newVersion.trim()
+    if (!/^\d+(\.\d+){0,2}$/.test(v)) {
+      toast.error('صيغة الإصدار غير صحيحة — مثال صحيح: 1.2.3')
+      return
+    }
+    setIsSavingVersion(true)
+    try {
+      const res = await fetch('/api/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ key: 'system_version', value: v }),
+      })
+      if (!res.ok) throw new Error('failed')
+      setSystemVersion(v)
+      setSystemVersionInput(v)
+      try {
+        const m = await import('@/components/dev-bar')
+        m.setCachedVersion?.(v)
+      } catch {}
+      toast.success(`✅ تم تحديث النظام إلى الإصدار v${v}`, { duration: 4000 })
+    } catch {
+      toast.error('حدث خطأ أثناء حفظ الإصدار')
+    } finally {
+      setIsSavingVersion(false)
+    }
+  }
 
   // ── Button icons state (super_developer only) ──
   const defaultButtonIcons = { placeAdmin: '⚙️', cashier: '🧾', captain: '🔔', bar: '☕' }
@@ -6130,6 +6183,92 @@ const handleSaveSettings = async () => {
                   إعادة الافتراضي
                 </Button>
               </div>
+            </div>
+          </div>
+
+          {/* Card 1.5 — System Version */}
+          <div className="relative rounded-2xl overflow-hidden p-5 space-y-4" style={{ background: 'linear-gradient(170deg, rgba(34,211,238,0.07) 0%, rgba(15,15,25,0.95) 100%)', border: '1px solid rgba(34,211,238,0.2)', boxShadow: '0 4px 24px rgba(0,0,0,0.22)' }}>
+            <div className="absolute inset-0 pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle at 100% 0%, rgba(34,211,238,0.06) 0%, transparent 50%)' }} />
+            <div className="relative flex items-center justify-between gap-3 pb-3" style={{ borderBottom: '1px solid rgba(34,211,238,0.14)' }}>
+              <div className="flex items-center gap-3">
+                <div className="flex items-center justify-center w-9 h-9 rounded-xl" style={{ background: 'linear-gradient(135deg, rgba(34,211,238,0.22), rgba(99,102,241,0.18))', border: '1px solid rgba(34,211,238,0.28)' }}>
+                  <Sparkles className="h-4 w-4" style={{ color: '#67e8f9' }} />
+                </div>
+                <div>
+                  <h3 className="font-bold text-white text-sm">إصدار النظام</h3>
+                  <p className="text-[10px]" style={{ color: 'rgba(103,232,249,0.65)' }}>ارفع نسخة جديدة وأعلن التحديث للمستخدمين</p>
+                </div>
+              </div>
+              <span className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-bold tabular-nums"
+                style={{ background: 'rgba(34,211,238,0.12)', border: '1px solid rgba(34,211,238,0.32)', color: '#67e8f9' }}>
+                <span className="inline-block h-1.5 w-1.5 rounded-full" style={{ background: '#34d399', boxShadow: '0 0 6px #34d399' }} />
+                v{systemVersion}
+              </span>
+            </div>
+            <div className="relative space-y-3">
+              <div className="grid grid-cols-3 gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="h-10 rounded-xl text-[11px] font-bold"
+                  style={{ borderColor: 'rgba(34,211,238,0.28)', color: '#67e8f9', background: 'rgba(34,211,238,0.06)' }}
+                  disabled={isSavingVersion}
+                  onClick={() => saveSystemVersion(bumpVersionPart(systemVersion, 'patch'))}
+                >
+                  <span className="flex flex-col leading-tight">
+                    <span>+ Patch</span>
+                    <span className="text-[9px] opacity-70 tabular-nums">{bumpVersionPart(systemVersion, 'patch')}</span>
+                  </span>
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="h-10 rounded-xl text-[11px] font-bold"
+                  style={{ borderColor: 'rgba(99,102,241,0.32)', color: '#a5b4fc', background: 'rgba(99,102,241,0.06)' }}
+                  disabled={isSavingVersion}
+                  onClick={() => saveSystemVersion(bumpVersionPart(systemVersion, 'minor'))}
+                >
+                  <span className="flex flex-col leading-tight">
+                    <span>+ Minor</span>
+                    <span className="text-[9px] opacity-70 tabular-nums">{bumpVersionPart(systemVersion, 'minor')}</span>
+                  </span>
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="h-10 rounded-xl text-[11px] font-bold"
+                  style={{ borderColor: 'rgba(168,85,247,0.32)', color: '#d8b4fe', background: 'rgba(168,85,247,0.06)' }}
+                  disabled={isSavingVersion}
+                  onClick={() => saveSystemVersion(bumpVersionPart(systemVersion, 'major'))}
+                >
+                  <span className="flex flex-col leading-tight">
+                    <span>+ Major</span>
+                    <span className="text-[9px] opacity-70 tabular-nums">{bumpVersionPart(systemVersion, 'major')}</span>
+                  </span>
+                </Button>
+              </div>
+              <div className="flex items-center gap-2">
+                <Input
+                  placeholder="رقم إصدار مخصص — مثال: 2.4.1"
+                  value={systemVersionInput}
+                  onChange={e => setSystemVersionInput(e.target.value)}
+                  className="h-10 text-xs rounded-xl text-white placeholder:text-white/25 tabular-nums"
+                  style={{ background: 'rgba(34,211,238,0.06)', border: '1px solid rgba(34,211,238,0.18)' }}
+                  dir="ltr"
+                />
+                <Button
+                  className="h-10 px-4 rounded-xl text-xs font-bold whitespace-nowrap"
+                  style={{ background: 'linear-gradient(135deg, #06b6d4, #0ea5e9)', color: '#fff', boxShadow: '0 4px 15px rgba(14,165,233,0.3)' }}
+                  disabled={isSavingVersion || !systemVersionInput.trim() || systemVersionInput.trim() === systemVersion}
+                  onClick={() => saveSystemVersion(systemVersionInput)}
+                >
+                  {isSavingVersion ? <Loader2 className="h-3.5 w-3.5 animate-spin ml-1" /> : <CheckCircle className="h-3.5 w-3.5 ml-1" />}
+                  تحديث النظام
+                </Button>
+              </div>
+              <p className="text-[10px] text-center" style={{ color: 'rgba(255,255,255,0.35)' }}>
+                هيظهر الإصدار في شريط الهيدر العلوي على كل الشاشات
+              </p>
             </div>
           </div>
 

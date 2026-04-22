@@ -14,6 +14,7 @@ import { toast, Toaster } from 'sonner'
 import { ReceiptModal } from '@/components/receipt-modal'
 import { CashierDashboard } from '@/components/cashier-dashboard'
 import Image from 'next/image'
+import { DevBar } from '@/components/dev-bar'
 
 // ↑ Bump this version every time you deploy a new update
 const APP_VERSION = '1.8'
@@ -1866,17 +1867,7 @@ export default function HomePage() {
   // Header Component
   const Header = () => (
     <header className="sticky top-0 z-40 bg-black/95 backdrop-blur-md" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-      {/* Creative developer attribution bar */}
-      <div className="relative overflow-hidden py-[8px]" style={{ background: 'linear-gradient(90deg, #020617 0%, #0c0920 25%, #150a2e 50%, #0c0920 75%, #020617 100%)' }}>
-        <div className="absolute inset-x-0 top-0 h-px" style={{ background: 'linear-gradient(90deg, transparent 0%, #6366f1 20%, #a855f7 50%, #06b6d4 80%, transparent 100%)' }} />
-        <div className="flex items-center justify-center gap-3">
-          <span style={{ color: 'rgba(99,102,241,0.55)', fontSize: '7px', lineHeight: 1 }}>◆</span>
-          <span style={{ fontSize: '9px', letterSpacing: '0.22em', fontWeight: 400, color: 'rgba(148,163,184,0.4)', fontFamily: 'ui-monospace, monospace', textTransform: 'uppercase' }}>Developed by</span>
-          <span style={{ fontSize: '11px', letterSpacing: '0.14em', fontWeight: 700, color: '#c4b5fd', textShadow: '0 0 16px rgba(167,139,250,0.85), 0 0 32px rgba(139,92,246,0.4)', textTransform: 'uppercase' }}>Basem Samir Ebeid</span>
-          <span style={{ color: 'rgba(99,102,241,0.55)', fontSize: '7px', lineHeight: 1 }}>◆</span>
-        </div>
-        <div className="absolute inset-x-0 bottom-0 h-px" style={{ background: 'linear-gradient(90deg, transparent 0%, rgba(99,102,241,0.3) 30%, rgba(99,102,241,0.3) 70%, transparent 100%)' }} />
-      </div>
+      <DevBar />
       <div className="flex w-full items-center justify-between px-6 py-3">
         <div className="flex items-center gap-2">
           <button
@@ -1916,23 +1907,55 @@ export default function HomePage() {
               <Settings className="h-5 w-5" />
             </button>
           )}
-          {/* Dev Admin VIP badge button */}
+          {/* Dev Admin — premium developer chip */}
           {isDevAdmin && (
             <button
               onClick={() => setActiveTab('admin')}
-              className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-bold tracking-wide transition-all ${
-                activeTab === 'admin'
-                  ? 'shadow-lg scale-105'
-                  : 'opacity-90 hover:opacity-100 hover:scale-105'
+              className={`group relative flex items-center gap-2 rounded-xl pl-2.5 pr-3 py-1.5 text-xs font-bold transition-all overflow-hidden ${
+                activeTab === 'admin' ? 'scale-[1.02]' : 'hover:scale-[1.02]'
               }`}
               style={{
-                background: 'linear-gradient(135deg, #7c3aed, #4f46e5, #0ea5e9)',
+                background: activeTab === 'admin'
+                  ? 'linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #1e1b4b 100%)'
+                  : 'linear-gradient(135deg, #0f0a2e 0%, #1a1140 50%, #0f0a2e 100%)',
+                border: '1px solid rgba(167,139,250,0.4)',
                 color: '#fff',
-                boxShadow: activeTab === 'admin' ? '0 0 16px rgba(124,58,237,0.7)' : '0 2px 8px rgba(79,70,229,0.4)'
+                boxShadow: activeTab === 'admin'
+                  ? '0 0 0 1px rgba(167,139,250,0.5), 0 6px 22px rgba(124,58,237,0.45), inset 0 1px 0 rgba(255,255,255,0.1)'
+                  : '0 2px 12px rgba(79,70,229,0.3), inset 0 1px 0 rgba(255,255,255,0.06)'
               }}
             >
-              <span>👑</span>
-              <span>Admin VIP</span>
+              {/* Animated sheen */}
+              <span aria-hidden className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                style={{ background: 'linear-gradient(115deg, transparent 30%, rgba(255,255,255,0.08) 50%, transparent 70%)' }} />
+              {/* Icon dot */}
+              <span className="relative flex h-5 w-5 items-center justify-center rounded-md text-[10px]"
+                style={{
+                  background: 'linear-gradient(135deg, #a78bfa, #6366f1)',
+                  boxShadow: '0 0 8px rgba(167,139,250,0.6), inset 0 0 0 1px rgba(255,255,255,0.18)'
+                }}>
+                <span style={{ filter: 'drop-shadow(0 0 4px rgba(255,255,255,0.6))' }}>★</span>
+              </span>
+              <span className="relative flex flex-col items-start leading-none">
+                <span style={{
+                  fontSize: '7.5px', letterSpacing: '0.22em', fontWeight: 600,
+                  color: 'rgba(196,181,253,0.65)', fontFamily: 'ui-monospace, monospace'
+                }}>DEVELOPER</span>
+                <span className="mt-0.5" style={{
+                  fontSize: '11px', letterSpacing: '0.05em', fontWeight: 800,
+                  background: 'linear-gradient(180deg, #f5f3ff 0%, #c4b5fd 100%)',
+                  WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text'
+                }}>Console</span>
+              </span>
+              {/* Pulse */}
+              {activeTab !== 'admin' && (
+                <span aria-hidden className="relative flex h-1.5 w-1.5">
+                  <span className="absolute inline-flex h-full w-full rounded-full opacity-75 animate-ping"
+                    style={{ background: '#a78bfa' }} />
+                  <span className="relative inline-flex h-1.5 w-1.5 rounded-full"
+                    style={{ background: '#a78bfa', boxShadow: '0 0 6px #a78bfa' }} />
+                </span>
+              )}
             </button>
           )}
         </div>
