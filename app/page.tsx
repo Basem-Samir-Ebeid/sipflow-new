@@ -1907,55 +1907,143 @@ export default function HomePage() {
               <Settings className="h-5 w-5" />
             </button>
           )}
-          {/* Dev Admin — premium developer chip */}
+          {/* Dev Admin — refined holographic developer chip */}
           {isDevAdmin && (
             <button
               onClick={() => setActiveTab('admin')}
-              className={`group relative flex items-center gap-2 rounded-xl pl-2.5 pr-3 py-1.5 text-xs font-bold transition-all overflow-hidden ${
-                activeTab === 'admin' ? 'scale-[1.02]' : 'hover:scale-[1.02]'
+              aria-label="Developer Console"
+              className={`group relative flex items-center gap-2.5 rounded-[10px] pl-2 pr-3 py-[7px] transition-all duration-300 overflow-hidden isolate ${
+                activeTab === 'admin' ? 'scale-[1.015]' : 'hover:scale-[1.015] active:scale-[0.985]'
               }`}
               style={{
-                background: activeTab === 'admin'
-                  ? 'linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #1e1b4b 100%)'
-                  : 'linear-gradient(135deg, #0f0a2e 0%, #1a1140 50%, #0f0a2e 100%)',
-                border: '1px solid rgba(167,139,250,0.4)',
-                color: '#fff',
-                boxShadow: activeTab === 'admin'
-                  ? '0 0 0 1px rgba(167,139,250,0.5), 0 6px 22px rgba(124,58,237,0.45), inset 0 1px 0 rgba(255,255,255,0.1)'
-                  : '0 2px 12px rgba(79,70,229,0.3), inset 0 1px 0 rgba(255,255,255,0.06)'
+                background:
+                  'linear-gradient(135deg, rgba(15,12,40,0.92) 0%, rgba(28,20,68,0.92) 50%, rgba(15,12,40,0.92) 100%)',
+                border: '1px solid',
+                borderColor: activeTab === 'admin' ? 'rgba(167,139,250,0.55)' : 'rgba(139,92,246,0.28)',
+                boxShadow:
+                  activeTab === 'admin'
+                    ? '0 0 0 1px rgba(167,139,250,0.35), 0 8px 28px -6px rgba(124,58,237,0.55), inset 0 1px 0 rgba(255,255,255,0.08), inset 0 -1px 0 rgba(0,0,0,0.4)'
+                    : '0 4px 14px -4px rgba(79,70,229,0.45), inset 0 1px 0 rgba(255,255,255,0.06), inset 0 -1px 0 rgba(0,0,0,0.35)',
+                backdropFilter: 'blur(8px)',
+                WebkitBackdropFilter: 'blur(8px)',
               }}
             >
-              {/* Animated sheen */}
-              <span aria-hidden className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity"
-                style={{ background: 'linear-gradient(115deg, transparent 30%, rgba(255,255,255,0.08) 50%, transparent 70%)' }} />
-              {/* Icon dot */}
-              <span className="relative flex h-5 w-5 items-center justify-center rounded-md text-[10px]"
+              {/* Top hairline highlight */}
+              <span
+                aria-hidden
+                className="pointer-events-none absolute inset-x-2 top-0 h-px"
+                style={{ background: 'linear-gradient(90deg, transparent, rgba(196,181,253,0.55), transparent)' }}
+              />
+              {/* Holographic sheen on hover */}
+              <span
+                aria-hidden
+                className="pointer-events-none absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-[1100ms] ease-out"
                 style={{
-                  background: 'linear-gradient(135deg, #a78bfa, #6366f1)',
-                  boxShadow: '0 0 8px rgba(167,139,250,0.6), inset 0 0 0 1px rgba(255,255,255,0.18)'
-                }}>
-                <span style={{ filter: 'drop-shadow(0 0 4px rgba(255,255,255,0.6))' }}>★</span>
-              </span>
-              <span className="relative flex flex-col items-start leading-none">
-                <span style={{
-                  fontSize: '7.5px', letterSpacing: '0.22em', fontWeight: 600,
-                  color: 'rgba(196,181,253,0.65)', fontFamily: 'ui-monospace, monospace'
-                }}>DEVELOPER</span>
-                <span className="mt-0.5" style={{
-                  fontSize: '11px', letterSpacing: '0.05em', fontWeight: 800,
-                  background: 'linear-gradient(180deg, #f5f3ff 0%, #c4b5fd 100%)',
-                  WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text'
-                }}>Console</span>
-              </span>
-              {/* Pulse */}
-              {activeTab !== 'admin' && (
-                <span aria-hidden className="relative flex h-1.5 w-1.5">
-                  <span className="absolute inline-flex h-full w-full rounded-full opacity-75 animate-ping"
-                    style={{ background: '#a78bfa' }} />
-                  <span className="relative inline-flex h-1.5 w-1.5 rounded-full"
-                    style={{ background: '#a78bfa', boxShadow: '0 0 6px #a78bfa' }} />
-                </span>
+                  background:
+                    'linear-gradient(110deg, transparent 35%, rgba(196,181,253,0.18) 50%, transparent 65%)',
+                }}
+              />
+              {/* Soft inner glow when active */}
+              {activeTab === 'admin' && (
+                <span
+                  aria-hidden
+                  className="pointer-events-none absolute inset-0"
+                  style={{
+                    background:
+                      'radial-gradient(120% 80% at 50% 100%, rgba(124,58,237,0.28) 0%, transparent 60%)',
+                  }}
+                />
               )}
+
+              {/* Hex-style icon badge (same star logo) */}
+              <span
+                className="relative flex h-[22px] w-[22px] items-center justify-center text-[11px] leading-none shrink-0"
+                style={{
+                  background:
+                    'conic-gradient(from 210deg at 50% 50%, #a78bfa 0deg, #818cf8 110deg, #6366f1 200deg, #a78bfa 360deg)',
+                  clipPath:
+                    'polygon(50% 0%, 95% 25%, 95% 75%, 50% 100%, 5% 75%, 5% 25%)',
+                  boxShadow:
+                    '0 0 10px rgba(167,139,250,0.55), inset 0 1px 0 rgba(255,255,255,0.35)',
+                }}
+              >
+                <span
+                  className="absolute inset-[1.5px]"
+                  style={{
+                    background:
+                      'linear-gradient(160deg, rgba(20,15,50,0.95) 0%, rgba(40,28,90,0.92) 100%)',
+                    clipPath:
+                      'polygon(50% 0%, 95% 25%, 95% 75%, 50% 100%, 5% 75%, 5% 25%)',
+                  }}
+                />
+                <span
+                  className="relative font-black"
+                  style={{
+                    background: 'linear-gradient(180deg, #ffffff 0%, #c4b5fd 100%)',
+                    WebkitBackgroundClip: 'text',
+                    WebkitTextFillColor: 'transparent',
+                    backgroundClip: 'text',
+                    filter: 'drop-shadow(0 0 4px rgba(196,181,253,0.7))',
+                  }}
+                >
+                  ★
+                </span>
+              </span>
+
+              {/* Label stack */}
+              <span className="relative flex flex-col items-start leading-none select-none">
+                <span
+                  style={{
+                    fontSize: '8px',
+                    letterSpacing: '0.28em',
+                    fontWeight: 700,
+                    color: 'rgba(196,181,253,0.7)',
+                    fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace',
+                  }}
+                >
+                  DEVELOPER
+                </span>
+                <span
+                  className="mt-[3px]"
+                  style={{
+                    fontSize: '12px',
+                    letterSpacing: '0.04em',
+                    fontWeight: 800,
+                    background:
+                      'linear-gradient(180deg, #ffffff 0%, #e9d5ff 60%, #c4b5fd 100%)',
+                    WebkitBackgroundClip: 'text',
+                    WebkitTextFillColor: 'transparent',
+                    backgroundClip: 'text',
+                    textShadow: '0 1px 0 rgba(0,0,0,0.4)',
+                  }}
+                >
+                  Console
+                </span>
+              </span>
+
+              {/* Status indicator */}
+              <span
+                aria-hidden
+                className="relative ml-0.5 flex h-1.5 w-1.5 shrink-0"
+                title={activeTab === 'admin' ? 'Active' : 'Live'}
+              >
+                {activeTab !== 'admin' && (
+                  <span
+                    className="absolute inline-flex h-full w-full rounded-full opacity-75 animate-ping"
+                    style={{ background: '#a78bfa' }}
+                  />
+                )}
+                <span
+                  className="relative inline-flex h-1.5 w-1.5 rounded-full"
+                  style={{
+                    background: activeTab === 'admin' ? '#34d399' : '#a78bfa',
+                    boxShadow:
+                      activeTab === 'admin'
+                        ? '0 0 8px #34d399, 0 0 0 1px rgba(52,211,153,0.35)'
+                        : '0 0 6px #a78bfa, 0 0 0 1px rgba(167,139,250,0.35)',
+                  }}
+                />
+              </span>
             </button>
           )}
         </div>
