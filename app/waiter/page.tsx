@@ -5,6 +5,7 @@ import { LogOut, RefreshCw, Loader2, ArrowRight, Coffee, CheckCircle2, Clock, Ca
 import { toast, Toaster } from 'sonner'
 import Image from 'next/image'
 import { DevBar } from '@/components/dev-bar'
+import { useSystemLogo } from '@/hooks/use-system-logo'
 
 interface ReservationNotif {
   id: string
@@ -68,6 +69,7 @@ const StageBar = ({ status }: { status: string }) => {
 }
 
 export default function WaiterPage() {
+  const systemLogoUrl = useSystemLogo()
   const [mounted, setMounted] = useState(false)
   const [staffUser, setStaffUser] = useState<StaffUser | null>(null)
   const [username, setUsername] = useState('')
@@ -354,7 +356,7 @@ export default function WaiterPage() {
           <div className="text-center mb-8">
             <div className="relative mx-auto mb-5 w-fit">
               <div className="h-[72px] w-[72px] rounded-2xl overflow-hidden shadow-2xl" style={{ boxShadow: '0 0 0 1px rgba(212,160,23,0.25), 0 0 30px rgba(212,160,23,0.12)' }}>
-                <Image src="/images/sipflow-logo.jpg" alt="SîpFlõw" width={72} height={72} className="object-cover w-full h-full" />
+                <Image src={systemLogoUrl} alt="SîpFlõw" width={72} height={72} className="object-cover w-full h-full" unoptimized />
               </div>
               <div className="absolute -bottom-2 -left-2 h-6 w-6 rounded-full flex items-center justify-center text-sm"
                 style={{ background: 'linear-gradient(135deg, #D4A017, #92640a)', boxShadow: '0 0 12px rgba(212,160,23,0.6)' }}>
@@ -481,7 +483,7 @@ export default function WaiterPage() {
               </div>
             </div>
             <div className="h-9 w-9 rounded-xl overflow-hidden shrink-0" style={{ border: '1px solid rgba(212,160,23,0.25)', boxShadow: '0 0 12px rgba(212,160,23,0.12)' }}>
-              <Image src="/images/sipflow-logo.jpg" alt="logo" width={36} height={36} className="object-cover w-full h-full" />
+              <Image src={systemLogoUrl} alt="logo" width={36} height={36} className="object-cover w-full h-full" unoptimized />
             </div>
           </div>
         </div>
