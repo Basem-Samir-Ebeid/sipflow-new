@@ -11,6 +11,7 @@ import {
 import { Input } from '@/components/ui/input'
 import { toast, Toaster } from 'sonner'
 import { DevBar } from '@/components/dev-bar'
+import { useSystemLogo } from '@/hooks/use-system-logo'
 import Image from 'next/image'
 import { printHTML } from '@/lib/print'
 
@@ -57,6 +58,7 @@ const VIOLET_DIM = 'rgba(168,85,247,0.15)'
 const VIOLET_BORDER = 'rgba(168,85,247,0.25)'
 
 export default function StaffPage() {
+  const systemLogoUrl = useSystemLogo()
   const [mounted, setMounted] = useState(false)
   const [staffUser, setStaffUser] = useState<StaffUser | null>(null)
   const [username, setUsername] = useState('')
@@ -350,7 +352,7 @@ export default function StaffPage() {
             <div className="text-center mb-8">
               <div className="relative mx-auto mb-5 h-20 w-20">
                 <div className="h-20 w-20 rounded-2xl overflow-hidden" style={{ border: `1px solid ${VIOLET_BORDER}`, boxShadow: `0 0 24px rgba(168,85,247,0.2)` }}>
-                  <Image src="/images/sipflow-logo.jpg" alt="SîpFlõw" width={80} height={80} className="object-cover w-full h-full" />
+                  <Image src={systemLogoUrl} alt="SîpFlõw" width={80} height={80} className="object-cover w-full h-full" unoptimized />
                 </div>
                 <div className="absolute -bottom-2 -left-2 flex h-7 w-7 items-center justify-center rounded-full text-sm"
                   style={{ background: 'linear-gradient(135deg, #a855f7, #7c3aed)', boxShadow: '0 0 14px rgba(168,85,247,0.6)' }}>
@@ -575,7 +577,7 @@ export default function StaffPage() {
               </div>
             </div>
             <div className="h-9 w-9 rounded-xl overflow-hidden shrink-0" style={{ border: `1px solid ${VIOLET_BORDER}` }}>
-              <Image src="/images/sipflow-logo.jpg" alt="logo" width={36} height={36} className="object-cover w-full h-full" />
+              <Image src={systemLogoUrl} alt="logo" width={36} height={36} className="object-cover w-full h-full" unoptimized />
             </div>
           </div>
         </div>
