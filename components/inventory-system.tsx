@@ -53,28 +53,105 @@ export default function InventorySystem({ placeId, isDevAdmin }: Props) {
   useEffect(() => { reload() }, [placeId])
 
   return (
-    <div className="space-y-4" dir="rtl">
-      <div className="flex items-center justify-between gap-2 flex-wrap">
-        <div>
-          <h2 className="text-xl font-bold flex items-center gap-2"><Beaker className="h-5 w-5" /> نظام المخزون الذكي</h2>
-          <p className="text-xs text-muted-foreground">مكونات • وصفات • حركات • موردين • أوامر شراء • تنبؤ ذكي</p>
+    <div className="space-y-5" dir="rtl">
+      {/* Elegant Header */}
+      <div
+        className="relative overflow-hidden rounded-2xl p-4 sm:p-5"
+        style={{
+          background:
+            'linear-gradient(135deg, rgba(15,12,40,0.85) 0%, rgba(28,20,68,0.85) 50%, rgba(15,12,40,0.85) 100%)',
+          border: '1px solid rgba(139,92,246,0.25)',
+          boxShadow:
+            '0 12px 40px -12px rgba(99,102,241,0.35), inset 0 1px 0 rgba(255,255,255,0.06)',
+        }}
+      >
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-x-3 top-0 h-px"
+          style={{ background: 'linear-gradient(90deg, transparent, rgba(196,181,253,0.55), transparent)' }}
+        />
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-0"
+          style={{ background: 'radial-gradient(120% 70% at 100% 0%, rgba(99,102,241,0.16), transparent 60%)' }}
+        />
+        <div className="relative flex items-center justify-between gap-3 flex-wrap">
+          <div className="flex items-center gap-3 min-w-0">
+            <div
+              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl"
+              style={{
+                background: 'linear-gradient(135deg, rgba(167,139,250,0.22), rgba(99,102,241,0.18))',
+                border: '1px solid rgba(167,139,250,0.4)',
+                boxShadow: '0 0 22px rgba(139,92,246,0.35), inset 0 1px 0 rgba(255,255,255,0.1)',
+              }}
+            >
+              <Beaker className="h-5 w-5 text-indigo-200" />
+            </div>
+            <div className="min-w-0">
+              <h2
+                className="text-lg sm:text-xl font-black tracking-tight leading-tight"
+                style={{
+                  background: 'linear-gradient(180deg, #ffffff 0%, #e9d5ff 60%, #c4b5fd 100%)',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  backgroundClip: 'text',
+                }}
+              >
+                نظام المخزون الذكي
+              </h2>
+              <p className="text-[11px] sm:text-xs mt-0.5 leading-snug" style={{ color: 'rgba(196,181,253,0.55)' }}>
+                مكونات • وصفات • حركات • موردين • أوامر شراء • تنبؤ ذكي
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={reload}
+            disabled={loading}
+            className="group relative flex items-center gap-1.5 rounded-xl px-3.5 py-2 text-xs font-bold transition-all active:scale-95 disabled:opacity-50"
+            style={{
+              background: 'linear-gradient(135deg, rgba(99,102,241,0.18), rgba(139,92,246,0.12))',
+              border: '1px solid rgba(167,139,250,0.4)',
+              color: '#c4b5fd',
+              boxShadow: '0 4px 14px -4px rgba(99,102,241,0.45), inset 0 1px 0 rgba(255,255,255,0.06)',
+            }}
+          >
+            <RefreshCw className={`h-3.5 w-3.5 ${loading ? 'animate-spin' : 'group-hover:rotate-180 transition-transform duration-500'}`} />
+            تحديث
+          </button>
         </div>
-        <Button size="sm" variant="outline" onClick={reload} disabled={loading}>
-          <RefreshCw className={`h-4 w-4 ml-1 ${loading ? 'animate-spin' : ''}`} /> تحديث
-        </Button>
       </div>
 
       <Tabs value={tab} onValueChange={setTab} className="w-full">
-        <TabsList className="grid grid-cols-4 md:grid-cols-8 w-full h-auto gap-1">
-          <TabsTrigger value="dashboard" className="text-xs">📊 لوحة</TabsTrigger>
-          <TabsTrigger value="ingredients" className="text-xs">📦 المكونات</TabsTrigger>
-          <TabsTrigger value="recipes" className="text-xs">🍳 الوصفات</TabsTrigger>
-          <TabsTrigger value="movements" className="text-xs">📝 الحركات</TabsTrigger>
-          <TabsTrigger value="ops" className="text-xs">⚡ عمليات</TabsTrigger>
-          <TabsTrigger value="suppliers" className="text-xs">🚚 موردين</TabsTrigger>
-          <TabsTrigger value="po" className="text-xs">🧾 شراء</TabsTrigger>
-          <TabsTrigger value="smart" className="text-xs">✨ ذكي</TabsTrigger>
-        </TabsList>
+        <div
+          className="rounded-2xl p-1.5"
+          style={{
+            background: 'linear-gradient(135deg, rgba(15,12,35,0.7), rgba(20,16,50,0.7))',
+            border: '1px solid rgba(139,92,246,0.18)',
+            boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.04)',
+          }}
+        >
+          <TabsList className="grid grid-cols-4 md:grid-cols-8 w-full h-auto gap-1 bg-transparent p-0">
+            {[
+              { v: 'dashboard', icon: '📊', label: 'لوحة' },
+              { v: 'ingredients', icon: '📦', label: 'المكونات' },
+              { v: 'recipes', icon: '🍳', label: 'الوصفات' },
+              { v: 'movements', icon: '📝', label: 'الحركات' },
+              { v: 'ops', icon: '⚡', label: 'عمليات' },
+              { v: 'suppliers', icon: '🚚', label: 'موردين' },
+              { v: 'po', icon: '🧾', label: 'شراء' },
+              { v: 'smart', icon: '✨', label: 'ذكي' },
+            ].map(t => (
+              <TabsTrigger
+                key={t.v}
+                value={t.v}
+                className="flex flex-col items-center gap-0.5 rounded-xl px-1 py-2 text-[11px] font-bold transition-all data-[state=active]:bg-gradient-to-br data-[state=active]:from-indigo-500/25 data-[state=active]:to-violet-500/20 data-[state=active]:text-white data-[state=active]:shadow-[0_4px_14px_-4px_rgba(99,102,241,0.55),inset_0_1px_0_rgba(255,255,255,0.1)] data-[state=active]:border data-[state=active]:border-violet-400/40 text-muted-foreground hover:text-foreground hover:bg-white/5"
+              >
+                <span className="text-base leading-none">{t.icon}</span>
+                <span className="leading-none">{t.label}</span>
+              </TabsTrigger>
+            ))}
+          </TabsList>
+        </div>
 
         <TabsContent value="dashboard"><DashboardTab dashboard={dashboard} ingredients={ingredients} /></TabsContent>
         <TabsContent value="ingredients"><IngredientsTab ingredients={ingredients} suppliers={suppliers} placeId={placeId} isDevAdmin={isDevAdmin} onChange={reload} /></TabsContent>
@@ -92,21 +169,52 @@ export default function InventorySystem({ placeId, isDevAdmin }: Props) {
 // ─── Dashboard ───────────────────────────────────────────────
 function DashboardTab({ dashboard, ingredients }: { dashboard: any; ingredients: Ingredient[] }) {
   if (!dashboard) return <div className="text-center py-8 text-sm text-muted-foreground">جاري التحميل...</div>
-  const KPI = ({ label, value, color, icon }: any) => (
-    <Card><CardContent className="p-4">
-      <div className="flex items-center justify-between"><div className="text-xs text-muted-foreground">{label}</div>{icon}</div>
-      <div className="text-2xl font-bold mt-1" style={{ color }}>{value}</div>
-    </CardContent></Card>
+  const KPI = ({ label, value, color, glow, icon, accent }: any) => (
+    <div
+      className="group relative overflow-hidden rounded-2xl p-4 transition-all hover:-translate-y-0.5"
+      style={{
+        background: 'linear-gradient(140deg, rgba(15,12,30,0.92) 0%, rgba(20,16,42,0.92) 100%)',
+        border: `1px solid ${accent}33`,
+        boxShadow: `0 8px 24px -10px ${glow}, inset 0 1px 0 rgba(255,255,255,0.04)`,
+      }}
+    >
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-x-2 top-0 h-px"
+        style={{ background: `linear-gradient(90deg, transparent, ${accent}99, transparent)` }}
+      />
+      <div
+        aria-hidden
+        className="pointer-events-none absolute -top-8 -left-8 h-24 w-24 rounded-full opacity-50 group-hover:opacity-80 transition-opacity"
+        style={{ background: `radial-gradient(circle, ${accent}33, transparent 70%)` }}
+      />
+      <div className="relative flex items-start justify-between gap-2">
+        <div className="text-[11px] font-semibold leading-tight" style={{ color: 'rgba(203,213,225,0.65)' }}>{label}</div>
+        <div
+          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg"
+          style={{
+            background: `${accent}1f`,
+            border: `1px solid ${accent}40`,
+            boxShadow: `inset 0 1px 0 rgba(255,255,255,0.06)`,
+          }}
+        >
+          {icon}
+        </div>
+      </div>
+      <div className="relative mt-3 text-2xl sm:text-[26px] font-black tracking-tight tabular-nums" style={{ color, textShadow: `0 0 22px ${accent}55` }}>
+        {value}
+      </div>
+    </div>
   )
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <KPI label="قيمة المخزون" value={`${(dashboard.totalValue || 0).toFixed(2)} ج`} color="#10b981" icon={<TrendingUp className="h-4 w-4 text-green-500" />} />
-        <KPI label="عدد المكونات" value={dashboard.ingredientCount || 0} color="#3b82f6" icon={<Package className="h-4 w-4 text-blue-500" />} />
-        <KPI label="تحت الحد الأدنى" value={dashboard.lowStockCount || 0} color="#f59e0b" icon={<AlertTriangle className="h-4 w-4 text-orange-500" />} />
-        <KPI label="نفد تماماً" value={dashboard.outOfStockCount || 0} color="#ef4444" icon={<AlertTriangle className="h-4 w-4 text-red-500" />} />
-        <KPI label="قارب على الانتهاء" value={dashboard.expiringSoonCount || 0} color="#a855f7" icon={<AlertTriangle className="h-4 w-4 text-purple-500" />} />
-        <KPI label="تكلفة الهدر هذا الشهر" value={`${(dashboard.wasteCost || 0).toFixed(2)} ج`} color="#dc2626" icon={<Trash2 className="h-4 w-4 text-red-500" />} />
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+        <KPI label="قيمة المخزون" value={`${(dashboard.totalValue || 0).toFixed(2)} ج`} color="#34d399" accent="#10b981" glow="rgba(16,185,129,0.45)" icon={<TrendingUp className="h-4 w-4 text-emerald-400" />} />
+        <KPI label="عدد المكونات" value={dashboard.ingredientCount || 0} color="#60a5fa" accent="#3b82f6" glow="rgba(59,130,246,0.4)" icon={<Package className="h-4 w-4 text-blue-400" />} />
+        <KPI label="تحت الحد الأدنى" value={dashboard.lowStockCount || 0} color="#fbbf24" accent="#f59e0b" glow="rgba(245,158,11,0.4)" icon={<AlertTriangle className="h-4 w-4 text-amber-400" />} />
+        <KPI label="نفد تماماً" value={dashboard.outOfStockCount || 0} color="#f87171" accent="#ef4444" glow="rgba(239,68,68,0.4)" icon={<AlertTriangle className="h-4 w-4 text-red-400" />} />
+        <KPI label="قارب على الانتهاء" value={dashboard.expiringSoonCount || 0} color="#c084fc" accent="#a855f7" glow="rgba(168,85,247,0.4)" icon={<AlertTriangle className="h-4 w-4 text-purple-400" />} />
+        <KPI label="تكلفة الهدر هذا الشهر" value={`${(dashboard.wasteCost || 0).toFixed(2)} ج`} color="#f87171" accent="#dc2626" glow="rgba(220,38,38,0.4)" icon={<Trash2 className="h-4 w-4 text-red-400" />} />
       </div>
 
       {dashboard.lowStock?.length > 0 && (
