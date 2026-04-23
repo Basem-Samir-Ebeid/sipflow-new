@@ -13,6 +13,7 @@ import { toast, Toaster } from 'sonner'
 import Image from 'next/image'
 import { printHTML } from '@/lib/print'
 import { DevBar } from '@/components/dev-bar'
+import { useSystemLogo } from '@/hooks/use-system-logo'
 
 interface StaffUser {
   id: string
@@ -49,6 +50,7 @@ interface DrinkReportItem {
 type StaffTab = 'pending' | 'done' | 'count' | 'report'
 
 export default function BarPage() {
+  const systemLogoUrl = useSystemLogo()
   const [mounted, setMounted] = useState(false)
   const [staffUser, setStaffUser] = useState<StaffUser | null>(null)
   const [username, setUsername] = useState('')
@@ -306,7 +308,7 @@ export default function BarPage() {
             <div className="text-center mb-8">
               <div className="relative mx-auto mb-5 w-fit">
                 <div className="h-[72px] w-[72px] rounded-2xl overflow-hidden shadow-2xl" style={{ boxShadow: '0 0 0 1px rgba(56,189,248,0.2), 0 0 30px rgba(56,189,248,0.1)' }}>
-                  <Image src="/images/sipflow-logo.jpg" alt="SîpFlõw" width={72} height={72} className="object-cover w-full h-full" />
+                  <Image src={systemLogoUrl} alt="SîpFlõw" width={72} height={72} className="object-cover w-full h-full" unoptimized />
                 </div>
                 <div className="absolute -bottom-2 -left-2 h-6 w-6 rounded-full flex items-center justify-center"
                   style={{ background: 'linear-gradient(135deg, #38bdf8, #0284c7)', boxShadow: '0 0 12px rgba(56,189,248,0.6)' }}>
@@ -582,7 +584,7 @@ export default function BarPage() {
               </div>
             </div>
             <div className="h-9 w-9 rounded-xl overflow-hidden shrink-0" style={{ border: '1px solid rgba(56,189,248,0.25)', boxShadow: '0 0 12px rgba(56,189,248,0.15)' }}>
-              <Image src="/images/sipflow-logo.jpg" alt="logo" width={36} height={36} className="object-cover w-full h-full" />
+              <Image src={systemLogoUrl} alt="logo" width={36} height={36} className="object-cover w-full h-full" unoptimized />
             </div>
           </div>
         </div>
