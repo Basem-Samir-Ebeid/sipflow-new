@@ -16,24 +16,22 @@ export const metadata: Metadata = {
     capable: true,
     statusBarStyle: 'black-translucent',
     title: 'SîpFlõw',
-    startupImage: '/icon-512x512.png',
+    startupImage: '/api/logo?size=512',
   },
   formatDetection: {
     telephone: false,
   },
   icons: {
     icon: [
-      { url: '/icon-192x192.png', sizes: '192x192', type: 'image/png' },
-      { url: '/icon-512x512.png', sizes: '512x512', type: 'image/png' },
-      { url: '/icon-light-32x32.png', media: '(prefers-color-scheme: light)' },
-      { url: '/icon-dark-32x32.png', media: '(prefers-color-scheme: dark)' },
-      { url: '/icon.svg', type: 'image/svg+xml' },
+      { url: '/api/logo?size=192', sizes: '192x192', type: 'image/png' },
+      { url: '/api/logo?size=512', sizes: '512x512', type: 'image/png' },
+      { url: '/api/logo?size=32', sizes: '32x32', type: 'image/png' },
     ],
     apple: [
-      { url: '/apple-icon.png', sizes: '180x180', type: 'image/png' },
-      { url: '/icon-192x192.png', sizes: '192x192', type: 'image/png' },
+      { url: '/api/logo?size=180', sizes: '180x180', type: 'image/png' },
+      { url: '/api/logo?size=192', sizes: '192x192', type: 'image/png' },
     ],
-    shortcut: '/icon-192x192.png',
+    shortcut: '/api/logo?size=192',
   },
 }
 
@@ -60,10 +58,10 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-title" content="SîpFlõw" />
         <meta name="application-name" content="SîpFlõw" />
         <meta name="msapplication-TileColor" content="#0a0a0a" />
-        <meta name="msapplication-TileImage" content="/icon-192x192.png" />
-        <link rel="apple-touch-icon" href="/apple-icon.png" />
-        <link rel="apple-touch-icon" sizes="192x192" href="/icon-192x192.png" />
-        <link rel="apple-touch-icon" sizes="512x512" href="/icon-512x512.png" />
+        <meta name="msapplication-TileImage" content="/api/logo?size=192" />
+        <link rel="apple-touch-icon" href="/api/logo?size=180" />
+        <link rel="apple-touch-icon" sizes="192x192" href="/api/logo?size=192" />
+        <link rel="apple-touch-icon" sizes="512x512" href="/api/logo?size=512" />
       </head>
       <body className="font-sans antialiased">
         <ThemeApplier />
