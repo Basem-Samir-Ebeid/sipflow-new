@@ -2887,7 +2887,7 @@ const handleSaveSettings = async () => {
               {/* Content group */}
               <div>
                 <p className="text-[9px] font-semibold uppercase tracking-widest px-1 mb-1" style={{ color: '#b45309' }}>Content</p>
-                <div className="grid grid-cols-4 gap-1.5">
+                <div className="grid grid-cols-3 gap-1.5">
                   {[
                     { tab: 'drinks',       icon: <Coffee className="h-3.5 w-3.5" />,      label: 'Drinks',       ac: '#d97706' },
                     { tab: 'inventory',    icon: <Package className="h-3.5 w-3.5" />,     label: 'Inventory',    ac: '#d97706' },
@@ -2913,7 +2913,7 @@ const handleSaveSettings = async () => {
               {/* People group */}
               <div>
                 <p className="text-[9px] font-semibold uppercase tracking-widest px-1 mb-1" style={{ color: '#047857' }}>People</p>
-                <div className="grid grid-cols-4 gap-1.5">
+                <div className="grid grid-cols-3 gap-1.5">
                   {[
                     { tab: 'place-admins', icon: <UserCog className="h-3.5 w-3.5" />,   label: 'Admins',    ac: '#059669' },
                     { tab: 'staff',        icon: <Users className="h-3.5 w-3.5" />,      label: 'Employees', ac: '#059669' },
