@@ -232,15 +232,20 @@ const ideaSetups: Record<string, IdeaSetup> = {
 
 export async function POST(request: Request) {
   try {
-    const { flagKey, scope } = await request.json()
+    const { flagKey, scope, title: titleFromClient, tab: tabFromClient, tabLabel: tabLabelFromClient } = await request.json()
     if (!flagKey || typeof flagKey !== 'string') {
       return NextResponse.json({ error: 'Idea key required' }, { status: 400 })
     }
     const implementationScope: ImplementationScope = scope === 'developer_admin' ? 'developer_admin' : 'all_pages'
 
-    const idea = ideaSetups[flagKey]
-    if (!idea) {
-      return NextResponse.json({ error: 'Unknown idea' }, { status: 404 })
+    const idea: IdeaSetup = ideaSetups[flagKey] || {
+      title: typeof titleFromClient === 'string' && titleFromClient.trim() ? titleFromClient : 'فكرة مخصصة',
+      tab: typeof tabFromClient === 'string' && tabFromClient.trim() ? tabFromClient : 'settings',
+      tabLabel: typeof tabLabelFromClient === 'string' && tabLabelFromClient.trim() ? tabLabelFromClient : 'الإعدادات',
+      setup: async () => {
+        await db.setSetting(`${flagKey}_config`, JSON.stringify({ enabled: true, dynamic: true }))
+        return ['تم تفعيل الفكرة وحفظ إعداداتها']
+      },
     }
 
     const steps = await idea.setup()

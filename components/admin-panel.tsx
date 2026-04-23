@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { toast } from 'sonner'
 import { Drink, User, OrderWithDetails, Place, Reservation } from '@/lib/types'
+import { AI_IDEAS, AI_IDEAS_COUNT } from '@/lib/ai-ideas'
 import { printHTML } from '@/lib/print'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -533,21 +534,8 @@ export function AdminPanel({
     saveFeatureFlags(updated)
   }
 
-  // AI Ideas state
-  const AI_IDEAS = [
-    { title: 'نظام تقييم الطلب',       desc: 'بعد تسليم الطلب، تظهر للزبون نافذة صغيرة يقيّم فيها تجربته بالنجوم مع تعليق اختياري. التقييمات تظهر في لوحة الأدمن مع إحصاءات.', icon: '⭐', color: '#fbbf24', tab: 'analytics',   tabLabel: 'التقارير',     flagKey: 'idea_order_rating'      },
-    { title: 'خريطة الطاولات التفاعلية', desc: 'مخطط بصري للمكان يعرض حالة كل طاولة بالألوان — فارغة / نشطة / تنتظر الحساب. الكاشير يضغط على الطاولة لإدارتها مباشرة.', icon: '🗺️', color: '#34d399', tab: 'cashier',    tabLabel: 'الكاشير',      flagKey: 'idea_table_map'         },
-    { title: 'قائمة انتظار ذكية',       desc: 'لما المكان يمتلئ، الزبون يسجل نفسه بـ QR عند المدخل. بمجرد تحرر طاولة يوصله إشعار فوري.', icon: '⏳', color: '#60a5fa', tab: 'settings',   tabLabel: 'الإعدادات',   flagKey: 'idea_waitlist'          },
-    { title: 'تخصيص المشروب',           desc: 'الزبون يختار مستوى السكر والثلج والإضافات لكل منتج. الخيارات تُحدد من الأدمن لكل منتج وتصل للبار واضحة.', icon: '🎛️', color: '#f472b6', tab: 'drinks',     tabLabel: 'المشاريب',    flagKey: 'idea_drink_custom'      },
-    { title: 'إخفاء المنتج تلقائياً',   desc: 'لما الكمية توصل الصفر يختفي المنتج من قائمة الزبائن تلقائياً ويرجع لما يرجع المخزون، مع تنبيه مسبق للأدمن.', icon: '📦', color: '#f59e0b', tab: 'inventory',  tabLabel: 'المخزون',     flagKey: 'idea_auto_hide'         },
-    { title: 'تقسيم الحساب',            desc: 'الكاشير يقسّم فاتورة الطاولة بالتساوي أو حسب كل شخص وطلبه. كل جزء ينطبع كفاتورة مستقلة.', icon: '💳', color: '#a78bfa', tab: 'cashier',    tabLabel: 'الكاشير',     flagKey: 'idea_split_bill'        },
-    { title: 'بطاقة الولاء الرقمية',    desc: 'الزبون يجمع نقاطاً تلقائياً على كل طلب. لما يوصل لعتبة معينة يحصل على مكافأة يحددها الأدمن.', icon: '🏆', color: '#fb923c', tab: 'settings',   tabLabel: 'الإعدادات',  flagKey: 'idea_loyalty'           },
-    { title: 'مؤقت الطاولة',            desc: 'كل طاولة تعرض للكاشير كم وقت مضى عليها. لما تتجاوز الحد تتلوّن باللون الأحمر تلقائياً.', icon: '⏱️', color: '#f87171', tab: 'cashier',    tabLabel: 'الكاشير',     flagKey: 'idea_table_timer'       },
-    { title: 'إعلان صوتي للطلب',        desc: 'لما البار يضغط جاهز، المتحدث يعلن باسم الطاولة تلقائياً بدون صياح. الأدمن يختار الصوت والنبرة.', icon: '🔊', color: '#6366f1', tab: 'settings',   tabLabel: 'الإعدادات',  flagKey: 'idea_voice_announce'    },
-    { title: 'تقارير PDF يومية',         desc: 'الكاشير يصدّر تقرير اليوم بضغطة واحدة — مبيعات، أكثر المنتجات طلباً، وصافي الإيراد.', icon: '📄', color: '#34d399', tab: 'analytics',  tabLabel: 'التقارير',    flagKey: 'idea_pdf_reports'       },
-    { title: 'لوحة أداء الموظفين',      desc: 'إحصاءات لكل موظف — كم طلب خدم، متوسط وقت التحضير، أعلى ساعات إنتاجية. مع ترتيب شهري.', icon: '🏅', color: '#fbbf24', tab: 'staff',      tabLabel: 'الموظفين',    flagKey: 'idea_staff_perf'        },
-    { title: 'مركز تحكم الفروع',        desc: 'لوحة واحدة تعرض كل الفروع في وقت واحد — مبيعات لحظية، طلبات نشطة، مخزون. مع تنبيهات فورية.', icon: '🌐', color: '#e879f9', tab: 'live',       tabLabel: 'البث المباشر',flagKey: 'idea_branch_ctrl'      },
-  ]
+  // AI Ideas state — 1000+ unique non-duplicate ideas generated from lib/ai-ideas.ts
+  // (kept name AI_IDEAS for backward compatibility)
   const [currentIdea, setCurrentIdea] = useState<typeof AI_IDEAS[0] | null>(null)
   const [isGeneratingIdea, setIsGeneratingIdea] = useState(false)
   const [isImplementingIdea, setIsImplementingIdea] = useState(false)
@@ -557,13 +545,25 @@ export function AdminPanel({
   const generateIdea = () => {
     setIsGeneratingIdea(true)
     setTimeout(() => {
-      let available = AI_IDEAS.map((_, i) => i).filter(i => !shownIdeas.has(i))
-      if (available.length === 0) { setShownIdeas(new Set()); available = AI_IDEAS.map((_, i) => i) }
-      const idx = available[Math.floor(Math.random() * available.length)]
-      setShownIdeas(prev => new Set([...prev, idx]))
+      const total = AI_IDEAS.length
+      let idx: number
+      if (shownIdeas.size >= total) {
+        setShownIdeas(new Set())
+        idx = Math.floor(Math.random() * total)
+      } else {
+        // Sample without scanning the entire array (works well even for thousands of ideas)
+        do {
+          idx = Math.floor(Math.random() * total)
+        } while (shownIdeas.has(idx))
+      }
+      setShownIdeas(prev => {
+        const next = new Set(prev)
+        next.add(idx)
+        return next
+      })
       setCurrentIdea(AI_IDEAS[idx])
       setIsGeneratingIdea(false)
-    }, 800)
+    }, 600)
   }
 
   const implementIdea = async (idea: typeof AI_IDEAS[0], scope: IdeaImplementationScope) => {
@@ -572,7 +572,7 @@ export function AdminPanel({
       const res = await fetch('/api/ai-ideas/implement', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ flagKey: idea.flagKey, scope })
+        body: JSON.stringify({ flagKey: idea.flagKey, scope, title: idea.title, tab: idea.tab, tabLabel: idea.tabLabel })
       })
       const data = await res.json()
       if (!res.ok || !data.success) throw new Error(data.error || 'Failed to implement idea')
@@ -9001,10 +9001,17 @@ const handleSaveSettings = async () => {
             <div className="p-4 border-b" style={{ borderColor: 'rgba(245,158,11,0.12)' }}>
               <div className="flex items-center gap-2">
                 <span className="text-lg">💡</span>
-                <div>
+                <div className="flex-1">
                   <h3 className="text-sm font-bold text-white">مولّد الأفكار</h3>
                   <p className="text-[11px]" style={{ color: '#fcd34d' }}>اضغط الزر واحصل على فكرة جاهزة للتطبيق في المشروع</p>
                 </div>
+                <span
+                  className="text-[10px] font-black tabular-nums px-2.5 py-1 rounded-full whitespace-nowrap"
+                  style={{ background: 'rgba(245,158,11,0.18)', border: '1px solid rgba(245,158,11,0.45)', color: '#fbbf24' }}
+                  title="عدد الأفكار الفريدة المتاحة"
+                >
+                  +{AI_IDEAS_COUNT.toLocaleString('en-US')} فكرة
+                </span>
               </div>
             </div>
             <div className="p-4 space-y-4">
