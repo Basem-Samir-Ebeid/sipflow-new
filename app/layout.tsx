@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next'
 import { Geist, Geist_Mono } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
 import { ThemeApplier } from '@/components/theme-applier'
+import { ServiceWorkerRegister } from '@/components/sw-register'
 import './globals.css'
 
 const _geist = Geist({ subsets: ["latin"] });
@@ -65,6 +66,7 @@ export default function RootLayout({
       </head>
       <body className="font-sans antialiased">
         <ThemeApplier />
+        <ServiceWorkerRegister />
         {children}
         <Analytics />
       </body>

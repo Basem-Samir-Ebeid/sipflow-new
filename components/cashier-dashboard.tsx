@@ -909,14 +909,22 @@ export function CashierDashboard({ currentUser, currentPlace, onLogout, systemLo
             <span className="flex items-center gap-1"><span className="inline-block w-3 h-3 rounded bg-zinc-800 border border-zinc-700" /> فاضية</span>
           </div>
 
-          {/* Table Grid */}
-          <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-8 gap-3">
+          {/* Table Grid (Smart Map) */}
+          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3">
             {filteredDisplayTables.map(tableNum => {
               const tOrds = tableMap.get(tableNum) || []
               const isActive = tOrds.length > 0
               const isPaid = paidTables.has(tableNum)
               const hasPending = tOrds.some(o => o.status === 'pending')
+              const itemCount = tOrds.reduce((s, o) => s + (Number(o.quantity) || 0), 0)
+              const pendingItems = tOrds.filter(o => o.status === 'pending' || o.status === 'preparing').reduce((s, o) => s + (Number(o.quantity) || 0), 0)
               const total = tOrds.reduce((s, o) => s + (Number(o.drink?.price) || 0) * o.quantity, 0)
+              // Earliest order time on this table
+              const earliestTs = tOrds.length > 0
+                ? Math.min(...tOrds.map(o => new Date(o.created_at as unknown as string).getTime()))
+                : 0
+              const minutesSeated = earliestTs > 0 ? Math.floor((Date.now() - earliestTs) / 60000) : 0
+              const customerName = (tOrds.find(o => (o as unknown as { customer_name?: string }).customer_name)?.customer_name as string | undefined) || ''
 
               // Color logic: green=paid, yellow=has orders(pending), red=has orders not paid(all ready/completed)
               let cardStyle = 'border-zinc-700 bg-zinc-800/60 text-zinc-500'
@@ -924,15 +932,42 @@ export function CashierDashboard({ currentUser, currentPlace, onLogout, systemLo
               else if (isActive && hasPending) cardStyle = 'border-amber-500/60 bg-amber-500/10 text-amber-300 cursor-pointer hover:bg-amber-500/20 active:scale-95'
               else if (isActive) cardStyle = 'border-red-500/60 bg-red-500/10 text-red-300 cursor-pointer hover:bg-red-500/20 active:scale-95'
 
+              // Stale timer color
+              const timerColor = minutesSeated >= 90 ? 'text-red-400' : minutesSeated >= 60 ? 'text-orange-400' : 'text-zinc-400'
+
               return (
                 <button key={tableNum}
                   onClick={() => (isActive || isPaid) ? setSelectedTable(tableNum) : undefined}
                   disabled={!isActive && !isPaid}
-                  className={`relative rounded-2xl border p-3 text-center transition-all duration-200 ${cardStyle}`}>
+                  className={`relative rounded-2xl border p-3 text-right transition-all duration-200 ${cardStyle} ${(isActive || isPaid) ? 'min-h-[96px]' : 'min-h-[68px]'}`}>
                   {hasPending && !isPaid && <span className="absolute -top-1 -right-1 h-3 w-3 rounded-full bg-orange-500 animate-pulse" />}
-                  <p className="text-lg font-black">{tableNum}</p>
-                  {isActive && !isPaid && <p className="text-[10px] mt-0.5 font-medium">{total.toFixed(0)} ج</p>}
-                  {isPaid && <CheckCircle2 className="h-3.5 w-3.5 mx-auto mt-0.5" />}
+                  {/* Header row */}
+                  <div className="flex items-start justify-between gap-1">
+                    <span className="text-lg font-black">#{tableNum}</span>
+                    {isActive && !isPaid && (
+                      <span className={`text-[9px] font-bold tabular-nums px-1.5 py-0.5 rounded-full bg-black/30 ${timerColor}`}>
+                        {minutesSeated >= 60 ? '🕐' : '⏱'} {minutesSeated}د
+                      </span>
+                    )}
+                    {isPaid && <CheckCircle2 className="h-3.5 w-3.5 mt-0.5 flex-shrink-0" />}
+                  </div>
+                  {/* Active table info */}
+                  {isActive && !isPaid && (
+                    <>
+                      {customerName && (
+                        <p className="text-[10.5px] font-bold mt-1 truncate" style={{ color: 'rgba(255,255,255,0.85)' }} title={customerName}>
+                          {customerName}
+                        </p>
+                      )}
+                      <div className="flex items-center justify-between mt-1.5 text-[10px]">
+                        <span className="font-bold opacity-90">{total.toFixed(0)} ج</span>
+                        <span className="opacity-70">{itemCount} صنف{pendingItems > 0 ? ` · ${pendingItems} جاري` : ''}</span>
+                      </div>
+                    </>
+                  )}
+                  {isPaid && (
+                    <p className="text-[10px] mt-1 opacity-80">جاهزة للزبون التالي</p>
+                  )}
                 </button>
               )
             })}
