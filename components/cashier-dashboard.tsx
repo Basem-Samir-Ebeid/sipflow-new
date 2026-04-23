@@ -11,6 +11,7 @@ import {
 } from 'lucide-react'
 import { toast, Toaster } from 'sonner'
 import { printHTML } from '@/lib/print'
+import { CopilotWidget } from '@/components/copilot-widget'
 
 /* ─────────────────────── Types ─────────────────────── */
 type PaymentMethod = 'cash' | 'visa' | 'instapay' | 'vodafone'
@@ -622,6 +623,7 @@ export function CashierDashboard({ currentUser, currentPlace, onLogout, systemLo
   return (
     <div className="min-h-screen bg-black" dir="rtl">
       <Toaster position="top-center" richColors />
+      <CopilotWidget placeId={currentPlace.id} />
 
       {/* ── Alarm Banner ── */}
       {alarmActive && (
