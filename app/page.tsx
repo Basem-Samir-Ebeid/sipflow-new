@@ -1875,8 +1875,8 @@ export default function HomePage() {
   const Header = () => (
     <header className="sticky top-0 z-40 bg-black/95 backdrop-blur-md" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
       <DevBar />
-      <div className="flex w-full items-center justify-between px-6 py-3">
-        <div className="flex items-center gap-2">
+      <div className="flex w-full items-center justify-between gap-2 px-3 sm:px-6 py-3">
+        <div className="flex items-center gap-2 min-w-0">
           <button
             onClick={() => { setActiveTab('menu'); if (isDevAdmin) fetchBoardPlaces().then(list => { if (list.length > 0) setMenuDevPlaceId(prev => prev || list[0].id) }) }}
             className={`flex h-11 w-11 items-center justify-center rounded-full overflow-hidden transition-colors border-2 ${
@@ -2102,11 +2102,11 @@ export default function HomePage() {
           )}
           <button
             onClick={handleLogoClick}
-            className="flex items-center gap-2 cursor-pointer select-none active:scale-95 transition-transform"
+            className="flex items-center gap-2 cursor-pointer select-none active:scale-95 transition-transform shrink-0"
             title={appName}
           >
-            <span className="text-lg font-bold text-foreground">{appName}</span>
-            <div className="flex h-11 w-11 items-center justify-center rounded-full overflow-hidden bg-black border-2" style={{ borderColor: '#D4A017' }}>
+            <span className="hidden sm:inline text-lg font-bold text-foreground">{appName}</span>
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full overflow-hidden bg-black border-2" style={{ borderColor: '#D4A017' }}>
               <img src={systemLogoUrl} alt="SîpFlõw" className="h-full w-full object-cover" />
             </div>
           </button>
