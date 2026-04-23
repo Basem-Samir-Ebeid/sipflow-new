@@ -1162,18 +1162,25 @@ export default function HomePage() {
   const handleConfirmTableAndSubmit = async (tableOverride?: string) => {
     const isCompanyPlace = currentPlace?.place_type === 'company'
     const tableNum = String(tableOverride ?? pendingTableNumber ?? '').trim()
-    const customerName = isCompanyPlace
+    // If the table number came in via QR override, auto-fill a default customer name
+    // so the customer can place the order immediately without filling anything.
+    const cameFromQR = !!tableOverride && !pendingCustomerName.trim()
+    let customerName = isCompanyPlace
       ? (currentEmployee?.name || pendingCustomerName).trim()
       : pendingCustomerName.trim()
-    
+
     if (!tableNum) {
       setTableModalError(isCompanyPlace ? 'الإدارة مطلوبة' : 'رقم الطربيزة مطلوب')
       return
     }
-    
+
     if (!customerName) {
-      setTableModalError('اسم الزبون مطلوب')
-      return
+      if (cameFromQR && !isCompanyPlace) {
+        customerName = `طاولة ${tableNum}`
+      } else {
+        setTableModalError('اسم الزبون مطلوب')
+        return
+      }
     }
 
     setIsSubmittingOrder(true)
