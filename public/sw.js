@@ -1,22 +1,39 @@
-// SîpFlõw service worker — v1
-const CACHE = 'sipflow-shell-v1'
-const SHELL = ['/', '/owner', '/manifest.json']
+// SîpFlõw Service Worker — v2 (offline-first)
+const VERSION = 'sipflow-v2'
+const SHELL_CACHE = `${VERSION}-shell`
+const API_CACHE = `${VERSION}-api`
+const ASSETS_CACHE = `${VERSION}-assets`
+
+const PRECACHE_URLS = [
+  '/',
+  '/owner',
+  '/owner/marketing',
+  '/bar',
+  '/waiter',
+  '/staff',
+  '/reserve',
+  '/manifest.json',
+]
 
 self.addEventListener('install', (event) => {
   self.skipWaiting()
   event.waitUntil(
-    caches.open(CACHE).then((cache) => cache.addAll(SHELL).catch(() => {}))
+    caches.open(SHELL_CACHE).then((c) =>
+      Promise.allSettled(PRECACHE_URLS.map((u) => c.add(u).catch(() => null)))
+    )
   )
 })
 
 self.addEventListener('activate', (event) => {
-  event.waitUntil(
-    (async () => {
-      const keys = await caches.keys()
-      await Promise.all(keys.filter((k) => k !== CACHE).map((k) => caches.delete(k)))
-      await self.clients.claim()
-    })()
-  )
+  event.waitUntil((async () => {
+    const keys = await caches.keys()
+    await Promise.all(keys.filter((k) => !k.startsWith(VERSION)).map((k) => caches.delete(k)))
+    await self.clients.claim()
+  })())
+})
+
+self.addEventListener('message', (event) => {
+  if (event.data === 'SKIP_WAITING') self.skipWaiting()
 })
 
 self.addEventListener('fetch', (event) => {
@@ -25,26 +42,66 @@ self.addEventListener('fetch', (event) => {
   const url = new URL(req.url)
   if (url.origin !== self.location.origin) return
 
-  // Network-first for API to keep data fresh; fall back to cache when offline.
+  // API GET → stale-while-revalidate
   if (url.pathname.startsWith('/api/')) {
-    event.respondWith(
-      fetch(req)
-        .then((res) => {
-          const copy = res.clone()
-          caches.open(CACHE).then((c) => c.put(req, copy)).catch(() => {})
-          return res
-        })
-        .catch(() => caches.match(req).then((r) => r || new Response(JSON.stringify({ offline: true }), { headers: { 'Content-Type': 'application/json' }, status: 503 })))
-    )
+    event.respondWith(staleWhileRevalidate(req, API_CACHE))
     return
   }
 
-  // Cache-first for shell/static.
-  event.respondWith(
-    caches.match(req).then((cached) => cached || fetch(req).then((res) => {
-      const copy = res.clone()
-      caches.open(CACHE).then((c) => c.put(req, copy)).catch(() => {})
-      return res
-    }).catch(() => caches.match('/')))
-  )
+  // Static assets → cache-first
+  if (
+    url.pathname.startsWith('/_next/') ||
+    /\.(png|jpg|jpeg|svg|webp|woff2?|ico|css|js|gif|mp3|wav|ogg)$/i.test(url.pathname)
+  ) {
+    event.respondWith(cacheFirst(req, ASSETS_CACHE))
+    return
+  }
+
+  // HTML pages → network-first, fall back to cache
+  event.respondWith(networkFirst(req, SHELL_CACHE))
 })
+
+async function staleWhileRevalidate(req, cacheName) {
+  const cache = await caches.open(cacheName)
+  const cached = await cache.match(req)
+  const network = fetch(req)
+    .then((res) => {
+      if (res && res.ok) cache.put(req, res.clone()).catch(() => {})
+      return res
+    })
+    .catch(() =>
+      cached ||
+      new Response(JSON.stringify({ offline: true, message: 'لا توجد بيانات محفوظة' }), {
+        headers: { 'Content-Type': 'application/json' },
+        status: 503,
+      })
+    )
+  return cached || network
+}
+
+async function cacheFirst(req, cacheName) {
+  const cache = await caches.open(cacheName)
+  const cached = await cache.match(req)
+  if (cached) return cached
+  try {
+    const res = await fetch(req)
+    if (res && res.ok) cache.put(req, res.clone()).catch(() => {})
+    return res
+  } catch {
+    return cached || new Response('', { status: 504 })
+  }
+}
+
+async function networkFirst(req, cacheName) {
+  const cache = await caches.open(cacheName)
+  try {
+    const res = await fetch(req)
+    if (res && res.ok) cache.put(req, res.clone()).catch(() => {})
+    return res
+  } catch {
+    const cached = await cache.match(req)
+    if (cached) return cached
+    const fallback = await cache.match('/')
+    return fallback || new Response('Offline', { status: 503 })
+  }
+}
