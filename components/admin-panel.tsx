@@ -7090,60 +7090,6 @@ const handleSaveSettings = async () => {
                 </div>
               </div>
 
-              {/* Clone Place */}
-              <div className="rounded-2xl overflow-hidden" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.08)' }}>
-                {/* Header */}
-                <div className="flex items-center gap-3 px-4 py-3" style={{ background: 'linear-gradient(135deg,rgba(168,85,247,0.12),rgba(139,92,246,0.06))', borderBottom: '1px solid rgba(168,85,247,0.15)' }}>
-                  <div className="h-8 w-8 rounded-xl flex items-center justify-center text-base shrink-0" style={{ background: 'rgba(168,85,247,0.15)', border: '1px solid rgba(168,85,247,0.3)' }}>🪄</div>
-                  <div>
-                    <p className="text-sm font-bold" style={{ color: '#c084fc' }}>نسخ مكان</p>
-                    <p className="text-[10px]" style={{ color: 'rgba(255,255,255,0.35)' }}>ينسخ المنيو والإعدادات لمكان جديد</p>
-                  </div>
-                </div>
-                {/* Body */}
-                <div className="p-4 space-y-2.5">
-                  <div>
-                    <Label className="text-[10px] font-semibold mb-1 block" style={{ color: 'rgba(255,255,255,0.4)' }}>المكان المصدر</Label>
-                    <select
-                      value={cloneSourceId}
-                      onChange={e => {
-                        setCloneSourceId(e.target.value)
-                        const src = places.find(p => p.id === e.target.value)
-                        if (src && !cloneNewName) setCloneNewName(`${src.name} (نسخة)`)
-                        if (src && !cloneNewCode) setCloneNewCode(`${src.code}-copy`)
-                      }}
-                      className="w-full h-9 rounded-xl px-3 text-sm text-foreground border-0 outline-none"
-                      style={{ background: 'rgba(168,85,247,0.08)', border: '1px solid rgba(168,85,247,0.2)' }}
-                    >
-                      <option value="">— اختر المكان المصدر —</option>
-                      {places.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
-                    </select>
-                  </div>
-                  <div className="grid grid-cols-2 gap-2">
-                    <div>
-                      <Label className="text-[10px] font-semibold mb-1 block" style={{ color: 'rgba(255,255,255,0.4)' }}>الاسم الجديد</Label>
-                      <Input value={cloneNewName} onChange={e => setCloneNewName(e.target.value)}
-                        placeholder="اسم المكان الجديد"
-                        className="h-9 text-sm border-0 text-foreground"
-                        style={{ background: 'rgba(255,255,255,0.05)', borderRadius: '10px' }} />
-                    </div>
-                    <div>
-                      <Label className="text-[10px] font-semibold mb-1 block" style={{ color: 'rgba(255,255,255,0.4)' }}>الكود الجديد</Label>
-                      <Input value={cloneNewCode} onChange={e => setCloneNewCode(e.target.value)}
-                        placeholder="كود-الزبون"
-                        className="h-9 text-sm border-0 text-foreground"
-                        style={{ background: 'rgba(255,255,255,0.05)', borderRadius: '10px' }} />
-                    </div>
-                  </div>
-                  <button
-                    onClick={handleClonePlace} disabled={isCloningPlace}
-                    className="w-full h-10 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-all disabled:opacity-50 mt-1"
-                    style={{ background: 'rgba(168,85,247,0.15)', border: '1px solid rgba(168,85,247,0.35)', color: '#c084fc', boxShadow: '0 4px 14px rgba(168,85,247,0.15)' }}>
-                    {isCloningPlace ? <RefreshCw className="h-4 w-4 animate-spin" /> : <span>🪄</span>}
-                    {isCloningPlace ? 'جاري النسخ...' : 'نسخ المكان'}
-                  </button>
-                </div>
-              </div>
             </div>
 
             {/* ── Places list ── */}
