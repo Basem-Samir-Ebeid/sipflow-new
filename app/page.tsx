@@ -2461,18 +2461,18 @@ export default function HomePage() {
             <input ref={loginPhotoInputRef} type="file" accept="image/jpeg,image/png,image/webp,image/gif" className="hidden" onChange={handleWelcomePhotoUpload} />
             {/* Animated background grid */}
             <div className="pointer-events-none absolute inset-0" style={{
-              backgroundImage: 'linear-gradient(rgba(244,63,94,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(244,63,94,0.04) 1px, transparent 1px)',
+              backgroundImage: 'linear-gradient(rgba(212,175,98,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(212,175,98,0.04) 1px, transparent 1px)',
               backgroundSize: '40px 40px'
             }} />
             {/* Glow blobs */}
-            <div className="pointer-events-none absolute top-[-120px] left-1/2 -translate-x-1/2 h-[340px] w-[340px] rounded-full opacity-20" style={{ background: 'radial-gradient(circle, #f43f5e 0%, transparent 70%)', filter: 'blur(60px)' }} />
-            <div className="pointer-events-none absolute bottom-0 right-[-80px] h-[240px] w-[240px] rounded-full opacity-10" style={{ background: 'radial-gradient(circle, #7c3aed 0%, transparent 70%)', filter: 'blur(50px)' }} />
+            <div className="pointer-events-none absolute top-[-120px] left-1/2 -translate-x-1/2 h-[340px] w-[340px] rounded-full opacity-25" style={{ background: 'radial-gradient(circle, #d4af62 0%, transparent 70%)', filter: 'blur(60px)' }} />
+            <div className="pointer-events-none absolute bottom-0 right-[-80px] h-[240px] w-[240px] rounded-full opacity-15" style={{ background: 'radial-gradient(circle, #b8893f 0%, transparent 70%)', filter: 'blur(50px)' }} />
 
             {/* Top bar */}
-            <div className="flex items-center justify-between px-5 py-3" style={{ borderBottom: '1px solid rgba(244,63,94,0.12)' }}>
+            <div className="flex items-center justify-between px-5 py-3" style={{ borderBottom: '1px solid rgba(212,175,98,0.15)' }}>
               <div className="flex items-center gap-2">
-                <div className="h-2 w-2 rounded-full bg-rose-500 animate-pulse" />
-                <span className="text-xs font-mono text-rose-400/70 tracking-widest uppercase">SîpFlõw · Dev Portal</span>
+                <div className="h-2 w-2 rounded-full animate-pulse" style={{ background: '#f4db9c', boxShadow: '0 0 8px #f4db9c' }} />
+                <span className="text-xs font-mono tracking-widest uppercase" style={{ color: 'rgba(244,219,156,0.75)' }}>SîpFlõw · Dev Portal</span>
               </div>
               <div className="flex items-center gap-3">
                 <span className="text-[10px] font-mono text-zinc-600">V{APP_VERSION}</span>
@@ -2495,47 +2495,47 @@ export default function HomePage() {
                   onMouseLeave={() => setWelcomePhotoHover(false)}
                 >
                   {/* Glow pulse behind */}
-                  <div className="absolute inset-0 rounded-full animate-pulse" style={{ background: 'rgba(244,63,94,0.25)', filter: 'blur(18px)', transform: 'scale(1.1)' }} />
+                  <div className="absolute inset-0 rounded-full animate-pulse" style={{ background: 'rgba(212,175,98,0.3)', filter: 'blur(18px)', transform: 'scale(1.1)' }} />
                   {/* Spinning ring */}
-                  <div className="absolute inset-[-4px] rounded-full" style={{ background: 'conic-gradient(from 0deg,#f43f5e,#be123c,#7c3aed,#f43f5e)', animation: 'devSpin 4s linear infinite', padding: 2, borderRadius: '50%' }}>
-                    <div className="w-full h-full rounded-full" style={{ background: '#0c0010' }} />
+                  <div className="absolute inset-[-4px] rounded-full" style={{ background: 'conic-gradient(from 0deg,#b8893f,#d4af62,#f4db9c,#fff5d6,#b8893f)', animation: 'devSpin 4s linear infinite', padding: 2, borderRadius: '50%' }}>
+                    <div className="w-full h-full rounded-full" style={{ background: '#0a0805' }} />
                   </div>
                   {/* Photo / placeholder */}
-                  <div className="absolute inset-0 rounded-full overflow-hidden flex items-center justify-center" style={{ background: 'linear-gradient(135deg,rgba(244,63,94,0.15),rgba(124,58,237,0.15))' }}>
+                  <div className="absolute inset-0 rounded-full overflow-hidden flex items-center justify-center" style={{ background: 'linear-gradient(135deg,rgba(184,137,63,0.2),rgba(244,219,156,0.1))' }}>
                     {welcomePhotoUploading ? (
-                      <Loader2 className="h-8 w-8 animate-spin text-rose-400" />
+                      <Loader2 className="h-8 w-8 animate-spin" style={{ color: '#f4db9c' }} />
                     ) : welcomePhotoUrl ? (
                       <img src={welcomePhotoUrl} alt="Admin" className="w-full h-full object-cover" />
                     ) : (
-                      <UserCircle className="h-12 w-12" style={{ color: 'rgba(244,63,94,0.5)' }} />
+                      <UserCircle className="h-12 w-12" style={{ color: 'rgba(244,219,156,0.55)' }} />
                     )}
                     {/* Hover overlay */}
                     {welcomePhotoHover && !welcomePhotoUploading && (
-                      <div className="absolute inset-0 rounded-full flex flex-col items-center justify-center gap-1" style={{ background: 'rgba(12,0,16,0.72)', backdropFilter: 'blur(3px)' }}>
-                        <Camera className="h-5 w-5 text-rose-300" />
-                        <span className="text-[10px] font-bold text-rose-300">تغيير</span>
+                      <div className="absolute inset-0 rounded-full flex flex-col items-center justify-center gap-1" style={{ background: 'rgba(10,8,5,0.75)', backdropFilter: 'blur(3px)' }}>
+                        <Camera className="h-5 w-5" style={{ color: '#fff5d6' }} />
+                        <span className="text-[10px] font-bold" style={{ color: '#fff5d6' }}>تغيير</span>
                       </div>
                     )}
                   </div>
                   {/* Shield badge */}
-                  <div className="absolute -bottom-1 -left-1 flex h-7 w-7 items-center justify-center rounded-full z-10" style={{ background: 'linear-gradient(135deg, #f43f5e, #be123c)', boxShadow: '0 0 14px rgba(244,63,94,0.6)' }}>
-                    <ShieldCheck className="h-3.5 w-3.5 text-white" />
+                  <div className="absolute -bottom-1 -left-1 flex h-7 w-7 items-center justify-center rounded-full z-10" style={{ background: 'linear-gradient(135deg, #f4db9c, #b8893f)', boxShadow: '0 0 14px rgba(212,175,98,0.65)' }}>
+                    <ShieldCheck className="h-3.5 w-3.5" style={{ color: '#1a1308' }} />
                   </div>
                 </div>
                 {/* Upload hint */}
-                <p className="text-[10px] font-mono cursor-pointer" onClick={() => !welcomePhotoUploading && loginPhotoInputRef.current?.click()} style={{ color: welcomePhotoUrl ? 'rgba(244,63,94,0.35)' : 'rgba(244,63,94,0.55)' }}>
+                <p className="text-[10px] font-mono cursor-pointer" onClick={() => !welcomePhotoUploading && loginPhotoInputRef.current?.click()} style={{ color: welcomePhotoUrl ? 'rgba(244,219,156,0.4)' : 'rgba(244,219,156,0.65)' }}>
                   {welcomePhotoUploading ? 'جارٍ الرفع...' : welcomePhotoUrl ? '✎ اضغط لتغيير الصورة' : '↑ اضغط لإضافة صورة شخصية'}
                 </p>
                 <div>
-                  <h1 className="text-2xl font-black tracking-tight" style={{ color: '#fff', textShadow: '0 0 30px rgba(244,63,94,0.5)' }}>Developer Admin</h1>
-                  <p className="text-xs text-zinc-500 mt-1 tracking-widest uppercase font-mono">Full System Access · SîpFlõw</p>
+                  <h1 className="text-2xl font-black tracking-tight" style={{ background: 'linear-gradient(180deg, #fff5d6 0%, #f4db9c 35%, #d4af62 70%, #b8893f 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text', textShadow: '0 0 30px rgba(212,175,98,0.5)' }}>Developer Admin</h1>
+                  <p className="text-xs mt-1 tracking-widest uppercase font-mono" style={{ color: 'rgba(212,175,98,0.55)' }}>Full System Access · SîpFlõw</p>
                 </div>
               </div>
 
               {/* Status cards */}
               <div className="grid grid-cols-3 gap-2 w-full max-w-sm">
                 {[
-                  { icon: '🛡️', label: 'الوصول', value: 'كامل', color: '#f43f5e' },
+                  { icon: '🛡️', label: 'الوصول', value: 'كامل', color: '#f4db9c' },
                   { icon: '⚡', label: 'النظام', value: 'نشط', color: '#22c55e' },
                   { icon: '🗄️', label: 'قاعدة البيانات', value: 'متصل', color: '#38bdf8' },
                 ].map(card => (
@@ -2548,9 +2548,9 @@ export default function HomePage() {
               </div>
 
               {/* Login card */}
-              <div className="w-full max-w-sm rounded-2xl p-6 space-y-4" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(244,63,94,0.2)', boxShadow: '0 0 40px rgba(244,63,94,0.08)' }}>
+              <div className="w-full max-w-sm rounded-2xl p-6 space-y-4" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(212,175,98,0.25)', boxShadow: '0 0 40px rgba(212,175,98,0.1)' }}>
                 <div className="flex items-center gap-2 mb-1">
-                  <Lock className="h-4 w-4 text-rose-400" />
+                  <Lock className="h-4 w-4" style={{ color: '#f4db9c' }} />
                   <span className="text-sm font-bold text-zinc-200">تسجيل الدخول</span>
                 </div>
                 <div>
@@ -2558,14 +2558,15 @@ export default function HomePage() {
                   <Input value={devAdminName} onChange={e => { setDevAdminName(e.target.value); setAdminError('') }}
                     onKeyDown={e => e.key === 'Enter' && handleAdminLogin()}
                     placeholder="اسم المطور..." dir="rtl"
-                    className="h-11 bg-zinc-900/80 border-zinc-700/60 text-white placeholder:text-zinc-600 focus-visible:ring-rose-500/40 focus-visible:border-rose-500/60" />
+                    className="h-11 bg-zinc-900/80 border-zinc-700/60 text-white placeholder:text-zinc-600"
+                    style={{ outline: 'none' }} />
                 </div>
                 <div>
                   <label className="text-xs font-medium text-zinc-500 mb-1.5 block">كلمة المرور</label>
                   <Input type="password" value={adminPassword} onChange={e => { setAdminPassword(e.target.value); setAdminError('') }}
                     onKeyDown={e => e.key === 'Enter' && handleAdminLogin()}
                     placeholder="••••••••" dir="ltr"
-                    className="h-11 bg-zinc-900/80 border-zinc-700/60 text-white placeholder:text-zinc-600 focus-visible:ring-rose-500/40 focus-visible:border-rose-500/60" />
+                    className="h-11 bg-zinc-900/80 border-zinc-700/60 text-white placeholder:text-zinc-600" />
                 </div>
                 {adminError && (
                   <div className="flex items-center gap-2 rounded-xl px-3 py-2" style={{ background: 'rgba(244,63,94,0.08)', border: '1px solid rgba(244,63,94,0.2)' }}>
@@ -2575,7 +2576,7 @@ export default function HomePage() {
                 )}
                 <button onClick={handleAdminLogin} disabled={isVerifyingDevAdmin}
                   className="w-full h-12 rounded-xl font-black text-sm flex items-center justify-center gap-2 transition-all active:scale-95 disabled:opacity-50"
-                  style={{ background: 'linear-gradient(135deg, #f43f5e, #be123c)', color: '#fff', boxShadow: '0 4px 20px rgba(244,63,94,0.4)', letterSpacing: '0.03em' }}>
+                  style={{ background: 'linear-gradient(135deg, #f4db9c 0%, #d4af62 50%, #b8893f 100%)', color: '#1a1308', boxShadow: '0 4px 20px rgba(212,175,98,0.45), inset 0 1px 0 rgba(255,255,255,0.35)', letterSpacing: '0.03em' }}>
                   {isVerifyingDevAdmin ? <Loader2 className="h-4 w-4 animate-spin" /> : <ShieldCheck className="h-4 w-4" />}
                   {isVerifyingDevAdmin ? 'جاري التحقق...' : 'دخول بوابة المطور'}
                 </button>

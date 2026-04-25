@@ -1,5 +1,5 @@
-// SîpFlõw Service Worker — v4 (offline-first)
-const VERSION = 'sipflow-v4'
+// SîpFlõw Service Worker — v5 (offline-first)
+const VERSION = 'sipflow-v5'
 const SHELL_CACHE = `${VERSION}-shell`
 const API_CACHE = `${VERSION}-api`
 const ASSETS_CACHE = `${VERSION}-assets`
