@@ -3763,7 +3763,7 @@ const handleSaveSettings = async () => {
             <div className="flex items-center gap-3 text-right">
               <div>
                 <p className="font-bold text-amber-300 text-sm">الحجوزات المسبقة</p>
-                <p className="text-xs text-muted-foreground">عرض وإدارة حجوزات ال��ملاء</p>
+                <p className="text-xs text-muted-foreground">عرض وإدارة حجوزات العملاء</p>
               </div>
             </div>
             <CalendarDays className="h-6 w-6 text-amber-400 shrink-0" />
@@ -6576,7 +6576,7 @@ const handleSaveSettings = async () => {
                   </div>
                   <div className="rounded-xl p-3" style={{ background: 'rgba(212,160,23,0.06)' }}>
                     <p className="text-xl font-black text-yellow-400">{totalRevenue.toFixed(0)} ج</p>
-                    <p className="text-[10px] text-muted-foreground">الإير��د المتوقع</p>
+                    <p className="text-[10px] text-muted-foreground">الإيراد المتوقع</p>
                   </div>
                   <div className="rounded-xl p-3" style={{ background: 'rgba(34,197,94,0.06)' }}>
                     <p className="text-xl font-black text-emerald-400">{completedOrders}</p>
@@ -9615,7 +9615,7 @@ const handleSaveSettings = async () => {
                   <div className="rounded-2xl border border-border bg-card p-5 space-y-4">
                     <h3 className="font-bold text-foreground flex items-center gap-2">
                       <Award className="h-4 w-4" style={{ color: gold }} />
-                      أكتر المشار��ب مبيعاً
+                      أكتر المشاريب مبيعاً
                     </h3>
                     <div className="space-y-3">
                       {analyticsData.topDrinks.map((d, i) => (
@@ -9625,7 +9625,7 @@ const handleSaveSettings = async () => {
                               <span className="text-xs text-muted-foreground w-4 text-center">{i + 1}</span>
                               {d.name}
                             </span>
-                            <span className="text-xs text-muted-foreground">{d.qty} طل�� • {d.revenue.toFixed(0)} جنيه</span>
+                            <span className="text-xs text-muted-foreground">{d.qty} طلب • {d.revenue.toFixed(0)} جنيه</span>
                           </div>
                           <div className="h-2.5 rounded-full bg-muted overflow-hidden">
                             <div

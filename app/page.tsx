@@ -870,7 +870,7 @@ export default function HomePage() {
     if (!pwd.trim()) return 'الباسورد مطلوب'
 
     // Minimum 5 characters
-    if (pwd.trim().length < 5) return 'الباسورد لازم يكون 5 أحرف ��و أكتر'
+    if (pwd.trim().length < 5) return 'الباسورد لازم يكون 5 أحرف أو أكتر'
 
     // Can't be same as username
     if (pwd.toLowerCase() === name.toLowerCase().trim()) return 'الباسورد ما ينفعش يكون نفس اسمك'
@@ -1721,7 +1721,7 @@ export default function HomePage() {
     finally { setIsLoadingPlaces(false) }
   }
 
-  // ─── Auto-login shared user for a place ──────────────���────
+  // ─── Auto-login shared user for a place ──────────────────
   const autoLoginSharedUser = async (place: Place) => {
     const sharedName = `__زبون__${place.id}`
     try {
@@ -3030,7 +3030,7 @@ export default function HomePage() {
                           textShadow: 'none'
                         }}
                       >
-                        ✨ نتمنى لكم يوماً جمي����اً ✨
+                        ✨ نتمنى لكم يوماً جميلاً ✨
                       </p>
                       <div className="flex items-center gap-2 mt-0.5">
                         <span className="text-blue-300 text-xs">✦</span>
@@ -4614,7 +4614,7 @@ export default function HomePage() {
             {/* Dev admin: place selector for menu */}
             {isDevAdmin && (
               <div className="rounded-2xl border border-border bg-card p-4 space-y-3">
-                <label className="text-sm text-muted-foreground block">اختر المكان لعرض منيو��</label>
+                <label className="text-sm text-muted-foreground block">اختر المكان لعرض منيوه</label>
                 <select
                   value={menuDevPlaceId}
                   onChange={e => setMenuDevPlaceId(e.target.value)}
@@ -5163,7 +5163,7 @@ export default function HomePage() {
                       className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
                     >
                       <ChevronRight className="h-4 w-4" />
-                      العودة لق��ئمة الأرشيف
+                      العودة لقائمة الأرشيف
                     </button>
 
                     {isLoadingArchivedOrders ? (
@@ -5286,7 +5286,7 @@ export default function HomePage() {
                   }}
                   className="w-full rounded-md border border-border bg-muted px-3 py-2 text-sm text-foreground"
                 >
-                  <option value="">— اختر المك��ن —</option>
+                  <option value="">— اختر المكان —</option>
                   {boardDevPlaces.map(p => (
                     <option key={p.id} value={p.id}>{p.name}</option>
                   ))}

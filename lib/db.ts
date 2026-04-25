@@ -480,7 +480,7 @@ export const db = {
     }
   },
 
-  // ─── Staff Users ─────────────────────────────────────��─
+  // ─── Staff Users ────────────────────────────────────────
   async getStaffUsers() {
     try {
       await sql`ALTER TABLE staff_users ADD COLUMN IF NOT EXISTS role TEXT DEFAULT 'cashier'`
