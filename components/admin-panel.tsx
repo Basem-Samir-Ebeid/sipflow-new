@@ -2665,20 +2665,20 @@ const handleSaveSettings = async () => {
         <div className="space-y-3">
           {/* ── Main Identity Card ── */}
           <div className="relative rounded-2xl overflow-hidden" style={{
-            background: 'linear-gradient(140deg, #04000d 0%, #0a0020 35%, #120038 65%, #0d001f 100%)',
-            boxShadow: '0 0 0 1px rgba(139,92,246,0.35), 0 8px 40px rgba(109,40,217,0.15), inset 0 1px 0 rgba(255,255,255,0.04)'
+            background: 'linear-gradient(140deg, #050402 0%, #0e0a04 35%, #1a1308 65%, #0c0905 100%)',
+            boxShadow: '0 0 0 1px rgba(212,175,98,0.4), 0 8px 40px rgba(184,137,63,0.18), inset 0 1px 0 rgba(255,255,255,0.04)'
           }}>
             {/* Animated sweep border */}
             <div className="pointer-events-none absolute inset-x-0 top-0 h-[2px] overflow-hidden">
-              <div className="h-full w-[200%]" style={{ background: 'linear-gradient(90deg, transparent 0%, rgba(139,92,246,0) 10%, rgba(167,139,250,0.9) 25%, rgba(99,102,241,1) 35%, rgba(167,139,250,0.9) 45%, rgba(139,92,246,0) 60%, transparent 100%)', animation: 'sweep 2.5s linear infinite' }} />
+              <div className="h-full w-[200%]" style={{ background: 'linear-gradient(90deg, transparent 0%, rgba(212,175,98,0) 10%, rgba(244,219,156,0.9) 25%, rgba(255,245,214,1) 35%, rgba(244,219,156,0.9) 45%, rgba(212,175,98,0) 60%, transparent 100%)', animation: 'sweep 2.5s linear infinite' }} />
             </div>
             <style>{`@keyframes sweep { 0%{transform:translateX(-50%)} 100%{transform:translateX(0%)} } @keyframes devpulse { 0%,100%{opacity:0.6;transform:scale(1)} 50%{opacity:1;transform:scale(1.08)} }`}</style>
 
             {/* Glow orbs */}
-            <div className="pointer-events-none absolute -top-16 -right-16 h-64 w-64 rounded-full" style={{ background: 'radial-gradient(circle, rgba(139,92,246,0.18), transparent 70%)', filter: 'blur(28px)' }} />
-            <div className="pointer-events-none absolute -bottom-10 -left-10 h-48 w-48 rounded-full" style={{ background: 'radial-gradient(circle, rgba(79,70,229,0.14), transparent 70%)', filter: 'blur(22px)' }} />
+            <div className="pointer-events-none absolute -top-16 -right-16 h-64 w-64 rounded-full" style={{ background: 'radial-gradient(circle, rgba(212,175,98,0.18), transparent 70%)', filter: 'blur(28px)' }} />
+            <div className="pointer-events-none absolute -bottom-10 -left-10 h-48 w-48 rounded-full" style={{ background: 'radial-gradient(circle, rgba(184,137,63,0.14), transparent 70%)', filter: 'blur(22px)' }} />
             {/* Circuit grid */}
-            <div className="pointer-events-none absolute inset-0" style={{ backgroundImage: 'linear-gradient(rgba(139,92,246,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(139,92,246,0.04) 1px, transparent 1px)', backgroundSize: '28px 28px' }} />
+            <div className="pointer-events-none absolute inset-0" style={{ backgroundImage: 'linear-gradient(rgba(212,175,98,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(212,175,98,0.04) 1px, transparent 1px)', backgroundSize: '28px 28px' }} />
 
             <div className="relative p-5 space-y-4">
               {/* ── Row 1: Identity ── */}
@@ -2707,48 +2707,48 @@ const handleSaveSettings = async () => {
                       className="absolute inset-0 rounded-full"
                       style={{
                         padding: 3,
-                        background: 'conic-gradient(from 0deg, #7c3aed, #4f46e5, #818cf8, #c4b5fd, #7c3aed)',
+                        background: 'conic-gradient(from 0deg, #b8893f, #d4af62, #f4db9c, #fff5d6, #b8893f)',
                         animation: 'spinRing 3s linear infinite',
                         borderRadius: '50%',
                       }}
                     >
-                      <div className="w-full h-full rounded-full" style={{ background: '#04000d' }} />
+                      <div className="w-full h-full rounded-full" style={{ background: '#0a0805' }} />
                     </div>
                     {/* Photo or placeholder */}
                     <div
                       className="absolute rounded-full overflow-hidden flex items-center justify-center"
-                      style={{ inset: 3, background: 'linear-gradient(135deg, rgba(139,92,246,0.25), rgba(79,70,229,0.18))' }}
+                      style={{ inset: 3, background: 'linear-gradient(135deg, rgba(184,137,63,0.28), rgba(244,219,156,0.12))' }}
                     >
                       {adminPhotoUploading ? (
-                        <Loader2 className="h-7 w-7 animate-spin" style={{ color: '#c4b5fd' }} />
+                        <Loader2 className="h-7 w-7 animate-spin" style={{ color: '#f4db9c' }} />
                       ) : adminPhotoUrl ? (
                         <img src={adminPhotoUrl} alt="Admin" className="w-full h-full object-cover" />
                       ) : (
-                        <UserCircle className="h-9 w-9" style={{ color: '#a78bfa' }} />
+                        <UserCircle className="h-9 w-9" style={{ color: '#f4db9c' }} />
                       )}
                       {/* Hover overlay */}
                       {adminPhotoHover && !adminPhotoUploading && (
                         <div
                           className="absolute inset-0 flex flex-col items-center justify-center gap-0.5 rounded-full"
-                          style={{ background: 'rgba(4,0,13,0.65)', backdropFilter: 'blur(2px)' }}
+                          style={{ background: 'rgba(10,8,5,0.7)', backdropFilter: 'blur(2px)' }}
                         >
-                          <Camera className="h-4 w-4" style={{ color: '#e9d5ff' }} />
-                          <span className="text-[9px] font-bold" style={{ color: '#e9d5ff' }}>تغيير</span>
+                          <Camera className="h-4 w-4" style={{ color: '#fff5d6' }} />
+                          <span className="text-[9px] font-bold" style={{ color: '#fff5d6' }}>تغيير</span>
                         </div>
                       )}
                     </div>
                     {/* Online dot */}
-                    <span className="absolute bottom-0.5 right-0.5 h-3.5 w-3.5 rounded-full border-2" style={{ background: '#10b981', borderColor: '#04000d', boxShadow: '0 0 8px rgba(16,185,129,0.7)', zIndex: 10 }} />
+                    <span className="absolute bottom-0.5 right-0.5 h-3.5 w-3.5 rounded-full border-2" style={{ background: '#10b981', borderColor: '#0a0805', boxShadow: '0 0 8px rgba(16,185,129,0.7)', zIndex: 10 }} />
                   </div>
                   <div>
                     <div className="flex items-center gap-2 mb-0.5">
-                      <h1 className="text-lg font-black tracking-tight text-white" style={{ textShadow: '0 0 24px rgba(167,139,250,0.6)' }}>Developer Admin</h1>
+                      <h1 className="text-lg font-black tracking-tight" style={{ background: 'linear-gradient(180deg, #fff5d6 0%, #f4db9c 35%, #d4af62 70%, #b8893f 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text', textShadow: '0 0 24px rgba(212,175,98,0.5)' }}>Developer Admin</h1>
                     </div>
-                    <p className="text-[11px] font-mono" style={{ color: '#7c6e9e' }}>root@sipflow · <span style={{ color: '#a78bfa' }}>full access</span></p>
+                    <p className="text-[11px] font-mono" style={{ color: '#9c8350' }}>root@sipflow · <span style={{ color: '#f4db9c' }}>full access</span></p>
                     <button
                       onClick={() => !adminPhotoUploading && adminPhotoInputRef.current?.click()}
                       className="mt-1 text-[10px] font-semibold transition-colors duration-200"
-                      style={{ color: adminPhotoUrl ? '#6d5a9e' : '#a78bfa', background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}
+                      style={{ color: adminPhotoUrl ? '#9c8350' : '#f4db9c', background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}
                     >
                       {adminPhotoUploading ? 'جارٍ الرفع...' : adminPhotoUrl ? '✎ تغيير الصورة الشخصية' : '+ اضغط للصورة الشخصية'}
                     </button>
@@ -2757,18 +2757,18 @@ const handleSaveSettings = async () => {
                 {/* Right side: badge + clock */}
                 <div className="flex shrink-0 flex-col items-end gap-1.5">
                   <div className="flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[10px] font-black tracking-[0.2em] uppercase"
-                    style={{ background: 'linear-gradient(135deg, rgba(139,92,246,0.25), rgba(79,70,229,0.2))', border: '1px solid rgba(139,92,246,0.5)', color: '#c4b5fd', boxShadow: '0 0 12px rgba(139,92,246,0.25)' }}>
-                    <span className="h-1.5 w-1.5 rounded-full bg-violet-400 animate-pulse" />MASTER
+                    style={{ background: 'linear-gradient(135deg, rgba(184,137,63,0.28), rgba(244,219,156,0.12))', border: '1px solid rgba(212,175,98,0.55)', color: '#f4db9c', boxShadow: '0 0 12px rgba(212,175,98,0.3)' }}>
+                    <span className="h-1.5 w-1.5 rounded-full animate-pulse" style={{ background: '#f4db9c', boxShadow: '0 0 6px #f4db9c' }} />MASTER
                   </div>
-                  <p className="font-mono text-base font-black tabular-nums" style={{ color: '#e9d5ff', letterSpacing: '0.06em', textShadow: '0 0 14px rgba(167,139,250,0.5)' }}>{currentTime}</p>
-                  <p className="text-[10px] font-mono" style={{ color: '#4c3d72' }}>{currentDate}</p>
+                  <p className="font-mono text-base font-black tabular-nums" style={{ background: 'linear-gradient(180deg, #fff5d6 0%, #f4db9c 50%, #d4af62 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text', letterSpacing: '0.06em', textShadow: '0 0 14px rgba(212,175,98,0.4)' }}>{currentTime}</p>
+                  <p className="text-[10px] font-mono" style={{ color: '#6e5a32' }}>{currentDate}</p>
                 </div>
               </div>
 
               {/* ── Row 2: KPI Cards ── */}
               <div className="grid grid-cols-4 gap-2">
                 {[
-                  { label: 'الأماكن',   value: places.length,               icon: '🏠', color: '#c4b5fd', bg: 'rgba(139,92,246,0.1)',  border: 'rgba(139,92,246,0.25)', glow: 'rgba(139,92,246,0.15)' },
+                  { label: 'الأماكن',   value: places.length,               icon: '🏠', color: '#f4db9c', bg: 'rgba(184,137,63,0.1)',  border: 'rgba(212,175,98,0.3)', glow: 'rgba(212,175,98,0.18)' },
                   { label: 'الموظفون', value: staffUsers.length,             icon: '👥', color: '#6ee7b7', bg: 'rgba(16,185,129,0.08)', border: 'rgba(16,185,129,0.22)', glow: 'rgba(16,185,129,0.1)' },
                   { label: 'العملاء',  value: clients.length,               icon: '⭐', color: '#fcd34d', bg: 'rgba(245,158,11,0.08)', border: 'rgba(245,158,11,0.22)', glow: 'rgba(245,158,11,0.1)' },
                   { label: 'الأصناف',  value: allDrinksStats?.total ?? '—', icon: '☕', color: '#f9a8d4', bg: 'rgba(236,72,153,0.08)', border: 'rgba(236,72,153,0.22)', glow: 'rgba(236,72,153,0.1)' },
@@ -2805,7 +2805,7 @@ const handleSaveSettings = async () => {
               {/* ── Row 4: Developer signature ── */}
               <div className="flex items-center justify-between">
                 <span style={{ fontSize: '10px', fontFamily: 'ui-monospace, monospace', fontWeight: 600, background: 'linear-gradient(180deg, #fff5d6 0%, #f4db9c 35%, #d4af62 70%, #b8893f 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text', textShadow: '0 0 8px rgba(212,175,98,0.3)', letterSpacing: '0.08em' }}>Basem Samir Ebeid · SîpFlõw v2.0</span>
-                <span className="text-[10px] font-mono" style={{ color: '#3d2d60' }}>ENV: production · region: auto</span>
+                <span className="text-[10px] font-mono" style={{ color: '#5a4828' }}>ENV: production · region: auto</span>
               </div>
             </div>
           </div>
