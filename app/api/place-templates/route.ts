@@ -73,7 +73,7 @@ export async function POST(request: Request) {
       let created = 0
       for (const drink of templateDrinks) {
         try {
-          await db.createDrink({ ...drink, place_id, initial_stock: 100 })
+          await db.createDrink({ ...drink, place_id })
           created++
         } catch { /* skip if error */ }
       }

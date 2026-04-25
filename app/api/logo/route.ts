@@ -28,15 +28,16 @@ export async function GET(request: Request) {
     }
 
     const contentType = upstream.headers.get('content-type') || 'image/png'
-    let buffer = Buffer.from(await upstream.arrayBuffer())
+    let buffer: Uint8Array = new Uint8Array(await upstream.arrayBuffer())
 
     if (size > 0) {
       try {
         const sharp = (await import('sharp')).default
-        buffer = await sharp(buffer)
+        const resized = await sharp(buffer)
           .resize(size, size, { fit: 'contain', background: { r: 255, g: 255, b: 255, alpha: 1 } })
           .png()
           .toBuffer()
+        buffer = new Uint8Array(resized)
       } catch {
         // sharp not available — return original
       }
