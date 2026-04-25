@@ -2804,7 +2804,7 @@ const handleSaveSettings = async () => {
 
               {/* ── Row 4: Developer signature ── */}
               <div className="flex items-center justify-between">
-                <span style={{ fontSize: '10px', fontFamily: 'ui-monospace, monospace', fontWeight: 600, color: '#a78bfa', textShadow: '0 0 8px rgba(167,139,250,0.4)', letterSpacing: '0.08em' }}>Basem Samir Ebeid · SîpFlõw v2.0</span>
+                <span style={{ fontSize: '10px', fontFamily: 'ui-monospace, monospace', fontWeight: 600, background: 'linear-gradient(180deg, #fff5d6 0%, #f4db9c 35%, #d4af62 70%, #b8893f 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text', textShadow: '0 0 8px rgba(212,175,98,0.3)', letterSpacing: '0.08em' }}>Basem Samir Ebeid · SîpFlõw v2.0</span>
                 <span className="text-[10px] font-mono" style={{ color: '#3d2d60' }}>ENV: production · region: auto</span>
               </div>
             </div>

@@ -2161,10 +2161,10 @@ export default function HomePage() {
             </span>
           </button>
           <div className="flex items-center justify-center gap-3">
-            <div className="h-px w-6" style={{ background: 'linear-gradient(90deg, transparent, rgba(99,102,241,0.4))' }} />
-            <span style={{ fontSize: '9px', letterSpacing: '0.18em', fontWeight: 400, color: 'rgba(148,163,184,0.35)', fontFamily: 'ui-monospace, monospace', textTransform: 'uppercase' }}>Developed by</span>
-            <span style={{ fontSize: '10px', letterSpacing: '0.12em', fontWeight: 700, color: '#a78bfa', textShadow: '0 0 12px rgba(167,139,250,0.6)', textTransform: 'uppercase' }}>Basem Samir Ebeid</span>
-            <div className="h-px w-6" style={{ background: 'linear-gradient(90deg, rgba(99,102,241,0.4), transparent)' }} />
+            <div className="h-px w-6" style={{ background: 'linear-gradient(90deg, transparent, rgba(212,175,98,0.45))' }} />
+            <span style={{ fontSize: '9px', letterSpacing: '0.18em', fontWeight: 400, color: 'rgba(180,160,120,0.55)', fontFamily: 'ui-monospace, monospace', textTransform: 'uppercase' }}>Developed by</span>
+            <span style={{ fontSize: '10px', letterSpacing: '0.12em', fontWeight: 700, background: 'linear-gradient(180deg, #fff5d6 0%, #f4db9c 35%, #d4af62 70%, #b8893f 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text', textShadow: '0 0 12px rgba(212,175,98,0.25)', textTransform: 'uppercase' }}>Basem Samir Ebeid</span>
+            <div className="h-px w-6" style={{ background: 'linear-gradient(90deg, rgba(212,175,98,0.45), transparent)' }} />
           </div>
         </div>
 
@@ -2600,10 +2600,10 @@ export default function HomePage() {
 
               {/* Footer */}
               <div className="flex items-center justify-center gap-2 pb-2">
-                <span style={{ color: 'rgba(99,102,241,0.4)', fontSize: '6px' }}>◆</span>
-                <span style={{ fontSize: '9px', letterSpacing: '0.12em', fontFamily: 'ui-monospace, monospace', color: 'rgba(148,163,184,0.3)' }}>Developed by</span>
-                <span style={{ fontSize: '9px', letterSpacing: '0.1em', fontWeight: 600, color: '#a78bfa', fontFamily: 'ui-monospace, monospace', textShadow: '0 0 10px rgba(167,139,250,0.5)' }}>Basem Samir Ebeid</span>
-                <span style={{ color: 'rgba(148,163,184,0.25)', fontSize: '9px', fontFamily: 'ui-monospace, monospace' }}>· SîpFlõw © {new Date().getFullYear()}</span>
+                <span style={{ color: 'rgba(212,175,98,0.55)', fontSize: '6px' }}>◆</span>
+                <span style={{ fontSize: '9px', letterSpacing: '0.12em', fontFamily: 'ui-monospace, monospace', color: 'rgba(180,160,120,0.5)' }}>Developed by</span>
+                <span style={{ fontSize: '9px', letterSpacing: '0.1em', fontWeight: 600, background: 'linear-gradient(180deg, #fff5d6 0%, #f4db9c 35%, #d4af62 70%, #b8893f 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text', fontFamily: 'ui-monospace, monospace', textShadow: '0 0 10px rgba(212,175,98,0.3)' }}>Basem Samir Ebeid</span>
+                <span style={{ color: 'rgba(180,160,120,0.35)', fontSize: '9px', fontFamily: 'ui-monospace, monospace' }}>· SîpFlõw © {new Date().getFullYear()}</span>
               </div>
             </div>
           </div>
@@ -2831,15 +2831,15 @@ export default function HomePage() {
     return (
       <main className="relative min-h-[100dvh] bg-black overflow-hidden" dir="ltr" onClick={handleGlobalClick}>
         {/* Developer attribution bar */}
-        <div className="relative overflow-hidden py-[8px]" style={{ background: 'linear-gradient(90deg, #020617 0%, #0c0920 25%, #150a2e 50%, #0c0920 75%, #020617 100%)' }}>
-          <div className="absolute inset-x-0 top-0 h-px" style={{ background: 'linear-gradient(90deg, transparent 0%, #6366f1 20%, #a855f7 50%, #06b6d4 80%, transparent 100%)' }} />
+        <div className="relative overflow-hidden py-[8px]" style={{ background: 'linear-gradient(90deg, #050505 0%, #0a0a0c 30%, #0d0d10 50%, #0a0a0c 70%, #050505 100%)' }}>
+          <div className="absolute inset-x-0 top-0 h-px" style={{ background: 'linear-gradient(90deg, transparent 0%, rgba(212,175,98,0.45) 38%, rgba(244,219,156,0.85) 50%, rgba(212,175,98,0.45) 62%, transparent 100%)' }} />
           <div className="flex items-center justify-center gap-3">
-            <span style={{ color: 'rgba(99,102,241,0.55)', fontSize: '7px', lineHeight: 1 }}>◆</span>
-            <span style={{ fontSize: '9px', letterSpacing: '0.22em', fontWeight: 400, color: 'rgba(148,163,184,0.4)', fontFamily: 'ui-monospace, monospace', textTransform: 'uppercase' }}>Developed by</span>
-            <span style={{ fontSize: '11px', letterSpacing: '0.14em', fontWeight: 700, color: '#c4b5fd', textShadow: '0 0 16px rgba(167,139,250,0.85), 0 0 32px rgba(139,92,246,0.4)', textTransform: 'uppercase' }}>Basem Samir Ebeid</span>
-            <span style={{ color: 'rgba(99,102,241,0.55)', fontSize: '7px', lineHeight: 1 }}>◆</span>
+            <span style={{ color: 'rgba(212,175,98,0.7)', fontSize: '7px', lineHeight: 1 }}>◆</span>
+            <span style={{ fontSize: '9px', letterSpacing: '0.22em', fontWeight: 400, color: 'rgba(180,160,120,0.55)', fontFamily: 'ui-monospace, monospace', textTransform: 'uppercase' }}>Developed by</span>
+            <span style={{ fontSize: '11px', letterSpacing: '0.14em', fontWeight: 700, background: 'linear-gradient(180deg, #fff5d6 0%, #f4db9c 35%, #d4af62 70%, #b8893f 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text', textShadow: '0 0 16px rgba(212,175,98,0.4)', textTransform: 'uppercase' }}>Basem Samir Ebeid</span>
+            <span style={{ color: 'rgba(212,175,98,0.7)', fontSize: '7px', lineHeight: 1 }}>◆</span>
           </div>
-          <div className="absolute inset-x-0 bottom-0 h-px" style={{ background: 'linear-gradient(90deg, transparent 0%, rgba(99,102,241,0.3) 30%, rgba(99,102,241,0.3) 70%, transparent 100%)' }} />
+          <div className="absolute inset-x-0 bottom-0 h-px" style={{ background: 'linear-gradient(90deg, transparent 0%, rgba(212,175,98,0.18) 30%, rgba(212,175,98,0.18) 70%, transparent 100%)' }} />
         </div>
         {/* Version tag */}
         <div className="w-full flex items-center justify-end px-4 py-2">
