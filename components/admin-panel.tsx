@@ -2864,9 +2864,8 @@ const handleSaveSettings = async () => {
               {/* Analytics group */}
               <div>
                 <p className="text-[9px] font-semibold uppercase tracking-widest px-1 mb-1" style={{ color: '#7c3aed' }}>Analytics</p>
-                <div className="grid grid-cols-2 gap-1.5">
+                <div className="grid grid-cols-1 gap-1.5">
                   {[
-                    { tab: 'analytics', icon: <TrendingUp className="h-3.5 w-3.5" />,  label: 'Reports',     ac: '#7c3aed' },
                     { tab: 'notes',     icon: <FileText className="h-3.5 w-3.5" />,    label: 'Notes',        ac: '#7c3aed' },
                   ].filter(item => canAccessDevTab(item.tab)).map(item => (
                     <button key={item.tab} onClick={() => handleTabChange(item.tab)}
