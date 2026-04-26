@@ -95,6 +95,7 @@ export default function HomePage() {
   const [isAdmin, setIsAdmin] = useState(false)
   const [showResetModal, setShowResetModal] = useState(false)
   const [resetCode, setResetCode] = useState('')
+  const [resetNewUsername, setResetNewUsername] = useState('')
   const [resetNewPassword, setResetNewPassword] = useState('')
   const [resetType, setResetType] = useState<'admin' | 'user' | 'both'>('admin')
   const [resetError, setResetError] = useState('')
@@ -1485,8 +1486,8 @@ export default function HomePage() {
 
   const handleReset = async () => {
     if (!resetCode.trim()) { setResetError('أدخل كود الريسيت'); return }
-    if ((resetType === 'admin' || resetType === 'both') && !resetNewPassword.trim()) {
-      setResetError('أدخل كلمة المرور الجديدة'); return
+    if ((resetType === 'admin' || resetType === 'both') && !resetNewPassword.trim() && !resetNewUsername.trim()) {
+      setResetError('أدخل اسم المستخدم أو كلمة المرور الجديدة'); return
     }
     setIsResetting(true)
     setResetError('')
@@ -1495,13 +1496,19 @@ export default function HomePage() {
       const res = await fetch('/api/dev-reset', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ resetCode: resetCode.trim(), type: resetType, newPassword: resetNewPassword.trim() })
+        body: JSON.stringify({
+          resetCode: resetCode.trim(),
+          type: resetType,
+          newPassword: resetNewPassword.trim(),
+          newUsername: resetNewUsername.trim(),
+        })
       })
       const data = await res.json()
       if (data.success) {
         setResetSuccess(data.message)
         setResetCode('')
         setResetNewPassword('')
+        setResetNewUsername('')
         if (resetType === 'user' || resetType === 'both') {
           localStorage.removeItem('qa3da_devadmin')
           localStorage.removeItem('qa3da_tab')
@@ -2398,25 +2405,29 @@ export default function HomePage() {
         {/* Admin Login Modal for Developer on place screen */}
         {showResetModal && (
           <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4" dir="rtl">
-            <div className="w-full max-w-xs rounded-2xl p-5 shadow-2xl" style={{ background: '#141414', border: '1px solid rgba(234,179,8,0.3)' }}>
-              <div className="text-center mb-5">
-                <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl mb-3" style={{ background: 'rgba(234,179,8,0.12)', border: '1px solid rgba(234,179,8,0.3)' }}>
+            <div className="w-full max-w-xs rounded-2xl p-5 shadow-2xl relative overflow-hidden" style={{ background: 'linear-gradient(160deg, #0c0905 0%, #1a1308 60%, #0a0805 100%)', border: '1px solid rgba(212,175,98,0.4)', boxShadow: '0 0 0 1px rgba(212,175,98,0.15), 0 20px 60px rgba(0,0,0,0.6), 0 0 40px rgba(184,137,63,0.15)' }}>
+              <div className="pointer-events-none absolute -top-20 -right-20 h-48 w-48 rounded-full" style={{ background: 'radial-gradient(circle, rgba(212,175,98,0.18), transparent 65%)', filter: 'blur(30px)' }} />
+              <div className="pointer-events-none absolute inset-x-0 top-0 h-px" style={{ background: 'linear-gradient(90deg, transparent, rgba(244,219,156,0.6), transparent)' }} />
+
+              <div className="relative text-center mb-5">
+                <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl mb-3" style={{ background: 'linear-gradient(135deg, rgba(184,137,63,0.25), rgba(244,219,156,0.1))', border: '1px solid rgba(212,175,98,0.45)', boxShadow: '0 0 18px rgba(212,175,98,0.25)' }}>
                   <span className="text-2xl">🔑</span>
                 </div>
-                <h2 className="text-lg font-bold text-white">إعادة ضبط النظام</h2>
-                <p className="text-xs text-zinc-500 mt-1">أدخل كود الريسيت لتأكيد العملية</p>
+                <h2 className="text-lg font-bold" style={{ background: 'linear-gradient(180deg, #fff5d6 0%, #f4db9c 50%, #d4af62 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text', textShadow: '0 0 18px rgba(212,175,98,0.4)' }}>إعادة ضبط النظام</h2>
+                <p className="text-xs mt-1" style={{ color: 'rgba(212,175,98,0.55)' }}>أدخل كود الريسيت لتأكيد العملية</p>
               </div>
-              <div className="space-y-3">
+              <div className="relative space-y-3">
                 <div>
-                  <label className="text-xs font-medium text-zinc-400 mb-1.5 block">نوع الريسيت</label>
+                  <label className="text-xs font-medium mb-1.5 block" style={{ color: 'rgba(244,219,156,0.7)' }}>نوع الريسيت</label>
                   <div className="grid grid-cols-3 gap-1.5">
                     {(['admin', 'user', 'both'] as const).map(t => (
                       <button key={t} onClick={() => setResetType(t)}
                         className="h-9 rounded-lg text-xs font-semibold transition-all"
                         style={{
-                          background: resetType === t ? 'rgba(234,179,8,0.2)' : 'rgba(255,255,255,0.05)',
-                          border: `1px solid ${resetType === t ? 'rgba(234,179,8,0.5)' : 'rgba(255,255,255,0.08)'}`,
-                          color: resetType === t ? '#fbbf24' : '#71717a'
+                          background: resetType === t ? 'linear-gradient(135deg, rgba(184,137,63,0.3), rgba(244,219,156,0.15))' : 'rgba(255,255,255,0.04)',
+                          border: `1px solid ${resetType === t ? 'rgba(212,175,98,0.55)' : 'rgba(255,255,255,0.08)'}`,
+                          color: resetType === t ? '#f4db9c' : '#71717a',
+                          boxShadow: resetType === t ? '0 0 12px rgba(212,175,98,0.2), inset 0 1px 0 rgba(255,255,255,0.06)' : 'none',
                         }}>
                         {t === 'admin' ? 'أدمن' : t === 'user' ? 'يوزر' : 'الكل'}
                       </button>
@@ -2424,30 +2435,49 @@ export default function HomePage() {
                   </div>
                 </div>
                 {(resetType === 'admin' || resetType === 'both') && (
-                  <div>
-                    <label className="text-xs font-medium text-zinc-400 mb-1.5 block">باسورد الأدمن الجديد</label>
-                    <Input type="password" value={resetNewPassword} onChange={e => { setResetNewPassword(e.target.value); setResetError('') }}
-                      placeholder="••••••••" dir="ltr"
-                      className="bg-zinc-900 border-zinc-700 text-white placeholder:text-zinc-600 focus-visible:ring-yellow-500/40 focus-visible:border-yellow-500/50" />
-                  </div>
+                  <>
+                    <div>
+                      <label className="text-xs font-medium mb-1.5 block flex items-center gap-1.5" style={{ color: 'rgba(244,219,156,0.7)' }}>
+                        <span>اسم المستخدم الجديد</span>
+                        <span className="text-[9px] font-normal" style={{ color: 'rgba(244,219,156,0.4)' }}>(اختياري)</span>
+                      </label>
+                      <Input value={resetNewUsername} onChange={e => { setResetNewUsername(e.target.value); setResetError('') }}
+                        placeholder="اسم المطور..." dir="rtl"
+                        className="bg-zinc-900 text-white placeholder:text-zinc-600"
+                        style={{ borderColor: 'rgba(212,175,98,0.25)' }} />
+                    </div>
+                    <div>
+                      <label className="text-xs font-medium mb-1.5 block flex items-center gap-1.5" style={{ color: 'rgba(244,219,156,0.7)' }}>
+                        <span>كلمة مرور الأدمن الجديدة</span>
+                        <span className="text-[9px] font-normal" style={{ color: 'rgba(244,219,156,0.4)' }}>(اختياري)</span>
+                      </label>
+                      <Input type="password" value={resetNewPassword} onChange={e => { setResetNewPassword(e.target.value); setResetError('') }}
+                        placeholder="••••••••" dir="ltr"
+                        className="bg-zinc-900 text-white placeholder:text-zinc-600"
+                        style={{ borderColor: 'rgba(212,175,98,0.25)' }} />
+                    </div>
+                    <p className="text-[10px] text-center" style={{ color: 'rgba(244,219,156,0.5)' }}>أدخل واحد منهما على الأقل لتغييره</p>
+                  </>
                 )}
                 <div>
-                  <label className="text-xs font-medium text-zinc-400 mb-1.5 block">كود الريسيت</label>
+                  <label className="text-xs font-medium mb-1.5 block" style={{ color: 'rgba(244,219,156,0.7)' }}>كود الريسيت</label>
                   <Input type="password" value={resetCode} onChange={e => { setResetCode(e.target.value); setResetError('') }}
                     onKeyDown={e => e.key === 'Enter' && handleReset()}
                     placeholder="••••••" dir="ltr"
-                    className="bg-zinc-900 border-zinc-700 text-white placeholder:text-zinc-600 focus-visible:ring-yellow-500/40 focus-visible:border-yellow-500/50" />
+                    className="bg-zinc-900 text-white placeholder:text-zinc-600"
+                    style={{ borderColor: 'rgba(212,175,98,0.25)' }} />
                 </div>
                 {resetError && <p className="text-center text-sm text-rose-400">{resetError}</p>}
                 {resetSuccess && <p className="text-center text-sm text-emerald-400">{resetSuccess}</p>}
                 <button onClick={handleReset} disabled={isResetting}
                   className="w-full h-11 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-all active:scale-95 disabled:opacity-60"
-                  style={{ background: 'linear-gradient(135deg, #d97706, #b45309)', color: '#fff', boxShadow: '0 2px 14px rgba(217,119,6,0.3)' }}>
+                  style={{ background: 'linear-gradient(135deg, #f4db9c 0%, #d4af62 50%, #b8893f 100%)', color: '#1a1308', boxShadow: '0 4px 18px rgba(212,175,98,0.45), inset 0 1px 0 rgba(255,255,255,0.35)', letterSpacing: '0.03em' }}>
                   {isResetting ? <Loader2 className="h-4 w-4 animate-spin" /> : <span>🔄</span>}
                   {isResetting ? 'جاري الريسيت...' : 'تأكيد الريسيت'}
                 </button>
-                <button onClick={() => { setShowResetModal(false); setResetCode(''); setResetNewPassword(''); setResetError(''); setResetSuccess('') }}
-                  className="w-full h-9 rounded-xl text-sm text-zinc-500 hover:text-zinc-300 transition-colors">
+                <button onClick={() => { setShowResetModal(false); setResetCode(''); setResetNewPassword(''); setResetNewUsername(''); setResetError(''); setResetSuccess('') }}
+                  className="w-full h-9 rounded-xl text-sm transition-colors"
+                  style={{ color: 'rgba(244,219,156,0.55)' }}>
                   إلغاء
                 </button>
               </div>

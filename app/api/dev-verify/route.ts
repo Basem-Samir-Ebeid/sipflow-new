@@ -34,11 +34,24 @@ export async function POST(request: NextRequest) {
     }
 
     if (password === adminSecret) {
+      let savedUsername: string | null = null
+      try {
+        const rows = await sql`SELECT value FROM app_settings WHERE key = 'dev_admin_username'`
+        if (rows[0]?.value) savedUsername = String(rows[0].value).trim()
+      } catch {}
+
+      if (savedUsername && savedUsername.length > 0) {
+        const inputName = (name || '').trim().toLowerCase()
+        if (inputName !== savedUsername.toLowerCase()) {
+          return NextResponse.json({ success: false, error: 'Invalid name or password' })
+        }
+      }
+
       const response = NextResponse.json({
         success: true,
         role: 'super_developer',
         roleLabel: DEV_ADMIN_ROLE_LABELS.super_developer,
-        name: name || 'Developer',
+        name: savedUsername || name || 'Developer',
       })
       response.cookies.set(DEV_ADMIN_SESSION_COOKIE, adminSessionValue(adminSecret), {
         httpOnly: true,
