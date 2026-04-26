@@ -303,6 +303,8 @@ export function AdminPanel({
     config: Array<{ key: string; value: string; type: 'string' | 'number' | 'boolean' }>
   }>>({})
   const [savingIdeaKey, setSavingIdeaKey] = useState<string | null>(null)
+  const [previewIdea, setPreviewIdea] = useState<{ flagKey: string; title: string; tab: string } | null>(null)
+  const [previewUrl, setPreviewUrl] = useState<string>('')
 
   // ── UI Customization (theme colors + tab labels + tab order) ──
   const DEFAULT_THEME_COLORS: ThemeColors = {
@@ -9596,6 +9598,26 @@ const handleSaveSettings = async () => {
                           <Settings2 className="h-3 w-3" />
                           {isEditing ? 'إغلاق' : 'إعدادات شاملة'}
                         </button>
+                        <button
+                          onClick={() => {
+                            const tab = (record.tab || idea.tab || '').toLowerCase()
+                            const urlByTab: Record<string, string> = {
+                              drinks: '/', cashier: '/bar', staff: '/staff',
+                              live: '/owner', analytics: '/owner', inventory: '/',
+                              reservations: '/staff', messages: '/owner', settings: '/',
+                              branding: '/', kitchen: '/bar', waiter: '/waiter',
+                            }
+                            const url = urlByTab[tab] || '/'
+                            setPreviewIdea({ flagKey: idea.flagKey, title: record.title || idea.title, tab })
+                            setPreviewUrl(url)
+                          }}
+                          className="flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[11px] font-bold transition-all hover:opacity-90"
+                          style={{ background: 'rgba(96,165,250,0.15)', color: '#60a5fa', border: '1px solid rgba(96,165,250,0.4)' }}
+                          title="عرض الميزة كما يراها الزبون"
+                        >
+                          <Eye className="h-3 w-3" />
+                          معاينة كزبون
+                        </button>
                         <div className="ms-auto">{renderDeleteFeatureBtn(idea.flagKey)}</div>
                       </div>
 
@@ -9752,6 +9774,89 @@ const handleSaveSettings = async () => {
               </div>
             )
           })()}
+
+          {/* ── Preview as customer drawer ── */}
+          {previewIdea && (
+            <div
+              className="fixed inset-0 z-[200] flex items-center justify-center p-4"
+              style={{ background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(6px)' }}
+              onClick={() => setPreviewIdea(null)}
+            >
+              <div
+                className="rounded-2xl overflow-hidden flex flex-col w-full max-w-5xl"
+                style={{ height: '85vh', background: '#0a0a0a', border: '1px solid rgba(96,165,250,0.4)', boxShadow: '0 20px 80px rgba(0,0,0,0.6)' }}
+                onClick={e => e.stopPropagation()}
+              >
+                <div className="flex items-center gap-2 px-4 py-3" style={{ background: 'rgba(96,165,250,0.08)', borderBottom: '1px solid rgba(96,165,250,0.25)' }}>
+                  <Eye className="h-4 w-4" style={{ color: '#60a5fa' }} />
+                  <div className="flex-1 min-w-0">
+                    <div className="text-xs font-bold text-foreground truncate">معاينة كزبون: {previewIdea.title}</div>
+                    <div className="text-[10px] text-muted-foreground truncate" dir="ltr">{previewUrl}</div>
+                  </div>
+                  <button
+                    onClick={() => {
+                      const iframe = document.getElementById('idea-preview-iframe') as HTMLIFrameElement | null
+                      if (iframe) iframe.src = iframe.src
+                    }}
+                    className="h-8 w-8 rounded-lg flex items-center justify-center transition-all hover:opacity-80"
+                    style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}
+                    title="إعادة تحميل"
+                  >
+                    <RefreshCw className="h-3.5 w-3.5 text-zinc-300" />
+                  </button>
+                  <a
+                    href={previewUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="h-8 w-8 rounded-lg flex items-center justify-center transition-all hover:opacity-80"
+                    style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}
+                    title="فتح في تبويب جديد"
+                  >
+                    <ExternalLink className="h-3.5 w-3.5 text-zinc-300" />
+                  </a>
+                  <button
+                    onClick={() => setPreviewIdea(null)}
+                    className="h-8 px-3 rounded-lg text-[11px] font-bold transition-all"
+                    style={{ background: 'rgba(244,63,94,0.12)', color: '#fda4af', border: '1px solid rgba(244,63,94,0.3)' }}
+                  >
+                    إغلاق
+                  </button>
+                </div>
+                <div className="flex items-center gap-1.5 px-4 py-2 flex-wrap" style={{ background: 'rgba(0,0,0,0.4)', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                  {[
+                    { label: 'الزبون', url: '/' },
+                    { label: 'الكاشير', url: '/bar' },
+                    { label: 'الموظفين', url: '/staff' },
+                    { label: 'الويتر', url: '/waiter' },
+                    { label: 'المالك', url: '/owner' },
+                  ].map(p => (
+                    <button
+                      key={p.url}
+                      onClick={() => setPreviewUrl(p.url)}
+                      className="rounded-md px-2.5 py-1 text-[10px] font-bold transition-all"
+                      style={{
+                        background: previewUrl === p.url ? 'rgba(96,165,250,0.2)' : 'rgba(255,255,255,0.03)',
+                        color: previewUrl === p.url ? '#60a5fa' : '#9ca3af',
+                        border: `1px solid ${previewUrl === p.url ? 'rgba(96,165,250,0.5)' : 'rgba(255,255,255,0.06)'}`,
+                      }}
+                    >
+                      {p.label}
+                    </button>
+                  ))}
+                </div>
+                <iframe
+                  id="idea-preview-iframe"
+                  src={previewUrl}
+                  className="flex-1 w-full"
+                  style={{ border: 'none', background: '#000' }}
+                  title="Customer preview"
+                />
+                <div className="px-4 py-2 text-[10px] text-muted-foreground text-center" style={{ background: 'rgba(0,0,0,0.4)', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+                  💡 لو الميزة محتاجة تسجيل دخول، اعمل لوجين داخل الإطار. الشارة الزرقاء/البنفسجية بتظهر في أعلى كل صفحة بعد الدخول.
+                </div>
+              </div>
+            </div>
+          )}
                 </TabsContent>
 
         {/* ─── Analytics / Reports Tab ─────────────────────────── */}
