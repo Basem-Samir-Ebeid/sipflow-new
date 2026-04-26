@@ -907,31 +907,48 @@ function TableCard({ group, onDeliver, onWay, formatTime, highlight }: {
 
       {/* Actions */}
       <div className="px-4 pb-4 space-y-2">
-        {group.allReady && !group.items.every(i => i.status === 'completed') && (
-          <button onClick={handleOnWay} disabled={isOnWay}
-            className="w-full h-10 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-all active:scale-[0.98] disabled:opacity-60"
-            style={{ background: 'rgba(59,130,246,0.15)', border: '1px solid rgba(59,130,246,0.3)', color: '#60a5fa' }}>
-            {isOnWay ? <Loader2 className="h-4 w-4 animate-spin" /> : <Navigation className="h-4 w-4" />}
-            في الطريق للطاولة
-          </button>
-        )}
-        {!group.items.every(i => i.status === 'completed') && (
-          <button onClick={handleClick} disabled={isDelivering}
-            className="w-full h-11 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-all active:scale-[0.98] disabled:opacity-60"
-            style={group.allReady
-              ? { background: 'linear-gradient(135deg, #34d399, #059669)', color: '#fff', boxShadow: '0 2px 16px rgba(52,211,153,0.3)' }
-              : { background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)', color: '#71717a' }}>
-            {isDelivering ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
-            {group.allReady ? 'تم تسليم الأوردر ✓' : 'سلّم الطلب'}
-          </button>
-        )}
-        {group.items.every(i => i.status === 'completed') && (
-          <div className="w-full h-9 rounded-xl flex items-center justify-center gap-2"
-            style={{ background: 'rgba(52,211,153,0.06)', border: '1px solid rgba(52,211,153,0.15)' }}>
-            <CheckCircle2 className="h-4 w-4 text-emerald-600" />
-            <span className="text-xs font-semibold text-emerald-600">تم تسليم هذا الطلب</span>
-          </div>
-        )}
+        {(() => {
+          const allCompleted = group.items.every(i => i.status === 'completed')
+          if (allCompleted) {
+            return (
+              <div className="w-full h-9 rounded-xl flex items-center justify-center gap-2"
+                style={{ background: 'rgba(52,211,153,0.06)', border: '1px solid rgba(52,211,153,0.15)' }}>
+                <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                <span className="text-xs font-semibold text-emerald-600">تم تسليم هذا الطلب</span>
+              </div>
+            )
+          }
+          if (!group.allReady) {
+            return (
+              <button onClick={handleClick} disabled={isDelivering}
+                className="w-full h-11 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-all active:scale-[0.98] disabled:opacity-60"
+                style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)', color: '#71717a' }}>
+                {isDelivering ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
+                سلّم الطلب
+              </button>
+            )
+          }
+          const activeItems = group.items.filter(i => i.status !== 'completed')
+          const allOnWay = activeItems.length > 0 && activeItems.every(i => i.status === 'on_the_way')
+          if (!allOnWay) {
+            return (
+              <button onClick={handleOnWay} disabled={isOnWay}
+                className="w-full h-11 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-all active:scale-[0.98] disabled:opacity-60"
+                style={{ background: 'rgba(59,130,246,0.15)', border: '1px solid rgba(59,130,246,0.3)', color: '#60a5fa' }}>
+                {isOnWay ? <Loader2 className="h-4 w-4 animate-spin" /> : <Navigation className="h-4 w-4" />}
+                في الطريق للطاولة
+              </button>
+            )
+          }
+          return (
+            <button onClick={handleClick} disabled={isDelivering}
+              className="w-full h-11 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-all active:scale-[0.98] disabled:opacity-60"
+              style={{ background: 'linear-gradient(135deg, #34d399, #059669)', color: '#fff', boxShadow: '0 2px 16px rgba(52,211,153,0.3)' }}>
+              {isDelivering ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
+              تم تسليم الأوردر ✓
+            </button>
+          )
+        })()}
       </div>
     </div>
   )
