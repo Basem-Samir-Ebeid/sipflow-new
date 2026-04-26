@@ -1933,11 +1933,11 @@ export default function HomePage() {
                 background:
                   'linear-gradient(135deg, rgba(15,12,40,0.92) 0%, rgba(28,20,68,0.92) 50%, rgba(15,12,40,0.92) 100%)',
                 border: '1px solid',
-                borderColor: activeTab === 'admin' ? 'rgba(167,139,250,0.55)' : 'rgba(139,92,246,0.28)',
+                borderColor: activeTab === 'admin' ? 'rgba(212,175,98,0.55)' : 'rgba(184,137,63,0.28)',
                 boxShadow:
                   activeTab === 'admin'
-                    ? '0 0 0 1px rgba(167,139,250,0.35), 0 8px 28px -6px rgba(124,58,237,0.55), inset 0 1px 0 rgba(255,255,255,0.08), inset 0 -1px 0 rgba(0,0,0,0.4)'
-                    : '0 4px 14px -4px rgba(79,70,229,0.45), inset 0 1px 0 rgba(255,255,255,0.06), inset 0 -1px 0 rgba(0,0,0,0.35)',
+                    ? '0 0 0 1px rgba(212,175,98,0.35), 0 8px 28px -6px rgba(184,137,63,0.55), inset 0 1px 0 rgba(255,255,255,0.08), inset 0 -1px 0 rgba(0,0,0,0.4)'
+                    : '0 4px 14px -4px rgba(138,101,41,0.45), inset 0 1px 0 rgba(255,255,255,0.06), inset 0 -1px 0 rgba(0,0,0,0.35)',
                 backdropFilter: 'blur(8px)',
                 WebkitBackdropFilter: 'blur(8px)',
               }}
@@ -1946,7 +1946,7 @@ export default function HomePage() {
               <span
                 aria-hidden
                 className="pointer-events-none absolute inset-x-2 top-0 h-px"
-                style={{ background: 'linear-gradient(90deg, transparent, rgba(196,181,253,0.55), transparent)' }}
+                style={{ background: 'linear-gradient(90deg, transparent, rgba(244,219,156,0.55), transparent)' }}
               />
               {/* Holographic sheen on hover */}
               <span
@@ -1954,7 +1954,7 @@ export default function HomePage() {
                 className="pointer-events-none absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-[1100ms] ease-out"
                 style={{
                   background:
-                    'linear-gradient(110deg, transparent 35%, rgba(196,181,253,0.18) 50%, transparent 65%)',
+                    'linear-gradient(110deg, transparent 35%, rgba(244,219,156,0.18) 50%, transparent 65%)',
                 }}
               />
               {/* Soft inner glow when active */}
@@ -1964,7 +1964,7 @@ export default function HomePage() {
                   className="pointer-events-none absolute inset-0"
                   style={{
                     background:
-                      'radial-gradient(120% 80% at 50% 100%, rgba(124,58,237,0.28) 0%, transparent 60%)',
+                      'radial-gradient(120% 80% at 50% 100%, rgba(184,137,63,0.28) 0%, transparent 60%)',
                   }}
                 />
               )}
@@ -1974,11 +1974,11 @@ export default function HomePage() {
                 className="relative flex h-[22px] w-[22px] items-center justify-center text-[11px] leading-none shrink-0"
                 style={{
                   background:
-                    'conic-gradient(from 210deg at 50% 50%, #a78bfa 0deg, #818cf8 110deg, #6366f1 200deg, #a78bfa 360deg)',
+                    'conic-gradient(from 210deg at 50% 50%, #f4db9c 0deg, #d4af62 110deg, #b8893f 200deg, #f4db9c 360deg)',
                   clipPath:
                     'polygon(50% 0%, 95% 25%, 95% 75%, 50% 100%, 5% 75%, 5% 25%)',
                   boxShadow:
-                    '0 0 10px rgba(167,139,250,0.55), inset 0 1px 0 rgba(255,255,255,0.35)',
+                    '0 0 10px rgba(212,175,98,0.55), inset 0 1px 0 rgba(255,255,255,0.35)',
                 }}
               >
                 <span
@@ -1993,11 +1993,11 @@ export default function HomePage() {
                 <span
                   className="relative font-black"
                   style={{
-                    background: 'linear-gradient(180deg, #ffffff 0%, #c4b5fd 100%)',
+                    background: 'linear-gradient(180deg, #ffffff 0%, #fff5d6 100%)',
                     WebkitBackgroundClip: 'text',
                     WebkitTextFillColor: 'transparent',
                     backgroundClip: 'text',
-                    filter: 'drop-shadow(0 0 4px rgba(196,181,253,0.7))',
+                    filter: 'drop-shadow(0 0 4px rgba(244,219,156,0.7))',
                   }}
                 >
                   ★
@@ -2011,7 +2011,7 @@ export default function HomePage() {
                     fontSize: '8px',
                     letterSpacing: '0.28em',
                     fontWeight: 700,
-                    color: 'rgba(196,181,253,0.7)',
+                    color: 'rgba(244,219,156,0.7)',
                     fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace',
                   }}
                 >
@@ -2024,7 +2024,7 @@ export default function HomePage() {
                     letterSpacing: '0.04em',
                     fontWeight: 800,
                     background:
-                      'linear-gradient(180deg, #ffffff 0%, #e9d5ff 60%, #c4b5fd 100%)',
+                      'linear-gradient(180deg, #ffffff 0%, #fff5d6 60%, #fff5d6 100%)',
                     WebkitBackgroundClip: 'text',
                     WebkitTextFillColor: 'transparent',
                     backgroundClip: 'text',
@@ -2044,17 +2044,17 @@ export default function HomePage() {
                 {activeTab !== 'admin' && (
                   <span
                     className="absolute inline-flex h-full w-full rounded-full opacity-75 animate-ping"
-                    style={{ background: '#a78bfa' }}
+                    style={{ background: '#f4db9c' }}
                   />
                 )}
                 <span
                   className="relative inline-flex h-1.5 w-1.5 rounded-full"
                   style={{
-                    background: activeTab === 'admin' ? '#34d399' : '#a78bfa',
+                    background: activeTab === 'admin' ? '#34d399' : '#f4db9c',
                     boxShadow:
                       activeTab === 'admin'
                         ? '0 0 8px #34d399, 0 0 0 1px rgba(52,211,153,0.35)'
-                        : '0 0 6px #a78bfa, 0 0 0 1px rgba(167,139,250,0.35)',
+                        : '0 0 6px #f4db9c, 0 0 0 1px rgba(212,175,98,0.35)',
                   }}
                 />
               </span>
@@ -2097,9 +2097,9 @@ export default function HomePage() {
                   ? 'rgba(34,197,94,0.12)'
                   : waiterCallCooldown > 0
                     ? 'rgba(255,255,255,0.04)'
-                    : 'rgba(99,102,241,0.18)',
-                border: `1px solid ${waiterOnTheWay ? 'rgba(34,197,94,0.35)' : waiterCallCooldown > 0 ? 'rgba(255,255,255,0.08)' : 'rgba(99,102,241,0.45)'}`,
-                color: waiterOnTheWay ? '#4ade80' : waiterCallCooldown > 0 ? '#6b7280' : '#a5b4fc'
+                    : 'rgba(184,137,63,0.18)',
+                border: `1px solid ${waiterOnTheWay ? 'rgba(34,197,94,0.35)' : waiterCallCooldown > 0 ? 'rgba(255,255,255,0.08)' : 'rgba(184,137,63,0.45)'}`,
+                color: waiterOnTheWay ? '#4ade80' : waiterCallCooldown > 0 ? '#6b7280' : '#f4db9c'
               }}
               title="اطلب النادل"
             >
@@ -2140,8 +2140,8 @@ export default function HomePage() {
         <Toaster position="top-center" richColors toastOptions={{ style: { direction: 'rtl' } }} />
         {/* Rich ambient background */}
         <div className="pointer-events-none fixed inset-0 overflow-hidden">
-          <div style={{ position: 'absolute', top: '-15%', left: '-10%', width: '55%', height: '55%', borderRadius: '50%', background: 'radial-gradient(ellipse at center, rgba(99,102,241,0.12) 0%, transparent 65%)' }} />
-          <div style={{ position: 'absolute', bottom: '-20%', right: '-15%', width: '60%', height: '60%', borderRadius: '50%', background: 'radial-gradient(ellipse at center, rgba(139,92,246,0.1) 0%, transparent 65%)' }} />
+          <div style={{ position: 'absolute', top: '-15%', left: '-10%', width: '55%', height: '55%', borderRadius: '50%', background: 'radial-gradient(ellipse at center, rgba(184,137,63,0.12) 0%, transparent 65%)' }} />
+          <div style={{ position: 'absolute', bottom: '-20%', right: '-15%', width: '60%', height: '60%', borderRadius: '50%', background: 'radial-gradient(ellipse at center, rgba(184,137,63,0.1) 0%, transparent 65%)' }} />
           <div style={{ position: 'absolute', top: '40%', right: '5%', width: '30%', height: '30%', borderRadius: '50%', background: 'radial-gradient(ellipse at center, rgba(6,182,212,0.06) 0%, transparent 65%)' }} />
           <div style={{ position: 'absolute', inset: 0, backgroundImage: 'radial-gradient(circle, rgba(255,255,255,0.018) 1px, transparent 1px)', backgroundSize: '32px 32px' }} />
         </div>
@@ -2150,20 +2150,20 @@ export default function HomePage() {
         <div className="relative w-full py-1.5" style={{ background: 'rgba(255,255,255,0.025)', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
           <button
             onClick={(e) => { e.stopPropagation(); setShowAdminLogin(true) }}
-            className="absolute left-4 top-[calc(100%+10px)] z-20 flex items-center gap-2 rounded-2xl px-2.5 py-2 transition-all duration-300 active:scale-95 hover:-translate-y-0.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-300/60"
+            className="absolute left-4 top-[calc(100%+10px)] z-20 flex items-center gap-2 rounded-2xl px-2.5 py-2 transition-all duration-300 active:scale-95 hover:-translate-y-0.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#f4db9c]/60"
             style={{
-              background: 'linear-gradient(135deg, rgba(15,23,42,0.92), rgba(49,46,129,0.78))',
-              border: '1px solid rgba(165,180,252,0.26)',
-              boxShadow: '0 14px 34px rgba(0,0,0,0.38), 0 0 24px rgba(99,102,241,0.16), inset 0 1px 0 rgba(255,255,255,0.08)',
+              background: 'linear-gradient(135deg, rgba(15,23,42,0.92), rgba(46,33,12,0.78))',
+              border: '1px solid rgba(244,219,156,0.26)',
+              boxShadow: '0 14px 34px rgba(0,0,0,0.38), 0 0 24px rgba(184,137,63,0.16), inset 0 1px 0 rgba(255,255,255,0.08)',
               backdropFilter: 'blur(14px)',
             }}
             title="Developer Admin"
           >
-            <span className="relative flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-xl" style={{ border: '1px solid rgba(255,255,255,0.14)', boxShadow: '0 0 18px rgba(129,140,248,0.28)' }}>
+            <span className="relative flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-xl" style={{ border: '1px solid rgba(255,255,255,0.14)', boxShadow: '0 0 18px rgba(212,175,98,0.28)' }}>
               <Image src={systemLogoUrl} alt="SîpFlõw" width={32} height={32} className="h-full w-full object-cover" />
             </span>
             <span className="hidden sm:flex flex-col items-start leading-none">
-              <span className="text-[9px] font-bold uppercase tracking-[0.22em]" style={{ color: 'rgba(199,210,254,0.72)' }}>Developer</span>
+              <span className="text-[9px] font-bold uppercase tracking-[0.22em]" style={{ color: 'rgba(255,245,214,0.72)' }}>Developer</span>
               <span className="text-[11px] font-black tracking-wide text-white">Admin</span>
             </span>
           </button>
@@ -2180,26 +2180,26 @@ export default function HomePage() {
           <div className="flex flex-col items-center space-y-5 pb-1">
             <div className="relative flex items-center justify-center" style={{ width: 110, height: 110 }}>
               {/* Outer pulse ring */}
-              <div className="absolute inset-0 rounded-3xl animate-pulse" style={{ background: 'rgba(99,102,241,0.08)', border: '1px solid rgba(99,102,241,0.15)' }} />
+              <div className="absolute inset-0 rounded-3xl animate-pulse" style={{ background: 'rgba(184,137,63,0.08)', border: '1px solid rgba(184,137,63,0.15)' }} />
               {/* Middle glow ring */}
-              <div className="absolute" style={{ inset: '-8px', borderRadius: '1.75rem', border: '1px solid rgba(139,92,246,0.15)', boxShadow: '0 0 40px rgba(99,102,241,0.12)' }} />
+              <div className="absolute" style={{ inset: '-8px', borderRadius: '1.75rem', border: '1px solid rgba(184,137,63,0.15)', boxShadow: '0 0 40px rgba(184,137,63,0.12)' }} />
               {/* Logo */}
-              <div className="relative rounded-3xl overflow-hidden" style={{ width: 100, height: 100, border: '1px solid rgba(255,255,255,0.1)', boxShadow: '0 8px 40px rgba(0,0,0,0.5), 0 0 0 1px rgba(99,102,241,0.2)' }}>
+              <div className="relative rounded-3xl overflow-hidden" style={{ width: 100, height: 100, border: '1px solid rgba(255,255,255,0.1)', boxShadow: '0 8px 40px rgba(0,0,0,0.5), 0 0 0 1px rgba(184,137,63,0.2)' }}>
                 <Image src={systemLogoUrl} alt="SîpFlõw" fill sizes="100px" loading="eager" style={{ objectFit: 'cover', objectPosition: 'center' }} />
-                <div className="absolute inset-0" style={{ background: 'linear-gradient(135deg, rgba(99,102,241,0.1) 0%, transparent 60%)' }} />
+                <div className="absolute inset-0" style={{ background: 'linear-gradient(135deg, rgba(184,137,63,0.1) 0%, transparent 60%)' }} />
               </div>
               {/* Badge */}
-              <div className="absolute -bottom-2 -right-2 flex h-7 w-7 items-center justify-center rounded-xl" style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6)', border: '2px solid #07050f', boxShadow: '0 4px 12px rgba(99,102,241,0.5)' }}>
+              <div className="absolute -bottom-2 -right-2 flex h-7 w-7 items-center justify-center rounded-xl" style={{ background: 'linear-gradient(135deg, #b8893f, #b8893f)', border: '2px solid #07050f', boxShadow: '0 4px 12px rgba(184,137,63,0.5)' }}>
                 <Coffee className="h-3.5 w-3.5 text-white" />
               </div>
             </div>
 
             <div className="text-center space-y-1.5">
-              <h1 className="text-3xl font-black tracking-tight text-white" style={{ textShadow: '0 0 30px rgba(99,102,241,0.3)' }}>{appName}</h1>
+              <h1 className="text-3xl font-black tracking-tight text-white" style={{ textShadow: '0 0 30px rgba(184,137,63,0.3)' }}>{appName}</h1>
               <div className="flex items-center justify-center gap-2">
-                <div className="h-px w-6" style={{ background: 'linear-gradient(90deg, transparent, rgba(99,102,241,0.5))' }} />
+                <div className="h-px w-6" style={{ background: 'linear-gradient(90deg, transparent, rgba(184,137,63,0.5))' }} />
                 <p className="text-[10px] tracking-[0.22em] uppercase font-semibold" style={{ color: 'rgba(148,163,184,0.45)' }}>Order Management System</p>
-                <div className="h-px w-6" style={{ background: 'linear-gradient(90deg, rgba(99,102,241,0.5), transparent)' }} />
+                <div className="h-px w-6" style={{ background: 'linear-gradient(90deg, rgba(184,137,63,0.5), transparent)' }} />
               </div>
             </div>
           </div>
@@ -2211,29 +2211,29 @@ export default function HomePage() {
             className="relative w-full rounded-2xl overflow-hidden transition-all active:scale-[0.97] disabled:opacity-50 group focus-visible:outline-none"
             style={{
               background: 'linear-gradient(135deg, rgba(12,8,28,0.98) 0%, rgba(22,14,50,0.98) 50%, rgba(18,10,40,0.98) 100%)',
-              border: '1px solid rgba(139,92,246,0.3)',
-              boxShadow: '0 0 0 1px rgba(99,102,241,0.08), 0 12px 40px rgba(99,102,241,0.15), 0 0 80px rgba(139,92,246,0.06)',
+              border: '1px solid rgba(184,137,63,0.3)',
+              boxShadow: '0 0 0 1px rgba(184,137,63,0.08), 0 12px 40px rgba(184,137,63,0.15), 0 0 80px rgba(184,137,63,0.06)',
             }}
           >
             {/* Top gradient line */}
-            <div className="absolute inset-x-0 top-0 h-px" style={{ background: 'linear-gradient(90deg, transparent 5%, #6366f1 35%, #a855f7 65%, transparent 95%)' }} />
+            <div className="absolute inset-x-0 top-0 h-px" style={{ background: 'linear-gradient(90deg, transparent 5%, #b8893f 35%, #d4af62 65%, transparent 95%)' }} />
             {/* Inner ambient */}
-            <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300" style={{ background: 'radial-gradient(ellipse at 50% 0%, rgba(99,102,241,0.08) 0%, transparent 70%)' }} />
+            <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300" style={{ background: 'radial-gradient(ellipse at 50% 0%, rgba(184,137,63,0.08) 0%, transparent 70%)' }} />
 
             <div className="relative flex items-center gap-3 px-4 py-3.5">
               {/* Animated icon */}
               <div className="relative shrink-0">
                 <div className="h-10 w-10 rounded-xl flex items-center justify-center" style={{
-                  background: 'linear-gradient(135deg, rgba(99,102,241,0.18), rgba(139,92,246,0.12))',
-                  border: '1px solid rgba(139,92,246,0.3)',
-                  boxShadow: '0 0 24px rgba(99,102,241,0.2), inset 0 1px 0 rgba(255,255,255,0.06)'
+                  background: 'linear-gradient(135deg, rgba(184,137,63,0.18), rgba(184,137,63,0.12))',
+                  border: '1px solid rgba(184,137,63,0.3)',
+                  boxShadow: '0 0 24px rgba(184,137,63,0.2), inset 0 1px 0 rgba(255,255,255,0.06)'
                 }}>
                   {isLoadingPlaces
-                    ? <Loader2 className="h-5 w-5 animate-spin text-indigo-400" />
-                    : <MapPin className="h-5 w-5 text-indigo-300" />}
+                    ? <Loader2 className="h-5 w-5 animate-spin text-[#d4af62]" />
+                    : <MapPin className="h-5 w-5 text-[#f4db9c]" />}
                 </div>
                 {!isLoadingPlaces && (
-                  <div className="absolute inset-0 rounded-xl animate-ping" style={{ background: 'rgba(99,102,241,0.15)', animationDuration: '2.5s' }} />
+                  <div className="absolute inset-0 rounded-xl animate-ping" style={{ background: 'rgba(184,137,63,0.15)', animationDuration: '2.5s' }} />
                 )}
               </div>
 
@@ -2250,13 +2250,13 @@ export default function HomePage() {
               </div>
 
               {/* Arrow */}
-              <div className="shrink-0 flex items-center justify-center h-7 w-7 rounded-lg transition-all group-hover:-translate-x-0.5" style={{ background: 'rgba(99,102,241,0.12)', border: '1px solid rgba(99,102,241,0.2)' }}>
-                <ChevronLeft className="h-3.5 w-3.5 text-indigo-400" />
+              <div className="shrink-0 flex items-center justify-center h-7 w-7 rounded-lg transition-all group-hover:-translate-x-0.5" style={{ background: 'rgba(184,137,63,0.12)', border: '1px solid rgba(184,137,63,0.2)' }}>
+                <ChevronLeft className="h-3.5 w-3.5 text-[#d4af62]" />
               </div>
             </div>
 
             {/* Bottom gradient line */}
-            <div className="absolute inset-x-0 bottom-0 h-px" style={{ background: 'linear-gradient(90deg, transparent 5%, rgba(139,92,246,0.3) 35%, rgba(99,102,241,0.3) 65%, transparent 95%)' }} />
+            <div className="absolute inset-x-0 bottom-0 h-px" style={{ background: 'linear-gradient(90deg, transparent 5%, rgba(184,137,63,0.3) 35%, rgba(184,137,63,0.3) 65%, transparent 95%)' }} />
           </button>
 
           {/* Separator */}
@@ -2293,7 +2293,7 @@ export default function HomePage() {
             className="relative overflow-hidden rounded-[1.35rem] p-3 shadow-2xl"
             style={{
               background: 'linear-gradient(145deg, rgba(10,12,28,0.96), rgba(21,16,44,0.98) 58%, rgba(33,18,62,0.96))',
-              border: '1px solid rgba(124,58,237,0.22)',
+              border: '1px solid rgba(184,137,63,0.22)',
               boxShadow: '0 24px 70px rgba(0,0,0,0.38), inset 0 1px 0 rgba(255,255,255,0.05)'
             }}
           >
@@ -2304,8 +2304,8 @@ export default function HomePage() {
                 backgroundSize: '34px 34px'
               }}
             />
-            <div className="pointer-events-none absolute -left-12 -top-10 h-36 w-36 rounded-full bg-violet-500/15 blur-3xl" />
-            <div className="pointer-events-none absolute -bottom-16 right-8 h-40 w-40 rounded-full bg-indigo-500/12 blur-3xl" />
+            <div className="pointer-events-none absolute -left-12 -top-10 h-36 w-36 rounded-full bg-[#b8893f]/15 blur-3xl" />
+            <div className="pointer-events-none absolute -bottom-16 right-8 h-40 w-40 rounded-full bg-[#b8893f]/12 blur-3xl" />
 
             <div className="relative space-y-3">
               <div className="flex items-start justify-between gap-3">
@@ -2329,7 +2329,7 @@ export default function HomePage() {
                 <div
                   className="flex h-10 w-10 items-center justify-center rounded-xl"
                   style={{
-                    background: 'linear-gradient(145deg, rgba(245,158,11,0.14), rgba(99,102,241,0.10))',
+                    background: 'linear-gradient(145deg, rgba(245,158,11,0.14), rgba(184,137,63,0.10))',
                     border: '1px solid rgba(245,158,11,0.18)'
                   }}
                 >
@@ -2340,7 +2340,7 @@ export default function HomePage() {
               <div className="grid grid-cols-3 gap-2">
                 {[
                   { icon: '🧭', title: 'توجيه ذكي', sub: 'اختيار المسار', color: '#facc15', bg: 'rgba(245,158,11,0.08)', border: 'rgba(245,158,11,0.16)' },
-                  { icon: '🔐', title: 'دخول آمن', sub: 'جلسة محمية', color: '#c4b5fd', bg: 'rgba(124,58,237,0.10)', border: 'rgba(124,58,237,0.18)' },
+                  { icon: '🔐', title: 'دخول آمن', sub: 'جلسة محمية', color: '#fff5d6', bg: 'rgba(184,137,63,0.10)', border: 'rgba(184,137,63,0.18)' },
                   { icon: '⚡', title: 'تشغيل فوري', sub: 'واجهة جاهزة', color: '#93c5fd', bg: 'rgba(59,130,246,0.09)', border: 'rgba(59,130,246,0.16)' },
                 ].map((item) => (
                   <div
@@ -2643,20 +2643,20 @@ export default function HomePage() {
         {/* Cashier Login Modal */}
         {showCashierLogin && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4" dir="rtl">
-            <div className="w-full max-w-xs rounded-2xl p-5 shadow-2xl" style={{ background: '#141414', border: '1px solid rgba(168,85,247,0.2)' }}>
+            <div className="w-full max-w-xs rounded-2xl p-5 shadow-2xl" style={{ background: '#141414', border: '1px solid rgba(212,175,98,0.2)' }}>
               <div className="text-center mb-7">
                 <div className="relative mx-auto mb-5 h-20 w-20">
-                  <div className="h-20 w-20 rounded-2xl overflow-hidden border border-violet-500/30 shadow-lg shadow-violet-500/15">
+                  <div className="h-20 w-20 rounded-2xl overflow-hidden border border-[#b8893f]/30 shadow-lg shadow-[#b8893f]/15">
                     <Image src={systemLogoUrl} alt="SîpFlõw" width={80} height={80} className="object-cover w-full h-full" />
                   </div>
                   <div className="absolute -bottom-2 -left-2 flex h-7 w-7 items-center justify-center rounded-full"
-                    style={{ background: 'linear-gradient(135deg, #a855f7, #7c3aed)', boxShadow: '0 0 10px rgba(168,85,247,0.5)' }}>
+                    style={{ background: 'linear-gradient(135deg, #d4af62, #b8893f)', boxShadow: '0 0 10px rgba(212,175,98,0.5)' }}>
                     <ClipboardList className="h-3.5 w-3.5 text-white" />
                   </div>
                 </div>
                 <div className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 mb-2 text-xs font-semibold"
-                  style={{ background: 'rgba(168,85,247,0.12)', border: '1px solid rgba(168,85,247,0.3)', color: '#c084fc' }}>
-                  <span className="h-1.5 w-1.5 rounded-full bg-violet-400 animate-pulse" />
+                  style={{ background: 'rgba(212,175,98,0.12)', border: '1px solid rgba(212,175,98,0.3)', color: '#f4db9c' }}>
+                  <span className="h-1.5 w-1.5 rounded-full bg-[#d4af62] animate-pulse" />
                   بوابة الكاشير
                 </div>
                 <h1 className="text-xl font-bold text-white">SîpFlõw · كاشير</h1>
@@ -2668,19 +2668,19 @@ export default function HomePage() {
                   <Input value={cashierLoginName} onChange={e => { setCashierLoginName(e.target.value); setCashierLoginError('') }}
                     onKeyDown={e => e.key === 'Enter' && handleCashierLogin()}
                     placeholder="username" dir="ltr"
-                    className="bg-zinc-900 border-zinc-700 text-white placeholder:text-zinc-600 focus-visible:ring-violet-500/40 focus-visible:border-violet-500/50" />
+                    className="bg-zinc-900 border-zinc-700 text-white placeholder:text-zinc-600 focus-visible:ring-[#b8893f]/40 focus-visible:border-[#b8893f]/50" />
                 </div>
                 <div>
                   <label className="text-xs font-medium text-zinc-400 mb-1.5 block">كلمة المرور</label>
                   <Input type="password" value={cashierLoginPwd} onChange={e => { setCashierLoginPwd(e.target.value); setCashierLoginError('') }}
                     onKeyDown={e => e.key === 'Enter' && handleCashierLogin()}
                     placeholder="••••••••" dir="ltr"
-                    className="bg-zinc-900 border-zinc-700 text-white placeholder:text-zinc-600 focus-visible:ring-violet-500/40 focus-visible:border-violet-500/50" />
+                    className="bg-zinc-900 border-zinc-700 text-white placeholder:text-zinc-600 focus-visible:ring-[#b8893f]/40 focus-visible:border-[#b8893f]/50" />
                 </div>
                 {cashierLoginError && <p className="text-center text-sm text-rose-400">{cashierLoginError}</p>}
                 <button onClick={handleCashierLogin} disabled={isCashierLoggingIn}
                   className="w-full h-11 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-all active:scale-95 disabled:opacity-60"
-                  style={{ background: isCashierLoggingIn ? 'rgba(168,85,247,0.3)' : 'linear-gradient(135deg, #a855f7, #7c3aed)', color: '#fff', boxShadow: '0 2px 14px rgba(168,85,247,0.3)' }}>
+                  style={{ background: isCashierLoggingIn ? 'rgba(212,175,98,0.3)' : 'linear-gradient(135deg, #d4af62, #b8893f)', color: '#fff', boxShadow: '0 2px 14px rgba(212,175,98,0.3)' }}>
                   {isCashierLoggingIn ? <Loader2 className="h-4 w-4 animate-spin" /> : <ClipboardList className="h-4 w-4" />}
                   {isCashierLoggingIn ? 'جاري الدخول...' : 'دخول كاشير'}
                 </button>
@@ -2762,20 +2762,20 @@ export default function HomePage() {
             <div className="fixed bottom-0 left-0 right-0 z-50 rounded-t-[2rem] flex flex-col" dir="rtl"
               style={{
                 background: 'linear-gradient(180deg, #0d0a1f 0%, #080613 100%)',
-                border: '1px solid rgba(139,92,246,0.2)',
+                border: '1px solid rgba(184,137,63,0.2)',
                 borderBottom: 'none',
-                boxShadow: '0 -20px 60px rgba(0,0,0,0.7), 0 -1px 0 rgba(139,92,246,0.1)',
+                boxShadow: '0 -20px 60px rgba(0,0,0,0.7), 0 -1px 0 rgba(184,137,63,0.1)',
                 maxHeight: '78vh',
               }}>
 
               {/* Top glow line */}
-              <div className="absolute inset-x-0 top-0 h-px rounded-full" style={{ background: 'linear-gradient(90deg, transparent 5%, #6366f1 30%, #a855f7 50%, #06b6d4 70%, transparent 95%)' }} />
+              <div className="absolute inset-x-0 top-0 h-px rounded-full" style={{ background: 'linear-gradient(90deg, transparent 5%, #b8893f 30%, #d4af62 50%, #06b6d4 70%, transparent 95%)' }} />
               {/* Ambient top glow */}
-              <div className="pointer-events-none absolute top-0 left-1/2 -translate-x-1/2 rounded-full" style={{ width: '60%', height: '100px', background: 'radial-gradient(ellipse at center top, rgba(99,102,241,0.12) 0%, transparent 70%)' }} />
+              <div className="pointer-events-none absolute top-0 left-1/2 -translate-x-1/2 rounded-full" style={{ width: '60%', height: '100px', background: 'radial-gradient(ellipse at center top, rgba(184,137,63,0.12) 0%, transparent 70%)' }} />
 
               {/* Handle bar */}
               <div className="flex justify-center pt-3.5 pb-1">
-                <div className="h-1 w-12 rounded-full" style={{ background: 'rgba(139,92,246,0.35)' }} />
+                <div className="h-1 w-12 rounded-full" style={{ background: 'rgba(184,137,63,0.35)' }} />
               </div>
 
               {/* Header */}
@@ -2789,8 +2789,8 @@ export default function HomePage() {
                   <p className="font-black text-white text-base tracking-tight">اختر مكانك</p>
                   <p className="text-[9px] tracking-[0.22em] uppercase mt-0.5 font-medium" style={{ color: 'rgba(148,163,184,0.4)' }}>Choose Your Destination</p>
                 </div>
-                <div className="flex h-8 w-8 items-center justify-center rounded-xl" style={{ background: 'rgba(99,102,241,0.1)', border: '1px solid rgba(99,102,241,0.15)' }}>
-                  <MapPin className="h-4 w-4 text-indigo-400" />
+                <div className="flex h-8 w-8 items-center justify-center rounded-xl" style={{ background: 'rgba(184,137,63,0.1)', border: '1px solid rgba(184,137,63,0.15)' }}>
+                  <MapPin className="h-4 w-4 text-[#d4af62]" />
                 </div>
               </div>
 
@@ -2798,7 +2798,7 @@ export default function HomePage() {
               <div className="flex-1 overflow-y-auto px-4 py-4" style={{ scrollbarWidth: 'none' }}>
                 {isLoadingPlaces ? (
                   <div className="flex flex-col items-center justify-center gap-3 py-14">
-                    <div className="h-8 w-8 rounded-full border-2 border-violet-500/20 border-t-violet-500 animate-spin" />
+                    <div className="h-8 w-8 rounded-full border-2 border-[#b8893f]/20 border-t-[#b8893f] animate-spin" />
                     <p className="text-sm font-medium" style={{ color: 'rgba(148,163,184,0.5)' }}>جاري تحميل الأماكن...</p>
                   </div>
                 ) : allActivePlaces.length === 0 ? (
@@ -2815,18 +2815,18 @@ export default function HomePage() {
                         className="relative group flex flex-col items-center gap-3 rounded-2xl p-4 text-center transition-all active:scale-95 overflow-hidden focus-visible:outline-none"
                         style={{
                           background: 'linear-gradient(145deg, rgba(14,10,30,0.95), rgba(24,14,50,0.95))',
-                          border: '1px solid rgba(139,92,246,0.2)',
+                          border: '1px solid rgba(184,137,63,0.2)',
                           boxShadow: '0 4px 20px rgba(0,0,0,0.35)',
                         }}
                       >
                         {/* Hover glow */}
-                        <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300" style={{ background: 'radial-gradient(ellipse at 50% 0%, rgba(99,102,241,0.08) 0%, transparent 70%)' }} />
+                        <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300" style={{ background: 'radial-gradient(ellipse at 50% 0%, rgba(184,137,63,0.08) 0%, transparent 70%)' }} />
                         {/* Top accent line */}
-                        <div className="absolute inset-x-0 top-0 h-px opacity-0 group-hover:opacity-100 transition-opacity" style={{ background: 'linear-gradient(90deg, transparent, rgba(139,92,246,0.6), transparent)' }} />
+                        <div className="absolute inset-x-0 top-0 h-px opacity-0 group-hover:opacity-100 transition-opacity" style={{ background: 'linear-gradient(90deg, transparent, rgba(184,137,63,0.6), transparent)' }} />
 
                         {/* Logo */}
                         <div className="relative h-16 w-16 rounded-2xl overflow-hidden flex items-center justify-center text-3xl"
-                          style={{ border: '1px solid rgba(139,92,246,0.25)', background: 'rgba(99,102,241,0.08)', boxShadow: '0 0 16px rgba(99,102,241,0.1)' }}>
+                          style={{ border: '1px solid rgba(184,137,63,0.25)', background: 'rgba(184,137,63,0.08)', boxShadow: '0 0 16px rgba(184,137,63,0.1)' }}>
                           {place.logo_url
                             ? <img src={place.logo_url} alt={place.name} className="h-full w-full object-cover" onError={e => { (e.target as HTMLImageElement).style.display = 'none' }} />
                             : <span style={{ fontSize: '28px' }}>🏪</span>}
@@ -2836,14 +2836,14 @@ export default function HomePage() {
                         <div className="w-full">
                           <p className="text-sm font-bold text-white leading-tight line-clamp-2">{place.name}</p>
                           {(place as any).code && (
-                            <p className="text-[9px] mt-1 font-mono tracking-wider" style={{ color: 'rgba(139,92,246,0.55)' }}>{(place as any).code}</p>
+                            <p className="text-[9px] mt-1 font-mono tracking-wider" style={{ color: 'rgba(184,137,63,0.55)' }}>{(place as any).code}</p>
                           )}
                         </div>
 
                         {/* Select hint */}
-                        <div className="flex items-center justify-center gap-1 rounded-full px-2.5 py-1 w-full" style={{ background: 'rgba(99,102,241,0.08)', border: '1px solid rgba(99,102,241,0.14)' }}>
-                          <MapPin className="h-2.5 w-2.5 text-indigo-400/70" />
-                          <span className="text-[9px] font-semibold tracking-wider uppercase text-indigo-400/70">اختر</span>
+                        <div className="flex items-center justify-center gap-1 rounded-full px-2.5 py-1 w-full" style={{ background: 'rgba(184,137,63,0.08)', border: '1px solid rgba(184,137,63,0.14)' }}>
+                          <MapPin className="h-2.5 w-2.5 text-[#d4af62]/70" />
+                          <span className="text-[9px] font-semibold tracking-wider uppercase text-[#d4af62]/70">اختر</span>
                         </div>
                       </button>
                     ))}
@@ -3034,12 +3034,12 @@ export default function HomePage() {
                   <div className="relative overflow-hidden rounded-2xl px-5 py-4"
                     style={{
                       background: 'linear-gradient(135deg, #1a0533 0%, #0d1f4f 40%, #0a2e1a 100%)',
-                      boxShadow: '0 0 24px rgba(139,92,246,0.25), inset 0 1px 0 rgba(255,255,255,0.07)'
+                      boxShadow: '0 0 24px rgba(184,137,63,0.25), inset 0 1px 0 rgba(255,255,255,0.07)'
                     }}
                   >
                     {/* Decorative glow blobs */}
                     <div className="absolute -top-4 -left-4 h-16 w-16 rounded-full opacity-30"
-                      style={{ background: 'radial-gradient(circle, #a855f7, transparent 70%)' }} />
+                      style={{ background: 'radial-gradient(circle, #d4af62, transparent 70%)' }} />
                     <div className="absolute -bottom-4 -right-4 h-16 w-16 rounded-full opacity-25"
                       style={{ background: 'radial-gradient(circle, #3b82f6, transparent 70%)' }} />
                     <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-24 w-24 rounded-full opacity-10"
@@ -3049,12 +3049,12 @@ export default function HomePage() {
                     <div className="relative flex flex-col items-center gap-1.5">
                       <div className="flex items-center gap-2 mb-1">
                         <span className="text-yellow-300 text-sm">✦</span>
-                        <span className="text-purple-300 text-xs">✦</span>
+                        <span className="text-[#f4db9c] text-xs">✦</span>
                         <span className="text-blue-300 text-sm">✦</span>
                       </div>
                       <p className="text-center text-base font-bold leading-relaxed"
                         style={{
-                          background: 'linear-gradient(90deg, #c084fc, #818cf8, #34d399)',
+                          background: 'linear-gradient(90deg, #f4db9c, #d4af62, #34d399)',
                           WebkitBackgroundClip: 'text',
                           WebkitTextFillColor: 'transparent',
                           backgroundClip: 'text',
@@ -3065,7 +3065,7 @@ export default function HomePage() {
                       </p>
                       <div className="flex items-center gap-2 mt-0.5">
                         <span className="text-blue-300 text-xs">✦</span>
-                        <span className="text-purple-300 text-sm">✦</span>
+                        <span className="text-[#f4db9c] text-sm">✦</span>
                         <span className="text-yellow-300 text-xs">✦</span>
                       </div>
                     </div>
@@ -4085,24 +4085,24 @@ export default function HomePage() {
                 <button
                   onClick={() => setDevTrackerMinimized(false)}
                   className="fixed bottom-4 right-4 z-40 flex items-center gap-2 rounded-full px-3 py-2 text-xs font-bold shadow-xl border transition-all"
-                  style={{ background: 'rgba(10,8,6,0.95)', borderColor: 'rgba(99,102,241,0.5)', color: '#818cf8' }}
+                  style={{ background: 'rgba(10,8,6,0.95)', borderColor: 'rgba(184,137,63,0.5)', color: '#d4af62' }}
                 >
-                  <span className="h-2 w-2 rounded-full bg-indigo-400 animate-pulse" />
+                  <span className="h-2 w-2 rounded-full bg-[#d4af62] animate-pulse" />
                   🏪 لوحة القعدة
-                  {pendingCount > 0 && <span className="rounded-full bg-indigo-500/20 px-1.5 text-indigo-300">{pendingCount}</span>}
+                  {pendingCount > 0 && <span className="rounded-full bg-[#b8893f]/20 px-1.5 text-[#f4db9c]">{pendingCount}</span>}
                 </button>
               )}
 
               {/* Full widget */}
               {!devTrackerMinimized && (
                 <div className="fixed bottom-4 right-4 z-40 w-80" dir="rtl">
-                  <div className="rounded-2xl border shadow-2xl overflow-hidden" style={{ background: 'rgba(10,8,6,0.97)', borderColor: 'rgba(99,102,241,0.4)' }}>
+                  <div className="rounded-2xl border shadow-2xl overflow-hidden" style={{ background: 'rgba(10,8,6,0.97)', borderColor: 'rgba(184,137,63,0.4)' }}>
                     {/* Header */}
-                    <div className="flex items-center justify-between px-4 py-2.5 border-b" style={{ borderColor: 'rgba(99,102,241,0.15)', background: 'rgba(99,102,241,0.08)' }}>
+                    <div className="flex items-center justify-between px-4 py-2.5 border-b" style={{ borderColor: 'rgba(184,137,63,0.15)', background: 'rgba(184,137,63,0.08)' }}>
                       <div className="flex items-center gap-2">
-                        <span className="h-2 w-2 rounded-full bg-indigo-400 animate-pulse" />
-                        <span className="text-sm font-bold text-indigo-300">🏪 لوحة القعدة</span>
-                        <span className="text-[10px] text-indigo-400/60 bg-indigo-500/10 rounded-full px-1.5">
+                        <span className="h-2 w-2 rounded-full bg-[#d4af62] animate-pulse" />
+                        <span className="text-sm font-bold text-[#f4db9c]">🏪 لوحة القعدة</span>
+                        <span className="text-[10px] text-[#d4af62]/60 bg-[#b8893f]/10 rounded-full px-1.5">
                           {tables.length} طربيزة • {totalOrders} طلب
                         </span>
                       </div>
@@ -4118,7 +4118,7 @@ export default function HomePage() {
                     {tables.length === 0 ? (
                       <div className="px-4 py-6 text-center text-xs text-zinc-500">لا يوجد طلبات نشطة حالياً</div>
                     ) : (
-                      <div className="divide-y max-h-80 overflow-y-auto" style={{ borderColor: 'rgba(99,102,241,0.08)' }}>
+                      <div className="divide-y max-h-80 overflow-y-auto" style={{ borderColor: 'rgba(184,137,63,0.08)' }}>
                         {tables.map(([tableKey, tableOrders]) => {
                           const allDone = tableOrders.every(o => o.status === 'completed')
                           const anyOnWay = tableOrders.some(o => o.status === 'on_the_way')
@@ -4128,7 +4128,7 @@ export default function HomePage() {
                               {/* Table header */}
                               <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-1.5">
-                                  <span className="text-xs font-bold" style={{ color: allDone ? '#4ade80' : anyOnWay ? '#60a5fa' : '#818cf8' }}>
+                                  <span className="text-xs font-bold" style={{ color: allDone ? '#4ade80' : anyOnWay ? '#60a5fa' : '#d4af62' }}>
                                     🪑 طربيزة {tableKey}
                                   </span>
                                   {tableOrders[0]?.customerName && (
@@ -4136,7 +4136,7 @@ export default function HomePage() {
                                   )}
                                 </div>
                                 <span className="text-[10px] font-medium rounded-full px-1.5 py-0.5"
-                                  style={{ background: allDone ? 'rgba(74,222,128,0.1)' : 'rgba(129,140,248,0.1)', color: allDone ? '#4ade80' : '#818cf8' }}>
+                                  style={{ background: allDone ? 'rgba(74,222,128,0.1)' : 'rgba(212,175,98,0.1)', color: allDone ? '#4ade80' : '#d4af62' }}>
                                   {allDone ? 'منتهي ✓' : `${pending} متبقي`}
                                 </span>
                               </div>
@@ -4159,7 +4159,7 @@ export default function HomePage() {
                     )}
 
                     {/* Footer summary */}
-                    <div className="px-4 py-2 border-t flex items-center justify-between" style={{ borderColor: 'rgba(99,102,241,0.12)', background: 'rgba(0,0,0,0.3)' }}>
+                    <div className="px-4 py-2 border-t flex items-center justify-between" style={{ borderColor: 'rgba(184,137,63,0.12)', background: 'rgba(0,0,0,0.3)' }}>
                       <span className="text-[11px] text-zinc-500">تحديث كل ٤ ثواني</span>
                       <button
                         onClick={() => { setShowDevTracker(false); clearInterval(devTrackingIntervalRef.current ?? undefined) }}
@@ -4701,7 +4701,7 @@ export default function HomePage() {
               {([
                 { key: 'hot', label: 'Hot ☕', color: '#ef4444', bg: 'rgba(239,68,68,0.15)', border: 'rgba(239,68,68,0.3)' },
                 { key: 'cold', label: 'Cold 🧊', color: '#3b82f6', bg: 'rgba(59,130,246,0.15)', border: 'rgba(59,130,246,0.3)' },
-                { key: 'shisha', label: 'Shisha 💨', color: '#a855f7', bg: 'rgba(168,85,247,0.15)', border: 'rgba(168,85,247,0.3)' },
+                { key: 'shisha', label: 'Shisha 💨', color: '#d4af62', bg: 'rgba(212,175,98,0.15)', border: 'rgba(212,175,98,0.3)' },
               ] as const).map(tab => (
                 <button
                   key={tab.key}
@@ -5389,8 +5389,8 @@ export default function HomePage() {
                           <p className="text-xs font-medium" style={{ color: 'rgba(255,255,255,0.4)' }}>الأشخاص</p>
                           <p className="text-2xl font-bold mt-0.5" style={{ color: 'rgba(255,255,255,0.9)' }}>{boUsers}</p>
                         </div>
-                        <div className="flex h-10 w-10 items-center justify-center rounded-xl" style={{ background: 'rgba(139,92,246,0.1)', border: '1px solid rgba(139,92,246,0.15)' }}>
-                          <Users className="h-5 w-5" style={{ color: '#a78bfa' }} />
+                        <div className="flex h-10 w-10 items-center justify-center rounded-xl" style={{ background: 'rgba(184,137,63,0.1)', border: '1px solid rgba(184,137,63,0.15)' }}>
+                          <Users className="h-5 w-5" style={{ color: '#f4db9c' }} />
                         </div>
                       </div>
                     </div>
