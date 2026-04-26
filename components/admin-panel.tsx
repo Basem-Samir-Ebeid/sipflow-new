@@ -295,6 +295,14 @@ export function AdminPanel({
   }
   const [featureFlags, setFeatureFlags] = useState<Record<string, boolean>>({})
   const [implementedIdeas, setImplementedIdeas] = useState<Record<string, ImplementedIdeaRecord>>({})
+  const [editingIdeaKey, setEditingIdeaKey] = useState<string | null>(null)
+  const [ideaConfigs, setIdeaConfigs] = useState<Record<string, Record<string, unknown>>>({})
+  const [ideaConfigDrafts, setIdeaConfigDrafts] = useState<Record<string, {
+    title: string
+    scope: 'developer_admin' | 'all_pages'
+    config: Array<{ key: string; value: string; type: 'string' | 'number' | 'boolean' }>
+  }>>({})
+  const [savingIdeaKey, setSavingIdeaKey] = useState<string | null>(null)
 
   // ── UI Customization (theme colors + tab labels + tab order) ──
   const DEFAULT_THEME_COLORS: ThemeColors = {
@@ -627,6 +635,125 @@ export function AdminPanel({
       toast.success(`🗑️ تم حذف "${idea.title}" من المشروع`)
     } catch { toast.error('تعذر الحذف') }
     setRemovingIdeaKey(null)
+  }
+
+  // ── Implemented Idea Inline Editor ─────────────────────────────
+  const detectValueType = (raw: unknown): 'string' | 'number' | 'boolean' => {
+    if (typeof raw === 'boolean') return 'boolean'
+    if (typeof raw === 'number') return 'number'
+    return 'string'
+  }
+  const configToDraft = (config: Record<string, unknown>) =>
+    Object.entries(config).map(([key, value]) => ({
+      key,
+      value: typeof value === 'object' && value !== null ? JSON.stringify(value) : String(value),
+      type: detectValueType(value),
+    }))
+  const draftToConfig = (entries: Array<{ key: string; value: string; type: 'string' | 'number' | 'boolean' }>) => {
+    const out: Record<string, unknown> = {}
+    entries.forEach(e => {
+      if (!e.key.trim()) return
+      if (e.type === 'boolean') out[e.key] = e.value === 'true'
+      else if (e.type === 'number') {
+        const n = Number(e.value)
+        out[e.key] = Number.isFinite(n) ? n : 0
+      } else {
+        try { out[e.key] = JSON.parse(e.value) } catch { out[e.key] = e.value }
+      }
+    })
+    return out
+  }
+  const openIdeaEditor = async (flagKey: string) => {
+    setEditingIdeaKey(flagKey)
+    try {
+      const res = await fetch(`/api/ai-ideas/config?flagKey=${encodeURIComponent(flagKey)}`)
+      const data = await res.json()
+      if (!res.ok || !data.success) throw new Error(data.error || 'Failed to load')
+      const config = (data.config && typeof data.config === 'object') ? data.config : {}
+      setIdeaConfigs(prev => ({ ...prev, [flagKey]: config }))
+      const idea = AI_IDEAS.find(i => i.flagKey === flagKey)
+      const record = data.record || {}
+      setIdeaConfigDrafts(prev => ({
+        ...prev,
+        [flagKey]: {
+          title: record.title || idea?.title || '',
+          scope: record.scope || 'all_pages',
+          config: configToDraft(config),
+        },
+      }))
+    } catch {
+      toast.error('تعذر تحميل الإعدادات')
+      setEditingIdeaKey(null)
+    }
+  }
+  const updateIdeaDraft = (flagKey: string, partial: Partial<{
+    title: string; scope: 'developer_admin' | 'all_pages';
+    config: Array<{ key: string; value: string; type: 'string' | 'number' | 'boolean' }>
+  }>) => {
+    setIdeaConfigDrafts(prev => ({
+      ...prev,
+      [flagKey]: { ...(prev[flagKey] || { title: '', scope: 'all_pages', config: [] }), ...partial },
+    }))
+  }
+  const updateIdeaConfigEntry = (flagKey: string, idx: number, partial: Partial<{ key: string; value: string; type: 'string' | 'number' | 'boolean' }>) => {
+    setIdeaConfigDrafts(prev => {
+      const draft = prev[flagKey] || { title: '', scope: 'all_pages' as const, config: [] }
+      const next = [...draft.config]
+      next[idx] = { ...next[idx], ...partial }
+      return { ...prev, [flagKey]: { ...draft, config: next } }
+    })
+  }
+  const addIdeaConfigEntry = (flagKey: string) => {
+    setIdeaConfigDrafts(prev => {
+      const draft = prev[flagKey] || { title: '', scope: 'all_pages' as const, config: [] }
+      return { ...prev, [flagKey]: { ...draft, config: [...draft.config, { key: '', value: '', type: 'string' }] } }
+    })
+  }
+  const removeIdeaConfigEntry = (flagKey: string, idx: number) => {
+    setIdeaConfigDrafts(prev => {
+      const draft = prev[flagKey] || { title: '', scope: 'all_pages' as const, config: [] }
+      return { ...prev, [flagKey]: { ...draft, config: draft.config.filter((_, i) => i !== idx) } }
+    })
+  }
+  const saveIdeaSettings = async (flagKey: string) => {
+    const draft = ideaConfigDrafts[flagKey]
+    if (!draft) return
+    setSavingIdeaKey(flagKey)
+    try {
+      const res = await fetch('/api/ai-ideas/config', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          flagKey,
+          title: draft.title,
+          scope: draft.scope,
+          replaceConfig: draftToConfig(draft.config),
+        }),
+      })
+      const data = await res.json()
+      if (!res.ok || !data.success) throw new Error(data.error || 'Failed to save')
+      setIdeaConfigs(prev => ({ ...prev, [flagKey]: data.config || {} }))
+      if (data.implementedIdeas) setImplementedIdeas(data.implementedIdeas)
+      if (data.featureFlags) setFeatureFlags(data.featureFlags)
+      toast.success('تم حفظ الإعدادات بنجاح')
+      setEditingIdeaKey(null)
+    } catch { toast.error('تعذر حفظ الإعدادات') }
+    setSavingIdeaKey(null)
+  }
+  const toggleIdeaEnabled = async (flagKey: string, enabled: boolean) => {
+    setSavingIdeaKey(flagKey)
+    try {
+      const res = await fetch('/api/ai-ideas/config', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ flagKey, enabled }),
+      })
+      const data = await res.json()
+      if (!res.ok || !data.success) throw new Error(data.error || 'Failed to toggle')
+      if (data.featureFlags) setFeatureFlags(data.featureFlags)
+      toast.success(enabled ? '✅ تم تفعيل الميزة' : '⏸️ تم إيقاف الميزة مؤقتاً')
+    } catch { toast.error('تعذر تغيير الحالة') }
+    setSavingIdeaKey(null)
   }
 
   // Smart Alerts state
@@ -9416,7 +9543,7 @@ const handleSaveSettings = async () => {
               'idea_waitlist', 'idea_loyalty', 'idea_voice_announce', 'idea_table_map',
               'idea_table_timer', 'idea_split_bill', 'idea_order_rating', 'idea_pdf_reports',
             ])
-            const genericIdeas = AI_IDEAS.filter(i => isIdeaImplemented(i.flagKey) && !customRendered.has(i.flagKey))
+            const genericIdeas = AI_IDEAS.filter(i => Boolean(implementedIdeas[i.flagKey]) && !customRendered.has(i.flagKey))
             if (genericIdeas.length === 0) return null
             return (
               <div className="space-y-3">
@@ -9424,23 +9551,185 @@ const handleSaveSettings = async () => {
                   const record = implementedIdeas[idea.flagKey] || {}
                   const steps = Array.isArray(record.steps) ? record.steps : []
                   const scope = record.scope || 'all_pages'
+                  const enabled = Boolean(featureFlags[idea.flagKey])
+                  const isEditing = editingIdeaKey === idea.flagKey
+                  const draft = ideaConfigDrafts[idea.flagKey]
+                  const savedConfig = ideaConfigs[idea.flagKey] || {}
+                  const isSaving = savingIdeaKey === idea.flagKey
                   return (
                     <div key={idea.flagKey} className="rounded-2xl p-4 space-y-3"
-                      style={{ background: `${idea.color}10`, border: `1px solid ${idea.color}35` }}>
+                      style={{ background: `${idea.color}${enabled ? '10' : '06'}`, border: `1px solid ${idea.color}${enabled ? '35' : '20'}`, opacity: enabled ? 1 : 0.75 }}>
                       <div className="flex items-center gap-2 flex-wrap">
                         <span className="text-lg">{idea.icon}</span>
-                        <h3 className="font-bold text-sm text-foreground flex-1 min-w-0 truncate">{idea.title}</h3>
+                        <h3 className="font-bold text-sm text-foreground flex-1 min-w-0 truncate">{record.title || idea.title}</h3>
                         <span className="text-[10px] px-2 py-0.5 rounded-full font-medium"
                           style={{ background: `${idea.color}20`, color: idea.color, border: `1px solid ${idea.color}40` }}>
-                          📍 {idea.tabLabel}
+                          📍 {record.tabLabel || idea.tabLabel}
                         </span>
                         <span className="text-[10px] px-2 py-0.5 rounded-full font-medium"
                           style={{ background: scope === 'developer_admin' ? 'rgba(167,139,250,0.15)' : 'rgba(52,211,153,0.15)', color: scope === 'developer_admin' ? '#a78bfa' : '#34d399' }}>
                           {scope === 'developer_admin' ? 'لوحة المطور فقط' : 'لكل الصفحات'}
                         </span>
-                        {renderDeleteFeatureBtn(idea.flagKey)}
                       </div>
                       <p className="text-xs text-muted-foreground leading-relaxed">{idea.desc}</p>
+
+                      {/* Control bar: enable toggle + edit + delete */}
+                      <div className="flex items-center gap-2 flex-wrap rounded-xl p-2.5" style={{ background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.06)' }}>
+                        <button
+                          onClick={() => toggleIdeaEnabled(idea.flagKey, !enabled)}
+                          disabled={isSaving}
+                          className="flex items-center gap-2 rounded-lg px-2.5 py-1.5 text-[11px] font-bold transition-all"
+                          style={{ background: enabled ? `${idea.color}25` : 'rgba(107,114,128,0.18)', color: enabled ? idea.color : '#9ca3af', border: `1px solid ${enabled ? `${idea.color}50` : 'rgba(107,114,128,0.3)'}` }}
+                          title={enabled ? 'إيقاف مؤقت بدون حذف' : 'إعادة تفعيل'}
+                        >
+                          <span className="w-7 h-3.5 rounded-full relative" style={{ background: enabled ? idea.color : 'rgba(255,255,255,0.15)' }}>
+                            <span className="absolute top-0.5 w-2.5 h-2.5 rounded-full bg-white transition-all" style={{ left: enabled ? '14px' : '2px' }} />
+                          </span>
+                          {enabled ? 'مفعّلة' : 'متوقفة'}
+                        </button>
+                        <button
+                          onClick={() => isEditing ? setEditingIdeaKey(null) : openIdeaEditor(idea.flagKey)}
+                          disabled={isSaving}
+                          className="flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[11px] font-bold transition-all hover:opacity-90"
+                          style={{ background: `${idea.color}18`, color: idea.color, border: `1px solid ${idea.color}40` }}
+                        >
+                          <Settings2 className="h-3 w-3" />
+                          {isEditing ? 'إغلاق' : 'إعدادات شاملة'}
+                        </button>
+                        <div className="ms-auto">{renderDeleteFeatureBtn(idea.flagKey)}</div>
+                      </div>
+
+                      {/* Inline settings editor */}
+                      {isEditing && draft && (
+                        <div className="rounded-xl p-3 space-y-3" style={{ background: 'rgba(0,0,0,0.25)', border: `1px dashed ${idea.color}40` }}>
+                          <div className="flex items-center gap-2">
+                            <Settings2 className="h-3.5 w-3.5" style={{ color: idea.color }} />
+                            <span className="text-[11px] font-bold" style={{ color: idea.color }}>تحكم شامل في الميزة</span>
+                          </div>
+
+                          <div className="space-y-2">
+                            <Label className="text-[11px] text-muted-foreground">الاسم المعروض</Label>
+                            <Input
+                              value={draft.title}
+                              onChange={e => updateIdeaDraft(idea.flagKey, { title: e.target.value })}
+                              className="h-8 text-xs"
+                              placeholder="اسم الميزة"
+                            />
+                          </div>
+
+                          <div className="space-y-2">
+                            <Label className="text-[11px] text-muted-foreground">نطاق التطبيق</Label>
+                            <div className="flex gap-2">
+                              <button
+                                onClick={() => updateIdeaDraft(idea.flagKey, { scope: 'all_pages' })}
+                                className="flex-1 rounded-lg px-2 py-1.5 text-[10px] font-bold transition-all"
+                                style={{ background: draft.scope === 'all_pages' ? 'rgba(52,211,153,0.2)' : 'rgba(255,255,255,0.04)', color: draft.scope === 'all_pages' ? '#34d399' : '#9ca3af', border: `1px solid ${draft.scope === 'all_pages' ? 'rgba(52,211,153,0.4)' : 'rgba(255,255,255,0.08)'}` }}
+                              >🌐 لكل الصفحات</button>
+                              <button
+                                onClick={() => updateIdeaDraft(idea.flagKey, { scope: 'developer_admin' })}
+                                className="flex-1 rounded-lg px-2 py-1.5 text-[10px] font-bold transition-all"
+                                style={{ background: draft.scope === 'developer_admin' ? 'rgba(167,139,250,0.2)' : 'rgba(255,255,255,0.04)', color: draft.scope === 'developer_admin' ? '#a78bfa' : '#9ca3af', border: `1px solid ${draft.scope === 'developer_admin' ? 'rgba(167,139,250,0.4)' : 'rgba(255,255,255,0.08)'}` }}
+                              >🔒 المطور فقط</button>
+                            </div>
+                          </div>
+
+                          <div className="space-y-2">
+                            <div className="flex items-center justify-between">
+                              <Label className="text-[11px] text-muted-foreground">إعدادات الميزة (مفتاح/قيمة)</Label>
+                              <button
+                                onClick={() => addIdeaConfigEntry(idea.flagKey)}
+                                className="text-[10px] px-2 py-0.5 rounded-md font-bold transition-all"
+                                style={{ background: `${idea.color}20`, color: idea.color, border: `1px solid ${idea.color}40` }}
+                              >+ إضافة</button>
+                            </div>
+                            {draft.config.length === 0 ? (
+                              <p className="text-[10px] text-muted-foreground italic">لا توجد إعدادات. اضغط "إضافة" لإنشاء مفتاح جديد.</p>
+                            ) : (
+                              <div className="space-y-1.5">
+                                {draft.config.map((entry, idx) => (
+                                  <div key={idx} className="flex items-center gap-1.5">
+                                    <Input
+                                      value={entry.key}
+                                      onChange={e => updateIdeaConfigEntry(idea.flagKey, idx, { key: e.target.value })}
+                                      placeholder="key"
+                                      className="h-7 text-[11px] flex-1 min-w-0"
+                                    />
+                                    <select
+                                      value={entry.type}
+                                      onChange={e => updateIdeaConfigEntry(idea.flagKey, idx, { type: e.target.value as 'string' | 'number' | 'boolean' })}
+                                      className="h-7 rounded-md border border-border bg-muted px-1.5 text-[10px] text-foreground"
+                                    >
+                                      <option value="string">نص</option>
+                                      <option value="number">رقم</option>
+                                      <option value="boolean">منطقي</option>
+                                    </select>
+                                    {entry.type === 'boolean' ? (
+                                      <select
+                                        value={entry.value}
+                                        onChange={e => updateIdeaConfigEntry(idea.flagKey, idx, { value: e.target.value })}
+                                        className="h-7 rounded-md border border-border bg-muted px-1.5 text-[11px] text-foreground flex-1 min-w-0"
+                                      >
+                                        <option value="true">true</option>
+                                        <option value="false">false</option>
+                                      </select>
+                                    ) : (
+                                      <Input
+                                        value={entry.value}
+                                        onChange={e => updateIdeaConfigEntry(idea.flagKey, idx, { value: e.target.value })}
+                                        placeholder="value"
+                                        className="h-7 text-[11px] flex-1 min-w-0"
+                                      />
+                                    )}
+                                    <button
+                                      onClick={() => removeIdeaConfigEntry(idea.flagKey, idx)}
+                                      className="shrink-0 h-7 w-7 rounded-md flex items-center justify-center transition-all"
+                                      style={{ background: 'rgba(244,63,94,0.12)', border: '1px solid rgba(244,63,94,0.3)', color: '#fda4af' }}
+                                      title="حذف هذا المفتاح"
+                                    >
+                                      <Trash2 className="h-3 w-3" />
+                                    </button>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+
+                          <div className="flex items-center gap-2 pt-1">
+                            <button
+                              onClick={() => saveIdeaSettings(idea.flagKey)}
+                              disabled={isSaving}
+                              className="flex-1 rounded-lg px-3 py-2 text-[11px] font-bold transition-all"
+                              style={{ background: idea.color, color: '#000' }}
+                            >
+                              {isSaving ? <Loader2 className="h-3.5 w-3.5 animate-spin mx-auto" /> : '💾 حفظ التغييرات'}
+                            </button>
+                            <button
+                              onClick={() => setEditingIdeaKey(null)}
+                              disabled={isSaving}
+                              className="rounded-lg px-3 py-2 text-[11px] font-bold transition-all"
+                              style={{ background: 'rgba(255,255,255,0.06)', color: '#9ca3af', border: '1px solid rgba(255,255,255,0.1)' }}
+                            >
+                              إلغاء
+                            </button>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Saved config preview (read-only) */}
+                      {!isEditing && Object.keys(savedConfig).length > 0 && (
+                        <div className="rounded-xl p-2.5" style={{ background: 'rgba(0,0,0,0.18)', border: '1px solid rgba(255,255,255,0.06)' }}>
+                          <p className="text-[10px] font-bold mb-1.5" style={{ color: idea.color }}>الإعدادات الحالية</p>
+                          <div className="grid grid-cols-2 gap-1.5">
+                            {Object.entries(savedConfig).map(([k, v]) => (
+                              <div key={k} className="flex items-center gap-1.5 text-[10px]">
+                                <span className="text-muted-foreground truncate">{k}:</span>
+                                <span className="font-mono truncate" style={{ color: idea.color }}>{typeof v === 'object' ? JSON.stringify(v) : String(v)}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
                       {steps.length > 0 && (
                         <div className="rounded-xl p-2.5 space-y-1" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
                           {steps.map((s, idx) => (
@@ -9452,7 +9741,7 @@ const handleSaveSettings = async () => {
                         </div>
                       )}
                       <div className="flex items-center justify-between text-[10px] text-muted-foreground">
-                        <span>الحالة: <span style={{ color: idea.color }}>● مفعّلة</span></span>
+                        <span>الحالة: <span style={{ color: enabled ? idea.color : '#9ca3af' }}>● {enabled ? 'مفعّلة' : 'متوقفة'}</span></span>
                         {record.implementedAt && (
                           <span>{new Date(record.implementedAt).toLocaleString('ar-EG')}</span>
                         )}
