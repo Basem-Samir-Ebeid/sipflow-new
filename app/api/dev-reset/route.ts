@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSql } from '@/lib/db'
+import { logDevActivity } from '@/lib/dev-activity'
 
 const RESET_CODE = '246850'
 
@@ -47,20 +48,39 @@ export async function POST(request: NextRequest) {
   try {
     const { resetCode, type, newPassword, newUsername } = await request.json()
 
+    const sql = getSql()
+
     if (resetCode !== RESET_CODE) {
+      await logDevActivity(sql, {
+        request,
+        action: 'reset_failed',
+        target: type || 'unknown',
+        status: 'failure',
+        details: { reason: 'invalid_reset_code' },
+      })
       return NextResponse.json({ success: false, error: 'كود الريسيت غلط' })
     }
-
-    const sql = getSql()
 
     if (type === 'admin') {
       const result = await applyAdminCredentials(sql, newUsername, newPassword)
       if (!result.ok) return NextResponse.json({ success: false, error: result.error })
+      await logDevActivity(sql, {
+        request,
+        action: 'reset_admin_credentials',
+        target: 'dev-admin',
+        details: { changed: result.changed, newUsernameProvided: !!newUsername, newPasswordProvided: !!newPassword },
+      })
       return NextResponse.json({ success: true, message: `تم تغيير ${result.changed} للأدمن المطور بنجاح` })
     }
 
     if (type === 'user') {
       await sql`UPDATE sessions SET is_active = false, ended_at = NOW() WHERE is_active = true`
+      await logDevActivity(sql, {
+        request,
+        action: 'reset_user_sessions',
+        target: 'all-users',
+        details: { scope: 'all_active_sessions' },
+      })
       return NextResponse.json({ success: true, message: 'تم إعادة ضبط جلسات المستخدمين بنجاح' })
     }
 
@@ -68,6 +88,12 @@ export async function POST(request: NextRequest) {
       const result = await applyAdminCredentials(sql, newUsername, newPassword)
       if (!result.ok) return NextResponse.json({ success: false, error: result.error })
       await sql`UPDATE sessions SET is_active = false, ended_at = NOW() WHERE is_active = true`
+      await logDevActivity(sql, {
+        request,
+        action: 'reset_admin_and_users',
+        target: 'dev-admin+users',
+        details: { changed: result.changed },
+      })
       return NextResponse.json({ success: true, message: `تم تغيير ${result.changed} للأدمن وإعادة ضبط المستخدمين بنجاح` })
     }
 

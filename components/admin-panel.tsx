@@ -32,6 +32,7 @@ import { THEME_VAR_KEYS, emitThemeChange, type ThemeColors, THEME_STORAGE_KEY } 
 import { Checkbox } from '@/components/ui/checkbox'
 import Image from 'next/image'
 import { LivePlacesHub } from '@/components/LivePlacesHub'
+import { DevActivityLog } from '@/components/dev-activity-log'
 import { OrderSimulator } from '@/components/order-simulator'
 import { PlaceTemplates } from '@/components/place-templates'
 import InventorySystem from '@/components/inventory-system'
@@ -119,7 +120,7 @@ export function AdminPanel({
       label: 'Super Developer',
       description: 'صلاحية كاملة لكل أجزاء النظام',
       homeTab: 'analytics',
-      tabs: ['alerts', 'analytics', 'notes', 'drinks', 'inventory', 'ingredients', 'cashier', 'reservations', 'place-admins', 'staff', 'places', 'subscriptions', 'messages', 'settings', 'branding', 'danger', 'live', 'permissions', 'simulator', 'templates', 'feature-flags', 'ai-ideas', 'implemented-ideas'],
+      tabs: ['alerts', 'analytics', 'notes', 'drinks', 'inventory', 'ingredients', 'cashier', 'reservations', 'place-admins', 'staff', 'places', 'subscriptions', 'messages', 'settings', 'branding', 'danger', 'live', 'permissions', 'activity', 'simulator', 'templates', 'feature-flags', 'ai-ideas', 'implemented-ideas'],
     },
     support_admin: {
       label: 'Support Admin',
@@ -2999,6 +3000,7 @@ const handleSaveSettings = async () => {
                     { tab: 'settings',    icon: <Settings2 className="h-3.5 w-3.5" />,     label: 'Settings',    ac: '#0284c7', badge: 0 },
                     { tab: 'branding',    icon: <span className="text-[13px] leading-none">🎨</span>, label: 'Branding', ac: '#d4af62', badge: 0 },
                     { tab: 'permissions', icon: <ShieldCheck className="h-3.5 w-3.5" />,   label: 'Permissions', ac: '#0284c7', badge: 0 },
+                    { tab: 'activity',    icon: <Activity className="h-3.5 w-3.5" />,      label: 'Activity',    ac: '#b8893f', badge: 0 },
                     { tab: 'danger',      icon: <Trash2 className="h-3.5 w-3.5" />,        label: 'Danger',      ac: '#dc2626', badge: 0 },
                   ].filter(item => canAccessDevTab(item.tab)).map(item => (
                     <button key={item.tab} onClick={() => handleTabChange(item.tab)}
@@ -3123,6 +3125,7 @@ const handleSaveSettings = async () => {
               ['messages', 'Messages'],
               ['settings', 'Settings'],
               ['permissions', 'Permissions'],
+              ['activity', 'Activity Log'],
               ['danger', 'Danger'],
               ['live', 'Live'],
               ['feature-flags', 'Feature Flags'],
@@ -6529,6 +6532,16 @@ const handleSaveSettings = async () => {
               </Button>
             </div>
           </div>
+        </TabsContent>
+
+        <TabsContent value="activity" className="space-y-4">
+          {devAdminRole === 'super_developer' ? (
+            <DevActivityLog />
+          ) : (
+            <div className="rounded-2xl p-6 text-center" style={{ background: 'rgba(184,137,63,0.08)', border: '1px solid rgba(184,137,63,0.22)', color: '#d4af62' }}>
+              هذا القسم مخصص لـ Super Developer فقط
+            </div>
+          )}
         </TabsContent>
 
         <TabsContent value="danger" className="space-y-4">

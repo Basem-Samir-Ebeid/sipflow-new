@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSql } from '@/lib/db'
 import { DEV_ADMIN_SESSION_COOKIE, DevAdminAccount, DevAdminRole, getDevAdminAccounts, isSuperDevAdminSession, passwordHash, saveDevAdminAccounts } from '@/lib/admin-auth'
+import { logDevActivity } from '@/lib/dev-activity'
 
 const allowedRoles: DevAdminRole[] = ['super_developer', 'support_admin', 'sales_admin', 'finance_admin']
 
@@ -37,8 +38,14 @@ export async function POST(request: NextRequest) {
     const accounts = await getDevAdminAccounts(sql)
 
     if (body.action === 'delete') {
+      const removed = accounts.find((account) => account.id === body.id)
       const nextAccounts = accounts.filter((account) => account.id !== body.id)
       await saveDevAdminAccounts(sql, nextAccounts)
+      await logDevActivity(sql, {
+        request,
+        action: 'dev_admin_delete',
+        target: removed ? `${removed.name} (${removed.role})` : String(body.id || 'unknown'),
+      })
       return NextResponse.json({ success: true, accounts: nextAccounts.map(publicAccount) })
     }
 
@@ -61,6 +68,12 @@ export async function POST(request: NextRequest) {
         }
       })
       await saveDevAdminAccounts(sql, nextAccounts)
+      await logDevActivity(sql, {
+        request,
+        action: 'dev_admin_update',
+        target: `${name} (${role})`,
+        details: { id: body.id, active: body.active !== false, passwordChanged: !!password },
+      })
       return NextResponse.json({ success: true, accounts: nextAccounts.map(publicAccount) })
     }
 
@@ -81,6 +94,12 @@ export async function POST(request: NextRequest) {
       },
     ]
     await saveDevAdminAccounts(sql, nextAccounts)
+    await logDevActivity(sql, {
+      request,
+      action: 'dev_admin_create',
+      target: `${name} (${role})`,
+      details: { active: body.active !== false },
+    })
     return NextResponse.json({ success: true, accounts: nextAccounts.map(publicAccount) })
   } catch (error) {
     console.error('Dev admins error:', error)

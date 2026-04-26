@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSql } from '@/lib/db'
 import { DEV_ADMIN_SESSION_COOKIE, adminSessionValue, getDevAdminSecret } from '@/lib/admin-auth'
+import { logDevActivity } from '@/lib/dev-activity'
 
 export async function POST(request: NextRequest) {
   try {
@@ -9,6 +10,13 @@ export async function POST(request: NextRequest) {
     const sessionToken = request.cookies.get(DEV_ADMIN_SESSION_COOKIE)?.value
 
     if (!expectedSecret || sessionToken !== adminSessionValue(expectedSecret)) {
+      await logDevActivity(sql, {
+        request,
+        action: 'password_change_failed',
+        target: 'dev-admin',
+        status: 'failure',
+        details: { reason: 'unauthorized' },
+      })
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 })
     }
 
@@ -24,6 +32,12 @@ export async function POST(request: NextRequest) {
       VALUES ('dev_admin_password', ${nextPassword}, NOW())
       ON CONFLICT (key) DO UPDATE SET value = ${nextPassword}, updated_at = NOW()
     `
+
+    await logDevActivity(sql, {
+      request,
+      action: 'password_change',
+      target: 'dev-admin',
+    })
 
     return NextResponse.json({ success: true })
   } catch (error) {
