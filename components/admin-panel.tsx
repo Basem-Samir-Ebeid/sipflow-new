@@ -9408,6 +9408,61 @@ const handleSaveSettings = async () => {
               <p className="text-[10px] text-muted-foreground">يشمل التقرير: المبيعات · أكثر المنتجات طلباً · صافي الإيراد</p>
             </div>
           )}
+
+          {/* ─── Generic fallback: render any implemented idea that has no custom UI block above ─── */}
+          {(() => {
+            const customRendered = new Set<string>([
+              'idea_branch_ctrl', 'idea_drink_custom', 'idea_auto_hide', 'idea_staff_perf',
+              'idea_waitlist', 'idea_loyalty', 'idea_voice_announce', 'idea_table_map',
+              'idea_table_timer', 'idea_split_bill', 'idea_order_rating', 'idea_pdf_reports',
+            ])
+            const genericIdeas = AI_IDEAS.filter(i => isIdeaImplemented(i.flagKey) && !customRendered.has(i.flagKey))
+            if (genericIdeas.length === 0) return null
+            return (
+              <div className="space-y-3">
+                {genericIdeas.map(idea => {
+                  const record = implementedIdeas[idea.flagKey] || {}
+                  const steps = Array.isArray(record.steps) ? record.steps : []
+                  const scope = record.scope || 'all_pages'
+                  return (
+                    <div key={idea.flagKey} className="rounded-2xl p-4 space-y-3"
+                      style={{ background: `${idea.color}10`, border: `1px solid ${idea.color}35` }}>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="text-lg">{idea.icon}</span>
+                        <h3 className="font-bold text-sm text-foreground flex-1 min-w-0 truncate">{idea.title}</h3>
+                        <span className="text-[10px] px-2 py-0.5 rounded-full font-medium"
+                          style={{ background: `${idea.color}20`, color: idea.color, border: `1px solid ${idea.color}40` }}>
+                          📍 {idea.tabLabel}
+                        </span>
+                        <span className="text-[10px] px-2 py-0.5 rounded-full font-medium"
+                          style={{ background: scope === 'developer_admin' ? 'rgba(167,139,250,0.15)' : 'rgba(52,211,153,0.15)', color: scope === 'developer_admin' ? '#a78bfa' : '#34d399' }}>
+                          {scope === 'developer_admin' ? 'لوحة المطور فقط' : 'لكل الصفحات'}
+                        </span>
+                        {renderDeleteFeatureBtn(idea.flagKey)}
+                      </div>
+                      <p className="text-xs text-muted-foreground leading-relaxed">{idea.desc}</p>
+                      {steps.length > 0 && (
+                        <div className="rounded-xl p-2.5 space-y-1" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
+                          {steps.map((s, idx) => (
+                            <div key={idx} className="flex items-start gap-2 text-[11px]" style={{ color: 'rgba(255,255,255,0.7)' }}>
+                              <span style={{ color: idea.color }}>✓</span>
+                              <span>{s}</span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                      <div className="flex items-center justify-between text-[10px] text-muted-foreground">
+                        <span>الحالة: <span style={{ color: idea.color }}>● مفعّلة</span></span>
+                        {record.implementedAt && (
+                          <span>{new Date(record.implementedAt).toLocaleString('ar-EG')}</span>
+                        )}
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            )
+          })()}
                 </TabsContent>
 
         {/* ─── Analytics / Reports Tab ─────────────────────────── */}
