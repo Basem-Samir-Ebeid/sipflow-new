@@ -4298,12 +4298,14 @@ export default function HomePage() {
             >
               <div
                 dir="rtl"
-                className="w-full max-w-sm relative overflow-hidden"
+                className="relative overflow-hidden"
                 style={{
-                  borderRadius: '20px',
+                  width: '100%',
+                  maxWidth: '300px',
+                  borderRadius: '18px',
                   background: 'linear-gradient(170deg, rgba(22,18,10,0.98) 0%, rgba(14,12,8,0.99) 55%, rgba(10,9,6,1) 100%)',
                   border: `1px solid ${accentBorder}`,
-                  boxShadow: `0 0 0 1px rgba(255,255,255,0.04), 0 8px 40px rgba(0,0,0,0.7), 0 0 60px ${accentGlow}`,
+                  boxShadow: `0 0 0 1px rgba(255,255,255,0.04), 0 8px 40px rgba(0,0,0,0.7), 0 0 50px ${accentGlow}`,
                   animation: 'orderModalIn 0.22s cubic-bezier(0.34,1.56,0.64,1) both',
                 }}
               >
@@ -4317,43 +4319,43 @@ export default function HomePage() {
                 {/* shimmer bar */}
                 <div style={{ height: '2px', background: `linear-gradient(90deg, transparent, ${accent}, transparent)`, opacity: 0.7 }} />
 
-                <div className="px-6 pt-7 pb-6">
+                <div className="px-5 pt-5 pb-5">
                   {/* icon */}
-                  <div className="flex justify-center mb-5 relative">
+                  <div className="flex justify-center mb-3 relative">
                     <div style={{
                       position: 'absolute',
-                      top: '-18px',
-                      width: '80px',
-                      height: '80px',
-                      borderRadius: '50%',
-                      background: `radial-gradient(circle, ${accentFaint} 0%, transparent 70%)`,
-                      filter: 'blur(12px)',
-                    }} />
-                    <div className="relative" style={{
+                      top: '-14px',
                       width: '64px',
                       height: '64px',
-                      borderRadius: '16px',
+                      borderRadius: '50%',
+                      background: `radial-gradient(circle, ${accentFaint} 0%, transparent 70%)`,
+                      filter: 'blur(10px)',
+                    }} />
+                    <div className="relative" style={{
+                      width: '50px',
+                      height: '50px',
+                      borderRadius: '13px',
                       background: `linear-gradient(145deg, ${accentFaint}, rgba(0,0,0,0.4))`,
                       border: `1px solid ${accentBorder}`,
-                      boxShadow: `0 0 20px ${accentGlow}`,
+                      boxShadow: `0 0 16px ${accentGlow}`,
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      fontSize: '28px',
+                      fontSize: '22px',
                     }}>
                       {isCompany ? '🏢' : '🪑'}
                       <div style={{
                         position: 'absolute',
-                        bottom: '-5px',
-                        left: '-5px',
-                        width: '20px',
-                        height: '20px',
+                        bottom: '-4px',
+                        left: '-4px',
+                        width: '17px',
+                        height: '17px',
                         borderRadius: '50%',
                         background: `linear-gradient(135deg, ${accent}, ${accentMid})`,
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
-                        fontSize: '10px',
+                        fontSize: '9px',
                         boxShadow: `0 2px 8px ${accentGlow}`,
                         border: '1.5px solid rgba(0,0,0,0.5)',
                       }}>✓</div>
@@ -4361,25 +4363,25 @@ export default function HomePage() {
                   </div>
 
                   {/* title */}
-                  <h2 className="text-center text-xl font-bold mb-1" style={{ color: '#f5f0e8' }}>تأكيد الطلب</h2>
-                  <p className="text-center text-sm mb-6" style={{ color: 'rgba(255,255,255,0.38)' }}>
+                  <h2 className="text-center text-base font-bold mb-0.5" style={{ color: '#f5f0e8', letterSpacing: '0.2px' }}>تأكيد الطلب</h2>
+                  <p className="text-center text-[11px] mb-4" style={{ color: 'rgba(255,255,255,0.4)' }}>
                     {isCompany ? 'حدد الإدارة التابع لها' : 'أدخل اسمك ورقم الطربيزة'}
                   </p>
 
                   {isCompany ? (
                     <>
                       {currentEmployee && (
-                        <div className="mb-4 px-4 py-2.5 text-right" style={{ borderRadius: '12px', background: 'rgba(59,130,246,0.08)', border: '1px solid rgba(59,130,246,0.2)' }}>
-                          <p className="text-xs font-semibold" style={{ color: '#93c5fd' }}>{currentEmployee.name}</p>
-                          <p className="text-[11px]" style={{ color: 'rgba(255,255,255,0.35)' }}>{currentEmployee.email}</p>
+                        <div className="mb-3 px-3 py-2 text-right" style={{ borderRadius: '10px', background: 'rgba(59,130,246,0.08)', border: '1px solid rgba(59,130,246,0.2)' }}>
+                          <p className="text-[11px] font-semibold" style={{ color: '#93c5fd' }}>{currentEmployee.name}</p>
+                          <p className="text-[10px]" style={{ color: 'rgba(255,255,255,0.35)' }}>{currentEmployee.email}</p>
                         </div>
                       )}
-                      <div className="flex items-center justify-between mb-1.5">
-                        <span className="text-xs font-semibold" style={{ color: accentText }}>الإدارة التابع لها</span>
-                        <span className="text-[10px] px-1.5 py-0.5 rounded" style={{ background: accentFaint, color: accentText }}>مطلوب</span>
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-[11px] font-semibold" style={{ color: accentText }}>الإدارة التابع لها</span>
+                        <span className="text-[9px] px-1.5 py-0.5 rounded" style={{ background: accentFaint, color: accentText }}>مطلوب</span>
                       </div>
-                      <div className="relative mb-5">
-                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-base" style={{ pointerEvents: 'none' }}>🏢</span>
+                      <div className="relative mb-3.5">
+                        <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-sm" style={{ pointerEvents: 'none' }}>🏢</span>
                         <Input
                           value={pendingTableNumber}
                           onChange={(e) => { setPendingTableNumber(e.target.value); setTableModalError('') }}
@@ -4387,14 +4389,14 @@ export default function HomePage() {
                           placeholder="مثال: الموارد البشرية"
                           autoFocus
                           style={{
-                            height: '48px',
-                            paddingRight: '38px',
+                            height: '40px',
+                            paddingRight: '32px',
                             textAlign: 'right',
-                            fontSize: '15px',
-                            fontWeight: 700,
+                            fontSize: '13px',
+                            fontWeight: 600,
                             background: 'rgba(255,255,255,0.04)',
-                            border: `1.5px solid ${accentBorder}`,
-                            borderRadius: '12px',
+                            border: `1px solid ${accentBorder}`,
+                            borderRadius: '10px',
                             color: '#f5f0e8',
                             outline: 'none',
                           }}
@@ -4404,52 +4406,52 @@ export default function HomePage() {
                   ) : (
                     <>
                       {/* name field */}
-                      <div className="flex items-center justify-between mb-1.5">
-                        <span className="text-xs font-semibold" style={{ color: accentText }}>اسمك</span>
-                        <span className="text-[10px] px-1.5 py-0.5 rounded" style={{ background: accentFaint, color: accentText }}>1 / 2</span>
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-[11px] font-semibold" style={{ color: accentText }}>اسمك</span>
+                        <span className="text-[9px] px-1.5 py-0.5 rounded" style={{ background: accentFaint, color: accentText }}>1 / 2</span>
                       </div>
-                      <div className="relative mb-4">
-                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-base" style={{ pointerEvents: 'none' }}>👤</span>
+                      <div className="relative mb-3">
+                        <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-sm" style={{ pointerEvents: 'none' }}>👤</span>
                         <Input
                           value={pendingCustomerName}
                           onChange={(e) => { setPendingCustomerName(e.target.value); setTableModalError('') }}
                           onKeyDown={(e) => e.key === 'Enter' && handleConfirmTableAndSubmit()}
                           placeholder="مثال: أحمد"
                           style={{
-                            height: '48px',
-                            paddingRight: '38px',
+                            height: '40px',
+                            paddingRight: '32px',
                             textAlign: 'right',
-                            fontSize: '15px',
-                            fontWeight: 700,
+                            fontSize: '13px',
+                            fontWeight: 600,
                             background: 'rgba(255,255,255,0.04)',
-                            border: `1.5px solid ${accentBorder}`,
-                            borderRadius: '12px',
+                            border: `1px solid ${accentBorder}`,
+                            borderRadius: '10px',
                             color: '#f5f0e8',
                             outline: 'none',
                           }}
                         />
                       </div>
                       {/* table field */}
-                      <div className="flex items-center justify-between mb-1.5">
-                        <span className="text-xs font-semibold" style={{ color: accentText }}>رقم الطربيزة</span>
-                        <span className="text-[10px] px-1.5 py-0.5 rounded" style={{ background: accentFaint, color: accentText }}>2 / 2</span>
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-[11px] font-semibold" style={{ color: accentText }}>رقم الطربيزة</span>
+                        <span className="text-[9px] px-1.5 py-0.5 rounded" style={{ background: accentFaint, color: accentText }}>2 / 2</span>
                       </div>
-                      <div className="relative mb-5">
-                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-base" style={{ pointerEvents: 'none' }}>🪑</span>
+                      <div className="relative mb-3.5">
+                        <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-sm" style={{ pointerEvents: 'none' }}>🪑</span>
                         <Input
                           value={pendingTableNumber}
                           onChange={(e) => { setPendingTableNumber(e.target.value); setTableModalError('') }}
                           onKeyDown={(e) => e.key === 'Enter' && handleConfirmTableAndSubmit()}
                           placeholder="مثال: 5"
                           style={{
-                            height: '48px',
-                            paddingRight: '38px',
+                            height: '40px',
+                            paddingRight: '32px',
                             textAlign: 'right',
-                            fontSize: '15px',
-                            fontWeight: 700,
+                            fontSize: '13px',
+                            fontWeight: 600,
                             background: 'rgba(255,255,255,0.04)',
-                            border: `1.5px solid ${accentBorder}`,
-                            borderRadius: '12px',
+                            border: `1px solid ${accentBorder}`,
+                            borderRadius: '10px',
                             color: '#f5f0e8',
                             outline: 'none',
                           }}
@@ -4459,34 +4461,34 @@ export default function HomePage() {
                   )}
 
                   {tableModalError && (
-                    <p className="text-sm text-red-400 mb-3 text-center">{tableModalError}</p>
+                    <p className="text-[12px] text-red-400 mb-2 text-center">{tableModalError}</p>
                   )}
 
                   {/* primary button */}
                   <button
                     onClick={() => handleConfirmTableAndSubmit()}
                     disabled={isSubmittingOrder}
-                    className="w-full flex items-center justify-center gap-2 font-bold text-base mb-3 relative overflow-hidden"
+                    className="w-full flex items-center justify-center gap-2 font-bold text-[13px] mb-2 relative overflow-hidden"
                     style={{
-                      height: '50px',
-                      borderRadius: '13px',
+                      height: '42px',
+                      borderRadius: '11px',
                       background: isSubmittingOrder
                         ? `linear-gradient(135deg, ${accentMid}, rgba(0,0,0,0.3))`
                         : `linear-gradient(135deg, ${accent} 0%, ${accentMid} 100%)`,
                       color: isCompany ? '#fff' : '#0a0800',
                       border: 'none',
-                      boxShadow: `0 4px 20px ${accentGlow}, inset 0 1px 0 rgba(255,255,255,0.18)`,
+                      boxShadow: `0 3px 14px ${accentGlow}, inset 0 1px 0 rgba(255,255,255,0.18)`,
                       cursor: isSubmittingOrder ? 'not-allowed' : 'pointer',
                       opacity: isSubmittingOrder ? 0.75 : 1,
                       transition: 'opacity 0.2s',
                     }}
                   >
                     {isSubmittingOrder ? (
-                      <Loader2 className="h-5 w-5 animate-spin" />
+                      <Loader2 className="h-4 w-4 animate-spin" />
                     ) : (
                       <>
                         <span>تأكيد وإرسال الطلب</span>
-                        <span style={{ fontSize: '16px' }}>←</span>
+                        <span style={{ fontSize: '14px' }}>←</span>
                       </>
                     )}
                   </button>
@@ -4495,12 +4497,12 @@ export default function HomePage() {
                   <button
                     onClick={() => setShowTableModal(false)}
                     disabled={isSubmittingOrder}
-                    className="w-full font-medium text-sm"
+                    className="w-full font-medium text-[12px]"
                     style={{
-                      height: '38px',
-                      borderRadius: '10px',
-                      background: 'rgba(255,255,255,0.05)',
-                      border: '1px solid rgba(255,255,255,0.08)',
+                      height: '32px',
+                      borderRadius: '9px',
+                      background: 'rgba(255,255,255,0.04)',
+                      border: '1px solid rgba(255,255,255,0.07)',
                       color: 'rgba(255,255,255,0.4)',
                       cursor: isSubmittingOrder ? 'not-allowed' : 'pointer',
                       transition: 'background 0.15s',
