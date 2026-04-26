@@ -1679,21 +1679,39 @@ export default function HomePage() {
 
   const handleDeleteSession = async () => {
     if (!sessionToDelete) return
+    const sessId = sessionToDelete.id
     setIsDeletingSession(true)
     try {
-      const res = await fetch(`/api/sessions/${sessionToDelete.id}`, { method: 'DELETE' })
-      if (res.ok) {
-        // Remove from archived sessions list
-        setArchivedSessions(archivedSessions.filter(s => s.id !== sessionToDelete.id))
+      const res = await fetch(`/api/sessions/${sessId}`, { method: 'DELETE' })
+      // Treat 404 as already-deleted (success from user's POV)
+      if (res.ok || res.status === 404) {
+        setArchivedSessions(prev => prev.filter(s => s.id !== sessId))
+        setSessionCustomerCache(prev => {
+          const next = { ...prev }
+          delete next[sessId]
+          return next
+        })
+        if (selectedArchivedSessionId === sessId) {
+          setSelectedArchivedSessionId(null)
+          setArchivedOrders([])
+        }
         setShowDeleteSessionConfirm(false)
         setSessionToDelete(null)
         toast.success('تم حذف الجلسة بنجاح')
       } else {
-        toast.error('فشل حذف الجلسة')
+        // Try to read server error message for better debugging
+        let serverMsg = ''
+        try {
+          const data = await res.json()
+          serverMsg = data?.error || ''
+        } catch {}
+        console.error('[v0] Delete session failed:', res.status, serverMsg)
+        toast.error(serverMsg ? `فشل الحذف: ${serverMsg}` : `فشل حذف الجلسة (${res.status})`)
       }
     } catch (err) {
       console.error('[v0] Error deleting session:', err)
-      toast.error('حدث خطأ أثناء الحذف')
+      const msg = err instanceof Error ? err.message : ''
+      toast.error(msg ? `خطأ في الاتصال: ${msg}` : 'حدث خطأ أثناء الحذف — تحقق من الاتصال')
     } finally {
       setIsDeletingSession(false)
     }
