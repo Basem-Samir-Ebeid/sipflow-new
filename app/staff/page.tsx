@@ -12,6 +12,7 @@ import { Input } from '@/components/ui/input'
 import { toast, Toaster } from 'sonner'
 import { DevBar } from '@/components/dev-bar'
 import { useSystemLogo } from '@/hooks/use-system-logo'
+import { ActiveFeaturesBanner } from '@/components/active-features-banner'
 import Image from 'next/image'
 import { printHTML } from '@/lib/print'
 
@@ -634,6 +635,7 @@ export default function StaffPage() {
 
       {/* ── CONTENT ── */}
       <div className="p-4 pb-24">
+        <ActiveFeaturesBanner tab="staff" title="ميزات الموظفين الذكية النشطة" compact />
 
         {/* PENDING TAB */}
         {staffTab === 'pending' && (

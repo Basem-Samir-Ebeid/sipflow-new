@@ -6,6 +6,7 @@ import { toast, Toaster } from 'sonner'
 import Image from 'next/image'
 import { DevBar } from '@/components/dev-bar'
 import { useSystemLogo } from '@/hooks/use-system-logo'
+import { ActiveFeaturesBanner } from '@/components/active-features-banner'
 
 interface ReservationNotif {
   id: string
@@ -516,6 +517,10 @@ export default function WaiterPage() {
           )}
         </div>
       </header>
+
+      <div className="px-4 pt-3">
+        <ActiveFeaturesBanner tab="cashier" title="ميزات الكاشير الذكية النشطة" compact />
+      </div>
 
       {/* Modals */}
       {showDeliveryHistory && (

@@ -15,6 +15,7 @@ import { ReceiptModal } from '@/components/receipt-modal'
 import { CashierDashboard } from '@/components/cashier-dashboard'
 import Image from 'next/image'
 import { DevBar } from '@/components/dev-bar'
+import { ActiveFeaturesBanner } from '@/components/active-features-banner'
 
 // ↑ Bump this version every time you deploy a new update
 const APP_VERSION = '1.8'
@@ -4739,6 +4740,8 @@ export default function HomePage() {
             )}
 
             {(!isDevAdmin || menuDevPlaceId) && (
+            <>
+            <ActiveFeaturesBanner tab="drinks" title="ميزات المشاريب الذكية النشطة" compact />
             <div className="grid grid-cols-2 gap-3">
               {visibleDrinks
                 .filter(d => {
@@ -4782,6 +4785,7 @@ export default function HomePage() {
                 </div>
               )}
             </div>
+            </>
             )}
 
             {cartCount > 0 && (!isDevAdmin || menuDevPlaceId) && (

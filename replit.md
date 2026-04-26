@@ -6,6 +6,11 @@ A Next.js multi-tenant café/social space drink ordering and management system. 
 ## Known Fix — Price Type Coercion
 PostgreSQL returns DECIMAL/NUMERIC columns as strings (e.g., `'15.00'`). All `drink.price` references across the codebase use `Number()` conversion before arithmetic, comparisons, and `.toFixed()` calls. This prevents `TypeError` crashes in DrinkCard and other components.
 
+## Recent Features (v2.9 — Live AI Idea Configs)
+- **شارة الميزات النشطة:** عند تنفيذ أي فكرة من مولّد الأفكار وضبط إعداداتها من تبويب "Implemented" في لوحة الأدمن، تظهر تلقائياً في الصفحات العامة المرتبطة بها (الكاشير `/bar`، الموظفين `/staff`، الويتر `/waiter`، المالك `/owner`، وقائمة المشاريب للزبون `/`). الشارة قابلة للطي/الفتح وتعرض اسم الفكرة + كل قيم الإعدادات الحالية بشكل مباشر، فأي تعديل في الإعدادات (تشغيل/إيقاف، تغيير قيمة، إضافة مفتاح) ينعكس على واجهة المستخدم خلال ثوان.
+- **API جديد:** `GET /api/ai-ideas/active?tab=cashier&onlyEnabled=true&scope=all_pages` يرجّع كل الأفكار المفعّلة + إعداداتها مجمّعة حسب التبويب.
+- **Hook & Component:** `lib/use-active-ideas.ts` (SWR refresh كل 15 ثانية) و`components/active-features-banner.tsx` لاستخدامها في أي صفحة.
+
 ## Recent Features (v2.7 — Developer Tools)
 - **تصميم لوحة SîpFlõw الفاخر (v2.8 - Apr 2026):** أُعيد تصميم تبويب "اللوحة" في app/page.tsx بمظهر بريميوم متناسق:
   - **Header card** جديد بذهبي/أسود متدرّج مع شريط ذهبي علوي متلاشٍ، أيقونة Coffee في حلقة ذهبية متوهجة، وعنوان "لوحة SîpFlõw" مع subtitle "DASHBOARD".

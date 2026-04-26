@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from 'react'
 import { Sparkles, RefreshCw, TrendingUp, TrendingDown, AlertTriangle, Store, DollarSign, ShoppingCart, Activity, Wifi, WifiOff, MessageCircle } from 'lucide-react'
 import Link from 'next/link'
+import { ActiveFeaturesBanner } from '@/components/active-features-banner'
 
 type PlaceStat = {
   id: string
@@ -129,6 +130,9 @@ export default function OwnerPage() {
           <StatChip icon={<ShoppingCart className="h-3.5 w-3.5" />} label="طلبات اليوم" value={data ? String(data.totals.orders) : '—'} color="#60a5fa" />
           <StatChip icon={<Store className="h-3.5 w-3.5" />} label="فروع نشطة" value={data ? `${data.totals.places_active}/${data.totals.places_total}` : '—'} color="#a78bfa" />
         </div>
+
+        <ActiveFeaturesBanner tab="live" title="ميزات اللوحة المباشرة النشطة" compact />
+        <ActiveFeaturesBanner tab="analytics" title="ميزات التقارير النشطة" compact />
 
         {totalAlerts > 0 && (
           <div

@@ -14,6 +14,7 @@ import Image from 'next/image'
 import { printHTML } from '@/lib/print'
 import { DevBar } from '@/components/dev-bar'
 import { useSystemLogo } from '@/hooks/use-system-logo'
+import { ActiveFeaturesBanner } from '@/components/active-features-banner'
 
 interface StaffUser {
   id: string
@@ -629,6 +630,7 @@ export default function BarPage() {
 
       {/* Content */}
       <div className="p-4 pb-8 space-y-4">
+        <ActiveFeaturesBanner tab="cashier" title="ميزات الكاشير الذكية النشطة" compact />
 
         {/* ── Pending Tab ── */}
         {staffTab === 'pending' && (
