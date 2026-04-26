@@ -305,6 +305,78 @@ export function AdminPanel({
   const [savingIdeaKey, setSavingIdeaKey] = useState<string | null>(null)
   const [previewIdea, setPreviewIdea] = useState<{ flagKey: string; title: string; tab: string } | null>(null)
   const [previewUrl, setPreviewUrl] = useState<string>('')
+  const [sandboxOpenKey, setSandboxOpenKey] = useState<string | null>(null)
+  const [sandboxInputs, setSandboxInputs] = useState<Record<string, Record<string, string>>>({})
+
+  const updateSandboxInput = (flagKey: string, key: string, value: string) => {
+    setSandboxInputs(prev => ({ ...prev, [flagKey]: { ...(prev[flagKey] || {}), [key]: value } }))
+  }
+
+  type SandboxRule = { key: string; label: string; verdict: 'pass' | 'fail' | 'info'; detail: string }
+  const evaluateSandbox = (config: Record<string, unknown>, inputs: Record<string, string>, ideaEnabled: boolean): SandboxRule[] => {
+    const rules: SandboxRule[] = []
+    rules.push({
+      key: '__enabled__',
+      label: 'حالة الميزة',
+      verdict: ideaEnabled ? 'pass' : 'fail',
+      detail: ideaEnabled ? 'الميزة مفعّلة وستُطبّق على الزبون' : 'الميزة متوقفة - لن تُطبّق أي قاعدة',
+    })
+    if (!ideaEnabled) return rules
+
+    const orderAmount = Number(inputs.order_amount || '0')
+    const itemCount = Number(inputs.item_count || '1')
+    const customerType = inputs.customer_type || 'regular'
+
+    Object.entries(config).forEach(([k, v]) => {
+      const lk = k.toLowerCase()
+      if (lk === 'enabled' && typeof v === 'boolean') {
+        rules.push({ key: k, label: `إعداد ${k}`, verdict: v ? 'pass' : 'fail', detail: v ? 'القاعدة الفرعية مفعّلة' : 'القاعدة الفرعية متوقفة' })
+        return
+      }
+      if (typeof v === 'number') {
+        if (lk.startsWith('max_') || lk.includes('limit') || lk.includes('maximum')) {
+          if (lk.includes('amount') || lk.includes('price') || lk.includes('total')) {
+            const ok = orderAmount <= v
+            rules.push({ key: k, label: `حد أقصى: ${k} (${v})`, verdict: ok ? 'pass' : 'fail', detail: `قيمة الطلب التجريبية ${orderAmount} ${ok ? 'ضمن' : 'تجاوزت'} الحد` })
+            return
+          }
+          if (lk.includes('count') || lk.includes('items') || lk.includes('qty')) {
+            const ok = itemCount <= v
+            rules.push({ key: k, label: `حد أقصى: ${k} (${v})`, verdict: ok ? 'pass' : 'fail', detail: `عدد المنتجات التجريبي ${itemCount} ${ok ? 'ضمن' : 'تجاوز'} الحد` })
+            return
+          }
+        }
+        if (lk.startsWith('min_') || lk.includes('minimum')) {
+          if (lk.includes('amount') || lk.includes('price') || lk.includes('total')) {
+            const ok = orderAmount >= v
+            rules.push({ key: k, label: `حد أدنى: ${k} (${v})`, verdict: ok ? 'pass' : 'fail', detail: `قيمة الطلب التجريبية ${orderAmount} ${ok ? 'تستوفي' : 'أقل من'} الحد` })
+            return
+          }
+        }
+        rules.push({ key: k, label: `${k} = ${v}`, verdict: 'info', detail: 'قيمة عددية ستُستخدم في حساب الميزة' })
+        return
+      }
+      if (typeof v === 'boolean') {
+        rules.push({ key: k, label: `${k}`, verdict: v ? 'pass' : 'info', detail: v ? 'مفعّلة' : 'غير مفعّلة' })
+        return
+      }
+      if (typeof v === 'string') {
+        if (lk.includes('customer') || lk.includes('type') || lk.includes('role')) {
+          const ok = String(v).toLowerCase() === customerType.toLowerCase()
+          rules.push({ key: k, label: `${k} = "${v}"`, verdict: ok ? 'pass' : 'info', detail: ok ? `مطابق لنوع الزبون التجريبي (${customerType})` : `الزبون التجريبي (${customerType}) لا يطابق` })
+          return
+        }
+        rules.push({ key: k, label: `${k} = "${v}"`, verdict: 'info', detail: 'قيمة نصية ستُستخدم في الميزة' })
+        return
+      }
+      rules.push({ key: k, label: k, verdict: 'info', detail: 'قيمة معقدة' })
+    })
+
+    if (Object.keys(config).length === 0) {
+      rules.push({ key: '__empty__', label: 'لا توجد إعدادات', verdict: 'info', detail: 'الميزة ستعمل بإعداداتها الافتراضية' })
+    }
+    return rules
+  }
 
   // ── UI Customization (theme colors + tab labels + tab order) ──
   const DEFAULT_THEME_COLORS: ThemeColors = {
@@ -9762,6 +9834,111 @@ const handleSaveSettings = async () => {
                           ))}
                         </div>
                       )}
+
+                      {/* ── Test Config Sandbox ── */}
+                      <div className="rounded-xl overflow-hidden" style={{ background: 'rgba(0,0,0,0.25)', border: '1px solid rgba(34,211,238,0.25)' }}>
+                        <button
+                          onClick={() => setSandboxOpenKey(sandboxOpenKey === idea.flagKey ? null : idea.flagKey)}
+                          className="w-full flex items-center justify-between gap-2 px-3 py-2 text-[11px] font-bold transition-all hover:opacity-90"
+                          style={{ color: '#22d3ee', background: 'rgba(34,211,238,0.06)' }}
+                        >
+                          <span className="flex items-center gap-2">
+                            <BrainCircuit className="h-3.5 w-3.5" />
+                            مختبر تجريبي للإعدادات (Sandbox)
+                          </span>
+                          <span className="text-[10px] opacity-70">{sandboxOpenKey === idea.flagKey ? '▲' : '▼'}</span>
+                        </button>
+                        {sandboxOpenKey === idea.flagKey && (() => {
+                          const inputs = sandboxInputs[idea.flagKey] || {}
+                          const rules = evaluateSandbox(savedConfig, inputs, enabled)
+                          const passCount = rules.filter(r => r.verdict === 'pass').length
+                          const failCount = rules.filter(r => r.verdict === 'fail').length
+                          return (
+                            <div className="p-3 space-y-3">
+                              <p className="text-[10px] text-muted-foreground leading-relaxed">
+                                💡 جرّب قيم وهمية وشوف هل الإعدادات الحالية هتسمح أو تمنع. لا يتأثر أي طلب أو زبون حقيقي.
+                              </p>
+                              <div className="grid grid-cols-3 gap-2">
+                                <div className="space-y-1">
+                                  <Label className="text-[10px] text-muted-foreground">قيمة الطلب (ج.م)</Label>
+                                  <Input
+                                    type="number"
+                                    value={inputs.order_amount || ''}
+                                    onChange={e => updateSandboxInput(idea.flagKey, 'order_amount', e.target.value)}
+                                    placeholder="100"
+                                    className="h-7 text-[11px]"
+                                  />
+                                </div>
+                                <div className="space-y-1">
+                                  <Label className="text-[10px] text-muted-foreground">عدد المنتجات</Label>
+                                  <Input
+                                    type="number"
+                                    value={inputs.item_count || ''}
+                                    onChange={e => updateSandboxInput(idea.flagKey, 'item_count', e.target.value)}
+                                    placeholder="3"
+                                    className="h-7 text-[11px]"
+                                  />
+                                </div>
+                                <div className="space-y-1">
+                                  <Label className="text-[10px] text-muted-foreground">نوع الزبون</Label>
+                                  <select
+                                    value={inputs.customer_type || 'regular'}
+                                    onChange={e => updateSandboxInput(idea.flagKey, 'customer_type', e.target.value)}
+                                    className="h-7 w-full rounded-md border border-border bg-muted px-1.5 text-[11px] text-foreground"
+                                  >
+                                    <option value="regular">عادي</option>
+                                    <option value="vip">VIP</option>
+                                    <option value="new">جديد</option>
+                                    <option value="loyal">دائم</option>
+                                  </select>
+                                </div>
+                              </div>
+
+                              <div className="flex items-center gap-2 text-[10px]">
+                                <span className="rounded-md px-2 py-0.5 font-bold" style={{ background: 'rgba(34,197,94,0.15)', color: '#4ade80', border: '1px solid rgba(34,197,94,0.3)' }}>
+                                  ✓ {passCount} نجح
+                                </span>
+                                {failCount > 0 && (
+                                  <span className="rounded-md px-2 py-0.5 font-bold" style={{ background: 'rgba(239,68,68,0.15)', color: '#f87171', border: '1px solid rgba(239,68,68,0.3)' }}>
+                                    ✗ {failCount} فشل
+                                  </span>
+                                )}
+                                <span className="text-muted-foreground ms-auto">{rules.length} قاعدة</span>
+                              </div>
+
+                              <div className="space-y-1.5 max-h-48 overflow-y-auto">
+                                {rules.map((r, idx) => {
+                                  const colors = r.verdict === 'pass'
+                                    ? { bg: 'rgba(34,197,94,0.08)', br: 'rgba(34,197,94,0.25)', txt: '#4ade80', icon: '✓' }
+                                    : r.verdict === 'fail'
+                                    ? { bg: 'rgba(239,68,68,0.08)', br: 'rgba(239,68,68,0.25)', txt: '#f87171', icon: '✗' }
+                                    : { bg: 'rgba(148,163,184,0.06)', br: 'rgba(148,163,184,0.2)', txt: '#94a3b8', icon: 'i' }
+                                  return (
+                                    <div key={idx} className="rounded-lg p-2 flex items-start gap-2" style={{ background: colors.bg, border: `1px solid ${colors.br}` }}>
+                                      <span className="text-[11px] font-black" style={{ color: colors.txt }}>{colors.icon}</span>
+                                      <div className="flex-1 min-w-0">
+                                        <div className="text-[11px] font-bold" style={{ color: colors.txt }}>{r.label}</div>
+                                        <div className="text-[10px] text-muted-foreground mt-0.5">{r.detail}</div>
+                                      </div>
+                                    </div>
+                                  )
+                                })}
+                              </div>
+
+                              <div className={`rounded-lg p-2 text-center text-[11px] font-bold`} style={{
+                                background: failCount === 0 ? 'rgba(34,197,94,0.12)' : 'rgba(239,68,68,0.12)',
+                                color: failCount === 0 ? '#4ade80' : '#f87171',
+                                border: `1px solid ${failCount === 0 ? 'rgba(34,197,94,0.3)' : 'rgba(239,68,68,0.3)'}`,
+                              }}>
+                                {failCount === 0
+                                  ? '🎯 الميزة ستعمل بنجاح مع هذه القيم التجريبية'
+                                  : `⚠️ ${failCount} قاعدة لن تتحقق - الميزة ستمنع التنفيذ في هذا السيناريو`}
+                              </div>
+                            </div>
+                          )
+                        })()}
+                      </div>
+
                       <div className="flex items-center justify-between text-[10px] text-muted-foreground">
                         <span>الحالة: <span style={{ color: enabled ? idea.color : '#9ca3af' }}>● {enabled ? 'مفعّلة' : 'متوقفة'}</span></span>
                         {record.implementedAt && (
