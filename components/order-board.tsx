@@ -82,14 +82,46 @@ export function OrderBoard({ orders, drinks, currentUser, onDeleteOrder, isAdmin
 
   if (Object.keys(ordersByCustomer).length === 0) {
     return (
-      <div className="rounded-2xl p-10 text-center" style={{ background: 'linear-gradient(160deg, #141210, #1a1714)', border: '1px solid rgba(255,255,255,0.06)' }}>
-        <div className="mb-4 flex justify-center">
-          <div className="flex h-14 w-14 items-center justify-center rounded-2xl" style={{ background: 'rgba(212,160,23,0.08)', border: '1px solid rgba(212,160,23,0.15)' }}>
-            <Coffee className="h-6 w-6" style={{ color: 'rgba(212,160,23,0.5)' }} />
+      <div className="relative overflow-hidden rounded-2xl px-6 py-12 text-center"
+        style={{
+          background: 'linear-gradient(160deg, #14110d 0%, #1a1611 50%, #14110d 100%)',
+          border: '1px solid rgba(212,160,23,0.18)',
+          boxShadow: '0 6px 24px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.03)',
+        }}>
+        {/* corner accents */}
+        <div className="absolute pointer-events-none" style={{ top: '-40px', left: '-40px', width: '180px', height: '180px', background: 'radial-gradient(circle, rgba(212,160,23,0.1), transparent 70%)', filter: 'blur(8px)' }} />
+        <div className="absolute pointer-events-none" style={{ bottom: '-40px', right: '-40px', width: '180px', height: '180px', background: 'radial-gradient(circle, rgba(244,219,156,0.07), transparent 70%)', filter: 'blur(8px)' }} />
+        {/* gold top shimmer */}
+        <div className="absolute top-0 inset-x-0" style={{ height: '1.5px', background: 'linear-gradient(90deg, transparent, rgba(212,160,23,0.5), transparent)' }} />
+
+        <div className="relative">
+          {/* icon orb with concentric rings */}
+          <div className="mb-5 flex justify-center">
+            <div className="relative">
+              {/* outer ring */}
+              <div className="absolute inset-0 -m-3 rounded-full" style={{ border: '1px solid rgba(212,160,23,0.12)' }} />
+              <div className="absolute inset-0 -m-1.5 rounded-full" style={{ border: '1px solid rgba(212,160,23,0.18)' }} />
+              <div className="relative flex h-16 w-16 items-center justify-center rounded-2xl"
+                style={{
+                  background: 'linear-gradient(135deg, rgba(212,160,23,0.18), rgba(212,160,23,0.04))',
+                  border: '1px solid rgba(212,160,23,0.3)',
+                  boxShadow: '0 0 28px rgba(212,160,23,0.22), inset 0 1px 0 rgba(255,255,255,0.08)',
+                }}>
+                <Coffee className="h-7 w-7" style={{ color: '#fbbf24' }} />
+              </div>
+            </div>
+          </div>
+
+          <h3 className="mb-2 text-lg font-black tracking-wide" style={{ color: '#f5f0e8' }}>SîpFlõw لسه فاضية</h3>
+          <p className="text-xs font-medium mb-4" style={{ color: 'rgba(255,255,255,0.45)' }}>اطلب أول مشروب وافتح جلستك!</p>
+
+          {/* decorative divider */}
+          <div className="flex items-center justify-center gap-2 mt-5">
+            <span style={{ height: '1px', width: '40px', background: 'linear-gradient(90deg, transparent, rgba(212,160,23,0.3))' }} />
+            <span className="text-[10px] font-bold tracking-[3px]" style={{ color: 'rgba(212,160,23,0.55)' }}>SîpFlõw</span>
+            <span style={{ height: '1px', width: '40px', background: 'linear-gradient(90deg, rgba(212,160,23,0.3), transparent)' }} />
           </div>
         </div>
-        <h3 className="mb-1.5 text-base font-bold" style={{ color: 'rgba(255,255,255,0.8)' }}>SîpFlõw لسه فاضية</h3>
-        <p className="text-xs" style={{ color: 'rgba(255,255,255,0.35)' }}>أطلب أول مشروب وافتح SîpFlõw!</p>
       </div>
     )
   }

@@ -4792,18 +4792,40 @@ export default function HomePage() {
         {/* Board Tab */}
         {activeTab === 'board' && (
           <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              {isToday && (!isDevAdmin || !!boardDevPlaceId) && (
-                <button
-                  onClick={() => setShowNewSessionConfirm(true)}
-                  className="flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-bold transition-all hover:brightness-110 active:scale-[0.97]"
-                  style={{ background: 'linear-gradient(135deg, #D4A017, #b8860b)', color: '#0a0500', boxShadow: '0 2px 8px rgba(212,160,23,0.2)' }}
-                >
-                  <Plus className="h-3.5 w-3.5" />
-                  SîpFlõw جديدة
-                </button>
-              )}
-              <h1 className="text-xl font-bold" style={{ color: 'rgba(255,255,255,0.9)' }}>لوحة SîpFlõw</h1>
+            {/* ── Premium dashboard header ── */}
+            <div className="relative overflow-hidden rounded-2xl"
+              style={{
+                background: 'linear-gradient(135deg, rgba(20,18,16,0.95) 0%, rgba(28,22,12,0.95) 100%)',
+                border: '1px solid rgba(212,160,23,0.18)',
+                boxShadow: '0 8px 24px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.04)',
+              }}>
+              {/* gold shimmer top */}
+              <div style={{ height: '1.5px', background: 'linear-gradient(90deg, transparent, #D4A017, transparent)', opacity: 0.55 }} />
+              {/* subtle radial accent */}
+              <div className="absolute pointer-events-none" style={{ top: '-30px', right: '-30px', width: '160px', height: '160px', background: 'radial-gradient(circle, rgba(212,160,23,0.12) 0%, transparent 70%)', filter: 'blur(8px)' }} />
+
+              <div className="relative flex items-center justify-between px-4 py-3.5">
+                {isToday && (!isDevAdmin || !!boardDevPlaceId) ? (
+                  <button
+                    onClick={() => setShowNewSessionConfirm(true)}
+                    className="flex items-center gap-1.5 rounded-xl px-3 py-2 text-[11px] font-bold transition-all hover:brightness-110 active:scale-[0.97]"
+                    style={{ background: 'linear-gradient(135deg, #D4A017, #b8860b)', color: '#0a0500', boxShadow: '0 4px 14px rgba(212,160,23,0.35), inset 0 1px 0 rgba(255,255,255,0.18)' }}
+                  >
+                    <Plus className="h-3.5 w-3.5" />
+                    جلسة جديدة
+                  </button>
+                ) : <span />}
+                <div className="flex items-center gap-2.5 text-right">
+                  <div>
+                    <h1 className="text-base font-black leading-tight" style={{ color: '#f5f0e8', letterSpacing: '0.3px' }}>لوحة SîpFlõw</h1>
+                    <p className="text-[10px] font-medium mt-0.5" style={{ color: 'rgba(212,160,23,0.7)', letterSpacing: '1.5px' }}>DASHBOARD</p>
+                  </div>
+                  <div className="h-9 w-9 rounded-xl flex items-center justify-center"
+                    style={{ background: 'linear-gradient(135deg, rgba(212,160,23,0.18), rgba(212,160,23,0.06))', border: '1px solid rgba(212,160,23,0.3)', boxShadow: '0 0 14px rgba(212,160,23,0.18)' }}>
+                    <Coffee className="h-4 w-4" style={{ color: '#fbbf24' }} />
+                  </div>
+                </div>
+              </div>
             </div>
 
             {/* Date navigator – all users (year / month / day) */}
@@ -4860,64 +4882,89 @@ export default function HomePage() {
                 setSelectedDate(prev)
               }
 
-              const navBtn = 'flex items-center justify-center w-8 h-8 rounded-lg transition-colors disabled:opacity-20 disabled:cursor-not-allowed hover:bg-white/5'
+              const navBtn = 'flex items-center justify-center w-7 h-7 rounded-lg transition-all disabled:opacity-15 disabled:cursor-not-allowed hover:bg-white/5 active:scale-90'
+              const navBtnLarge = 'flex items-center justify-center w-9 h-9 rounded-xl transition-all disabled:opacity-15 disabled:cursor-not-allowed hover:bg-amber-500/10 active:scale-90'
 
               return (
-                <div className="rounded-2xl overflow-hidden" style={{ background: 'linear-gradient(160deg, #141210, #1a1714)', border: '1px solid rgba(255,255,255,0.06)' }}>
-                  {/* ── Year row ── */}
-                  <div className="flex items-center justify-between px-2 py-1.5" style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
-                    <button onClick={goYearNewer} disabled={isToday} className={navBtn}>
-                      <ChevronRight className="h-3.5 w-3.5" style={{ color: 'rgba(255,255,255,0.3)' }} />
-                    </button>
-                    <span className="text-xs font-semibold tracking-widest" style={{ color: 'rgba(255,255,255,0.4)' }}>{yr}</span>
-                    <button onClick={goYearOlder} className={navBtn}>
-                      <ChevronLeft className="h-3.5 w-3.5" style={{ color: 'rgba(255,255,255,0.3)' }} />
-                    </button>
+                <div className="relative overflow-hidden rounded-2xl"
+                  style={{
+                    background: 'linear-gradient(155deg, #14110d 0%, #1a1611 50%, #14110d 100%)',
+                    border: '1px solid rgba(212,160,23,0.15)',
+                    boxShadow: '0 6px 20px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.03)',
+                  }}>
+                  {/* corner accents */}
+                  <div className="absolute pointer-events-none" style={{ top: 0, left: 0, width: '60px', height: '60px', background: 'radial-gradient(circle at top left, rgba(212,160,23,0.1), transparent 70%)' }} />
+                  <div className="absolute pointer-events-none" style={{ bottom: 0, right: 0, width: '60px', height: '60px', background: 'radial-gradient(circle at bottom right, rgba(212,160,23,0.08), transparent 70%)' }} />
+
+                  {/* ── Year + Month combined header pill ── */}
+                  <div className="relative flex items-center justify-between gap-2 px-3 pt-2.5 pb-2">
+                    <div className="flex items-center gap-1">
+                      <button onClick={goYearNewer} disabled={isToday} className={navBtn}>
+                        <ChevronRight className="h-3 w-3" style={{ color: 'rgba(212,160,23,0.55)' }} />
+                      </button>
+                      <span className="text-[10px] font-bold tracking-[2px] px-2" style={{ color: 'rgba(212,160,23,0.65)' }}>{yr}</span>
+                      <button onClick={goYearOlder} className={navBtn}>
+                        <ChevronLeft className="h-3 w-3" style={{ color: 'rgba(212,160,23,0.55)' }} />
+                      </button>
+                    </div>
+                    <div className="h-3 w-px" style={{ background: 'rgba(212,160,23,0.2)' }} />
+                    <div className="flex items-center gap-1">
+                      <button onClick={goMonthNewer} disabled={isToday} className={navBtn}>
+                        <ChevronRight className="h-3 w-3" style={{ color: 'rgba(212,160,23,0.55)' }} />
+                      </button>
+                      <span className="text-[11px] font-bold px-1.5" style={{ color: 'rgba(255,255,255,0.78)' }}>
+                        {effectiveDate.toLocaleDateString('ar-EG', { month: 'long' })}
+                      </span>
+                      <button onClick={goMonthOlder} className={navBtn}>
+                        <ChevronLeft className="h-3 w-3" style={{ color: 'rgba(212,160,23,0.55)' }} />
+                      </button>
+                    </div>
                   </div>
 
-                  {/* ── Month row ── */}
-                  <div className="flex items-center justify-between px-2 py-1.5" style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
-                    <button onClick={goMonthNewer} disabled={isToday} className={navBtn}>
-                      <ChevronRight className="h-3.5 w-3.5" style={{ color: 'rgba(255,255,255,0.3)' }} />
-                    </button>
-                    <span className="text-xs font-semibold" style={{ color: 'rgba(255,255,255,0.7)' }}>
-                      {effectiveDate.toLocaleDateString('ar-EG', { month: 'long' })}
-                    </span>
-                    <button onClick={goMonthOlder} className={navBtn}>
-                      <ChevronLeft className="h-3.5 w-3.5" style={{ color: 'rgba(255,255,255,0.3)' }} />
-                    </button>
-                  </div>
+                  {/* gold divider */}
+                  <div className="mx-3" style={{ height: '1px', background: 'linear-gradient(90deg, transparent, rgba(212,160,23,0.25), transparent)' }} />
 
-                  {/* ── Day row ── */}
-                  <div className="flex items-center justify-between px-2 py-2.5">
-                    <button onClick={goNewer} disabled={isToday} className={navBtn}>
-                      <ChevronRight className="h-4 w-4" style={{ color: 'rgba(255,255,255,0.3)' }} />
+                  {/* ── Featured day row ── */}
+                  <div className="relative flex items-center justify-between gap-2 px-3 py-3">
+                    <button onClick={goNewer} disabled={isToday} className={navBtnLarge}>
+                      <ChevronRight className="h-4 w-4" style={{ color: '#D4A017' }} />
                     </button>
 
-                    <div className="flex flex-col items-center gap-0.5 flex-1">
+                    <div className="flex-1 flex items-center justify-center">
                       {isToday ? (
-                        <div className="flex items-center gap-2">
-                          <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-                          <span className="text-sm font-bold" style={{ color: '#34d399' }}>اليوم</span>
+                        <div className="relative flex items-center gap-2.5 px-5 py-2 rounded-full"
+                          style={{
+                            background: 'linear-gradient(135deg, rgba(52,211,153,0.14), rgba(52,211,153,0.06))',
+                            border: '1px solid rgba(52,211,153,0.35)',
+                            boxShadow: '0 0 22px rgba(52,211,153,0.2), inset 0 1px 0 rgba(255,255,255,0.08)',
+                          }}>
+                          <span className="relative flex h-2 w-2">
+                            <span className="absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75 animate-ping" />
+                            <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-400" />
+                          </span>
+                          <span className="text-sm font-black tracking-wide" style={{ color: '#6ee7b7' }}>اليوم</span>
+                          <span className="text-[10px] font-semibold opacity-70" style={{ color: '#6ee7b7' }}>
+                            {new Date().toLocaleDateString('ar-EG', { day: 'numeric', month: 'short' })}
+                          </span>
                         </div>
                       ) : (
-                        <>
-                          <span className="text-sm font-bold" style={{ color: 'rgba(255,255,255,0.85)' }}>
+                        <div className="flex flex-col items-center gap-1">
+                          <span className="text-sm font-black tracking-wide" style={{ color: 'rgba(255,255,255,0.92)' }}>
                             {effectiveDate.toLocaleDateString('ar-EG', { weekday: 'long', day: 'numeric' })}
                           </span>
                           <button
                             onClick={() => setSelectedDate(null)}
-                            className="text-[11px] hover:underline leading-none"
-                            style={{ color: '#D4A017' }}
+                            className="text-[10px] font-semibold hover:underline leading-none px-2 py-0.5 rounded-full"
+                            style={{ color: '#D4A017', background: 'rgba(212,160,23,0.08)', border: '1px solid rgba(212,160,23,0.18)' }}
                           >
                             العودة لليوم
                           </button>
-                        </>
+                        </div>
                       )}
                     </div>
 
-                    <button onClick={goOlder} className={navBtn}>
-                      <ChevronLeft className="h-4 w-4" style={{ color: 'rgba(255,255,255,0.3)' }} />
+                    <button onClick={goOlder} className={navBtnLarge}>
+                      <ChevronLeft className="h-4 w-4" style={{ color: '#D4A017' }} />
                     </button>
                   </div>
                 </div>
@@ -5363,16 +5410,27 @@ export default function HomePage() {
                     {isAnyAdmin ? (
                       <button
                         onClick={() => setShowReceipt(true)}
-                        className="flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors"
+                        className="flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-bold transition-all hover:brightness-110 active:scale-[0.97]"
+                        style={{ background: 'linear-gradient(135deg, #D4A017, #b8860b)', color: '#0a0500', boxShadow: '0 3px 12px rgba(212,160,23,0.3), inset 0 1px 0 rgba(255,255,255,0.18)' }}
                       >
                         <Printer className="h-4 w-4" />
                         طباعة الفاتورة
                       </button>
                     ) : <span />}
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <div className="flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold"
+                      style={
+                        isToday
+                          ? { background: 'rgba(52,211,153,0.1)', border: '1px solid rgba(52,211,153,0.25)', color: '#6ee7b7' }
+                          : isFuture
+                          ? { background: 'rgba(96,165,250,0.08)', border: '1px solid rgba(96,165,250,0.2)', color: '#93c5fd' }
+                          : { background: 'rgba(212,160,23,0.08)', border: '1px solid rgba(212,160,23,0.2)', color: '#D4A017' }
+                      }>
                       {isToday ? (
                         <>
-                          <span className="h-2 w-2 rounded-full bg-green-500 animate-pulse"></span>
+                          <span className="relative flex h-1.5 w-1.5">
+                            <span className="absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75 animate-ping" />
+                            <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-400" />
+                          </span>
                           <span>تحديث مباشر</span>
                         </>
                       ) : isFuture ? (
@@ -5383,28 +5441,57 @@ export default function HomePage() {
                     </div>
                   </div>
 
-                  {/* Stats Cards */}
-                  <div className="grid grid-cols-2 gap-2.5">
-                    <div className="rounded-xl p-3.5" style={{ background: 'linear-gradient(160deg, #141210, #1a1714)', border: '1px solid rgba(255,255,255,0.06)' }}>
-                      <div className="flex items-center justify-between">
+                  {/* Stats Cards — premium */}
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="relative overflow-hidden rounded-2xl p-4"
+                      style={{
+                        background: 'linear-gradient(155deg, #14110d 0%, #1c1813 100%)',
+                        border: '1px solid rgba(244,219,156,0.18)',
+                        boxShadow: '0 4px 16px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.04)',
+                      }}>
+                      <div className="absolute pointer-events-none" style={{ top: '-20px', left: '-20px', width: '90px', height: '90px', background: 'radial-gradient(circle, rgba(244,219,156,0.1), transparent 70%)' }} />
+                      <div className="relative flex items-center justify-between">
                         <div className="text-right">
-                          <p className="text-xs font-medium" style={{ color: 'rgba(255,255,255,0.4)' }}>الأشخاص</p>
-                          <p className="text-2xl font-bold mt-0.5" style={{ color: 'rgba(255,255,255,0.9)' }}>{boUsers}</p>
+                          <p className="text-[10px] font-bold tracking-[1.5px]" style={{ color: 'rgba(244,219,156,0.55)' }}>الأشخاص</p>
+                          <p className="text-3xl font-black mt-1 leading-none" style={{ color: '#f5f0e8', textShadow: '0 0 18px rgba(244,219,156,0.18)' }}>{boUsers}</p>
+                          <p className="text-[9px] font-semibold mt-1.5" style={{ color: 'rgba(255,255,255,0.3)' }}>GUESTS</p>
                         </div>
-                        <div className="flex h-10 w-10 items-center justify-center rounded-xl" style={{ background: 'rgba(184,137,63,0.1)', border: '1px solid rgba(184,137,63,0.15)' }}>
+                        <div className="flex h-11 w-11 items-center justify-center rounded-2xl"
+                          style={{
+                            background: 'linear-gradient(135deg, rgba(244,219,156,0.2), rgba(244,219,156,0.05))',
+                            border: '1px solid rgba(244,219,156,0.3)',
+                            boxShadow: '0 0 16px rgba(244,219,156,0.18), inset 0 1px 0 rgba(255,255,255,0.1)',
+                          }}>
                           <Users className="h-5 w-5" style={{ color: '#f4db9c' }} />
                         </div>
                       </div>
                     </div>
-                    <div className="rounded-xl p-3.5" style={{ background: 'linear-gradient(160deg, #141210, #1a1714)', border: '1px solid rgba(255,255,255,0.06)' }}>
-                      <div className="flex items-center justify-between">
+                    <div className="relative overflow-hidden rounded-2xl p-4"
+                      style={{
+                        background: 'linear-gradient(155deg, #14110d 0%, #1f1810 100%)',
+                        border: '1px solid rgba(212,160,23,0.22)',
+                        boxShadow: '0 4px 16px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.04)',
+                      }}>
+                      <div className="absolute pointer-events-none" style={{ top: '-20px', right: '-20px', width: '90px', height: '90px', background: 'radial-gradient(circle, rgba(212,160,23,0.14), transparent 70%)' }} />
+                      <div className="relative flex items-center justify-between">
                         <div className="text-right">
-                          <p className="text-xs font-medium" style={{ color: 'rgba(255,255,255,0.4)' }}>الإجمالي</p>
-                          <p className="text-2xl font-bold mt-0.5" style={{ color: boTotal > 0 ? '#fbbf24' : 'rgba(255,255,255,0.3)' }}>
-                            {boTotal > 0 ? `${boTotal.toFixed(0)}` : '-'}
-                          </p>
+                          <p className="text-[10px] font-bold tracking-[1.5px]" style={{ color: 'rgba(212,160,23,0.6)' }}>الإجمالي</p>
+                          <div className="flex items-baseline gap-1 mt-1">
+                            <p className="text-3xl font-black leading-none" style={{ color: boTotal > 0 ? '#fbbf24' : 'rgba(255,255,255,0.3)', textShadow: boTotal > 0 ? '0 0 20px rgba(251,191,36,0.4)' : 'none' }}>
+                              {boTotal > 0 ? boTotal.toFixed(0) : '—'}
+                            </p>
+                            {boTotal > 0 && (
+                              <span className="text-[10px] font-bold" style={{ color: 'rgba(212,160,23,0.7)' }}>ج.م</span>
+                            )}
+                          </div>
+                          <p className="text-[9px] font-semibold mt-1.5" style={{ color: 'rgba(255,255,255,0.3)' }}>REVENUE</p>
                         </div>
-                        <div className="flex h-10 w-10 items-center justify-center rounded-xl" style={{ background: 'rgba(212,160,23,0.1)', border: '1px solid rgba(212,160,23,0.15)' }}>
+                        <div className="flex h-11 w-11 items-center justify-center rounded-2xl"
+                          style={{
+                            background: 'linear-gradient(135deg, rgba(212,160,23,0.25), rgba(212,160,23,0.05))',
+                            border: '1px solid rgba(212,160,23,0.4)',
+                            boxShadow: '0 0 18px rgba(212,160,23,0.25), inset 0 1px 0 rgba(255,255,255,0.12)',
+                          }}>
                           <DollarSign className="h-5 w-5" style={{ color: '#D4A017' }} />
                         </div>
                       </div>
@@ -5414,8 +5501,15 @@ export default function HomePage() {
                   {/* Table badge */}
                   {!isAnyAdmin && effectiveTable && (
                     <div className="flex items-center justify-center gap-2">
-                      <span className="rounded-full px-4 py-1.5 text-sm font-semibold" style={{ background: 'rgba(212,160,23,0.1)', border: '1px solid rgba(212,160,23,0.2)', color: '#D4A017' }}>
-                        🪑 طربيزة {effectiveTable}
+                      <span className="flex items-center gap-2 rounded-full px-5 py-2 text-sm font-bold"
+                        style={{
+                          background: 'linear-gradient(135deg, rgba(212,160,23,0.15), rgba(212,160,23,0.06))',
+                          border: '1px solid rgba(212,160,23,0.35)',
+                          color: '#fbbf24',
+                          boxShadow: '0 0 18px rgba(212,160,23,0.18), inset 0 1px 0 rgba(255,255,255,0.06)',
+                        }}>
+                        <span>🪑</span>
+                        <span>طربيزة {effectiveTable}</span>
                       </span>
                     </div>
                   )}
