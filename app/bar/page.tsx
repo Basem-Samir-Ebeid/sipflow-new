@@ -294,15 +294,15 @@ export default function BarPage() {
   if (!staffUser) {
     return (
       <div className="min-h-[100dvh] relative overflow-hidden" dir="rtl"
-        style={{ background: 'radial-gradient(ellipse at top, #0c1828 0%, #060c14 50%, #000 100%)' }}>
+        style={{ background: 'radial-gradient(ellipse at top, #1a1408 0%, #0a0703 50%, #000 100%)' }}>
         <Toaster position="top-center" richColors />
         <DevBar />
 
         {/* Decorative glows */}
         <div className="absolute top-0 right-1/2 translate-x-1/2 w-[500px] h-[500px] rounded-full pointer-events-none"
-          style={{ background: 'radial-gradient(circle, rgba(56,189,248,0.18) 0%, transparent 70%)', filter: 'blur(60px)' }} />
+          style={{ background: 'radial-gradient(circle, rgba(212,160,23,0.18) 0%, transparent 70%)', filter: 'blur(60px)' }} />
         <div className="absolute top-20 left-10 w-32 h-32 rounded-full pointer-events-none"
-          style={{ background: 'radial-gradient(circle, rgba(56,189,248,0.08) 0%, transparent 70%)' }} />
+          style={{ background: 'radial-gradient(circle, rgba(212,160,23,0.08) 0%, transparent 70%)' }} />
         <div className="absolute bottom-32 right-8 w-40 h-40 rounded-full pointer-events-none"
           style={{ background: 'radial-gradient(circle, rgba(2,132,199,0.08) 0%, transparent 70%)' }} />
 
@@ -319,23 +319,23 @@ export default function BarPage() {
           <div className="pt-20 pb-8 px-6 text-center relative">
             <div className="relative mx-auto mb-6 h-28 w-28">
               <div className="absolute inset-0 rounded-full"
-                style={{ background: 'radial-gradient(circle, rgba(56,189,248,0.4) 0%, transparent 70%)', filter: 'blur(20px)' }} />
+                style={{ background: 'radial-gradient(circle, rgba(212,160,23,0.4) 0%, transparent 70%)', filter: 'blur(20px)' }} />
               <div className="relative h-28 w-28 rounded-3xl overflow-hidden shadow-2xl"
-                style={{ border: '2px solid rgba(56,189,248,0.4)', boxShadow: '0 0 40px rgba(56,189,248,0.3), 0 8px 32px rgba(0,0,0,0.5)' }}>
+                style={{ border: '2px solid rgba(212,160,23,0.4)', boxShadow: '0 0 40px rgba(212,160,23,0.3), 0 8px 32px rgba(0,0,0,0.5)' }}>
                 <Image src={systemLogoUrl} alt="SîpFlõw" width={112} height={112} className="object-cover w-full h-full" unoptimized />
               </div>
               <div className="absolute -bottom-1 -left-1 flex h-10 w-10 items-center justify-center rounded-full"
-                style={{ background: 'linear-gradient(135deg, #7dd3fc, #38bdf8, #0284c7)', boxShadow: '0 4px 16px rgba(56,189,248,0.6), 0 0 0 3px #060c14' }}>
+                style={{ background: 'linear-gradient(135deg, #fcd34d, #D4A017, #92640a)', boxShadow: '0 4px 16px rgba(212,160,23,0.6), 0 0 0 3px #0a0703' }}>
                 <Coffee className="h-5 w-5 text-white" />
               </div>
             </div>
             <div className="inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 mb-3 text-xs font-bold"
-              style={{ background: 'rgba(56,189,248,0.15)', border: '1px solid rgba(56,189,248,0.4)', color: '#7dd3fc' }}>
+              style={{ background: 'rgba(212,160,23,0.15)', border: '1px solid rgba(212,160,23,0.4)', color: '#fcd34d' }}>
               <span className="h-1.5 w-1.5 rounded-full bg-sky-400 animate-pulse" />
               بوابة البار
             </div>
             <h1 className="text-3xl font-black text-white mb-1.5"
-              style={{ background: 'linear-gradient(180deg, #fff 0%, #7dd3fc 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
+              style={{ background: 'linear-gradient(180deg, #fff 0%, #fcd34d 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
               SîpFlõw · بار
             </h1>
             <p className="text-sm text-zinc-400">نظام إدارة البار</p>
@@ -344,7 +344,7 @@ export default function BarPage() {
           {/* Form Card */}
           <div className="flex-1 px-6 pb-10">
             <div className="w-full max-w-md mx-auto rounded-3xl p-6 sm:p-8 space-y-5"
-              style={{ background: 'rgba(8,18,32,0.7)', border: '1px solid rgba(56,189,248,0.15)', backdropFilter: 'blur(20px)', boxShadow: '0 20px 60px rgba(0,0,0,0.4)' }}>
+              style={{ background: 'rgba(20,16,8,0.7)', border: '1px solid rgba(212,160,23,0.15)', backdropFilter: 'blur(20px)', boxShadow: '0 20px 60px rgba(0,0,0,0.4)' }}>
               <div>
                 <label className="text-xs font-bold text-zinc-300 mb-2 block">اسم المستخدم</label>
                 <Input type="text" value={username} onChange={(e) => setUsername(e.target.value)}
@@ -361,7 +361,7 @@ export default function BarPage() {
               </div>
               <button onClick={handleLogin} disabled={isLoggingIn}
                 className="w-full h-13 py-3.5 rounded-2xl font-black text-base flex items-center justify-center gap-2 transition-all active:scale-[0.98] disabled:opacity-60"
-                style={{ background: isLoggingIn ? 'rgba(56,189,248,0.3)' : 'linear-gradient(135deg, #7dd3fc 0%, #38bdf8 50%, #0284c7 100%)', color: '#001824', boxShadow: '0 8px 24px rgba(56,189,248,0.4), inset 0 1px 0 rgba(255,255,255,0.3)' }}>
+                style={{ background: isLoggingIn ? 'rgba(212,160,23,0.3)' : 'linear-gradient(135deg, #fcd34d 0%, #D4A017 50%, #92640a 100%)', color: '#1a0800', boxShadow: '0 8px 24px rgba(212,160,23,0.4), inset 0 1px 0 rgba(255,255,255,0.3)' }}>
                 {isLoggingIn ? <Loader2 className="h-5 w-5 animate-spin" /> : <Zap className="h-5 w-5" />}
                 {isLoggingIn ? 'جاري الدخول...' : 'دخول البار'}
               </button>
@@ -415,7 +415,7 @@ export default function BarPage() {
         <div className="flex items-center justify-between px-4 pt-4 pb-3 gap-3">
           <div className="flex items-center gap-2 shrink-0">
             <div className="flex items-center gap-1.5 rounded-lg px-2.5 py-1.5"
-              style={{ background: 'rgba(56,189,248,0.08)', border: '1px solid rgba(56,189,248,0.18)' }}>
+              style={{ background: 'rgba(212,160,23,0.08)', border: '1px solid rgba(212,160,23,0.18)' }}>
               <Clock className="h-3 w-3 text-sky-400" />
               <span className="text-[11px] font-bold text-sky-300 tabular-nums tracking-tight">{formatTime(group.earliestTime)}</span>
             </div>
@@ -489,7 +489,7 @@ export default function BarPage() {
                 <div className="flex items-center justify-end gap-2 flex-wrap">
                   {order.quantity > 1 && (
                     <span className="rounded-md px-2 py-0.5 text-[11px] font-black tabular-nums"
-                      style={{ background: 'rgba(56,189,248,0.15)', color: '#7dd3fc', border: '1px solid rgba(56,189,248,0.3)' }}>
+                      style={{ background: 'rgba(212,160,23,0.15)', color: '#fcd34d', border: '1px solid rgba(212,160,23,0.3)' }}>
                       × {order.quantity}
                     </span>
                   )}
@@ -519,14 +519,14 @@ export default function BarPage() {
               className="w-full h-12 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-all active:scale-[0.98] disabled:opacity-60 relative overflow-hidden group"
               style={{
                 background: completingUserId === group.userId
-                  ? 'rgba(56,189,248,0.3)'
+                  ? 'rgba(212,160,23,0.3)'
                   : group.employee
                     ? 'linear-gradient(135deg, #2563eb 0%, #3b82f6 50%, #60a5fa 100%)'
-                    : 'linear-gradient(135deg, #0ea5e9, #0284c7)',
+                    : 'linear-gradient(135deg, #b8860b, #92640a)',
                 color: '#fff',
                 boxShadow: group.employee
                   ? '0 4px 20px rgba(59,130,246,0.4), 0 0 0 1px rgba(255,255,255,0.08) inset'
-                  : '0 4px 18px rgba(56,189,248,0.32), 0 0 0 1px rgba(255,255,255,0.08) inset'
+                  : '0 4px 18px rgba(212,160,23,0.32), 0 0 0 1px rgba(255,255,255,0.08) inset'
               }}>
               <span className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity"
                 style={{ background: 'linear-gradient(135deg, rgba(255,255,255,0.08), transparent)' }} />
@@ -600,7 +600,7 @@ export default function BarPage() {
                 <span className="text-[11px] text-emerald-500 font-medium">نشط · البار</span>
               </div>
             </div>
-            <div className="h-9 w-9 rounded-xl overflow-hidden shrink-0" style={{ border: '1px solid rgba(56,189,248,0.25)', boxShadow: '0 0 12px rgba(56,189,248,0.15)' }}>
+            <div className="h-9 w-9 rounded-xl overflow-hidden shrink-0" style={{ border: '1px solid rgba(212,160,23,0.25)', boxShadow: '0 0 12px rgba(212,160,23,0.15)' }}>
               <Image src={systemLogoUrl} alt="logo" width={36} height={36} className="object-cover w-full h-full" unoptimized />
             </div>
           </div>
@@ -616,7 +616,7 @@ export default function BarPage() {
           ] as const).map(tab => {
             const active = staffTab === tab.key
             const colors: Record<string, { active: string; badge: string; border: string }> = {
-              sky:     { active: '#38bdf8', badge: '#0284c7', border: 'rgba(56,189,248,0.5)' },
+              sky:     { active: '#D4A017', badge: '#92640a', border: 'rgba(212,160,23,0.5)' },
               emerald: { active: '#34d399', badge: '#059669', border: 'rgba(52,211,153,0.5)' },
               amber:   { active: '#fbbf24', badge: '#d97706', border: 'rgba(251,191,36,0.5)' },
               violet:  { active: '#a78bfa', badge: '#7c3aed', border: 'rgba(167,139,250,0.5)' },
@@ -702,7 +702,7 @@ export default function BarPage() {
               </div>
             ) : pendingGroups.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-16 gap-4">
-                <div className="h-16 w-16 rounded-2xl flex items-center justify-center" style={{ background: 'rgba(56,189,248,0.08)', border: '1px solid rgba(56,189,248,0.15)' }}>
+                <div className="h-16 w-16 rounded-2xl flex items-center justify-center" style={{ background: 'rgba(212,160,23,0.08)', border: '1px solid rgba(212,160,23,0.15)' }}>
                   <CheckCircle className="h-8 w-8 text-sky-500/60" />
                 </div>
                 <div className="text-center">
@@ -714,7 +714,7 @@ export default function BarPage() {
               <div className="space-y-3">
                 {pendingGroups.map(group => <OrderCard key={group.userId} group={group} showComplete={true} />)}
                 <div className="flex items-center justify-center gap-2 pt-1">
-                  <span className="text-xs font-semibold rounded-full px-3 py-1.5" style={{ background: 'rgba(56,189,248,0.08)', color: '#38bdf8', border: '1px solid rgba(56,189,248,0.15)' }}>
+                  <span className="text-xs font-semibold rounded-full px-3 py-1.5" style={{ background: 'rgba(212,160,23,0.08)', color: '#D4A017', border: '1px solid rgba(212,160,23,0.15)' }}>
                     {pendingGroups.length} {pendingGroups.length === 1 ? 'طاولة' : 'طاولات'} في الانتظار
                   </span>
                   <span className="text-xs font-semibold rounded-full px-3 py-1.5" style={{ background: 'rgba(255,255,255,0.04)', color: '#71717a', border: '1px solid rgba(255,255,255,0.06)' }}>
@@ -860,7 +860,7 @@ export default function BarPage() {
             <div className="flex items-center justify-between">
               <button onClick={handlePrintReport}
                 className="flex items-center gap-2 rounded-xl px-3 py-2 text-xs font-bold transition-all active:scale-95"
-                style={{ background: 'rgba(56,189,248,0.08)', border: '1px solid rgba(56,189,248,0.2)', color: '#38bdf8' }}>
+                style={{ background: 'rgba(212,160,23,0.08)', border: '1px solid rgba(212,160,23,0.2)', color: '#D4A017' }}>
                 <FileText className="h-3.5 w-3.5" />
                 طباعة التقرير
               </button>
@@ -868,7 +868,7 @@ export default function BarPage() {
             </div>
 
             <div className="grid grid-cols-2 gap-3">
-              <div className="rounded-2xl p-4 text-center" style={{ background: '#111', border: '1px solid rgba(56,189,248,0.2)' }}>
+              <div className="rounded-2xl p-4 text-center" style={{ background: '#111', border: '1px solid rgba(212,160,23,0.2)' }}>
                 <p className="text-3xl font-black text-sky-400">{allOrders.length}</p>
                 <p className="text-[11px] text-zinc-600 mt-1 font-medium">إجمالي الطلبات</p>
               </div>
@@ -898,7 +898,7 @@ export default function BarPage() {
                     <div key={item.drinkName} className="rounded-2xl p-3.5" style={{ background: '#111', border: '1px solid rgba(255,255,255,0.06)' }}>
                       <div className="flex items-center justify-between mb-2.5">
                         <span className="text-xs font-black rounded-full px-2.5 py-1"
-                          style={{ background: 'rgba(56,189,248,0.1)', color: '#38bdf8', border: '1px solid rgba(56,189,248,0.2)' }}>
+                          style={{ background: 'rgba(212,160,23,0.1)', color: '#D4A017', border: '1px solid rgba(212,160,23,0.2)' }}>
                           × {item.count}
                         </span>
                         <div className="flex items-center gap-2 text-right">
@@ -910,7 +910,7 @@ export default function BarPage() {
                         </div>
                       </div>
                       <div className="h-1 rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.06)' }}>
-                        <div className="h-full rounded-full transition-all duration-500" style={{ width: `${pct}%`, background: 'linear-gradient(90deg, #0ea5e9, #38bdf8)' }} />
+                        <div className="h-full rounded-full transition-all duration-500" style={{ width: `${pct}%`, background: 'linear-gradient(90deg, #b8860b, #D4A017)' }} />
                       </div>
                     </div>
                   )

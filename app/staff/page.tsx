@@ -54,9 +54,9 @@ interface Reservation {
 
 type StaffTab = 'pending' | 'done' | 'report' | 'reservations'
 
-const VIOLET = '#a855f7'
-const VIOLET_DIM = 'rgba(168,85,247,0.15)'
-const VIOLET_BORDER = 'rgba(168,85,247,0.25)'
+const VIOLET = '#D4A017'
+const VIOLET_DIM = 'rgba(212,160,23,0.15)'
+const VIOLET_BORDER = 'rgba(212,160,23,0.3)'
 
 export default function StaffPage() {
   const systemLogoUrl = useSystemLogo()
@@ -335,43 +335,60 @@ export default function StaffPage() {
   /* ─── LOGIN ─── */
   if (!staffUser) {
     return (
-      <div className="min-h-[100dvh] flex flex-col" dir="rtl" style={{ background: '#080808' }}>
+      <div className="min-h-[100dvh] relative overflow-hidden" dir="rtl"
+        style={{ background: 'radial-gradient(ellipse at top, #1a1408 0%, #0a0703 50%, #000 100%)' }}>
         <Toaster position="top-center" richColors />
         <DevBar />
-        <div className="px-4 pt-4">
-          <button onClick={() => { window.location.href = '/' }}
-            className="flex items-center gap-1.5 text-xs transition-colors"
-            style={{ color: 'rgba(255,255,255,0.35)' }}
-            onMouseEnter={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.7)')}
-            onMouseLeave={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.35)')}>
-            <ArrowRight className="h-3.5 w-3.5" />
-            الرئيسية
-          </button>
-        </div>
-        <div className="flex-1 flex items-center justify-center p-5">
-          <div className="w-full max-w-xs">
-            <div className="text-center mb-8">
-              <div className="relative mx-auto mb-5 h-20 w-20">
-                <div className="h-20 w-20 rounded-2xl overflow-hidden" style={{ border: `1px solid ${VIOLET_BORDER}`, boxShadow: `0 0 24px rgba(168,85,247,0.2)` }}>
-                  <Image src={systemLogoUrl} alt="SîpFlõw" width={80} height={80} className="object-cover w-full h-full" unoptimized />
-                </div>
-                <div className="absolute -bottom-2 -left-2 flex h-7 w-7 items-center justify-center rounded-full text-sm"
-                  style={{ background: 'linear-gradient(135deg, #a855f7, #7c3aed)', boxShadow: '0 0 14px rgba(168,85,247,0.6)' }}>
-                  <Receipt className="h-3.5 w-3.5 text-white" />
-                </div>
-              </div>
-              <div className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 mb-3 text-xs font-semibold"
-                style={{ background: VIOLET_DIM, border: `1px solid ${VIOLET_BORDER}`, color: '#c084fc' }}>
-                <span className="h-1.5 w-1.5 rounded-full animate-pulse" style={{ background: VIOLET }} />
-                بوابة الكاشير
-              </div>
-              <h1 className="text-xl font-bold text-white">SîpFlõw</h1>
-              <p className="text-xs mt-1" style={{ color: 'rgba(255,255,255,0.35)' }}>إدارة الطلبات والإيرادات</p>
-            </div>
 
-            <div className="rounded-2xl p-5 space-y-4" style={{ background: '#131313', border: `1px solid ${VIOLET_BORDER}` }}>
+        {/* Decorative glows */}
+        <div className="absolute top-0 right-1/2 translate-x-1/2 w-[500px] h-[500px] rounded-full pointer-events-none"
+          style={{ background: 'radial-gradient(circle, rgba(212,160,23,0.2) 0%, transparent 70%)', filter: 'blur(60px)' }} />
+        <div className="absolute top-20 left-10 w-32 h-32 rounded-full pointer-events-none"
+          style={{ background: 'radial-gradient(circle, rgba(212,160,23,0.08) 0%, transparent 70%)' }} />
+        <div className="absolute bottom-32 right-8 w-40 h-40 rounded-full pointer-events-none"
+          style={{ background: 'radial-gradient(circle, rgba(146,100,10,0.06) 0%, transparent 70%)' }} />
+
+        {/* Back to home */}
+        <button onClick={() => { window.location.href = '/' }}
+          className="absolute top-5 right-5 z-10 flex items-center gap-1.5 px-3 h-10 rounded-full text-xs text-zinc-300 transition-all active:scale-95"
+          style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', backdropFilter: 'blur(10px)' }}>
+          <ArrowRight className="h-3.5 w-3.5" />
+          الرئيسية
+        </button>
+
+        <div className="min-h-[100dvh] flex flex-col">
+          {/* Hero */}
+          <div className="pt-20 pb-8 px-6 text-center relative">
+            <div className="relative mx-auto mb-6 h-28 w-28">
+              <div className="absolute inset-0 rounded-full"
+                style={{ background: 'radial-gradient(circle, rgba(212,160,23,0.4) 0%, transparent 70%)', filter: 'blur(20px)' }} />
+              <div className="relative h-28 w-28 rounded-3xl overflow-hidden shadow-2xl"
+                style={{ border: '2px solid rgba(212,160,23,0.45)', boxShadow: '0 0 40px rgba(212,160,23,0.3), 0 8px 32px rgba(0,0,0,0.5)' }}>
+                <Image src={systemLogoUrl} alt="SîpFlõw" width={112} height={112} className="object-cover w-full h-full" unoptimized />
+              </div>
+              <div className="absolute -bottom-1 -left-1 flex h-10 w-10 items-center justify-center rounded-full"
+                style={{ background: 'linear-gradient(135deg, #fcd34d, #D4A017, #92640a)', boxShadow: '0 4px 16px rgba(212,160,23,0.6), 0 0 0 3px #0a0703' }}>
+                <Receipt className="h-5 w-5 text-black" />
+              </div>
+            </div>
+            <div className="inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 mb-3 text-xs font-bold"
+              style={{ background: 'rgba(212,160,23,0.15)', border: '1px solid rgba(212,160,23,0.4)', color: '#fcd34d' }}>
+              <span className="h-1.5 w-1.5 rounded-full animate-pulse" style={{ background: '#D4A017' }} />
+              بوابة الكاشير
+            </div>
+            <h1 className="text-3xl font-black text-white mb-1.5"
+              style={{ background: 'linear-gradient(180deg, #fff 0%, #fcd34d 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
+              SîpFlõw · كاشير
+            </h1>
+            <p className="text-sm text-zinc-400">إدارة الطلبات والإيرادات</p>
+          </div>
+
+          {/* Form Card */}
+          <div className="flex-1 px-6 pb-10">
+            <div className="w-full max-w-md mx-auto rounded-3xl p-6 sm:p-8 space-y-5"
+              style={{ background: 'rgba(20,16,8,0.7)', border: '1px solid rgba(212,160,23,0.18)', backdropFilter: 'blur(20px)', boxShadow: '0 20px 60px rgba(0,0,0,0.4)' }}>
               <div>
-                <label className="text-xs font-medium mb-1.5 block" style={{ color: 'rgba(255,255,255,0.5)' }}>اسم المستخدم</label>
+                <label className="text-xs font-bold text-zinc-300 mb-2 block">اسم المستخدم</label>
                 <input
                   type="text"
                   value={username}
@@ -379,14 +396,14 @@ export default function StaffPage() {
                   placeholder="أدخل اسم المستخدم"
                   dir="rtl"
                   onKeyDown={e => e.key === 'Enter' && handleLogin()}
-                  className="w-full h-11 rounded-xl px-4 text-sm text-white placeholder:text-zinc-600 outline-none transition-all"
-                  style={{ background: '#0d0d0d', border: '1px solid rgba(255,255,255,0.08)' }}
-                  onFocus={e => (e.currentTarget.style.borderColor = VIOLET_BORDER)}
-                  onBlur={e => (e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)')}
+                  className="w-full h-12 rounded-xl px-4 text-base text-white placeholder:text-zinc-600 outline-none transition-all"
+                  style={{ background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(63,63,70,1)' }}
+                  onFocus={e => (e.currentTarget.style.borderColor = 'rgba(212,160,23,0.6)')}
+                  onBlur={e => (e.currentTarget.style.borderColor = 'rgba(63,63,70,1)')}
                 />
               </div>
               <div>
-                <label className="text-xs font-medium mb-1.5 block" style={{ color: 'rgba(255,255,255,0.5)' }}>كلمة المرور</label>
+                <label className="text-xs font-bold text-zinc-300 mb-2 block">كلمة المرور</label>
                 <input
                   type="password"
                   value={password}
@@ -394,18 +411,18 @@ export default function StaffPage() {
                   placeholder="••••••••"
                   dir="ltr"
                   onKeyDown={e => e.key === 'Enter' && handleLogin()}
-                  className="w-full h-11 rounded-xl px-4 text-sm text-white placeholder:text-zinc-600 outline-none transition-all"
-                  style={{ background: '#0d0d0d', border: '1px solid rgba(255,255,255,0.08)' }}
-                  onFocus={e => (e.currentTarget.style.borderColor = VIOLET_BORDER)}
-                  onBlur={e => (e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)')}
+                  className="w-full h-12 rounded-xl px-4 text-base text-white placeholder:text-zinc-600 outline-none transition-all"
+                  style={{ background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(63,63,70,1)' }}
+                  onFocus={e => (e.currentTarget.style.borderColor = 'rgba(212,160,23,0.6)')}
+                  onBlur={e => (e.currentTarget.style.borderColor = 'rgba(63,63,70,1)')}
                 />
               </div>
               <button
                 onClick={handleLogin}
                 disabled={isLoggingIn}
-                className="w-full h-11 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-all active:scale-95 disabled:opacity-60"
-                style={{ background: isLoggingIn ? VIOLET_DIM : 'linear-gradient(135deg, #a855f7, #7c3aed)', color: '#fff', boxShadow: '0 2px 16px rgba(168,85,247,0.35)' }}>
-                {isLoggingIn ? <Loader2 className="h-4 w-4 animate-spin" /> : <Receipt className="h-4 w-4" />}
+                className="w-full h-13 py-3.5 rounded-2xl font-black text-base flex items-center justify-center gap-2 transition-all active:scale-[0.98] disabled:opacity-60"
+                style={{ background: isLoggingIn ? 'rgba(212,160,23,0.3)' : 'linear-gradient(135deg, #fcd34d 0%, #D4A017 50%, #92640a 100%)', color: '#1a0800', boxShadow: '0 8px 24px rgba(212,160,23,0.4), inset 0 1px 0 rgba(255,255,255,0.3)' }}>
+                {isLoggingIn ? <Loader2 className="h-5 w-5 animate-spin" /> : <Receipt className="h-5 w-5" />}
                 {isLoggingIn ? 'جاري الدخول...' : 'دخول الكاشير'}
               </button>
             </div>
@@ -437,7 +454,7 @@ export default function StaffPage() {
 
         {/* Card header */}
         <div className="flex items-center justify-between px-4 py-3"
-          style={{ background: isVip ? 'rgba(245,158,11,0.08)' : 'rgba(168,85,247,0.06)', borderBottom: `1px solid ${isVip ? 'rgba(245,158,11,0.2)' : 'rgba(255,255,255,0.06)'}` }}>
+          style={{ background: isVip ? 'rgba(245,158,11,0.08)' : 'rgba(212,160,23,0.06)', borderBottom: `1px solid ${isVip ? 'rgba(245,158,11,0.2)' : 'rgba(255,255,255,0.06)'}` }}>
           <div className="flex items-center gap-2">
             <Clock className="h-3.5 w-3.5" style={{ color: VIOLET }} />
             <span className="text-sm font-medium" style={{ color: VIOLET }}>{formatTime(group.earliestTime)}</span>
@@ -822,7 +839,7 @@ export default function StaffPage() {
                         </div>
                       </div>
                       <div className="h-1.5 rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.07)' }}>
-                        <div className="h-full rounded-full transition-all" style={{ width: `${pct}%`, background: idx === 0 ? 'linear-gradient(90deg, #a855f7, #38bdf8)' : VIOLET }} />
+                        <div className="h-full rounded-full transition-all" style={{ width: `${pct}%`, background: idx === 0 ? 'linear-gradient(90deg, #D4A017, #38bdf8)' : VIOLET }} />
                       </div>
                     </div>
                   )
@@ -1007,10 +1024,10 @@ export default function StaffPage() {
           className="fixed bottom-6 left-4 z-40 flex items-center gap-2 rounded-2xl px-4 py-3 font-bold text-sm text-white shadow-2xl transition-all active:scale-95"
           style={{
             background: pendingReservations.length > 0
-              ? 'linear-gradient(135deg, #a855f7, #7c3aed)'
+              ? 'linear-gradient(135deg, #D4A017, #92640a)'
               : 'rgba(255,255,255,0.07)',
             border: pendingReservations.length > 0 ? 'none' : '1px solid rgba(255,255,255,0.1)',
-            boxShadow: pendingReservations.length > 0 ? '0 4px 24px rgba(168,85,247,0.45)' : '0 4px 16px rgba(0,0,0,0.4)'
+            boxShadow: pendingReservations.length > 0 ? '0 4px 24px rgba(212,160,23,0.45)' : '0 4px 16px rgba(0,0,0,0.4)'
           }}>
           <CalendarDays className="h-5 w-5" />
           الحجوزات
