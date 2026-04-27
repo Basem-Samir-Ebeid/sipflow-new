@@ -2661,8 +2661,8 @@ export default function HomePage() {
 
         {/* Cashier Login Modal */}
         {showCashierLogin && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4" dir="rtl">
-            <div className="w-full max-w-xs rounded-2xl p-5 shadow-2xl" style={{ background: '#141414', border: '1px solid rgba(212,175,98,0.2)' }}>
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/95 backdrop-blur-sm" dir="rtl">
+            <div className="w-screen h-screen overflow-y-auto p-6 sm:p-10 flex flex-col justify-center" style={{ background: '#141414' }}><div className="w-full max-w-md mx-auto">
               <div className="text-center mb-7">
                 <div className="relative mx-auto mb-5 h-20 w-20">
                   <div className="h-20 w-20 rounded-2xl overflow-hidden border border-[#b8893f]/30 shadow-lg shadow-[#b8893f]/15">
@@ -2708,7 +2708,7 @@ export default function HomePage() {
                   إلغاء
                 </button>
               </div>
-            </div>
+            </div></div>
           </div>
         )}
 
