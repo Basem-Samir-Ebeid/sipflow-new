@@ -27,7 +27,7 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Plus, Trash2, Pencil, Upload, RefreshCw, Users, Coffee, Key, BarChart3, TrendingUp, Award, Clock, Send, MessageSquare, Settings2, Hash, UserPlus, UserCog, Minus, Package, Banknote, CheckCircle2, Hourglass, TableProperties, Copy, ExternalLink, Link2, Eye, EyeOff, QrCode, CalendarDays, CalendarCheck, CalendarX, Download, Loader2, Activity, ShieldCheck, ChevronLeft, Radio, Camera, UserCircle, Bell, AlertTriangle, BrainCircuit, Siren, FileText, GripVertical, Wrench, ArrowUp, ArrowDown, Palette, Sparkles, CheckCircle } from 'lucide-react'
+import { Plus, Trash2, Pencil, Upload, RefreshCw, Users, Coffee, Key, BarChart3, TrendingUp, Award, Clock, Send, MessageSquare, Settings2, Hash, UserPlus, UserCog, Minus, Package, Banknote, CheckCircle2, Hourglass, TableProperties, Copy, ExternalLink, Link2, Eye, EyeOff, QrCode, CalendarDays, CalendarCheck, CalendarX, Download, Loader2, Activity, ShieldCheck, ChevronLeft, Radio, Camera, UserCircle, Bell, AlertTriangle, BrainCircuit, Siren, FileText, GripVertical, Wrench, ArrowUp, ArrowDown, Palette, Sparkles, CheckCircle, Save, Play } from 'lucide-react'
 import { THEME_VAR_KEYS, emitThemeChange, type ThemeColors, THEME_STORAGE_KEY } from '@/components/theme-applier'
 import { Checkbox } from '@/components/ui/checkbox'
 import Image from 'next/image'
@@ -307,9 +307,64 @@ export function AdminPanel({
   const [previewUrl, setPreviewUrl] = useState<string>('')
   const [sandboxOpenKey, setSandboxOpenKey] = useState<string | null>(null)
   const [sandboxInputs, setSandboxInputs] = useState<Record<string, Record<string, string>>>({})
+  type SandboxScenario = { id: string; name: string; inputs: Record<string, string>; createdAt: string }
+  const [sandboxScenarios, setSandboxScenarios] = useState<Record<string, SandboxScenario[]>>({})
+  const [sandboxScenarioNameDraft, setSandboxScenarioNameDraft] = useState<Record<string, string>>({})
+  const [savingScenarioKey, setSavingScenarioKey] = useState<string | null>(null)
 
   const updateSandboxInput = (flagKey: string, key: string, value: string) => {
     setSandboxInputs(prev => ({ ...prev, [flagKey]: { ...(prev[flagKey] || {}), [key]: value } }))
+  }
+
+  const loadSandboxScenarios = async (flagKey: string) => {
+    try {
+      const res = await fetch(`/api/ai-ideas/sandbox-scenarios?flagKey=${encodeURIComponent(flagKey)}`)
+      const data = await res.json()
+      if (data?.success && Array.isArray(data.scenarios)) {
+        setSandboxScenarios(prev => ({ ...prev, [flagKey]: data.scenarios }))
+      }
+    } catch (e) {
+      console.error('load scenarios failed', e)
+    }
+  }
+
+  const saveSandboxScenario = async (flagKey: string) => {
+    const name = (sandboxScenarioNameDraft[flagKey] || '').trim()
+    if (!name) return
+    setSavingScenarioKey(flagKey)
+    try {
+      const inputs = sandboxInputs[flagKey] || {}
+      const res = await fetch('/api/ai-ideas/sandbox-scenarios', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ flagKey, name, inputs }),
+      })
+      const data = await res.json()
+      if (data?.success && Array.isArray(data.scenarios)) {
+        setSandboxScenarios(prev => ({ ...prev, [flagKey]: data.scenarios }))
+        setSandboxScenarioNameDraft(prev => ({ ...prev, [flagKey]: '' }))
+      }
+    } catch (e) {
+      console.error('save scenario failed', e)
+    } finally {
+      setSavingScenarioKey(null)
+    }
+  }
+
+  const deleteSandboxScenario = async (flagKey: string, id: string) => {
+    try {
+      const res = await fetch(`/api/ai-ideas/sandbox-scenarios?flagKey=${encodeURIComponent(flagKey)}&id=${encodeURIComponent(id)}`, { method: 'DELETE' })
+      const data = await res.json()
+      if (data?.success && Array.isArray(data.scenarios)) {
+        setSandboxScenarios(prev => ({ ...prev, [flagKey]: data.scenarios }))
+      }
+    } catch (e) {
+      console.error('delete scenario failed', e)
+    }
+  }
+
+  const applySandboxScenario = (flagKey: string, scenario: SandboxScenario) => {
+    setSandboxInputs(prev => ({ ...prev, [flagKey]: { ...scenario.inputs } }))
   }
 
   type SandboxRule = { key: string; label: string; verdict: 'pass' | 'fail' | 'info'; detail: string }
@@ -9838,7 +9893,11 @@ const handleSaveSettings = async () => {
                       {/* ── Test Config Sandbox ── */}
                       <div className="rounded-xl overflow-hidden" style={{ background: 'rgba(0,0,0,0.25)', border: '1px solid rgba(34,211,238,0.25)' }}>
                         <button
-                          onClick={() => setSandboxOpenKey(sandboxOpenKey === idea.flagKey ? null : idea.flagKey)}
+                          onClick={() => {
+                            const opening = sandboxOpenKey !== idea.flagKey
+                            setSandboxOpenKey(opening ? idea.flagKey : null)
+                            if (opening && !sandboxScenarios[idea.flagKey]) loadSandboxScenarios(idea.flagKey)
+                          }}
                           className="w-full flex items-center justify-between gap-2 px-3 py-2 text-[11px] font-bold transition-all hover:opacity-90"
                           style={{ color: '#22d3ee', background: 'rgba(34,211,238,0.06)' }}
                         >
@@ -9933,6 +9992,64 @@ const handleSaveSettings = async () => {
                                 {failCount === 0
                                   ? '🎯 الميزة ستعمل بنجاح مع هذه القيم التجريبية'
                                   : `⚠️ ${failCount} قاعدة لن تتحقق - الميزة ستمنع التنفيذ في هذا السيناريو`}
+                              </div>
+
+                              {/* Saved Scenarios */}
+                              <div className="rounded-lg p-2.5 space-y-2" style={{ background: 'rgba(34,211,238,0.04)', border: '1px solid rgba(34,211,238,0.15)' }}>
+                                <div className="flex items-center gap-2 text-[10px] font-bold" style={{ color: '#22d3ee' }}>
+                                  <Save className="h-3 w-3" />
+                                  السيناريوهات المحفوظة
+                                </div>
+                                <div className="flex items-center gap-1.5">
+                                  <Input
+                                    value={sandboxScenarioNameDraft[idea.flagKey] || ''}
+                                    onChange={e => setSandboxScenarioNameDraft(prev => ({ ...prev, [idea.flagKey]: e.target.value }))}
+                                    onKeyDown={e => { if (e.key === 'Enter') saveSandboxScenario(idea.flagKey) }}
+                                    placeholder='مثال: زبون VIP طلب 500 ج.م'
+                                    className="h-7 text-[11px] flex-1"
+                                  />
+                                  <button
+                                    onClick={() => saveSandboxScenario(idea.flagKey)}
+                                    disabled={savingScenarioKey === idea.flagKey || !(sandboxScenarioNameDraft[idea.flagKey] || '').trim()}
+                                    className="h-7 px-2.5 rounded-md text-[10px] font-bold transition-all disabled:opacity-50"
+                                    style={{ background: 'linear-gradient(135deg, #06b6d4, #0891b2)', color: '#fff' }}
+                                  >
+                                    {savingScenarioKey === idea.flagKey ? '...' : 'حفظ'}
+                                  </button>
+                                </div>
+                                {(sandboxScenarios[idea.flagKey] || []).length === 0 ? (
+                                  <p className="text-[10px] text-muted-foreground text-center py-1">لا توجد سيناريوهات محفوظة بعد. احفظ القيم الحالية لإعادة تشغيلها لاحقاً.</p>
+                                ) : (
+                                  <div className="space-y-1 max-h-32 overflow-y-auto">
+                                    {(sandboxScenarios[idea.flagKey] || []).map(scn => (
+                                      <div key={scn.id} className="flex items-center gap-1.5 rounded-md px-2 py-1.5 group" style={{ background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.05)' }}>
+                                        <button
+                                          onClick={() => applySandboxScenario(idea.flagKey, scn)}
+                                          className="flex-1 text-right min-w-0"
+                                        >
+                                          <div className="text-[11px] font-bold text-foreground truncate">{scn.name}</div>
+                                          <div className="text-[9px] text-muted-foreground truncate">
+                                            طلب: {scn.inputs.order_amount || '0'} · منتجات: {scn.inputs.item_count || '1'} · {scn.inputs.customer_type || 'regular'}
+                                          </div>
+                                        </button>
+                                        <button
+                                          onClick={() => applySandboxScenario(idea.flagKey, scn)}
+                                          className="h-6 w-6 rounded flex items-center justify-center hover:bg-cyan-500/20 transition-colors"
+                                          title="تشغيل"
+                                        >
+                                          <Play className="h-3 w-3" style={{ color: '#22d3ee' }} />
+                                        </button>
+                                        <button
+                                          onClick={() => deleteSandboxScenario(idea.flagKey, scn.id)}
+                                          className="h-6 w-6 rounded flex items-center justify-center hover:bg-rose-500/20 transition-colors"
+                                          title="حذف"
+                                        >
+                                          <Trash2 className="h-3 w-3 text-rose-400" />
+                                        </button>
+                                      </div>
+                                    ))}
+                                  </div>
+                                )}
                               </div>
                             </div>
                           )
