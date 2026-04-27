@@ -2661,114 +2661,176 @@ export default function HomePage() {
 
         {/* Cashier Login Modal */}
         {showCashierLogin && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/95 backdrop-blur-sm" dir="rtl">
-            <div className="w-screen h-screen overflow-y-auto p-6 sm:p-10 flex flex-col justify-center" style={{ background: '#141414' }}><div className="w-full max-w-md mx-auto">
-              <div className="text-center mb-7">
-                <div className="relative mx-auto mb-5 h-20 w-20">
-                  <div className="h-20 w-20 rounded-2xl overflow-hidden border border-[#b8893f]/30 shadow-lg shadow-[#b8893f]/15">
-                    <Image src={systemLogoUrl} alt="SîpFlõw" width={80} height={80} className="object-cover w-full h-full" />
+          <div className="fixed inset-0 z-50 overflow-y-auto" dir="rtl"
+            style={{ background: 'radial-gradient(ellipse at top, #1a1208 0%, #0a0604 50%, #000 100%)' }}>
+            {/* Decorative top glow */}
+            <div className="absolute top-0 right-1/2 translate-x-1/2 w-[500px] h-[500px] rounded-full pointer-events-none"
+              style={{ background: 'radial-gradient(circle, rgba(212,175,98,0.18) 0%, transparent 70%)', filter: 'blur(60px)' }} />
+            {/* Decorative circles */}
+            <div className="absolute top-20 left-10 w-32 h-32 rounded-full pointer-events-none"
+              style={{ background: 'radial-gradient(circle, rgba(212,175,98,0.08) 0%, transparent 70%)' }} />
+            <div className="absolute bottom-32 right-8 w-40 h-40 rounded-full pointer-events-none"
+              style={{ background: 'radial-gradient(circle, rgba(184,137,63,0.06) 0%, transparent 70%)' }} />
+
+            {/* Close button */}
+            <button onClick={() => { setShowCashierLogin(false); setCashierLoginName(''); setCashierLoginPwd(''); setCashierLoginError('') }}
+              className="absolute top-5 left-5 z-10 h-10 w-10 rounded-full flex items-center justify-center transition-all active:scale-90"
+              style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', backdropFilter: 'blur(10px)' }}>
+              <X className="h-5 w-5 text-zinc-300" />
+            </button>
+
+            <div className="min-h-screen flex flex-col">
+              {/* Hero Section */}
+              <div className="pt-16 pb-8 px-6 text-center relative">
+                <div className="relative mx-auto mb-6 h-28 w-28">
+                  {/* Glow behind logo */}
+                  <div className="absolute inset-0 rounded-full"
+                    style={{ background: 'radial-gradient(circle, rgba(212,175,98,0.4) 0%, transparent 70%)', filter: 'blur(20px)' }} />
+                  <div className="relative h-28 w-28 rounded-3xl overflow-hidden shadow-2xl"
+                    style={{ border: '2px solid rgba(212,175,98,0.4)', boxShadow: '0 0 40px rgba(212,175,98,0.3), 0 8px 32px rgba(0,0,0,0.5)' }}>
+                    <Image src={systemLogoUrl} alt="SîpFlõw" width={112} height={112} className="object-cover w-full h-full" />
                   </div>
-                  <div className="absolute -bottom-2 -left-2 flex h-7 w-7 items-center justify-center rounded-full"
-                    style={{ background: 'linear-gradient(135deg, #d4af62, #b8893f)', boxShadow: '0 0 10px rgba(212,175,98,0.5)' }}>
-                    <ClipboardList className="h-3.5 w-3.5 text-white" />
+                  <div className="absolute -bottom-1 -left-1 flex h-10 w-10 items-center justify-center rounded-full"
+                    style={{ background: 'linear-gradient(135deg, #f4db9c, #b8893f)', boxShadow: '0 4px 16px rgba(212,175,98,0.6), 0 0 0 3px #0a0604' }}>
+                    <ClipboardList className="h-5 w-5 text-[#1a1208]" />
                   </div>
                 </div>
-                <div className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 mb-2 text-xs font-semibold"
-                  style={{ background: 'rgba(212,175,98,0.12)', border: '1px solid rgba(212,175,98,0.3)', color: '#f4db9c' }}>
+                <div className="inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 mb-3 text-xs font-bold"
+                  style={{ background: 'rgba(212,175,98,0.15)', border: '1px solid rgba(212,175,98,0.4)', color: '#f4db9c' }}>
                   <span className="h-1.5 w-1.5 rounded-full bg-[#d4af62] animate-pulse" />
                   بوابة الكاشير
                 </div>
-                <h1 className="text-xl font-bold text-white">SîpFlõw · كاشير</h1>
-                <p className="text-xs text-zinc-500 mt-1">إدارة الطلبات والإيرادات</p>
+                <h1 className="text-3xl font-black text-white mb-1.5"
+                  style={{ background: 'linear-gradient(180deg, #fff 0%, #f4db9c 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
+                  SîpFlõw · كاشير
+                </h1>
+                <p className="text-sm text-zinc-400">إدارة الطلبات والإيرادات</p>
               </div>
-              <div className="space-y-4">
-                <div>
-                  <label className="text-xs font-medium text-zinc-400 mb-1.5 block">اسم المستخدم</label>
-                  <Input value={cashierLoginName} onChange={e => { setCashierLoginName(e.target.value); setCashierLoginError('') }}
-                    onKeyDown={e => e.key === 'Enter' && handleCashierLogin()}
-                    placeholder="username" dir="ltr"
-                    className="bg-zinc-900 border-zinc-700 text-white placeholder:text-zinc-600 focus-visible:ring-[#b8893f]/40 focus-visible:border-[#b8893f]/50" />
+
+              {/* Form Card */}
+              <div className="flex-1 px-6 pb-10">
+                <div className="w-full max-w-md mx-auto rounded-3xl p-6 sm:p-8 space-y-5"
+                  style={{ background: 'rgba(20,15,10,0.7)', border: '1px solid rgba(212,175,98,0.15)', backdropFilter: 'blur(20px)', boxShadow: '0 20px 60px rgba(0,0,0,0.4)' }}>
+                  <div>
+                    <label className="text-xs font-bold text-zinc-300 mb-2 block">اسم المستخدم</label>
+                    <Input value={cashierLoginName} onChange={e => { setCashierLoginName(e.target.value); setCashierLoginError('') }}
+                      onKeyDown={e => e.key === 'Enter' && handleCashierLogin()}
+                      placeholder="username" dir="ltr"
+                      className="h-12 bg-black/40 border-zinc-800 text-white placeholder:text-zinc-600 focus-visible:ring-[#b8893f]/50 focus-visible:border-[#b8893f]/60 text-base" />
+                  </div>
+                  <div>
+                    <label className="text-xs font-bold text-zinc-300 mb-2 block">كلمة المرور</label>
+                    <Input type="password" value={cashierLoginPwd} onChange={e => { setCashierLoginPwd(e.target.value); setCashierLoginError('') }}
+                      onKeyDown={e => e.key === 'Enter' && handleCashierLogin()}
+                      placeholder="••••••••" dir="ltr"
+                      className="h-12 bg-black/40 border-zinc-800 text-white placeholder:text-zinc-600 focus-visible:ring-[#b8893f]/50 focus-visible:border-[#b8893f]/60 text-base" />
+                  </div>
+                  {cashierLoginError && (
+                    <div className="rounded-xl px-3 py-2 text-center text-sm text-rose-300"
+                      style={{ background: 'rgba(244,63,94,0.1)', border: '1px solid rgba(244,63,94,0.3)' }}>
+                      {cashierLoginError}
+                    </div>
+                  )}
+                  <button onClick={handleCashierLogin} disabled={isCashierLoggingIn}
+                    className="w-full h-13 py-3.5 rounded-2xl font-black text-base flex items-center justify-center gap-2 transition-all active:scale-[0.98] disabled:opacity-60"
+                    style={{ background: isCashierLoggingIn ? 'rgba(212,175,98,0.3)' : 'linear-gradient(135deg, #f4db9c 0%, #d4af62 50%, #b8893f 100%)', color: '#1a0800', boxShadow: '0 8px 24px rgba(212,175,98,0.4), inset 0 1px 0 rgba(255,255,255,0.3)' }}>
+                    {isCashierLoggingIn ? <Loader2 className="h-5 w-5 animate-spin" /> : <ClipboardList className="h-5 w-5" />}
+                    {isCashierLoggingIn ? 'جاري الدخول...' : 'دخول كاشير'}
+                  </button>
                 </div>
-                <div>
-                  <label className="text-xs font-medium text-zinc-400 mb-1.5 block">كلمة المرور</label>
-                  <Input type="password" value={cashierLoginPwd} onChange={e => { setCashierLoginPwd(e.target.value); setCashierLoginError('') }}
-                    onKeyDown={e => e.key === 'Enter' && handleCashierLogin()}
-                    placeholder="••••••••" dir="ltr"
-                    className="bg-zinc-900 border-zinc-700 text-white placeholder:text-zinc-600 focus-visible:ring-[#b8893f]/40 focus-visible:border-[#b8893f]/50" />
-                </div>
-                {cashierLoginError && <p className="text-center text-sm text-rose-400">{cashierLoginError}</p>}
-                <button onClick={handleCashierLogin} disabled={isCashierLoggingIn}
-                  className="w-full h-11 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-all active:scale-95 disabled:opacity-60"
-                  style={{ background: isCashierLoggingIn ? 'rgba(212,175,98,0.3)' : 'linear-gradient(135deg, #d4af62, #b8893f)', color: '#fff', boxShadow: '0 2px 14px rgba(212,175,98,0.3)' }}>
-                  {isCashierLoggingIn ? <Loader2 className="h-4 w-4 animate-spin" /> : <ClipboardList className="h-4 w-4" />}
-                  {isCashierLoggingIn ? 'جاري الدخول...' : 'دخول كاشير'}
-                </button>
-                <button onClick={() => { setShowCashierLogin(false); setCashierLoginName(''); setCashierLoginPwd(''); setCashierLoginError('') }}
-                  className="w-full h-9 rounded-xl text-sm text-zinc-500 hover:text-zinc-300 transition-colors">
-                  إلغاء
-                </button>
               </div>
-            </div></div>
+            </div>
           </div>
         )}
 
         {/* Place Admin login from landing screen */}
         {showPlaceAdminLanding && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/95 backdrop-blur-sm" dir="rtl">
-            <div className="w-screen h-screen overflow-y-auto p-6 sm:p-10 flex flex-col justify-center" style={{ background: '#141414' }}><div className="w-full max-w-md mx-auto">
-              <div className="text-center mb-7">
-                <div className="relative mx-auto mb-5 h-20 w-20">
-                  <div className="h-20 w-20 rounded-2xl overflow-hidden shadow-lg" style={{ border: '1px solid rgba(212,160,23,0.35)', boxShadow: '0 4px 20px rgba(212,160,23,0.15)' }}>
-                    <Image src={systemLogoUrl} alt="SîpFlõw" width={80} height={80} className="object-cover w-full h-full" />
+          <div className="fixed inset-0 z-50 overflow-y-auto" dir="rtl"
+            style={{ background: 'radial-gradient(ellipse at top, #1a1408 0%, #0a0703 50%, #000 100%)' }}>
+            {/* Decorative top glow */}
+            <div className="absolute top-0 right-1/2 translate-x-1/2 w-[500px] h-[500px] rounded-full pointer-events-none"
+              style={{ background: 'radial-gradient(circle, rgba(212,160,23,0.2) 0%, transparent 70%)', filter: 'blur(60px)' }} />
+            {/* Decorative circles */}
+            <div className="absolute top-20 left-10 w-32 h-32 rounded-full pointer-events-none"
+              style={{ background: 'radial-gradient(circle, rgba(212,160,23,0.08) 0%, transparent 70%)' }} />
+            <div className="absolute bottom-32 right-8 w-40 h-40 rounded-full pointer-events-none"
+              style={{ background: 'radial-gradient(circle, rgba(184,134,11,0.06) 0%, transparent 70%)' }} />
+
+            {/* Close button */}
+            <button onClick={() => { setShowPlaceAdminLanding(false); setPlaceAdminConfirmName(''); setPlaceAdminConfirmError('') }}
+              className="absolute top-5 left-5 z-10 h-10 w-10 rounded-full flex items-center justify-center transition-all active:scale-90"
+              style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', backdropFilter: 'blur(10px)' }}>
+              <X className="h-5 w-5 text-zinc-300" />
+            </button>
+
+            <div className="min-h-screen flex flex-col">
+              {/* Hero Section */}
+              <div className="pt-16 pb-8 px-6 text-center relative">
+                <div className="relative mx-auto mb-6 h-28 w-28">
+                  {/* Glow behind logo */}
+                  <div className="absolute inset-0 rounded-full"
+                    style={{ background: 'radial-gradient(circle, rgba(212,160,23,0.4) 0%, transparent 70%)', filter: 'blur(20px)' }} />
+                  <div className="relative h-28 w-28 rounded-3xl overflow-hidden shadow-2xl"
+                    style={{ border: '2px solid rgba(212,160,23,0.45)', boxShadow: '0 0 40px rgba(212,160,23,0.3), 0 8px 32px rgba(0,0,0,0.5)' }}>
+                    <Image src={systemLogoUrl} alt="SîpFlõw" width={112} height={112} className="object-cover w-full h-full" />
                   </div>
-                  <div className="absolute -bottom-2 -left-2 flex h-7 w-7 items-center justify-center rounded-full"
-                    style={{ background: 'linear-gradient(135deg, #D4A017, #b8860b)', boxShadow: '0 0 10px rgba(212,160,23,0.5)' }}>
-                    <Settings className="h-3.5 w-3.5 text-black" />
+                  <div className="absolute -bottom-1 -left-1 flex h-10 w-10 items-center justify-center rounded-full"
+                    style={{ background: 'linear-gradient(135deg, #fcd34d, #D4A017, #b8860b)', boxShadow: '0 4px 16px rgba(212,160,23,0.6), 0 0 0 3px #0a0703' }}>
+                    <Settings className="h-5 w-5 text-black" />
                   </div>
                 </div>
-                <div className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 mb-2 text-xs font-semibold"
-                  style={{ background: 'rgba(212,160,23,0.12)', border: '1px solid rgba(212,160,23,0.3)', color: '#D4A017' }}>
+                <div className="inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 mb-3 text-xs font-bold"
+                  style={{ background: 'rgba(212,160,23,0.15)', border: '1px solid rgba(212,160,23,0.4)', color: '#fcd34d' }}>
                   <span className="h-1.5 w-1.5 rounded-full bg-amber-400 animate-pulse" />
                   بوابة إدارة المكان
                 </div>
-                <h1 className="text-xl font-bold text-white">SîpFlõw · أدمن</h1>
-                <p className="text-xs text-zinc-500 mt-1">إدارة المكان والطلبات والإعدادات</p>
+                <h1 className="text-3xl font-black text-white mb-1.5"
+                  style={{ background: 'linear-gradient(180deg, #fff 0%, #fcd34d 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
+                  SîpFlõw · أدمن
+                </h1>
+                <p className="text-sm text-zinc-400">إدارة المكان والطلبات والإعدادات</p>
               </div>
-              <div className="space-y-4">
-                <div>
-                  <label className="text-xs font-medium text-zinc-400 mb-1.5 block">اسم المكان</label>
-                  <Input value={placeCode} onChange={e => { setPlaceCode(e.target.value); setPlaceAdminConfirmError('') }}
-                    onKeyDown={e => e.key === 'Enter' && handlePlaceAdminFromLanding()}
-                    placeholder="مثال: كافيه النيل" dir="rtl"
-                    className="bg-zinc-900 border-zinc-700 text-white placeholder:text-zinc-600 focus-visible:ring-amber-500/40 focus-visible:border-amber-500/50" />
+
+              {/* Form Card */}
+              <div className="flex-1 px-6 pb-10">
+                <div className="w-full max-w-md mx-auto rounded-3xl p-6 sm:p-8 space-y-5"
+                  style={{ background: 'rgba(20,16,8,0.7)', border: '1px solid rgba(212,160,23,0.18)', backdropFilter: 'blur(20px)', boxShadow: '0 20px 60px rgba(0,0,0,0.4)' }}>
+                  <div>
+                    <label className="text-xs font-bold text-zinc-300 mb-2 block">اسم المكان</label>
+                    <Input value={placeCode} onChange={e => { setPlaceCode(e.target.value); setPlaceAdminConfirmError('') }}
+                      onKeyDown={e => e.key === 'Enter' && handlePlaceAdminFromLanding()}
+                      placeholder="مثال: كافيه النيل" dir="rtl"
+                      className="h-12 bg-black/40 border-zinc-800 text-white placeholder:text-zinc-600 focus-visible:ring-amber-500/50 focus-visible:border-amber-500/60 text-base" />
+                  </div>
+                  <div>
+                    <label className="text-xs font-bold text-zinc-300 mb-2 block">اسم الأدمن</label>
+                    <Input value={placeAdminConfirmName} onChange={e => { setPlaceAdminConfirmName(e.target.value); setPlaceAdminConfirmError('') }}
+                      onKeyDown={e => e.key === 'Enter' && handlePlaceAdminFromLanding()}
+                      placeholder="اسمك..." dir="rtl"
+                      className="h-12 bg-black/40 border-zinc-800 text-white placeholder:text-zinc-600 focus-visible:ring-amber-500/50 focus-visible:border-amber-500/60 text-base" />
+                  </div>
+                  <div>
+                    <label className="text-xs font-bold text-zinc-300 mb-2 block">كلمة المرور</label>
+                    <Input type="password" value={placeAdminConfirmPwd} onChange={e => { setPlaceAdminConfirmPwd(e.target.value); setPlaceAdminConfirmError('') }}
+                      onKeyDown={e => e.key === 'Enter' && handlePlaceAdminFromLanding()}
+                      placeholder="••••••••" dir="ltr"
+                      className="h-12 bg-black/40 border-zinc-800 text-white placeholder:text-zinc-600 focus-visible:ring-amber-500/50 focus-visible:border-amber-500/60 text-base" />
+                  </div>
+                  {placeAdminConfirmError && (
+                    <div className="rounded-xl px-3 py-2 text-center text-sm text-rose-300"
+                      style={{ background: 'rgba(244,63,94,0.1)', border: '1px solid rgba(244,63,94,0.3)' }}>
+                      {placeAdminConfirmError}
+                    </div>
+                  )}
+                  <button onClick={handlePlaceAdminFromLanding} disabled={isVerifyingPlaceAdmin}
+                    className="w-full h-13 py-3.5 rounded-2xl font-black text-base flex items-center justify-center gap-2 transition-all active:scale-[0.98] disabled:opacity-60"
+                    style={{ background: isVerifyingPlaceAdmin ? 'rgba(212,160,23,0.3)' : 'linear-gradient(135deg, #fcd34d 0%, #D4A017 50%, #b8860b 100%)', color: '#1a0800', boxShadow: '0 8px 24px rgba(212,160,23,0.4), inset 0 1px 0 rgba(255,255,255,0.3)' }}>
+                    {isVerifyingPlaceAdmin ? <Loader2 className="h-5 w-5 animate-spin" /> : <Settings className="h-5 w-5" />}
+                    {isVerifyingPlaceAdmin ? 'جاري التحقق...' : 'دخول لوحة الإدارة'}
+                  </button>
                 </div>
-                <div>
-                  <label className="text-xs font-medium text-zinc-400 mb-1.5 block">اسم الأدمن</label>
-                  <Input value={placeAdminConfirmName} onChange={e => { setPlaceAdminConfirmName(e.target.value); setPlaceAdminConfirmError('') }}
-                    onKeyDown={e => e.key === 'Enter' && handlePlaceAdminFromLanding()}
-                    placeholder="اسمك..." dir="rtl"
-                    className="bg-zinc-900 border-zinc-700 text-white placeholder:text-zinc-600 focus-visible:ring-amber-500/40 focus-visible:border-amber-500/50" />
-                </div>
-                <div>
-                  <label className="text-xs font-medium text-zinc-400 mb-1.5 block">كلمة المرور</label>
-                  <Input type="password" value={placeAdminConfirmPwd} onChange={e => { setPlaceAdminConfirmPwd(e.target.value); setPlaceAdminConfirmError('') }}
-                    onKeyDown={e => e.key === 'Enter' && handlePlaceAdminFromLanding()}
-                    placeholder="••••••••" dir="ltr"
-                    className="bg-zinc-900 border-zinc-700 text-white placeholder:text-zinc-600 focus-visible:ring-amber-500/40 focus-visible:border-amber-500/50" />
-                </div>
-                {placeAdminConfirmError && <p className="text-center text-sm text-rose-400">{placeAdminConfirmError}</p>}
-                <button onClick={handlePlaceAdminFromLanding} disabled={isVerifyingPlaceAdmin}
-                  className="w-full h-11 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-all active:scale-95 disabled:opacity-60"
-                  style={{ background: isVerifyingPlaceAdmin ? 'rgba(212,160,23,0.3)' : 'linear-gradient(135deg, #D4A017, #b8860b)', color: '#1a0800', boxShadow: '0 2px 14px rgba(212,160,23,0.3)' }}>
-                  {isVerifyingPlaceAdmin ? <Loader2 className="h-4 w-4 animate-spin" /> : <Settings className="h-4 w-4" />}
-                  {isVerifyingPlaceAdmin ? 'جاري التحقق...' : 'دخول لوحة الإدارة'}
-                </button>
-                <button onClick={() => { setShowPlaceAdminLanding(false); setPlaceAdminConfirmName(''); setPlaceAdminConfirmError('') }}
-                  className="w-full h-9 rounded-xl text-sm text-zinc-500 hover:text-zinc-300 transition-colors">
-                  إلغاء
-                </button>
               </div>
-            </div></div>
+            </div>
           </div>
         )}
 
