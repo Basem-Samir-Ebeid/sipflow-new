@@ -293,60 +293,76 @@ export default function BarPage() {
 
   if (!staffUser) {
     return (
-      <div className="min-h-[100dvh] flex flex-col" dir="rtl" style={{ background: '#080808' }}>
+      <div className="min-h-[100dvh] relative overflow-hidden" dir="rtl"
+        style={{ background: 'radial-gradient(ellipse at top, #0c1828 0%, #060c14 50%, #000 100%)' }}>
         <Toaster position="top-center" richColors />
         <DevBar />
-        <div className="px-4 pt-4">
-          <button onClick={() => { window.location.href = '/' }}
-            className="flex items-center gap-1.5 text-xs text-zinc-600 hover:text-zinc-400 transition-colors">
-            <ArrowRight className="h-3.5 w-3.5" />
-            الرئيسية
-          </button>
-        </div>
-        <div className="flex-1 flex items-center justify-center p-6">
-          <div className="w-full max-w-[320px]">
-            {/* Logo */}
-            <div className="text-center mb-8">
-              <div className="relative mx-auto mb-5 w-fit">
-                <div className="h-[72px] w-[72px] rounded-2xl overflow-hidden shadow-2xl" style={{ boxShadow: '0 0 0 1px rgba(56,189,248,0.2), 0 0 30px rgba(56,189,248,0.1)' }}>
-                  <Image src={systemLogoUrl} alt="SîpFlõw" width={72} height={72} className="object-cover w-full h-full" unoptimized />
-                </div>
-                <div className="absolute -bottom-2 -left-2 h-6 w-6 rounded-full flex items-center justify-center"
-                  style={{ background: 'linear-gradient(135deg, #38bdf8, #0284c7)', boxShadow: '0 0 12px rgba(56,189,248,0.6)' }}>
-                  <Coffee className="h-3 w-3 text-white" />
-                </div>
-              </div>
-              <div className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 mb-3 text-[11px] font-semibold"
-                style={{ background: 'rgba(56,189,248,0.08)', border: '1px solid rgba(56,189,248,0.2)', color: '#7dd3fc' }}>
-                <span className="h-1.5 w-1.5 rounded-full bg-sky-400 animate-pulse" />
-                بوابة البار
-              </div>
-              <h1 className="text-2xl font-black text-white tracking-tight">SîpFlõw</h1>
-              <p className="text-xs text-zinc-500 mt-1">نظام إدارة البار</p>
-            </div>
 
-            {/* Form */}
-            <div className="rounded-3xl p-5 space-y-4" style={{ background: '#111111', border: '1px solid rgba(255,255,255,0.06)' }}>
-              <div className="space-y-1.5">
-                <label className="text-[11px] font-semibold text-zinc-500 uppercase tracking-wider block">اسم المستخدم</label>
+        {/* Decorative glows */}
+        <div className="absolute top-0 right-1/2 translate-x-1/2 w-[500px] h-[500px] rounded-full pointer-events-none"
+          style={{ background: 'radial-gradient(circle, rgba(56,189,248,0.18) 0%, transparent 70%)', filter: 'blur(60px)' }} />
+        <div className="absolute top-20 left-10 w-32 h-32 rounded-full pointer-events-none"
+          style={{ background: 'radial-gradient(circle, rgba(56,189,248,0.08) 0%, transparent 70%)' }} />
+        <div className="absolute bottom-32 right-8 w-40 h-40 rounded-full pointer-events-none"
+          style={{ background: 'radial-gradient(circle, rgba(2,132,199,0.08) 0%, transparent 70%)' }} />
+
+        {/* Back to home */}
+        <button onClick={() => { window.location.href = '/' }}
+          className="absolute top-5 right-5 z-10 flex items-center gap-1.5 px-3 h-10 rounded-full text-xs text-zinc-300 transition-all active:scale-95"
+          style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', backdropFilter: 'blur(10px)' }}>
+          <ArrowRight className="h-3.5 w-3.5" />
+          الرئيسية
+        </button>
+
+        <div className="min-h-[100dvh] flex flex-col">
+          {/* Hero */}
+          <div className="pt-20 pb-8 px-6 text-center relative">
+            <div className="relative mx-auto mb-6 h-28 w-28">
+              <div className="absolute inset-0 rounded-full"
+                style={{ background: 'radial-gradient(circle, rgba(56,189,248,0.4) 0%, transparent 70%)', filter: 'blur(20px)' }} />
+              <div className="relative h-28 w-28 rounded-3xl overflow-hidden shadow-2xl"
+                style={{ border: '2px solid rgba(56,189,248,0.4)', boxShadow: '0 0 40px rgba(56,189,248,0.3), 0 8px 32px rgba(0,0,0,0.5)' }}>
+                <Image src={systemLogoUrl} alt="SîpFlõw" width={112} height={112} className="object-cover w-full h-full" unoptimized />
+              </div>
+              <div className="absolute -bottom-1 -left-1 flex h-10 w-10 items-center justify-center rounded-full"
+                style={{ background: 'linear-gradient(135deg, #7dd3fc, #38bdf8, #0284c7)', boxShadow: '0 4px 16px rgba(56,189,248,0.6), 0 0 0 3px #060c14' }}>
+                <Coffee className="h-5 w-5 text-white" />
+              </div>
+            </div>
+            <div className="inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 mb-3 text-xs font-bold"
+              style={{ background: 'rgba(56,189,248,0.15)', border: '1px solid rgba(56,189,248,0.4)', color: '#7dd3fc' }}>
+              <span className="h-1.5 w-1.5 rounded-full bg-sky-400 animate-pulse" />
+              بوابة البار
+            </div>
+            <h1 className="text-3xl font-black text-white mb-1.5"
+              style={{ background: 'linear-gradient(180deg, #fff 0%, #7dd3fc 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
+              SîpFlõw · بار
+            </h1>
+            <p className="text-sm text-zinc-400">نظام إدارة البار</p>
+          </div>
+
+          {/* Form Card */}
+          <div className="flex-1 px-6 pb-10">
+            <div className="w-full max-w-md mx-auto rounded-3xl p-6 sm:p-8 space-y-5"
+              style={{ background: 'rgba(8,18,32,0.7)', border: '1px solid rgba(56,189,248,0.15)', backdropFilter: 'blur(20px)', boxShadow: '0 20px 60px rgba(0,0,0,0.4)' }}>
+              <div>
+                <label className="text-xs font-bold text-zinc-300 mb-2 block">اسم المستخدم</label>
                 <Input type="text" value={username} onChange={(e) => setUsername(e.target.value)}
                   placeholder="أدخل اسم المستخدم" dir="rtl"
-                  className="h-11 rounded-xl text-sm"
-                  style={{ background: '#1a1a1a', border: '1px solid rgba(255,255,255,0.08)', color: '#fff' }}
+                  className="h-12 bg-black/40 border-zinc-800 text-white placeholder:text-zinc-600 focus-visible:ring-sky-500/50 focus-visible:border-sky-500/60 text-base"
                   onKeyDown={(e) => e.key === 'Enter' && handleLogin()} />
               </div>
-              <div className="space-y-1.5">
-                <label className="text-[11px] font-semibold text-zinc-500 uppercase tracking-wider block">كلمة المرور</label>
+              <div>
+                <label className="text-xs font-bold text-zinc-300 mb-2 block">كلمة المرور</label>
                 <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••" dir="ltr"
-                  className="h-11 rounded-xl text-sm"
-                  style={{ background: '#1a1a1a', border: '1px solid rgba(255,255,255,0.08)', color: '#fff' }}
+                  className="h-12 bg-black/40 border-zinc-800 text-white placeholder:text-zinc-600 focus-visible:ring-sky-500/50 focus-visible:border-sky-500/60 text-base"
                   onKeyDown={(e) => e.key === 'Enter' && handleLogin()} />
               </div>
               <button onClick={handleLogin} disabled={isLoggingIn}
-                className="w-full h-12 rounded-2xl font-bold text-sm flex items-center justify-center gap-2 transition-all active:scale-[0.98] disabled:opacity-50 mt-2"
-                style={{ background: 'linear-gradient(135deg, #38bdf8, #0284c7)', color: '#fff', boxShadow: '0 4px 20px rgba(56,189,248,0.35)' }}>
-                {isLoggingIn ? <Loader2 className="h-4 w-4 animate-spin" /> : <Zap className="h-4 w-4" />}
+                className="w-full h-13 py-3.5 rounded-2xl font-black text-base flex items-center justify-center gap-2 transition-all active:scale-[0.98] disabled:opacity-60"
+                style={{ background: isLoggingIn ? 'rgba(56,189,248,0.3)' : 'linear-gradient(135deg, #7dd3fc 0%, #38bdf8 50%, #0284c7 100%)', color: '#001824', boxShadow: '0 8px 24px rgba(56,189,248,0.4), inset 0 1px 0 rgba(255,255,255,0.3)' }}>
+                {isLoggingIn ? <Loader2 className="h-5 w-5 animate-spin" /> : <Zap className="h-5 w-5" />}
                 {isLoggingIn ? 'جاري الدخول...' : 'دخول البار'}
               </button>
             </div>
