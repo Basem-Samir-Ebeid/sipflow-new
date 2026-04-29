@@ -156,6 +156,7 @@ export default function HomePage() {
   const [isSurprising, setIsSurprising] = useState(false)
   const [menuCategory, setMenuCategory] = useState<'hot' | 'cold' | 'shisha'>('hot')
   const [isSubmittingOrder, setIsSubmittingOrder] = useState(false)
+  const [submitSuccessKey, setSubmitSuccessKey] = useState(0)
 
   // Cashier login state
   const [showCashierLogin, setShowCashierLogin] = useState(false)
@@ -1352,6 +1353,7 @@ export default function HomePage() {
         } else {
           toast.success('تم إرسال طلبك بنجاح!')
         }
+        setSubmitSuccessKey(k => k + 1)
         // Show tracker widget if tracking is enabled for this place
         if (currentPlace?.order_tracking_enabled !== false && !isDevAdmin) {
           setShowTracker(true)
@@ -4868,6 +4870,7 @@ export default function HomePage() {
                 disabledLabel={!isDevAdmin && !session ? 'جاري تحميل الجلسة...' : undefined}
                 freeDrinkId={freeDrinksState.freeDrinkId}
                 freeDrinksLeft={freeDrinksState.freeDrinksLeft}
+                submitSuccessKey={submitSuccessKey}
               />
             )}
           </div>

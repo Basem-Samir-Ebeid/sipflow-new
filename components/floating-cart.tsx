@@ -21,6 +21,64 @@ interface FloatingCartProps {
   disabledLabel?: string
   freeDrinkId?: string | null
   freeDrinksLeft?: number
+  submitSuccessKey?: number
+}
+
+const CONFETTI_COLORS = ['#fbbf24', '#D4A017', '#f59e0b', '#fde68a', '#10b981', '#ef4444', '#ffffff']
+
+function ConfettiBurst({ burstId }: { burstId: number }) {
+  const particles = Array.from({ length: 36 }, (_, i) => {
+    const angle = (Math.PI * (i / 36)) + (Math.random() * 0.4 - 0.2)
+    const distance = 140 + Math.random() * 180
+    const x = Math.cos(angle) * distance * (Math.random() > 0.5 ? 1 : -1)
+    const y = -Math.sin(angle) * distance - Math.random() * 80
+    return {
+      id: i,
+      x,
+      y,
+      color: CONFETTI_COLORS[i % CONFETTI_COLORS.length],
+      size: 6 + Math.random() * 8,
+      rotate: Math.random() * 720 - 360,
+      delay: Math.random() * 0.08,
+      duration: 1.1 + Math.random() * 0.6,
+      shape: i % 3,
+    }
+  })
+  return (
+    <div
+      key={burstId}
+      className="pointer-events-none fixed bottom-12 left-1/2 z-[60] -translate-x-1/2"
+      aria-hidden="true"
+    >
+      {particles.map(p => (
+        <motion.span
+          key={p.id}
+          initial={{ x: 0, y: 0, scale: 0, opacity: 1, rotate: 0 }}
+          animate={{
+            x: p.x,
+            y: [0, p.y * 0.6, p.y + 200],
+            scale: [0, 1, 1, 0.85],
+            opacity: [1, 1, 1, 0],
+            rotate: p.rotate,
+          }}
+          transition={{
+            duration: p.duration,
+            delay: p.delay,
+            ease: 'easeOut',
+            times: [0, 0.25, 0.7, 1],
+          }}
+          className="absolute"
+          style={{
+            width: p.size,
+            height: p.shape === 0 ? p.size : p.size * 0.45,
+            background: p.color,
+            borderRadius: p.shape === 1 ? '50%' : '2px',
+            boxShadow: `0 0 8px ${p.color}66`,
+          }}
+        />
+      ))}
+    </div>
+  )
 }
 
 export function FloatingCart({
@@ -37,13 +95,24 @@ export function FloatingCart({
   disabledLabel,
   freeDrinkId = null,
   freeDrinksLeft = 0,
+  submitSuccessKey = 0,
 }: FloatingCartProps) {
   const [isOpen, setIsOpen] = useState(false)
   const [pulseKey, setPulseKey] = useState(0)
   const [displayTotal, setDisplayTotal] = useState(cartTotal)
   const [lastAddedName, setLastAddedName] = useState<string>('')
+  const [confettiKey, setConfettiKey] = useState(0)
+  const prevSuccessKeyRef = useRef(submitSuccessKey)
   const prevCountRef = useRef(cartCount)
   const prevCartRef = useRef(cart)
+
+  useEffect(() => {
+    if (submitSuccessKey > prevSuccessKeyRef.current) {
+      setConfettiKey(k => k + 1)
+      setIsOpen(false)
+    }
+    prevSuccessKeyRef.current = submitSuccessKey
+  }, [submitSuccessKey])
 
   useEffect(() => {
     if (cartCount > prevCountRef.current) {
@@ -108,6 +177,8 @@ export function FloatingCart({
       <span className="sr-only" aria-live="polite">
         {lastAddedName ? `تمت إضافة ${lastAddedName}، الإجمالي ${cartTotal.toFixed(2)} جنيه` : ''}
       </span>
+
+      {confettiKey > 0 && <ConfettiBurst burstId={confettiKey} />}
 
       <AnimatePresence>
         {isOpen && (
