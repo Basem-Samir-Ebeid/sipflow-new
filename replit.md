@@ -6,6 +6,13 @@ A Next.js multi-tenant café/social space drink ordering and management system. 
 ## Known Fix — Price Type Coercion
 PostgreSQL returns DECIMAL/NUMERIC columns as strings (e.g., `'15.00'`). All `drink.price` references across the codebase use `Number()` conversion before arithmetic, comparisons, and `.toFixed()` calls. This prevents `TypeError` crashes in DrinkCard and other components.
 
+## Recent Features (v3.0 — Floating Order Cart)
+- **شريط الطلب العائم (`components/floating-cart.tsx`):** استبدل شريط السلة القديم اللي كان sticky جوّه قائمة المشاريب بشريط fixed عائم في أسفل الشاشة، مع animations بـ framer-motion.
+- **حالتان:** pill صغير (شنطة + badge عدد الأصناف + الإجمالي + زرار "تأكيد") و preview كامل (قائمة الأصناف الأخيرة بصور مصغّرة + +/- لكل صنف + شارة الطاولة + مجموع متحرّك + زرار "تأكيد الطلب").
+- **Animations:** نبضة ذهبية + bounce على الـ badge عند إضافة صنف، عدّاد متحرّك للسعر بـ `requestAnimationFrame` (easing cubic)، AnimatePresence للـ preview/items، و sr-only `aria-live` يعلن المشروب اللي اتضاف.
+- **Keyboard shortcut:** `C` يفتح/يقفل الـ preview، `Esc` يقفله.
+- **التكامل في `app/page.tsx`:** يظهر فقط في تبويب menu (مع spacer عشان مايغطّيش آخر صف من المشاريب)، يستخدم نفس `cart`, `cartTotal`, `cartCount`, `freeDrinksState`, `tableNumber`, `handleSubmitOrder`. الفلو القديم لمودال الطاولة وتأكيد الطلب لم يتغيّر.
+
 ## Recent Features (v2.9 — Live AI Idea Configs)
 - **شارة الميزات النشطة:** عند تنفيذ أي فكرة من مولّد الأفكار وضبط إعداداتها من تبويب "Implemented" في لوحة الأدمن، تظهر تلقائياً في الصفحات العامة المرتبطة بها (الكاشير `/bar`، الموظفين `/staff`، الويتر `/waiter`، المالك `/owner`، وقائمة المشاريب للزبون `/`). الشارة قابلة للطي/الفتح وتعرض اسم الفكرة + كل قيم الإعدادات الحالية بشكل مباشر، فأي تعديل في الإعدادات (تشغيل/إيقاف، تغيير قيمة، إضافة مفتاح) ينعكس على واجهة المستخدم خلال ثوان.
 - **API جديد:** `GET /api/ai-ideas/active?tab=cashier&onlyEnabled=true&scope=all_pages` يرجّع كل الأفكار المفعّلة + إعداداتها مجمّعة حسب التبويب.

@@ -16,6 +16,7 @@ import { CashierDashboard } from '@/components/cashier-dashboard'
 import Image from 'next/image'
 import { DevBar } from '@/components/dev-bar'
 import { ActiveFeaturesBanner } from '@/components/active-features-banner'
+import { FloatingCart } from '@/components/floating-cart'
 
 // ↑ Bump this version every time you deploy a new update
 const APP_VERSION = '1.8'
@@ -4850,25 +4851,24 @@ export default function HomePage() {
             </>
             )}
 
-            {cartCount > 0 && (!isDevAdmin || menuDevPlaceId) && (
-              <div className="sticky bottom-4 rounded-2xl p-4 shadow-xl" style={{ background: 'linear-gradient(135deg, #1a0d00, #0f0800)', border: '1px solid rgba(212,160,23,0.2)', boxShadow: '0 -4px 20px rgba(0,0,0,0.5)' }}>
-                <div className="mb-3 flex items-center justify-between">
-                  <span className="text-sm font-semibold" style={{ color: 'rgba(255,255,255,0.7)' }}>
-                    {cartCount} صنف في السلة
-                  </span>
-                  {cartTotal > 0 && (
-                    <span className="text-sm font-bold" style={{ color: '#fbbf24' }}>{cartTotal.toFixed(2)} ج.م</span>
-                  )}
-                </div>
-                <Button 
-                  className="h-11 w-full rounded-xl text-sm font-bold"
-                  style={{ background: 'linear-gradient(135deg, #D4A017, #b8860b)', color: '#0a0500' }}
-                  onClick={handleSubmitOrder}
-                  disabled={(!isDevAdmin && !session) || isSubmittingOrder}
-                >
-                  {!isDevAdmin && !session ? 'جاري تحميل الجلسة...' : 'تأكيد الطلب'}
-                </Button>
-              </div>
+            {/* الشريط العائم للطلب */}
+            <div className="h-24" aria-hidden="true" />
+            {(!isDevAdmin || menuDevPlaceId) && (
+              <FloatingCart
+                cart={cart}
+                drinks={drinks}
+                cartCount={cartCount}
+                cartTotal={cartTotal}
+                tableNumber={tableNumber}
+                onAdd={handleAddToCart}
+                onRemove={handleRemoveFromCart}
+                onSubmit={handleSubmitOrder}
+                isSubmitting={isSubmittingOrder}
+                disabled={(!isDevAdmin && !session) || isSubmittingOrder}
+                disabledLabel={!isDevAdmin && !session ? 'جاري تحميل الجلسة...' : undefined}
+                freeDrinkId={freeDrinksState.freeDrinkId}
+                freeDrinksLeft={freeDrinksState.freeDrinksLeft}
+              />
             )}
           </div>
         )}
