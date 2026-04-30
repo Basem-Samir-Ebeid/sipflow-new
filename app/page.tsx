@@ -9,7 +9,8 @@ import { AdminPanel } from '@/components/admin-panel'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Coffee, Grid3x2 as Grid3X3, Settings, ChevronLeft, ChevronRight, ArrowRight, DollarSign, Users, Calendar, Bell, X, Printer, CircleCheck as CheckCircle2, LogOut, Eye, EyeOff, Loader2, Sparkles, ShieldCheck, ClipboardList, MapPin, Archive, Lock, Clock, Trash2, Plus, Camera, UserCircle } from 'lucide-react'
+import { Coffee, Grid3x2 as Grid3X3, Settings, ChevronLeft, ChevronRight, ArrowRight, DollarSign, Users, Calendar, Bell, X, Printer, CircleCheck as CheckCircle2, LogOut, Eye, EyeOff, Loader2, Sparkles, ShieldCheck, ClipboardList, MapPin, Archive, Lock, Clock, Trash2, Plus, Camera, UserCircle, ScanLine, Globe, MessageCircle, Wifi, WifiOff, Activity, ChevronDown, ChevronUp, History, Download, Crown, Receipt, Cog, Bell as BellIcon, Compass, Zap, Sunrise, Sun as SunIcon, Sunset, Moon } from 'lucide-react'
+import { QrScannerModal } from '@/components/qr-scanner-modal'
 import { toast, Toaster } from 'sonner'
 import { ReceiptModal } from '@/components/receipt-modal'
 import { CashierDashboard } from '@/components/cashier-dashboard'
@@ -117,6 +118,19 @@ export default function HomePage() {
   const [sysStatus, setSysStatus] = useState<{ places: number; activePlaces: number; totalOrders: number; totalPending: number; totalRevenue: number } | null>(null)
   const [sysOnline, setSysOnline] = useState<boolean | null>(null)
   const [sysLastUpdate, setSysLastUpdate] = useState<Date | null>(null)
+  // ── Landing page enhancements (v3.1) ─────────────────────────
+  const [showQrScanner, setShowQrScanner] = useState(false)
+  const [showVersionModal, setShowVersionModal] = useState(false)
+  const [controlPanelOpen, setControlPanelOpen] = useState(false)
+  const [lastVisitedPlace, setLastVisitedPlace] = useState<{ id: string; name: string; code: string } | null>(null)
+  const [isOnline, setIsOnline] = useState(true)
+  const [uiLang, setUiLang] = useState<'ar' | 'en'>('ar')
+  const [pwaInstallEvent, setPwaInstallEvent] = useState<any>(null)
+  const [showPwaBanner, setShowPwaBanner] = useState(false)
+  const [recentActivities, setRecentActivities] = useState<{ drink_name: string; place_name: string; created_at: string }[]>([])
+  const [animatedPlacesCount, setAnimatedPlacesCount] = useState(0)
+  const [tickerIndex, setTickerIndex] = useState(0)
+  const [whatsappOpen, setWhatsappOpen] = useState(false)
   const [welcomeName, setWelcomeName] = useState('')
   const [showMessages, setShowMessages] = useState(false)
   const [showReceipt, setShowReceipt] = useState(false)
@@ -457,6 +471,13 @@ export default function HomePage() {
             totalPending: g.totalPending,
             totalRevenue: g.totalRevenue,
           })
+          if (Array.isArray(json.recentActivity)) {
+            setRecentActivities(json.recentActivity.slice(0, 8).map((a: any) => ({
+              drink_name: a.drink_name || 'مشروب',
+              place_name: a.place_name || 'مكان',
+              created_at: a.created_at,
+            })))
+          }
           setSysOnline(true)
           setSysLastUpdate(new Date())
         } else {
@@ -470,6 +491,160 @@ export default function HomePage() {
     const interval = setInterval(fetchSysStatus, 30000)
     return () => clearInterval(interval)
   }, [])
+
+  // ── Landing extras: online/offline indicator ──────────────────
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    setIsOnline(navigator.onLine)
+    const onUp = () => setIsOnline(true)
+    const onDown = () => setIsOnline(false)
+    window.addEventListener('online', onUp)
+    window.addEventListener('offline', onDown)
+    return () => {
+      window.removeEventListener('online', onUp)
+      window.removeEventListener('offline', onDown)
+    }
+  }, [])
+
+  // ── Landing extras: load last visited place from localStorage ─
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem('qa3da_place')
+      if (raw) {
+        const p = JSON.parse(raw)
+        if (p && p.id && p.name) {
+          setLastVisitedPlace({ id: p.id, name: p.name, code: p.code || '' })
+        }
+      }
+      const savedLang = localStorage.getItem('sipflow_lang')
+      if (savedLang === 'en' || savedLang === 'ar') setUiLang(savedLang)
+    } catch {}
+  }, [])
+
+  // ── Landing extras: animate active places count ───────────────
+  useEffect(() => {
+    if (!sysStatus) return
+    const target = sysStatus.activePlaces || 0
+    if (target === animatedPlacesCount) return
+    const start = animatedPlacesCount
+    const startTime = performance.now()
+    const duration = 900
+    let raf = 0
+    const tick = (now: number) => {
+      const t = Math.min(1, (now - startTime) / duration)
+      const eased = 1 - Math.pow(1 - t, 3)
+      setAnimatedPlacesCount(Math.round(start + (target - start) * eased))
+      if (t < 1) raf = requestAnimationFrame(tick)
+    }
+    raf = requestAnimationFrame(tick)
+    return () => cancelAnimationFrame(raf)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sysStatus?.activePlaces])
+
+  // ── Landing extras: rotate activity ticker ────────────────────
+  useEffect(() => {
+    if (recentActivities.length === 0) return
+    const id = setInterval(() => {
+      setTickerIndex(i => (i + 1) % recentActivities.length)
+    }, 3500)
+    return () => clearInterval(id)
+  }, [recentActivities.length])
+
+  // ── Landing extras: PWA install prompt capture ────────────────
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const handler = (e: any) => {
+      e.preventDefault()
+      setPwaInstallEvent(e)
+      const dismissed = localStorage.getItem('sipflow_pwa_dismissed')
+      if (!dismissed) setShowPwaBanner(true)
+    }
+    window.addEventListener('beforeinstallprompt', handler as any)
+    return () => window.removeEventListener('beforeinstallprompt', handler as any)
+  }, [])
+
+  const handleInstallPwa = async () => {
+    if (!pwaInstallEvent) return
+    try {
+      pwaInstallEvent.prompt()
+      const choice = await pwaInstallEvent.userChoice
+      if (choice?.outcome === 'accepted') {
+        toast.success('جاري تثبيت التطبيق على شاشتك')
+      }
+    } catch {}
+    setShowPwaBanner(false)
+    setPwaInstallEvent(null)
+  }
+
+  const dismissPwaBanner = () => {
+    setShowPwaBanner(false)
+    try { localStorage.setItem('sipflow_pwa_dismissed', '1') } catch {}
+  }
+
+  const toggleLang = () => {
+    const next = uiLang === 'ar' ? 'en' : 'ar'
+    setUiLang(next)
+    try { localStorage.setItem('sipflow_lang', next) } catch {}
+  }
+
+  // ── Landing extras: time-based greeting ───────────────────────
+  const greeting = useMemo(() => {
+    const h = new Date().getHours()
+    if (h >= 5 && h < 12) return { text: 'صباح الخير', en: 'Good morning', icon: 'sunrise' as const, color: '#fcd34d' }
+    if (h >= 12 && h < 17) return { text: 'نهارك سعيد', en: 'Good afternoon', icon: 'sun' as const, color: '#facc15' }
+    if (h >= 17 && h < 21) return { text: 'مساء النور', en: 'Good evening', icon: 'sunset' as const, color: '#fb923c' }
+    return { text: 'ليلة سعيدة', en: 'Good night', icon: 'moon' as const, color: '#a78bfa' }
+  }, [])
+
+  const handleQrResult = useCallback(async (raw: string) => {
+    setShowQrScanner(false)
+    let codeToTry = raw.trim()
+    let tableFromQr: string | null = null
+    // If it's a URL, try parsing place= and table= params
+    try {
+      const u = new URL(raw)
+      const p = u.searchParams.get('place')
+      const t = u.searchParams.get('table')
+      if (p) codeToTry = p
+      if (t) tableFromQr = t
+    } catch {
+      // not a URL — treat as raw place code
+    }
+    if (!codeToTry) {
+      toast.error('لم نقدر نقرأ الكود')
+      return
+    }
+    try {
+      const res = await fetch(`/api/places/lookup?code=${encodeURIComponent(codeToTry)}`)
+      const data = await res.json()
+      if (data?.error || !data?.id) {
+        toast.error('المكان غير موجود')
+        return
+      }
+      if (tableFromQr) setTableNumber(tableFromQr)
+      setCurrentPlace(data)
+      try { localStorage.setItem('qa3da_place', JSON.stringify(data)) } catch {}
+      toast.success(`أهلاً بك في ${data.name}`)
+    } catch {
+      toast.error('تعذّر الاتصال بالخادم')
+    }
+  }, [])
+
+  const handleResumeLastPlace = useCallback(async () => {
+    if (!lastVisitedPlace) return
+    try {
+      const res = await fetch(`/api/places/lookup?code=${encodeURIComponent(lastVisitedPlace.code || lastVisitedPlace.name)}`)
+      const data = await res.json()
+      if (data?.id) {
+        setCurrentPlace(data)
+        try { localStorage.setItem('qa3da_place', JSON.stringify(data)) } catch {}
+      } else {
+        toast.error('المكان لم يعد متاحاً')
+      }
+    } catch {
+      toast.error('تعذّر الاتصال')
+    }
+  }, [lastVisitedPlace])
 
   // Fetch place closed status and maintenance mode whenever place changes
   useEffect(() => {
@@ -2217,20 +2392,74 @@ export default function HomePage() {
             </div>
 
             <div className="text-center space-y-1.5">
-              <h1 className="text-3xl font-black tracking-tight text-white" style={{ textShadow: '0 0 30px rgba(184,137,63,0.3)' }}>{appName}</h1>
+              {/* Time-based greeting */}
+              <div className="flex items-center justify-center gap-1.5 mb-1">
+                {greeting.icon === 'sunrise' && <Sunrise className="h-3.5 w-3.5" style={{ color: greeting.color }} />}
+                {greeting.icon === 'sun' && <SunIcon className="h-3.5 w-3.5" style={{ color: greeting.color }} />}
+                {greeting.icon === 'sunset' && <Sunset className="h-3.5 w-3.5" style={{ color: greeting.color }} />}
+                {greeting.icon === 'moon' && <Moon className="h-3.5 w-3.5" style={{ color: greeting.color }} />}
+                <span className="text-[11px] font-semibold tracking-wide" style={{ color: greeting.color, opacity: 0.8 }}>
+                  {uiLang === 'ar' ? greeting.text : greeting.en}
+                </span>
+              </div>
+              <div className="flex items-center justify-center gap-2">
+                <h1 className="text-3xl font-black tracking-tight text-white" style={{ textShadow: '0 0 30px rgba(184,137,63,0.3)' }}>{appName}</h1>
+                <button
+                  onClick={() => setShowVersionModal(true)}
+                  className="self-start mt-1 rounded-full px-2 py-0.5 text-[9px] font-black tracking-wider transition-all hover:scale-105 active:scale-95"
+                  style={{ background: 'linear-gradient(135deg, rgba(184,137,63,0.25), rgba(244,219,156,0.12))', color: '#f4db9c', border: '1px solid rgba(212,175,98,0.4)', boxShadow: '0 0 10px rgba(212,175,98,0.18)' }}
+                  title="ما الجديد"
+                >
+                  v{APP_VERSION}
+                </button>
+              </div>
               <div className="flex items-center justify-center gap-2">
                 <div className="h-px w-6" style={{ background: 'linear-gradient(90deg, transparent, rgba(184,137,63,0.5))' }} />
                 <p className="text-[10px] tracking-[0.22em] uppercase font-semibold" style={{ color: 'rgba(148,163,184,0.45)' }}>Order Management System</p>
                 <div className="h-px w-6" style={{ background: 'linear-gradient(90deg, rgba(184,137,63,0.5), transparent)' }} />
               </div>
+
+              {/* Live places + activity ticker */}
+              {sysStatus && sysStatus.activePlaces > 0 && (
+                <div className="flex items-center justify-center gap-2 pt-1">
+                  <span className="relative flex h-1.5 w-1.5">
+                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-60" />
+                    <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-emerald-400" />
+                  </span>
+                  <span className="text-[10px] font-semibold text-emerald-300/80">
+                    {animatedPlacesCount} {uiLang === 'ar' ? 'مكان نشط الآن' : 'active places now'}
+                  </span>
+                  {sysStatus.totalOrders > 0 && (
+                    <>
+                      <span className="text-[10px] text-amber-200/30">•</span>
+                      <span className="text-[10px] font-semibold text-amber-200/60">
+                        {sysStatus.totalOrders} {uiLang === 'ar' ? 'طلب اليوم' : 'orders today'}
+                      </span>
+                    </>
+                  )}
+                </div>
+              )}
+
+              {/* Activity ticker */}
+              {recentActivities.length > 0 && (
+                <div className="mt-2 mx-auto max-w-xs overflow-hidden rounded-full px-3 py-1.5" style={{ background: 'rgba(255,255,255,0.025)', border: '1px solid rgba(255,255,255,0.05)' }}>
+                  <div className="flex items-center gap-1.5 text-[10px]">
+                    <Activity className="h-3 w-3 shrink-0 text-amber-300/70" />
+                    <span className="truncate text-slate-300/80" key={tickerIndex} style={{ animation: 'fadeIn 0.5s ease' }}>
+                      ✨ {recentActivities[tickerIndex]?.drink_name} — {recentActivities[tickerIndex]?.place_name}
+                    </span>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 
-          {/* Place Picker Hero Button */}
+          {/* Place Picker + QR Scanner row */}
+          <div className="flex items-stretch gap-2">
           <button
             onClick={handleOpenPlacesPicker}
             disabled={isLoadingPlaces}
-            className="relative w-full rounded-2xl overflow-hidden transition-all active:scale-[0.97] disabled:opacity-50 group focus-visible:outline-none"
+            className="relative flex-1 rounded-2xl overflow-hidden transition-all active:scale-[0.97] disabled:opacity-50 group focus-visible:outline-none"
             style={{
               background: 'linear-gradient(135deg, rgba(12,8,28,0.98) 0%, rgba(22,14,50,0.98) 50%, rgba(18,10,40,0.98) 100%)',
               border: '1px solid rgba(184,137,63,0.3)',
@@ -2281,30 +2510,70 @@ export default function HomePage() {
             <div className="absolute inset-x-0 bottom-0 h-px" style={{ background: 'linear-gradient(90deg, transparent 5%, rgba(184,137,63,0.3) 35%, rgba(184,137,63,0.3) 65%, transparent 95%)' }} />
           </button>
 
+          {/* QR Scanner button */}
+          <button
+            onClick={() => setShowQrScanner(true)}
+            className="relative shrink-0 rounded-2xl px-3.5 transition-all active:scale-95 group"
+            style={{
+              background: 'linear-gradient(135deg, rgba(184,137,63,0.18), rgba(184,137,63,0.08))',
+              border: '1px solid rgba(184,137,63,0.3)',
+              boxShadow: '0 0 24px rgba(184,137,63,0.12), inset 0 1px 0 rgba(255,255,255,0.05)',
+            }}
+            title={uiLang === 'ar' ? 'امسح كود الطاولة' : 'Scan table QR'}
+          >
+            <div className="flex flex-col items-center gap-1">
+              <ScanLine className="h-5 w-5 text-[#f4db9c]" />
+              <span className="text-[8px] font-bold tracking-wide text-amber-200/70">QR</span>
+            </div>
+          </button>
+          </div>
+
+          {/* Last visited place quick chip */}
+          {lastVisitedPlace && !currentPlace && (
+            <button
+              onClick={handleResumeLastPlace}
+              className="flex w-full items-center gap-2 rounded-xl px-3 py-2 transition-all hover:bg-white/[0.06] active:scale-[0.98]"
+              style={{ background: 'rgba(255,255,255,0.03)', border: '1px dashed rgba(184,137,63,0.25)' }}
+            >
+              <History className="h-3.5 w-3.5 shrink-0 text-amber-300/70" />
+              <span className="text-[11px] text-amber-200/70">
+                {uiLang === 'ar' ? 'آخر زيارة' : 'Last visit'}:
+              </span>
+              <span className="flex-1 truncate text-right text-[12px] font-bold text-white">
+                {lastVisitedPlace.name}
+              </span>
+              <span className="text-[10px] font-bold text-amber-300">
+                {uiLang === 'ar' ? 'ادخل ←' : '→ Enter'}
+              </span>
+            </button>
+          )}
+
           {/* Separator */}
           <div className="flex items-center gap-3">
             <div className="h-px flex-1" style={{ background: 'rgba(255,255,255,0.06)' }} />
-            <p className="text-[10px] tracking-[0.18em] uppercase font-medium" style={{ color: 'rgba(148,163,184,0.3)' }}>الموظفون والإدارة</p>
+            <p className="text-[10px] tracking-[0.18em] uppercase font-medium" style={{ color: 'rgba(148,163,184,0.3)' }}>{uiLang === 'ar' ? 'الموظفون والإدارة' : 'Staff & Management'}</p>
             <div className="h-px flex-1" style={{ background: 'rgba(255,255,255,0.06)' }} />
           </div>
 
           {/* Admin Buttons */}
           <div className="flex flex-col gap-2 w-full">
-            {/* Role buttons 2x2 */}
+            {/* Role buttons 2x2 with lucide icons */}
             <div className="grid grid-cols-2 gap-2">
               {[
-                { label: 'Place Admin', icon: <span className="text-base leading-none">{buttonIcons.placeAdmin}</span>, onClick: () => { setShowPlaceAdminLanding(true); setPlaceAdminConfirmError('') }, color: '#94a3b8', iconColor: 'rgba(148,163,184,0.15)' },
-                { label: 'Cashier', icon: <span className="text-base leading-none">{buttonIcons.cashier}</span>, onClick: () => { setShowCashierLogin(true); setCashierLoginError('') }, color: '#6ee7b7', iconColor: 'rgba(110,231,183,0.12)' },
-                { label: 'Captain', icon: <span className="text-base leading-none">{buttonIcons.captain}</span>, onClick: () => { window.location.href = '/waiter' }, color: '#fcd34d', iconColor: 'rgba(252,211,77,0.1)' },
-                { label: 'Bar', icon: <span className="text-base leading-none">{buttonIcons.bar}</span>, onClick: () => { window.location.href = '/bar' }, color: '#7dd3fc', iconColor: 'rgba(125,211,252,0.1)' },
+                { label: 'Place Admin', LucideIcon: Crown, onClick: () => { setShowPlaceAdminLanding(true); setPlaceAdminConfirmError('') }, color: '#94a3b8', iconColor: 'rgba(148,163,184,0.15)' },
+                { label: 'Cashier', LucideIcon: Receipt, onClick: () => { setShowCashierLogin(true); setCashierLoginError('') }, color: '#6ee7b7', iconColor: 'rgba(110,231,183,0.12)' },
+                { label: 'Captain', LucideIcon: BellIcon, onClick: () => { window.location.href = '/waiter' }, color: '#fcd34d', iconColor: 'rgba(252,211,77,0.1)' },
+                { label: 'Bar', LucideIcon: Coffee, onClick: () => { window.location.href = '/bar' }, color: '#7dd3fc', iconColor: 'rgba(125,211,252,0.1)' },
               ].map((btn, i) => (
                 <button
                   key={i}
                   onClick={btn.onClick}
-                  className="flex items-center gap-2.5 py-3 px-3.5 rounded-xl transition-all hover:brightness-110 active:scale-[0.97] focus-visible:ring-2 focus-visible:ring-white/10 focus-visible:outline-none"
+                  className="flex items-center gap-2.5 py-3 px-3.5 rounded-xl transition-all hover:brightness-110 hover:-translate-y-0.5 active:scale-[0.97] focus-visible:ring-2 focus-visible:ring-white/10 focus-visible:outline-none group"
                   style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}
                 >
-                  <span className="flex h-8 w-8 items-center justify-center rounded-lg shrink-0" style={{ background: btn.iconColor, color: btn.color }}>{btn.icon}</span>
+                  <span className="flex h-8 w-8 items-center justify-center rounded-lg shrink-0 transition-all group-hover:scale-110" style={{ background: btn.iconColor, color: btn.color, boxShadow: `0 0 12px ${btn.iconColor}` }}>
+                    <btn.LucideIcon className="h-4 w-4" />
+                  </span>
                   <span className="text-sm font-medium" style={{ color: btn.color }}>{btn.label}</span>
                 </button>
               ))}
@@ -2312,7 +2581,7 @@ export default function HomePage() {
           </div>
 
           <div
-            className="relative overflow-hidden rounded-[1.35rem] p-3 shadow-2xl"
+            className="relative overflow-hidden rounded-[1.35rem] shadow-2xl"
             style={{
               background: 'linear-gradient(145deg, rgba(10,12,28,0.96), rgba(21,16,44,0.98) 58%, rgba(33,18,62,0.96))',
               border: '1px solid rgba(184,137,63,0.22)',
@@ -2329,100 +2598,223 @@ export default function HomePage() {
             <div className="pointer-events-none absolute -left-12 -top-10 h-36 w-36 rounded-full bg-[#b8893f]/15 blur-3xl" />
             <div className="pointer-events-none absolute -bottom-16 right-8 h-40 w-40 rounded-full bg-[#b8893f]/12 blur-3xl" />
 
-            <div className="relative space-y-3">
-              <div className="flex items-start justify-between gap-3">
-                <div
-                  className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[10px] font-bold"
-                  style={{
-                    background: sysOnline === false ? 'rgba(244,63,94,0.12)' : 'rgba(16,185,129,0.13)',
-                    color: sysOnline === false ? '#fb7185' : '#6ee7b7',
-                    border: `1px solid ${sysOnline === false ? 'rgba(244,63,94,0.22)' : 'rgba(16,185,129,0.24)'}`
-                  }}
-                >
-                  <span>{sysOnline === null ? 'جار الفحص' : sysOnline ? 'جاهز للعمل' : 'يحتاج مراجعة'}</span>
-                  <span className={`h-1.5 w-1.5 rounded-full ${sysOnline === false ? 'bg-rose-400' : 'bg-emerald-400'}`} />
-                </div>
-
-                <div className="text-center">
-                  <h3 className="text-base font-semibold tracking-wide text-slate-100">لوحة التشغيل الهادئ</h3>
-                  <p className="mt-0.5 text-[9px] font-semibold tracking-[0.36em] text-amber-200/55" dir="ltr">CONTROL MODE</p>
-                </div>
-
-                <div
-                  className="flex h-10 w-10 items-center justify-center rounded-xl"
-                  style={{
-                    background: 'linear-gradient(145deg, rgba(245,158,11,0.14), rgba(184,137,63,0.10))',
-                    border: '1px solid rgba(245,158,11,0.18)'
-                  }}
-                >
-                  <ShieldCheck className="h-5 w-5 text-slate-200/80" />
-                </div>
+            {/* Always-visible header (clickable to expand/collapse) */}
+            <button
+              onClick={() => setControlPanelOpen(o => !o)}
+              className="relative flex w-full items-center justify-between gap-3 p-3 text-right transition-colors hover:bg-white/[0.02]"
+            >
+              <div
+                className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[10px] font-bold"
+                style={{
+                  background: !isOnline ? 'rgba(148,163,184,0.12)' : sysOnline === false ? 'rgba(244,63,94,0.12)' : 'rgba(16,185,129,0.13)',
+                  color: !isOnline ? '#cbd5e1' : sysOnline === false ? '#fb7185' : '#6ee7b7',
+                  border: `1px solid ${!isOnline ? 'rgba(148,163,184,0.22)' : sysOnline === false ? 'rgba(244,63,94,0.22)' : 'rgba(16,185,129,0.24)'}`
+                }}
+              >
+                {!isOnline ? <WifiOff className="h-3 w-3" /> : <Wifi className="h-3 w-3" />}
+                <span>
+                  {!isOnline
+                    ? (uiLang === 'ar' ? 'بدون اتصال' : 'Offline')
+                    : sysOnline === null ? (uiLang === 'ar' ? 'جار الفحص' : 'Checking') : sysOnline ? (uiLang === 'ar' ? 'جاهز للعمل' : 'Online') : (uiLang === 'ar' ? 'يحتاج مراجعة' : 'Issues')}
+                </span>
               </div>
 
-              <div className="grid grid-cols-3 gap-2">
-                {[
-                  { icon: '🧭', title: 'توجيه ذكي', sub: 'اختيار المسار', color: '#facc15', bg: 'rgba(245,158,11,0.08)', border: 'rgba(245,158,11,0.16)' },
-                  { icon: '🔐', title: 'دخول آمن', sub: 'جلسة محمية', color: '#fff5d6', bg: 'rgba(184,137,63,0.10)', border: 'rgba(184,137,63,0.18)' },
-                  { icon: '⚡', title: 'تشغيل فوري', sub: 'واجهة جاهزة', color: '#93c5fd', bg: 'rgba(59,130,246,0.09)', border: 'rgba(59,130,246,0.16)' },
-                ].map((item) => (
-                  <div
-                    key={item.title}
-                    className="rounded-xl px-2 py-2.5 text-center"
-                    style={{ background: item.bg, border: `1px solid ${item.border}` }}
-                  >
-                    <div className="text-xl leading-none">{item.icon}</div>
-                    <p className="mt-1.5 text-[11px] font-bold" style={{ color: item.color }}>{item.title}</p>
-                    <p className="mt-0.5 text-[8px] text-slate-400/65">{item.sub}</p>
-                  </div>
-                ))}
+              <div className="text-center flex-1">
+                <h3 className="text-sm font-semibold tracking-wide text-slate-100">{uiLang === 'ar' ? 'لوحة التشغيل الهادئ' : 'Control Panel'}</h3>
+                <p className="mt-0.5 text-[8px] font-semibold tracking-[0.36em] text-amber-200/55" dir="ltr">CONTROL MODE</p>
               </div>
 
               <div
-                className="rounded-xl px-3 py-2.5"
+                className="flex h-9 w-9 items-center justify-center rounded-xl transition-transform"
                 style={{
-                  background: 'rgba(0,0,0,0.18)',
-                  border: '1px solid rgba(255,255,255,0.06)'
+                  background: 'linear-gradient(145deg, rgba(245,158,11,0.14), rgba(184,137,63,0.10))',
+                  border: '1px solid rgba(245,158,11,0.18)',
+                  transform: controlPanelOpen ? 'rotate(180deg)' : 'rotate(0)',
                 }}
               >
-                <div className="flex items-center justify-between gap-3">
-                  <span className="text-lg text-amber-200">✦</span>
-                  <div className="text-right">
-                    <p className="text-xs font-semibold text-slate-100">نظام دخول منظم للفريق</p>
-                    <p className="mt-0.5 text-[10px] text-slate-400/70">اختر الدور المطلوب وابدأ بدون عرض بيانات التشغيل</p>
-                  </div>
-                  <span
-                    className="rounded-full px-2.5 py-0.5 text-[9px] font-black tracking-wide"
-                    style={{
-                      background: 'rgba(245,158,11,0.10)',
-                      color: '#facc15',
-                      border: '1px solid rgba(245,158,11,0.18)'
-                    }}
-                  >
-                    PRIVATE
-                  </span>
+                <ChevronDown className="h-4 w-4 text-slate-200/80" />
+              </div>
+            </button>
+
+            {/* Collapsible body */}
+            <div
+              className="relative overflow-hidden transition-all duration-300 ease-out"
+              style={{ maxHeight: controlPanelOpen ? '600px' : '0px', opacity: controlPanelOpen ? 1 : 0 }}
+            >
+              <div className="space-y-3 px-3 pb-3">
+                <div className="grid grid-cols-3 gap-2">
+                  {[
+                    { Icon: Compass, title: uiLang === 'ar' ? 'توجيه ذكي' : 'Smart routing', sub: uiLang === 'ar' ? 'اختيار المسار' : 'Choose path', color: '#facc15', bg: 'rgba(245,158,11,0.08)', border: 'rgba(245,158,11,0.16)' },
+                    { Icon: Lock, title: uiLang === 'ar' ? 'دخول آمن' : 'Secure access', sub: uiLang === 'ar' ? 'جلسة محمية' : 'Protected session', color: '#fff5d6', bg: 'rgba(184,137,63,0.10)', border: 'rgba(184,137,63,0.18)' },
+                    { Icon: Zap, title: uiLang === 'ar' ? 'تشغيل فوري' : 'Instant start', sub: uiLang === 'ar' ? 'واجهة جاهزة' : 'Ready UI', color: '#93c5fd', bg: 'rgba(59,130,246,0.09)', border: 'rgba(59,130,246,0.16)' },
+                  ].map((item) => (
+                    <div
+                      key={item.title}
+                      className="rounded-xl px-2 py-2.5 text-center"
+                      style={{ background: item.bg, border: `1px solid ${item.border}` }}
+                    >
+                      <item.Icon className="mx-auto h-5 w-5" style={{ color: item.color }} />
+                      <p className="mt-1.5 text-[11px] font-bold" style={{ color: item.color }}>{item.title}</p>
+                      <p className="mt-0.5 text-[8px] text-slate-400/65">{item.sub}</p>
+                    </div>
+                  ))}
                 </div>
-              </div>
 
-              <div className="flex flex-wrap items-center justify-center gap-2">
-                {['بوابة الموظف', 'وضع خاص', 'مراقبة هادئة'].map((label) => (
-                  <span
-                    key={label}
-                    className="rounded-full px-2.5 py-1 text-[9px] font-medium text-slate-300/65"
-                    style={{ background: 'rgba(255,255,255,0.035)', border: '1px solid rgba(255,255,255,0.055)' }}
-                  >
-                    {label}
-                  </span>
-                ))}
-              </div>
+                <div
+                  className="rounded-xl px-3 py-2.5"
+                  style={{ background: 'rgba(0,0,0,0.18)', border: '1px solid rgba(255,255,255,0.06)' }}
+                >
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="text-lg text-amber-200">✦</span>
+                    <div className="text-right">
+                      <p className="text-xs font-semibold text-slate-100">{uiLang === 'ar' ? 'نظام دخول منظم للفريق' : 'Organized team access'}</p>
+                      <p className="mt-0.5 text-[10px] text-slate-400/70">{uiLang === 'ar' ? 'اختر الدور المطلوب وابدأ بدون عرض بيانات التشغيل' : 'Pick a role and start without exposing operational data'}</p>
+                    </div>
+                    <span
+                      className="rounded-full px-2.5 py-0.5 text-[9px] font-black tracking-wide"
+                      style={{ background: 'rgba(245,158,11,0.10)', color: '#facc15', border: '1px solid rgba(245,158,11,0.18)' }}
+                    >
+                      PRIVATE
+                    </span>
+                  </div>
+                </div>
 
-              {sysLastUpdate && (
-                <p className="text-[9px] font-mono text-right" style={{ color: 'rgba(148,163,184,0.24)' }}>
-                  {sysLastUpdate.toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' })}
-                </p>
-              )}
+                <div className="flex flex-wrap items-center justify-center gap-2">
+                  {(uiLang === 'ar' ? ['بوابة الموظف', 'وضع خاص', 'مراقبة هادئة'] : ['Staff portal', 'Private mode', 'Quiet monitor']).map((label) => (
+                    <span
+                      key={label}
+                      className="rounded-full px-2.5 py-1 text-[9px] font-medium text-slate-300/65"
+                      style={{ background: 'rgba(255,255,255,0.035)', border: '1px solid rgba(255,255,255,0.055)' }}
+                    >
+                      {label}
+                    </span>
+                  ))}
+                </div>
+
+                {sysLastUpdate && (
+                  <p className="text-[9px] font-mono text-right" style={{ color: 'rgba(148,163,184,0.24)' }}>
+                    {sysLastUpdate.toLocaleTimeString(uiLang === 'ar' ? 'ar-EG' : 'en-US', { hour: '2-digit', minute: '2-digit' })}
+                  </p>
+                )}
+              </div>
             </div>
           </div>
         </div>
+
+        {/* Floating language toggle (top-right corner) */}
+        <button
+          onClick={toggleLang}
+          className="fixed top-3 right-3 z-30 flex items-center gap-1.5 rounded-full px-2.5 py-1.5 transition-all active:scale-95 hover:bg-white/10"
+          style={{ background: 'rgba(15,23,42,0.7)', border: '1px solid rgba(184,137,63,0.3)', backdropFilter: 'blur(10px)' }}
+          title={uiLang === 'ar' ? 'Switch to English' : 'التبديل للعربية'}
+        >
+          <Globe className="h-3.5 w-3.5 text-amber-200/80" />
+          <span className="text-[10px] font-bold tracking-wide text-amber-100">{uiLang === 'ar' ? 'EN' : 'AR'}</span>
+        </button>
+
+        {/* Floating WhatsApp support button */}
+        <a
+          href="https://wa.me/201000000000?text=أحتاج%20مساعدة%20في%20SipFlow"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="fixed bottom-5 left-5 z-30 flex h-12 w-12 items-center justify-center rounded-full transition-all hover:scale-110 active:scale-95"
+          style={{ background: 'linear-gradient(135deg, #25D366, #128C7E)', boxShadow: '0 10px 30px rgba(37,211,102,0.4), 0 0 24px rgba(37,211,102,0.25)' }}
+          title={uiLang === 'ar' ? 'دعم WhatsApp' : 'WhatsApp support'}
+        >
+          <MessageCircle className="h-5 w-5 text-white" />
+          <span className="absolute -top-0.5 -right-0.5 flex h-2.5 w-2.5">
+            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
+            <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-emerald-300" />
+          </span>
+        </a>
+
+        {/* PWA install banner */}
+        {showPwaBanner && (
+          <div
+            className="fixed bottom-5 right-5 z-30 max-w-[260px] rounded-2xl p-3 shadow-2xl"
+            style={{ background: 'linear-gradient(135deg, rgba(15,23,42,0.96), rgba(46,33,12,0.92))', border: '1px solid rgba(244,219,156,0.35)', backdropFilter: 'blur(12px)' }}
+          >
+            <div className="flex items-start gap-2.5">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl" style={{ background: 'rgba(184,137,63,0.18)', border: '1px solid rgba(212,175,98,0.3)' }}>
+                <Download className="h-4 w-4 text-amber-200" />
+              </div>
+              <div className="flex-1">
+                <p className="text-[12px] font-bold text-white">{uiLang === 'ar' ? 'ثبّت SipFlow كتطبيق' : 'Install SipFlow as app'}</p>
+                <p className="mt-0.5 text-[10px] text-amber-200/60">{uiLang === 'ar' ? 'وصول أسرع من شاشتك مباشرة' : 'Faster access from your home screen'}</p>
+                <div className="mt-2 flex gap-1.5">
+                  <button onClick={handleInstallPwa} className="rounded-lg bg-amber-500/90 px-2.5 py-1 text-[10px] font-bold text-black hover:bg-amber-400">
+                    {uiLang === 'ar' ? 'تثبيت' : 'Install'}
+                  </button>
+                  <button onClick={dismissPwaBanner} className="rounded-lg bg-white/10 px-2.5 py-1 text-[10px] font-medium text-white/70 hover:bg-white/15">
+                    {uiLang === 'ar' ? 'لاحقاً' : 'Later'}
+                  </button>
+                </div>
+              </div>
+              <button onClick={dismissPwaBanner} className="text-white/40 hover:text-white/70">
+                <X className="h-3.5 w-3.5" />
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Version / What's new modal */}
+        {showVersionModal && (
+          <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4" dir="rtl" onClick={() => setShowVersionModal(false)}>
+            <div
+              className="relative w-full max-w-sm overflow-hidden rounded-2xl p-5 shadow-2xl"
+              style={{ background: 'linear-gradient(160deg, #0c0905 0%, #1a1308 60%, #0a0805 100%)', border: '1px solid rgba(212,175,98,0.4)', boxShadow: '0 20px 60px rgba(0,0,0,0.6), 0 0 40px rgba(184,137,63,0.18)' }}
+              onClick={e => e.stopPropagation()}
+            >
+              <div className="pointer-events-none absolute inset-x-0 top-0 h-px" style={{ background: 'linear-gradient(90deg, transparent, rgba(244,219,156,0.6), transparent)' }} />
+              <div className="text-center mb-3">
+                <div className="mx-auto inline-flex h-12 w-12 items-center justify-center rounded-xl mb-2" style={{ background: 'linear-gradient(135deg, rgba(184,137,63,0.25), rgba(244,219,156,0.1))', border: '1px solid rgba(212,175,98,0.45)' }}>
+                  <Sparkles className="h-5 w-5 text-amber-200" />
+                </div>
+                <h3 className="text-base font-black text-white">{uiLang === 'ar' ? `جديد في v${APP_VERSION}` : `What's new in v${APP_VERSION}`}</h3>
+                <p className="text-[11px] text-amber-200/60 mt-1">{uiLang === 'ar' ? 'أحدث تحسينات الواجهة' : 'Latest interface improvements'}</p>
+              </div>
+              <ul className="space-y-2 text-[12px] text-slate-200/85" dir={uiLang === 'ar' ? 'rtl' : 'ltr'}>
+                {(uiLang === 'ar' ? [
+                  '📷 ماسح QR للطاولات — افتح المنيو فوراً',
+                  '🌅 تحية ذكية حسب الوقت',
+                  '🟢 عدّاد الأماكن النشطة الحية',
+                  '✨ شريط آخر النشاطات المتحرّك',
+                  '🔁 رجوع سريع لآخر مكان زرته',
+                  '🌐 تبديل اللغة (AR/EN)',
+                  '📲 تثبيت كتطبيق على شاشتك (PWA)',
+                  '💬 دعم WhatsApp مباشر',
+                  '📡 مؤشّر الاتصال (متصل/بدون اتصال)',
+                  '📂 لوحة التشغيل قابلة للطي',
+                ] : [
+                  '📷 QR scanner for tables — open menu instantly',
+                  '🌅 Smart time-based greeting',
+                  '🟢 Live active places counter',
+                  '✨ Animated activity ticker',
+                  '🔁 Quick return to last visited place',
+                  '🌐 Language switch (AR/EN)',
+                  '📲 Install as PWA on your home screen',
+                  '💬 Direct WhatsApp support',
+                  '📡 Connection indicator (online/offline)',
+                  '📂 Collapsible control panel',
+                ]).map((line, i) => (
+                  <li key={i} className="flex items-start gap-2 rounded-lg px-2 py-1.5" style={{ background: 'rgba(255,255,255,0.025)' }}>
+                    <span>{line}</span>
+                  </li>
+                ))}
+              </ul>
+              <button
+                onClick={() => setShowVersionModal(false)}
+                className="mt-4 w-full rounded-xl py-2 text-sm font-bold text-black transition-all hover:scale-[1.02] active:scale-95"
+                style={{ background: 'linear-gradient(135deg, #f4db9c, #d4af62)' }}
+              >
+                {uiLang === 'ar' ? 'تمام' : 'Got it'}
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* QR scanner modal */}
+        <QrScannerModal open={showQrScanner} onClose={() => setShowQrScanner(false)} onResult={handleQrResult} />
 
         {/* Admin Login Modal for Developer on place screen */}
         {showResetModal && (
