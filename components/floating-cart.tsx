@@ -141,6 +141,8 @@ export function FloatingCart({
   const bob = useTransform(smoothedVelocity, [-60, 0, 60], [-7, 0, 7])
   const lastScrollYRef = useRef(0)
   const scrollIdleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const lastUpPopRef = useRef(0)
+  const wrapperRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     if (typeof window === 'undefined') return
@@ -153,13 +155,56 @@ export function FloatingCart({
       scrollVelocity.set(clamped)
       if (scrollIdleTimerRef.current) clearTimeout(scrollIdleTimerRef.current)
       scrollIdleTimerRef.current = setTimeout(() => scrollVelocity.set(0), 110)
+
+      // Scrolling up after a long scroll-down: re-announce the cart with a pop
+      if (dy < -8 && cartCount > 0 && !isOpen && !isSubmitting && !disabled) {
+        const now = Date.now()
+        if (now - lastUpPopRef.current > 1500) {
+          lastUpPopRef.current = now
+          nudgeControls.start({
+            y: [0, -14, 0, -6, 0],
+            transition: { duration: 0.7, ease: 'easeOut' },
+          })
+        }
+      }
     }
     window.addEventListener('scroll', onScroll, { passive: true })
     return () => {
       window.removeEventListener('scroll', onScroll)
       if (scrollIdleTimerRef.current) clearTimeout(scrollIdleTimerRef.current)
     }
-  }, [scrollVelocity])
+  }, [scrollVelocity, cartCount, isOpen, isSubmitting, disabled, nudgeControls])
+
+  // Track the visual viewport so the cart stays above iOS/Chrome URL bar
+  // even when the user scrolls back up after reaching the page bottom.
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const vv = window.visualViewport
+    const apply = (gap: number) => {
+      if (wrapperRef.current) {
+        wrapperRef.current.style.setProperty('--vv-bottom', `${Math.max(0, gap)}px`)
+      }
+    }
+    const update = () => {
+      if (vv) {
+        const gap = window.innerHeight - (vv.height + vv.offsetTop)
+        apply(gap)
+      } else {
+        apply(0)
+      }
+    }
+    update()
+    vv?.addEventListener('resize', update)
+    vv?.addEventListener('scroll', update)
+    window.addEventListener('resize', update)
+    window.addEventListener('scroll', update, { passive: true })
+    return () => {
+      vv?.removeEventListener('resize', update)
+      vv?.removeEventListener('scroll', update)
+      window.removeEventListener('resize', update)
+      window.removeEventListener('scroll', update)
+    }
+  }, [cartCount])
 
   useEffect(() => {
     if (submitSuccessKey > prevSuccessKeyRef.current) {
@@ -252,6 +297,7 @@ export function FloatingCart({
       <AnimatePresence>
         {cartCount > 0 && (
           <motion.div
+            ref={wrapperRef}
             key="floating-cart"
             initial={{ y: 120, opacity: 0 }}
             animate={{
@@ -266,7 +312,7 @@ export function FloatingCart({
               x: { duration: 5.6, repeat: Infinity, ease: 'easeInOut' },
             }}
             className="fixed left-1/2 z-50 w-[calc(100%-1rem)] max-w-md -translate-x-1/2 px-1"
-            style={{ bottom: 'calc(env(safe-area-inset-bottom, 0px) + 0.75rem)' }}
+            style={{ bottom: 'calc(env(safe-area-inset-bottom, 0px) + 0.75rem + var(--vv-bottom, 0px))' }}
             dir="rtl"
           >
             <AnimatePresence mode="wait" initial={false}>
