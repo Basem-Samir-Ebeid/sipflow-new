@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion, AnimatePresence, useMotionValue, useSpring, useTransform } from 'framer-motion'
 import { Button } from '@/components/ui/button'
 import { ShoppingBag, ChevronUp, Plus, Minus, MapPin, X, Loader2 } from 'lucide-react'
 import Image from 'next/image'
@@ -105,6 +105,33 @@ export function FloatingCart({
   const prevSuccessKeyRef = useRef(submitSuccessKey)
   const prevCountRef = useRef(cartCount)
   const prevCartRef = useRef(cart)
+
+  // Scroll-reactive motion: tilt + bob in response to scroll velocity
+  const scrollVelocity = useMotionValue(0)
+  const smoothedVelocity = useSpring(scrollVelocity, { stiffness: 220, damping: 22, mass: 0.5 })
+  const tilt = useTransform(smoothedVelocity, [-40, 0, 40], [-5, 0, 5])
+  const bob = useTransform(smoothedVelocity, [-40, 0, 40], [-3, 0, 3])
+  const lastScrollYRef = useRef(0)
+  const scrollIdleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    lastScrollYRef.current = window.scrollY
+    const onScroll = () => {
+      const y = window.scrollY
+      const dy = y - lastScrollYRef.current
+      lastScrollYRef.current = y
+      const clamped = Math.max(-60, Math.min(60, dy))
+      scrollVelocity.set(clamped)
+      if (scrollIdleTimerRef.current) clearTimeout(scrollIdleTimerRef.current)
+      scrollIdleTimerRef.current = setTimeout(() => scrollVelocity.set(0), 110)
+    }
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => {
+      window.removeEventListener('scroll', onScroll)
+      if (scrollIdleTimerRef.current) clearTimeout(scrollIdleTimerRef.current)
+    }
+  }, [scrollVelocity])
 
   useEffect(() => {
     if (submitSuccessKey > prevSuccessKeyRef.current) {
@@ -382,6 +409,7 @@ export function FloatingCart({
                   exit={{ opacity: 0, scale: 0.95 }}
                   transition={{ duration: 0.18 }}
                   className="relative"
+                  style={{ rotate: tilt, y: bob, transformOrigin: '50% 100%', willChange: 'transform' }}
                 >
                   <motion.span
                     key={pulseKey}
