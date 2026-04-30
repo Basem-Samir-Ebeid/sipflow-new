@@ -9,9 +9,31 @@ interface QrScannerModalProps {
   open: boolean
   onClose: () => void
   onResult: (text: string) => void
+  lang?: 'ar' | 'en'
 }
 
-export function QrScannerModal({ open, onClose, onResult }: QrScannerModalProps) {
+const T = {
+  ar: {
+    title: 'امسح كود الطاولة',
+    subtitle: 'QR من باركود الطاولة',
+    cameraError: 'تعذّر فتح الكاميرا. تأكد من السماح بإذن الكاميرا.',
+    manualLabel: 'أدخل كود المكان أو الصق رابط الـ QR',
+    manualPlaceholder: 'مثلاً: CAFE01 أو رابط الـ QR',
+    submit: 'دخول',
+    switchToManual: 'أو أدخل الكود يدوياً',
+  },
+  en: {
+    title: 'Scan table QR',
+    subtitle: 'QR from the table barcode',
+    cameraError: "Couldn't open the camera. Please allow camera access.",
+    manualLabel: 'Enter the place code or paste the QR link',
+    manualPlaceholder: 'e.g. CAFE01 or a QR link',
+    submit: 'Enter',
+    switchToManual: 'Or enter the code manually',
+  },
+} as const
+
+export function QrScannerModal({ open, onClose, onResult, lang = 'ar' }: QrScannerModalProps) {
   const videoRef = useRef<HTMLVideoElement>(null)
   const streamRef = useRef<MediaStream | null>(null)
   const detectorRef = useRef<any>(null)
@@ -21,6 +43,8 @@ export function QrScannerModal({ open, onClose, onResult }: QrScannerModalProps)
   const [error, setError] = useState('')
   const [manualMode, setManualMode] = useState(false)
   const [manualValue, setManualValue] = useState('')
+
+  const t = T[lang]
 
   useEffect(() => {
     if (!open) return
@@ -85,7 +109,7 @@ export function QrScannerModal({ open, onClose, onResult }: QrScannerModalProps)
         }
         rafRef.current = requestAnimationFrame(tick)
       } catch (e: any) {
-        setError(e?.message || 'تعذّر فتح الكاميرا. تأكد من السماح بإذن الكاميرا.')
+        setError(t.cameraError)
         setManualMode(true)
       } finally {
         setStarting(false)
@@ -97,7 +121,7 @@ export function QrScannerModal({ open, onClose, onResult }: QrScannerModalProps)
       cancelled = true
       stop()
     }
-  }, [open, onResult])
+  }, [open, onResult, t.cameraError])
 
   if (!open) return null
 
@@ -108,7 +132,7 @@ export function QrScannerModal({ open, onClose, onResult }: QrScannerModalProps)
   }
 
   return (
-    <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/85 backdrop-blur-sm p-4" dir="rtl">
+    <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/85 backdrop-blur-sm p-4" dir={lang === 'ar' ? 'rtl' : 'ltr'}>
       <div
         className="relative w-full max-w-sm overflow-hidden rounded-2xl shadow-2xl"
         style={{
@@ -125,8 +149,8 @@ export function QrScannerModal({ open, onClose, onResult }: QrScannerModalProps)
               <ScanLine className="h-4.5 w-4.5 text-[#f4db9c]" />
             </div>
             <div>
-              <h3 className="text-sm font-bold text-white">امسح كود الطاولة</h3>
-              <p className="text-[10px] text-amber-200/55">QR من باركود الطاولة</p>
+              <h3 className="text-sm font-bold text-white">{t.title}</h3>
+              <p className="text-[10px] text-amber-200/55">{t.subtitle}</p>
             </div>
           </div>
           <button onClick={onClose} className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/5 text-white/60 hover:bg-white/10 hover:text-white">
@@ -168,19 +192,19 @@ export function QrScannerModal({ open, onClose, onResult }: QrScannerModalProps)
             <div className="space-y-2">
               <label className="flex items-center gap-1.5 text-[11px] font-medium text-amber-200/70">
                 <Keyboard className="h-3.5 w-3.5" />
-                <span>أدخل كود المكان أو الصق رابط الـ QR</span>
+                <span>{t.manualLabel}</span>
               </label>
               <Input
                 value={manualValue}
                 onChange={e => setManualValue(e.target.value)}
                 onKeyDown={e => e.key === 'Enter' && handleManualSubmit()}
-                placeholder="مثلاً: CAFE01 أو رابط الـ QR"
+                placeholder={t.manualPlaceholder}
                 className="bg-zinc-900 text-white placeholder:text-zinc-600"
                 style={{ borderColor: 'rgba(212,175,98,0.25)' }}
                 autoFocus
               />
               <Button onClick={handleManualSubmit} disabled={!manualValue.trim()} className="w-full bg-amber-500/90 text-black hover:bg-amber-400">
-                دخول
+                {t.submit}
               </Button>
             </div>
           )}
@@ -191,7 +215,7 @@ export function QrScannerModal({ open, onClose, onResult }: QrScannerModalProps)
               className="flex w-full items-center justify-center gap-2 rounded-lg bg-white/5 py-2 text-[11px] font-medium text-white/70 hover:bg-white/10"
             >
               <Keyboard className="h-3.5 w-3.5" />
-              أو أدخل الكود يدوياً
+              {t.switchToManual}
             </button>
           )}
         </div>

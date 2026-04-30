@@ -473,8 +473,8 @@ export default function HomePage() {
           })
           if (Array.isArray(json.recentActivity)) {
             setRecentActivities(json.recentActivity.slice(0, 8).map((a: any) => ({
-              drink_name: a.drink_name || 'مشروب',
-              place_name: a.place_name || 'مكان',
+              drink_name: a.drink_name || '',
+              place_name: a.place_name || '',
               created_at: a.created_at,
             })))
           }
@@ -569,7 +569,7 @@ export default function HomePage() {
       pwaInstallEvent.prompt()
       const choice = await pwaInstallEvent.userChoice
       if (choice?.outcome === 'accepted') {
-        toast.success('جاري تثبيت التطبيق على شاشتك')
+        toast.success(uiLang === 'ar' ? 'جاري تثبيت التطبيق على شاشتك' : 'Installing the app on your home screen')
       }
     } catch {}
     setShowPwaBanner(false)
@@ -2408,7 +2408,7 @@ export default function HomePage() {
                   onClick={() => setShowVersionModal(true)}
                   className="self-start mt-1 rounded-full px-2 py-0.5 text-[9px] font-black tracking-wider transition-all hover:scale-105 active:scale-95"
                   style={{ background: 'linear-gradient(135deg, rgba(184,137,63,0.25), rgba(244,219,156,0.12))', color: '#f4db9c', border: '1px solid rgba(212,175,98,0.4)', boxShadow: '0 0 10px rgba(212,175,98,0.18)' }}
-                  title="ما الجديد"
+                  title={uiLang === 'ar' ? 'ما الجديد' : "What's new"}
                 >
                   v{APP_VERSION}
                 </button>
@@ -2446,7 +2446,7 @@ export default function HomePage() {
                   <div className="flex items-center gap-1.5 text-[10px]">
                     <Activity className="h-3 w-3 shrink-0 text-amber-300/70" />
                     <span className="truncate text-slate-300/80" key={tickerIndex} style={{ animation: 'fadeIn 0.5s ease' }}>
-                      ✨ {recentActivities[tickerIndex]?.drink_name} — {recentActivities[tickerIndex]?.place_name}
+                      ✨ {recentActivities[tickerIndex]?.drink_name || (uiLang === 'ar' ? 'مشروب' : 'drink')} — {recentActivities[tickerIndex]?.place_name || (uiLang === 'ar' ? 'مكان' : 'place')}
                     </span>
                   </div>
                 </div>
@@ -2489,13 +2489,15 @@ export default function HomePage() {
               </div>
 
               {/* Text */}
-              <div className="text-right flex-1 min-w-0">
+              <div className={`flex-1 min-w-0 ${uiLang === 'ar' ? 'text-right' : 'text-left'}`}>
                 <p className="text-base font-black text-white leading-tight tracking-tight">
-                  {isLoadingPlaces ? 'جاري التحميل...' : 'اختار مكانك'}
+                  {isLoadingPlaces
+                    ? (uiLang === 'ar' ? 'جاري التحميل...' : 'Loading…')
+                    : (uiLang === 'ar' ? 'اختار مكانك' : 'Pick your place')}
                 </p>
                 {!isLoadingPlaces && (
                   <p className="text-[11px] mt-0.5 leading-tight" style={{ color: 'rgba(148,163,184,0.5)' }}>
-                    استكشف الأماكن المتاحة واختر وجهتك
+                    {uiLang === 'ar' ? 'استكشف الأماكن المتاحة واختر وجهتك' : 'Browse available places and choose your destination'}
                   </p>
                 )}
               </div>
@@ -2714,7 +2716,7 @@ export default function HomePage() {
 
         {/* Floating WhatsApp support button */}
         <a
-          href="https://wa.me/201000000000?text=أحتاج%20مساعدة%20في%20SipFlow"
+          href={`https://wa.me/201000000000?text=${encodeURIComponent(uiLang === 'ar' ? 'أحتاج مساعدة في SipFlow' : 'I need help with SipFlow')}`}
           target="_blank"
           rel="noopener noreferrer"
           className="fixed bottom-5 left-5 z-30 flex h-12 w-12 items-center justify-center rounded-full transition-all hover:scale-110 active:scale-95"
@@ -2814,7 +2816,7 @@ export default function HomePage() {
         )}
 
         {/* QR scanner modal */}
-        <QrScannerModal open={showQrScanner} onClose={() => setShowQrScanner(false)} onResult={handleQrResult} />
+        <QrScannerModal open={showQrScanner} onClose={() => setShowQrScanner(false)} onResult={handleQrResult} lang={uiLang} />
 
         {/* Admin Login Modal for Developer on place screen */}
         {showResetModal && (
