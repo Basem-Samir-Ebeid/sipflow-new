@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import { motion, AnimatePresence, useMotionValue, useSpring, useTransform } from 'framer-motion'
+import { motion, AnimatePresence, useMotionValue, useSpring, useTransform, useAnimationControls } from 'framer-motion'
 import { Button } from '@/components/ui/button'
 import { ShoppingBag, ChevronUp, Plus, Minus, MapPin, X, Loader2 } from 'lucide-react'
 import Image from 'next/image'
@@ -105,6 +105,34 @@ export function FloatingCart({
   const prevSuccessKeyRef = useRef(submitSuccessKey)
   const prevCountRef = useRef(cartCount)
   const prevCartRef = useRef(cart)
+
+  // Idle-nudge: gentle shake to remind the user when the order sits unconfirmed
+  const nudgeControls = useAnimationControls()
+
+  useEffect(() => {
+    if (cartCount === 0 || isOpen || isSubmitting || disabled) {
+      nudgeControls.stop()
+      nudgeControls.set({ x: 0, rotate: 0 })
+      return
+    }
+    const playNudge = () => {
+      nudgeControls.start({
+        x: [0, -5, 5, -4, 4, -2, 2, 0],
+        rotate: [0, -2.2, 2.2, -1.6, 1.6, -1, 1, 0],
+        transition: { duration: 0.75, ease: 'easeInOut' },
+      })
+    }
+    const firstTimer = setTimeout(() => {
+      playNudge()
+    }, 12000)
+    const repeatTimer = setInterval(() => {
+      playNudge()
+    }, 22000)
+    return () => {
+      clearTimeout(firstTimer)
+      clearInterval(repeatTimer)
+    }
+  }, [cartCount, cart, isOpen, isSubmitting, disabled, nudgeControls])
 
   // Scroll-reactive motion: tilt + bob in response to scroll velocity
   const scrollVelocity = useMotionValue(0)
@@ -421,12 +449,14 @@ export function FloatingCart({
                       background: 'radial-gradient(circle, rgba(251,191,36,0.55) 0%, transparent 70%)',
                     }}
                   />
-                  <div
+                  <motion.div
+                    animate={nudgeControls}
                     className="relative flex items-stretch gap-1 rounded-2xl p-1"
                     style={{
                       background: darkBg,
                       border: '1px solid rgba(212,160,23,0.32)',
                       boxShadow: '0 12px 30px rgba(0,0,0,0.55), 0 0 24px rgba(212,160,23,0.08)',
+                      transformOrigin: '50% 100%',
                     }}
                   >
                     <button
@@ -504,7 +534,7 @@ export function FloatingCart({
                         'تأكيد'
                       )}
                     </Button>
-                  </div>
+                  </motion.div>
                 </motion.div>
               )}
             </AnimatePresence>
