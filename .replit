@@ -43,3 +43,7 @@ build = ["pnpm", "run", "build"]
 [userenv]
 
 [userenv.shared]
+
+[postMerge]
+path = "scripts/post-merge.sh"
+timeoutMs = 120000
