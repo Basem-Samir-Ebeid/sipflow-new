@@ -137,8 +137,8 @@ export function FloatingCart({
   // Scroll-reactive motion: tilt + bob in response to scroll velocity
   const scrollVelocity = useMotionValue(0)
   const smoothedVelocity = useSpring(scrollVelocity, { stiffness: 220, damping: 22, mass: 0.5 })
-  const tilt = useTransform(smoothedVelocity, [-40, 0, 40], [-5, 0, 5])
-  const bob = useTransform(smoothedVelocity, [-40, 0, 40], [-3, 0, 3])
+  const tilt = useTransform(smoothedVelocity, [-60, 0, 60], [-9, 0, 9])
+  const bob = useTransform(smoothedVelocity, [-60, 0, 60], [-7, 0, 7])
   const lastScrollYRef = useRef(0)
   const scrollIdleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
@@ -254,10 +254,19 @@ export function FloatingCart({
           <motion.div
             key="floating-cart"
             initial={{ y: 120, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
+            animate={{
+              opacity: 1,
+              y: [0, -8, 0, -4, 0],
+              x: [0, 2, 0, -2, 0],
+            }}
             exit={{ y: 120, opacity: 0 }}
-            transition={{ type: 'spring', stiffness: 320, damping: 28 }}
-            className="fixed bottom-3 left-1/2 z-50 w-[calc(100%-1rem)] max-w-md -translate-x-1/2 px-1"
+            transition={{
+              opacity: { duration: 0.3 },
+              y: { duration: 4.2, repeat: Infinity, ease: 'easeInOut' },
+              x: { duration: 5.6, repeat: Infinity, ease: 'easeInOut' },
+            }}
+            className="fixed left-1/2 z-50 w-[calc(100%-1rem)] max-w-md -translate-x-1/2 px-1"
+            style={{ bottom: 'calc(env(safe-area-inset-bottom, 0px) + 0.75rem)' }}
             dir="rtl"
           >
             <AnimatePresence mode="wait" initial={false}>
@@ -520,20 +529,35 @@ export function FloatingCart({
                       <ChevronUp className="h-4 w-4 text-white/40 transition group-hover:text-white/70" />
                     </button>
 
-                    <Button
-                      className="h-auto rounded-xl px-4 text-xs font-bold"
-                      style={{ background: goldGradient, color: '#0a0500' }}
-                      onClick={onSubmit}
-                      disabled={disabled || isSubmitting}
-                    >
-                      {isSubmitting ? (
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                      ) : disabled && disabledLabel ? (
-                        <span className="text-[11px]">{disabledLabel}</span>
-                      ) : (
-                        'تأكيد'
+                    <div className="relative">
+                      {!disabled && !isSubmitting && (
+                        <motion.span
+                          aria-hidden="true"
+                          className="pointer-events-none absolute inset-0 rounded-xl"
+                          style={{ background: goldGradient }}
+                          animate={{ opacity: [0.55, 0, 0.55], scale: [1, 1.18, 1] }}
+                          transition={{ duration: 1.8, repeat: Infinity, ease: 'easeInOut' }}
+                        />
                       )}
-                    </Button>
+                      <Button
+                        className="relative h-auto min-h-[3rem] rounded-xl px-5 text-sm font-extrabold tracking-wide"
+                        style={{
+                          background: goldGradient,
+                          color: '#0a0500',
+                          boxShadow: '0 6px 18px rgba(212,160,23,0.45), inset 0 1px 0 rgba(255,255,255,0.25)',
+                        }}
+                        onClick={onSubmit}
+                        disabled={disabled || isSubmitting}
+                      >
+                        {isSubmitting ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : disabled && disabledLabel ? (
+                          <span className="text-[11px]">{disabledLabel}</span>
+                        ) : (
+                          'تأكيد الطلب'
+                        )}
+                      </Button>
+                    </div>
                   </motion.div>
                 </motion.div>
               )}
