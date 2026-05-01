@@ -131,6 +131,8 @@ export default function HomePage() {
   const [animatedPlacesCount, setAnimatedPlacesCount] = useState(0)
   const [tickerIndex, setTickerIndex] = useState(0)
   const [whatsappOpen, setWhatsappOpen] = useState(false)
+  const [supportWhatsapp, setSupportWhatsapp] = useState('')
+  const supportWhatsappDigits = supportWhatsapp.replace(/\D+/g, '')
   const [welcomeName, setWelcomeName] = useState('')
   const [showMessages, setShowMessages] = useState(false)
   const [showReceipt, setShowReceipt] = useState(false)
@@ -400,6 +402,14 @@ export default function HomePage() {
     fetch('/api/settings?key=app_name')
       .then(r => r.json())
       .then(d => { if (d.value) setAppName(d.value) })
+      .catch(() => {})
+  }, [])
+
+  // Fetch support WhatsApp number
+  useEffect(() => {
+    fetch('/api/settings?key=support_whatsapp')
+      .then(r => r.json())
+      .then(d => { if (d.value) setSupportWhatsapp(String(d.value)) })
       .catch(() => {})
   }, [])
 
@@ -2714,21 +2724,23 @@ export default function HomePage() {
           <span className="text-[10px] font-bold tracking-wide text-amber-100">{uiLang === 'ar' ? 'EN' : 'AR'}</span>
         </button>
 
-        {/* Floating WhatsApp support button */}
-        <a
-          href={`https://wa.me/201000000000?text=${encodeURIComponent(uiLang === 'ar' ? 'أحتاج مساعدة في SipFlow' : 'I need help with SipFlow')}`}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="fixed bottom-5 left-5 z-30 flex h-12 w-12 items-center justify-center rounded-full transition-all hover:scale-110 active:scale-95"
-          style={{ background: 'linear-gradient(135deg, #25D366, #128C7E)', boxShadow: '0 10px 30px rgba(37,211,102,0.4), 0 0 24px rgba(37,211,102,0.25)' }}
-          title={uiLang === 'ar' ? 'دعم WhatsApp' : 'WhatsApp support'}
-        >
-          <MessageCircle className="h-5 w-5 text-white" />
-          <span className="absolute -top-0.5 -right-0.5 flex h-2.5 w-2.5">
-            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
-            <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-emerald-300" />
-          </span>
-        </a>
+        {/* Floating WhatsApp support button — hidden when no support number is configured */}
+        {supportWhatsappDigits && (
+          <a
+            href={`https://wa.me/${supportWhatsappDigits}?text=${encodeURIComponent(uiLang === 'ar' ? 'أحتاج مساعدة في SipFlow' : 'I need help with SipFlow')}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="fixed bottom-5 left-5 z-30 flex h-12 w-12 items-center justify-center rounded-full transition-all hover:scale-110 active:scale-95"
+            style={{ background: 'linear-gradient(135deg, #25D366, #128C7E)', boxShadow: '0 10px 30px rgba(37,211,102,0.4), 0 0 24px rgba(37,211,102,0.25)' }}
+            title={uiLang === 'ar' ? 'دعم WhatsApp' : 'WhatsApp support'}
+          >
+            <MessageCircle className="h-5 w-5 text-white" />
+            <span className="absolute -top-0.5 -right-0.5 flex h-2.5 w-2.5">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
+              <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-emerald-300" />
+            </span>
+          </a>
+        )}
 
         {/* PWA install banner */}
         {showPwaBanner && (

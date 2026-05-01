@@ -63,6 +63,7 @@ PostgreSQL returns DECIMAL/NUMERIC columns as strings (e.g., `'15.00'`). All `dr
 - **وضع المكان مغلق (Closed Mode):** Place admin can toggle open/closed in Settings tab. When closed, saves key `place_closed_${placeId}=true` via `/api/settings`. Customer page fetches this on load; when closed, shows a full-screen red overlay blocking the menu. Admin can set a custom closure message stored as `place_closed_message_${placeId}`.
 - **Order Rating System:** Customers see 1-5 star rating widget in the order tracker after all orders are delivered. Ratings stored in DB and displayed in cashier report tab with avg + distribution chart.
 - **WhatsApp Notifications:** Customer enters optional phone number when ordering. When bar marks order ready, a popup appears with a WhatsApp button linking to `wa.me/<phone>?text=...` to notify the customer.
+- **Floating WhatsApp support button:** Landing page renders a floating WhatsApp button using `app_settings.support_whatsapp` (digits only, with country code). Dev admin manages it from Settings tab. Empty value hides the button instead of opening a broken chat.
 - **DB additions:** `orders.rating` (smallint), `orders.rating_comment` (text), `orders.customer_phone` (text)
 
 ## Architecture

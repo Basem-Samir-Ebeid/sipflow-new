@@ -1083,6 +1083,42 @@ export function AdminPanel({
     } catch {}
   }
 
+  // ── Fetch support WhatsApp number (dev admin) ──
+  const fetchSupportWhatsapp = async () => {
+    try {
+      const res = await fetch('/api/settings?key=support_whatsapp')
+      if (res.ok) {
+        const d = await res.json()
+        setSupportWhatsapp(d.value ? String(d.value) : '')
+      }
+    } catch {}
+  }
+
+  // ── Save support WhatsApp number ──
+  const handleSaveSupportWhatsapp = async () => {
+    const trimmed = supportWhatsapp.trim()
+    const digits = trimmed.replace(/\D+/g, '')
+    if (trimmed && !digits) {
+      toast.error('أدخل رقم WhatsApp صحيح')
+      return
+    }
+    setIsSavingSupportWhatsapp(true)
+    try {
+      const res = await fetch('/api/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ key: 'support_whatsapp', value: digits }),
+      })
+      if (!res.ok) throw new Error('save failed')
+      setSupportWhatsapp(digits)
+      toast.success(digits ? 'تم حفظ رقم دعم WhatsApp' : 'تم إخفاء زر دعم WhatsApp')
+    } catch {
+      toast.error('خطأ في حفظ الرقم')
+    } finally {
+      setIsSavingSupportWhatsapp(false)
+    }
+  }
+
   // ── Save global banner ──
   const handleSaveBanner = async () => {
     setIsSavingBanner(true)
@@ -1668,6 +1704,10 @@ export function AdminPanel({
   const [globalBannerText, setGlobalBannerText] = useState('')
   const [globalBannerColor, setGlobalBannerColor] = useState('amber')
   const [isSavingBanner, setIsSavingBanner] = useState(false)
+
+  // Support WhatsApp number (dev admin)
+  const [supportWhatsapp, setSupportWhatsapp] = useState('')
+  const [isSavingSupportWhatsapp, setIsSavingSupportWhatsapp] = useState(false)
 
   // Broadcast message
   const [broadcastTitle, setBroadcastTitle] = useState('')
@@ -2903,7 +2943,7 @@ const handleSaveSettings = async () => {
     if (v === 'tables' && !isDevAdmin) { fetchPlaceTableCount(); fetchInventory() }
     if (v === 'settings' && !isDevAdmin && placeId) { fetchClosedStatus() }
     if (v === 'settings' && !isDevAdmin && placeId) { fetchPlaces().then(list => { const p = list.find((pl: Place) => pl.id === placeId); if (p) { setReservationsEnabledMap(prev => ({ ...prev, [placeId]: !!p.reservations_enabled })); setOrderTrackingMap(prev => ({ ...prev, [placeId]: p.order_tracking_enabled !== false })) } }) }
-    if (v === 'settings' && isDevAdmin) { fetchGlobalBanner(); fetchPlaces().then(list => { const m: Record<string, boolean> = {}; list.forEach((p: Place) => { m[p.id] = p.order_tracking_enabled !== false }); setOrderTrackingMap(m) }) }
+    if (v === 'settings' && isDevAdmin) { fetchGlobalBanner(); fetchSupportWhatsapp(); fetchPlaces().then(list => { const m: Record<string, boolean> = {}; list.forEach((p: Place) => { m[p.id] = p.order_tracking_enabled !== false }); setOrderTrackingMap(m) }) }
     if (v === 'cashier') { if (isDevAdmin) { fetchPlaces().then(list => { if (list.length > 0) setCashierPlaceId(prev => { const chosen = prev || list[0].id; fetchCashierOrders(chosen); return chosen }) }); fetchCashierUsers() } else if (placeId) { setCashierPlaceId(placeId); setCashierUserPlaceId(placeId); setTableNewPlaceId(placeId); setTablesPlaceId(placeId); setFeeSettingsPlaceId(placeId); fetchCashierOrders(placeId); fetchCashierUsers(placeId); fetchTableUsers(placeId); fetchPlaces().then(list => { const p = list.find((pl: Place) => pl.id === placeId); if (p) { setFeeServiceCharge(p.service_charge != null ? String(p.service_charge) : '0'); setFeeTaxRate(p.tax_rate != null ? String(p.tax_rate) : '0') } }) } }
     if (v === 'reservations') { if (!isDevAdmin && placeId) { setReservationsPlaceId(placeId); fetchReservations(placeId) } fetchPlaces().then(list => { if (list.length > 0) { const pid = isDevAdmin ? (reservationsPlaceId || list[0].id) : (placeId || list[0].id); if (isDevAdmin) { setReservationsPlaceId(pid); fetchReservations(pid) } const p = list.find((pl: Place) => pl.id === pid); if (p) setReservationsEnabledMap(prev => ({ ...prev, [pid]: !!p.reservations_enabled })) } }) }
     if (v === 'analytics') {
@@ -6151,6 +6191,48 @@ const handleSaveSettings = async () => {
                 disabled={isSavingBanner}
               >
                 {isSavingBanner ? 'جاري الحفظ...' : '💾 حفظ البنر'}
+              </Button>
+            </div>
+          )}
+
+          {/* ── Support WhatsApp number (dev admin only) ── */}
+          {isDevAdmin && (
+            <div className="rounded-2xl p-4 space-y-3" style={{
+              background: supportWhatsapp ? 'rgba(37,211,102,0.06)' : 'rgba(255,255,255,0.02)',
+              border: `1px solid ${supportWhatsapp ? 'rgba(37,211,102,0.35)' : 'rgba(255,255,255,0.08)'}`
+            }}>
+              <div className="flex items-center gap-2">
+                <span className="text-lg">💬</span>
+                <div>
+                  <h3 className="text-sm font-bold text-foreground">رقم دعم WhatsApp</h3>
+                  <p className="text-xs text-muted-foreground">يظهر كزر عائم في الصفحة الرئيسية. اتركه فارغاً لإخفاء الزر.</p>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label className="text-xs text-muted-foreground">الرقم (مع رمز الدولة، بدون + أو مسافات)</Label>
+                <Input
+                  value={supportWhatsapp}
+                  onChange={e => setSupportWhatsapp(e.target.value)}
+                  placeholder="مثال: 201234567890"
+                  inputMode="tel"
+                  dir="ltr"
+                  className="border-border bg-muted text-foreground text-sm"
+                />
+                {supportWhatsapp.trim() && (
+                  <p className="text-[10px] text-muted-foreground" dir="ltr">
+                    https://wa.me/{supportWhatsapp.replace(/\D+/g, '')}
+                  </p>
+                )}
+              </div>
+
+              <Button
+                className="w-full"
+                style={{ background: 'rgba(37,211,102,0.15)', color: '#25D366', border: '1px solid rgba(37,211,102,0.35)' }}
+                onClick={handleSaveSupportWhatsapp}
+                disabled={isSavingSupportWhatsapp}
+              >
+                {isSavingSupportWhatsapp ? 'جاري الحفظ...' : '💾 حفظ رقم الدعم'}
               </Button>
             </div>
           )}

@@ -204,3 +204,7 @@ CREATE INDEX IF NOT EXISTS idx_reservations_place_id ON reservations(place_id);
 -- =============================================
 INSERT INTO app_settings (key, value) VALUES ('max_order_receivers', '5')
 ON CONFLICT (key) DO NOTHING;
+
+-- Support WhatsApp number (digits only, with country code; empty hides the floating button)
+INSERT INTO app_settings (key, value) VALUES ('support_whatsapp', '')
+ON CONFLICT (key) DO NOTHING;
