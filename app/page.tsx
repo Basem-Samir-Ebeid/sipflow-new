@@ -133,6 +133,7 @@ export default function HomePage() {
   const [whatsappOpen, setWhatsappOpen] = useState(false)
   const [supportWhatsapp, setSupportWhatsapp] = useState('')
   const supportWhatsappDigits = supportWhatsapp.replace(/\D+/g, '')
+  const [supportWhatsappMsg, setSupportWhatsappMsg] = useState('')
   const [welcomeName, setWelcomeName] = useState('')
   const [showMessages, setShowMessages] = useState(false)
   const [showReceipt, setShowReceipt] = useState(false)
@@ -405,11 +406,15 @@ export default function HomePage() {
       .catch(() => {})
   }, [])
 
-  // Fetch support WhatsApp number
+  // Fetch support WhatsApp number and greeting
   useEffect(() => {
     fetch('/api/settings?key=support_whatsapp')
       .then(r => r.json())
       .then(d => { if (d.value) setSupportWhatsapp(String(d.value)) })
+      .catch(() => {})
+    fetch('/api/settings?key=support_whatsapp_msg')
+      .then(r => r.json())
+      .then(d => { if (d.value) setSupportWhatsappMsg(String(d.value)) })
       .catch(() => {})
   }, [])
 
@@ -621,24 +626,24 @@ export default function HomePage() {
       // not a URL — treat as raw place code
     }
     if (!codeToTry) {
-      toast.error('لم نقدر نقرأ الكود')
+      toast.error(uiLang === 'ar' ? 'لم نقدر نقرأ الكود' : "Couldn't read the QR code")
       return
     }
     try {
       const res = await fetch(`/api/places/lookup?code=${encodeURIComponent(codeToTry)}`)
       const data = await res.json()
       if (data?.error || !data?.id) {
-        toast.error('المكان غير موجود')
+        toast.error(uiLang === 'ar' ? 'المكان غير موجود' : 'Place not found')
         return
       }
       if (tableFromQr) setTableNumber(tableFromQr)
       setCurrentPlace(data)
       try { localStorage.setItem('qa3da_place', JSON.stringify(data)) } catch {}
-      toast.success(`أهلاً بك في ${data.name}`)
+      toast.success(uiLang === 'ar' ? `أهلاً بك في ${data.name}` : `Welcome to ${data.name}`)
     } catch {
-      toast.error('تعذّر الاتصال بالخادم')
+      toast.error(uiLang === 'ar' ? 'تعذّر الاتصال بالخادم' : 'Could not connect to server')
     }
-  }, [])
+  }, [uiLang])
 
   const handleResumeLastPlace = useCallback(async () => {
     if (!lastVisitedPlace) return
@@ -649,12 +654,12 @@ export default function HomePage() {
         setCurrentPlace(data)
         try { localStorage.setItem('qa3da_place', JSON.stringify(data)) } catch {}
       } else {
-        toast.error('المكان لم يعد متاحاً')
+        toast.error(uiLang === 'ar' ? 'المكان لم يعد متاحاً' : 'Place is no longer available')
       }
     } catch {
-      toast.error('تعذّر الاتصال')
+      toast.error(uiLang === 'ar' ? 'تعذّر الاتصال' : 'Could not connect')
     }
-  }, [lastVisitedPlace])
+  }, [lastVisitedPlace, uiLang])
 
   // Fetch place closed status and maintenance mode whenever place changes
   useEffect(() => {
@@ -2727,7 +2732,7 @@ export default function HomePage() {
         {/* Floating WhatsApp support button — hidden when no support number is configured */}
         {supportWhatsappDigits && (
           <a
-            href={`https://wa.me/${supportWhatsappDigits}?text=${encodeURIComponent(uiLang === 'ar' ? 'أحتاج مساعدة في SipFlow' : 'I need help with SipFlow')}`}
+            href={`https://wa.me/${supportWhatsappDigits}?text=${encodeURIComponent(supportWhatsappMsg || (uiLang === 'ar' ? 'أحتاج مساعدة في SipFlow' : 'I need help with SipFlow'))}`}
             target="_blank"
             rel="noopener noreferrer"
             className="fixed bottom-5 left-5 z-30 flex h-12 w-12 items-center justify-center rounded-full transition-all hover:scale-110 active:scale-95"
@@ -3249,7 +3254,7 @@ export default function HomePage() {
             {/* Backdrop */}
             <div className="fixed inset-0 z-40 bg-black/75 backdrop-blur-md" onClick={() => setShowPlacesPicker(false)} />
             {/* Sheet */}
-            <div className="fixed bottom-0 left-0 right-0 z-50 rounded-t-[2rem] flex flex-col" dir="rtl"
+            <div className="fixed bottom-0 left-0 right-0 z-50 rounded-t-[2rem] flex flex-col" dir={uiLang === 'ar' ? 'rtl' : 'ltr'}
               style={{
                 background: 'linear-gradient(180deg, #0d0a1f 0%, #080613 100%)',
                 border: '1px solid rgba(184,137,63,0.2)',
@@ -3276,8 +3281,8 @@ export default function HomePage() {
                   <X className="h-4 w-4" />
                 </button>
                 <div className="text-center">
-                  <p className="font-black text-white text-base tracking-tight">اختر مكانك</p>
-                  <p className="text-[9px] tracking-[0.22em] uppercase mt-0.5 font-medium" style={{ color: 'rgba(148,163,184,0.4)' }}>Choose Your Destination</p>
+                  <p className="font-black text-white text-base tracking-tight">{uiLang === 'ar' ? 'اختر مكانك' : 'Pick your place'}</p>
+                  <p className="text-[9px] tracking-[0.22em] uppercase mt-0.5 font-medium" style={{ color: 'rgba(148,163,184,0.4)' }}>{uiLang === 'ar' ? 'Choose Your Destination' : 'Select a venue'}</p>
                 </div>
                 <div className="flex h-8 w-8 items-center justify-center rounded-xl" style={{ background: 'rgba(184,137,63,0.1)', border: '1px solid rgba(184,137,63,0.15)' }}>
                   <MapPin className="h-4 w-4 text-[#d4af62]" />
@@ -3289,12 +3294,12 @@ export default function HomePage() {
                 {isLoadingPlaces ? (
                   <div className="flex flex-col items-center justify-center gap-3 py-14">
                     <div className="h-8 w-8 rounded-full border-2 border-[#b8893f]/20 border-t-[#b8893f] animate-spin" />
-                    <p className="text-sm font-medium" style={{ color: 'rgba(148,163,184,0.5)' }}>جاري تحميل الأماكن...</p>
+                    <p className="text-sm font-medium" style={{ color: 'rgba(148,163,184,0.5)' }}>{uiLang === 'ar' ? 'جاري تحميل الأماكن...' : 'Loading places…'}</p>
                   </div>
                 ) : allActivePlaces.length === 0 ? (
                   <div className="flex flex-col items-center justify-center gap-3 py-14">
                     <span className="text-5xl">🏪</span>
-                    <p className="text-sm font-medium" style={{ color: 'rgba(148,163,184,0.5)' }}>لا توجد أماكن متاحة حالياً</p>
+                    <p className="text-sm font-medium" style={{ color: 'rgba(148,163,184,0.5)' }}>{uiLang === 'ar' ? 'لا توجد أماكن متاحة حالياً' : 'No places available right now'}</p>
                   </div>
                 ) : (
                   <div className="grid grid-cols-2 gap-3 pb-4">
@@ -3333,7 +3338,7 @@ export default function HomePage() {
                         {/* Select hint */}
                         <div className="flex items-center justify-center gap-1 rounded-full px-2.5 py-1 w-full" style={{ background: 'rgba(184,137,63,0.08)', border: '1px solid rgba(184,137,63,0.14)' }}>
                           <MapPin className="h-2.5 w-2.5 text-[#d4af62]/70" />
-                          <span className="text-[9px] font-semibold tracking-wider uppercase text-[#d4af62]/70">اختر</span>
+                          <span className="text-[9px] font-semibold tracking-wider uppercase text-[#d4af62]/70">{uiLang === 'ar' ? 'اختر' : 'Select'}</span>
                         </div>
                       </button>
                     ))}

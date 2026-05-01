@@ -1083,15 +1083,40 @@ export function AdminPanel({
     } catch {}
   }
 
-  // ── Fetch support WhatsApp number (dev admin) ──
+  // ── Fetch support WhatsApp number and greeting (dev admin) ──
   const fetchSupportWhatsapp = async () => {
     try {
-      const res = await fetch('/api/settings?key=support_whatsapp')
-      if (res.ok) {
-        const d = await res.json()
+      const [numRes, msgRes] = await Promise.all([
+        fetch('/api/settings?key=support_whatsapp'),
+        fetch('/api/settings?key=support_whatsapp_msg'),
+      ])
+      if (numRes.ok) {
+        const d = await numRes.json()
         setSupportWhatsapp(d.value ? String(d.value) : '')
       }
+      if (msgRes.ok) {
+        const d = await msgRes.json()
+        setSupportWhatsappMsg(d.value ? String(d.value) : '')
+      }
     } catch {}
+  }
+
+  // ── Save support WhatsApp greeting message ──
+  const handleSaveWhatsappMsg = async () => {
+    setIsSavingWhatsappMsg(true)
+    try {
+      const res = await fetch('/api/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ key: 'support_whatsapp_msg', value: supportWhatsappMsg.trim() }),
+      })
+      if (!res.ok) throw new Error('save failed')
+      toast.success(supportWhatsappMsg.trim() ? 'تم حفظ رسالة الترحيب' : 'تم مسح الرسالة — سيُستخدم النص الافتراضي')
+    } catch {
+      toast.error('خطأ في حفظ رسالة الترحيب')
+    } finally {
+      setIsSavingWhatsappMsg(false)
+    }
   }
 
   // ── Save support WhatsApp number ──
@@ -1705,9 +1730,11 @@ export function AdminPanel({
   const [globalBannerColor, setGlobalBannerColor] = useState('amber')
   const [isSavingBanner, setIsSavingBanner] = useState(false)
 
-  // Support WhatsApp number (dev admin)
+  // Support WhatsApp number and greeting message (dev admin)
   const [supportWhatsapp, setSupportWhatsapp] = useState('')
   const [isSavingSupportWhatsapp, setIsSavingSupportWhatsapp] = useState(false)
+  const [supportWhatsappMsg, setSupportWhatsappMsg] = useState('')
+  const [isSavingWhatsappMsg, setIsSavingWhatsappMsg] = useState(false)
 
   // Broadcast message
   const [broadcastTitle, setBroadcastTitle] = useState('')
@@ -6234,6 +6261,27 @@ const handleSaveSettings = async () => {
               >
                 {isSavingSupportWhatsapp ? 'جاري الحفظ...' : '💾 حفظ رقم الدعم'}
               </Button>
+
+              {/* Greeting message */}
+              <div className="pt-2 space-y-2" style={{ borderTop: '1px solid rgba(37,211,102,0.1)' }}>
+                <Label className="text-xs text-muted-foreground">رسالة الترحيب المرسلة مع الضغط على الزر (اختياري)</Label>
+                <Input
+                  value={supportWhatsappMsg}
+                  onChange={e => setSupportWhatsappMsg(e.target.value)}
+                  placeholder="مثال: مرحباً، أحتاج مساعدة في SipFlow"
+                  className="border-border bg-muted text-foreground text-sm"
+                />
+                <p className="text-[10px] text-muted-foreground">اتركها فارغة لاستخدام الرسالة الافتراضية.</p>
+                <Button
+                  size="sm"
+                  className="w-full"
+                  style={{ background: 'rgba(37,211,102,0.1)', color: '#25D366', border: '1px solid rgba(37,211,102,0.2)' }}
+                  onClick={handleSaveWhatsappMsg}
+                  disabled={isSavingWhatsappMsg}
+                >
+                  {isSavingWhatsappMsg ? 'جاري الحفظ...' : '💬 حفظ رسالة الترحيب'}
+                </Button>
+              </div>
             </div>
           )}
 
