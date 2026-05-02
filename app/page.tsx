@@ -2742,48 +2742,6 @@ export default function HomePage() {
           <span className="text-[10px] font-bold tracking-wide text-amber-100">{uiLang === 'ar' ? 'EN' : 'AR'}</span>
         </button>
 
-        {/* Floating WhatsApp — customers contact place owner */}
-        {customerWaDigits && (
-          <div className="fixed bottom-5 left-5 z-30 flex flex-col items-center gap-1">
-            <a
-              href={`https://wa.me/${customerWaDigits}?text=${encodeURIComponent(supportWhatsappMsg || (uiLang === 'ar' ? `مرحباً، أحتاج مساعدة من ${customerWaPlaceName}` : `Hello, I need help from ${customerWaPlaceName}`))}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="relative flex h-12 w-12 items-center justify-center rounded-full transition-all hover:scale-110 active:scale-95"
-              style={{ background: 'linear-gradient(135deg, #25D366, #128C7E)', boxShadow: '0 10px 30px rgba(37,211,102,0.4), 0 0 24px rgba(37,211,102,0.25)' }}
-              title={uiLang === 'ar' ? 'تواصل مع المكان عبر WhatsApp' : 'Contact place on WhatsApp'}
-              onClick={() => { if (customerWaPlaceId) fetch('/api/whatsapp-clicks', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ place_id: customerWaPlaceId }) }).catch(() => {}) }}
-            >
-              <MessageCircle className="h-5 w-5 text-white" />
-              <span className="absolute -top-0.5 -right-0.5 flex h-2.5 w-2.5">
-                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
-                <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-emerald-300" />
-              </span>
-            </a>
-            <span className="text-[10px] font-bold text-emerald-300 rounded-full px-2 py-0.5 backdrop-blur-sm" style={{ background: 'rgba(0,0,0,0.65)' }} dir="ltr">+{customerWaDigits}</span>
-          </div>
-        )}
-
-        {/* Floating WhatsApp — place admins contact developer */}
-        {adminWaDigits && (
-          <div className="fixed bottom-5 left-5 z-30 flex flex-col items-center gap-1">
-            <a
-              href={`https://wa.me/${adminWaDigits}?text=${encodeURIComponent(uiLang === 'ar' ? 'مرحباً، أنا أدمن مكان وأحتاج مساعدة من المطور' : 'Hello, I am a place admin and need help from the developer')}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="relative flex h-12 w-12 items-center justify-center rounded-full transition-all hover:scale-110 active:scale-95"
-              style={{ background: 'linear-gradient(135deg, #25D366, #128C7E)', boxShadow: '0 10px 30px rgba(37,211,102,0.4), 0 0 24px rgba(37,211,102,0.25)' }}
-              title={uiLang === 'ar' ? 'تواصل مع المطور عبر WhatsApp' : 'Contact developer on WhatsApp'}
-            >
-              <MessageCircle className="h-5 w-5 text-white" />
-              <span className="absolute -top-0.5 -right-0.5 flex h-2.5 w-2.5">
-                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
-                <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-emerald-300" />
-              </span>
-            </a>
-            <span className="text-[10px] font-bold text-emerald-300 rounded-full px-2 py-0.5 backdrop-blur-sm" style={{ background: 'rgba(0,0,0,0.65)' }} dir="ltr">+{adminWaDigits}</span>
-          </div>
-        )}
 
         {/* PWA install banner */}
         {showPwaBanner && (
@@ -6350,6 +6308,49 @@ export default function HomePage() {
             ))}
           </div>
         </>
+      )}
+
+      {/* Floating WhatsApp — customers contact place owner */}
+      {customerWaDigits && (
+        <div className="fixed bottom-5 left-5 z-30 flex flex-col items-center gap-1">
+          <a
+            href={`https://wa.me/${customerWaDigits}?text=${encodeURIComponent(supportWhatsappMsg || (uiLang === 'ar' ? `مرحباً، أحتاج مساعدة من ${customerWaPlaceName}` : `Hello, I need help from ${customerWaPlaceName}`))}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="relative flex h-12 w-12 items-center justify-center rounded-full transition-all hover:scale-110 active:scale-95"
+            style={{ background: 'linear-gradient(135deg, #25D366, #128C7E)', boxShadow: '0 10px 30px rgba(37,211,102,0.4), 0 0 24px rgba(37,211,102,0.25)' }}
+            title={uiLang === 'ar' ? 'تواصل مع المكان عبر WhatsApp' : 'Contact place on WhatsApp'}
+            onClick={() => { if (customerWaPlaceId) fetch('/api/whatsapp-clicks', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ place_id: customerWaPlaceId }) }).catch(() => {}) }}
+          >
+            <MessageCircle className="h-5 w-5 text-white" />
+            <span className="absolute -top-0.5 -right-0.5 flex h-2.5 w-2.5">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
+              <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-emerald-300" />
+            </span>
+          </a>
+          <span className="text-[10px] font-bold text-emerald-300 rounded-full px-2 py-0.5 backdrop-blur-sm" style={{ background: 'rgba(0,0,0,0.65)' }} dir="ltr">+{customerWaDigits}</span>
+        </div>
+      )}
+
+      {/* Floating WhatsApp — place admins contact developer */}
+      {adminWaDigits && (
+        <div className="fixed bottom-5 left-5 z-30 flex flex-col items-center gap-1">
+          <a
+            href={`https://wa.me/${adminWaDigits}?text=${encodeURIComponent(uiLang === 'ar' ? 'مرحباً، أنا أدمن مكان وأحتاج مساعدة من المطور' : 'Hello, I am a place admin and need help from the developer')}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="relative flex h-12 w-12 items-center justify-center rounded-full transition-all hover:scale-110 active:scale-95"
+            style={{ background: 'linear-gradient(135deg, #25D366, #128C7E)', boxShadow: '0 10px 30px rgba(37,211,102,0.4), 0 0 24px rgba(37,211,102,0.25)' }}
+            title={uiLang === 'ar' ? 'تواصل مع المطور عبر WhatsApp' : 'Contact developer on WhatsApp'}
+          >
+            <MessageCircle className="h-5 w-5 text-white" />
+            <span className="absolute -top-0.5 -right-0.5 flex h-2.5 w-2.5">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
+              <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-emerald-300" />
+            </span>
+          </a>
+          <span className="text-[10px] font-bold text-emerald-300 rounded-full px-2 py-0.5 backdrop-blur-sm" style={{ background: 'rgba(0,0,0,0.65)' }} dir="ltr">+{adminWaDigits}</span>
+        </div>
       )}
 
     </main>
