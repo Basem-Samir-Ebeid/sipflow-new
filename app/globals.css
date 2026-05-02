@@ -197,3 +197,9 @@
   stroke-dasharray: 14 4;
   animation: zigzag-dash-flow 0.55s linear infinite;
 }
+
+@keyframes waPulse {
+  0%   { box-shadow: 0 4px 20px rgba(37,211,102,0.5), 0 0 0 0 rgba(37,211,102,0.45); }
+  70%  { box-shadow: 0 4px 20px rgba(37,211,102,0.5), 0 0 0 14px rgba(37,211,102,0); }
+  100% { box-shadow: 0 4px 20px rgba(37,211,102,0.5), 0 0 0 0 rgba(37,211,102,0); }
+}

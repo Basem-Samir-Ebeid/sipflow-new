@@ -805,5 +805,43 @@ export const db = {
       GROUP BY d.name
       ORDER BY quantity DESC
     `
+  },
+
+  // ─── WhatsApp Clicks ────────────────────────────────────
+  async ensureWaClicksTable() {
+    await sql`
+      CREATE TABLE IF NOT EXISTS whatsapp_clicks (
+        id        SERIAL PRIMARY KEY,
+        place_id  TEXT NOT NULL,
+        clicked_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      )
+    `
+    await sql`CREATE INDEX IF NOT EXISTS idx_wa_clicks_place_id ON whatsapp_clicks(place_id)`
+    await sql`CREATE INDEX IF NOT EXISTS idx_wa_clicks_clicked_at ON whatsapp_clicks(clicked_at)`
+  },
+
+  async logWaClick(placeId: string) {
+    await this.ensureWaClicksTable()
+    await sql`INSERT INTO whatsapp_clicks (place_id) VALUES (${placeId})`
+  },
+
+  async getWaClickStats(placeId: string) {
+    await this.ensureWaClicksTable()
+    const rows = await sql`
+      SELECT
+        COUNT(*)                                                        AS total,
+        COUNT(*) FILTER (WHERE clicked_at >= CURRENT_DATE)             AS today,
+        COUNT(*) FILTER (WHERE clicked_at >= date_trunc('week', NOW())) AS week,
+        MAX(clicked_at)                                                 AS last_click
+      FROM whatsapp_clicks
+      WHERE place_id = ${placeId}
+    `
+    const r = rows[0] || {}
+    return {
+      total:      Number(r.total)      || 0,
+      today:      Number(r.today)      || 0,
+      week:       Number(r.week)       || 0,
+      last_click: r.last_click ?? null,
+    }
   }
 }
