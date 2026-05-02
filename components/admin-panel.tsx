@@ -1149,6 +1149,21 @@ export function AdminPanel({
     }
   }
 
+  // ── Fetch WhatsApp click stats for place ──
+  const fetchWaClickStats = async (pid?: string) => {
+    const id = pid || placeId
+    if (!id) return
+    setIsFetchingWaStats(true)
+    try {
+      const res = await fetch(`/api/whatsapp-clicks?place_id=${id}`)
+      if (res.ok) {
+        const data = await res.json()
+        setWaClickStats({ total: data.total ?? 0, today: data.today ?? 0, week: data.week ?? 0, last_click: data.last_click ?? null })
+      }
+    } catch {}
+    finally { setIsFetchingWaStats(false) }
+  }
+
   // ── Save place WhatsApp number (place admin) ──
   const handleSavePlaceWhatsapp = async () => {
     const digits = placeWhatsapp.trim().replace(/\D+/g, '')
@@ -1286,7 +1301,7 @@ export function AdminPanel({
     } catch {}
   }
 
-  // Fetch table count and place WhatsApp for table map
+  // Fetch table count, place WhatsApp, and click stats for table map
   const fetchPlaceTableCount = async () => {
     if (!placeId) return
     try {
@@ -1299,6 +1314,7 @@ export function AdminPanel({
     } catch (err) {
       console.error('Error fetching place details:', err)
     }
+    fetchWaClickStats(placeId)
   }
 
   // Message state
@@ -1789,6 +1805,9 @@ export function AdminPanel({
   // Developer WhatsApp number (set by dev admin, shown to place admins)
   const [devWhatsappNum, setDevWhatsappNum] = useState('')
   const [isSavingDevWhatsapp, setIsSavingDevWhatsapp] = useState(false)
+  // WhatsApp click stats (place admin view)
+  const [waClickStats, setWaClickStats] = useState<{ total: number; today: number; week: number; last_click: string | null } | null>(null)
+  const [isFetchingWaStats, setIsFetchingWaStats] = useState(false)
 
   // Broadcast message
   const [broadcastTitle, setBroadcastTitle] = useState('')
@@ -6027,20 +6046,57 @@ const handleSaveSettings = async () => {
             </div>
           )}
 
-          {/* ── Place WhatsApp number (place admin sets for customers) ── */}
+          {/* ── Place WhatsApp number + click stats (place admin) ── */}
           {!isDevAdmin && placeId && currentPlace && (
             <div className="rounded-2xl p-4 space-y-3" style={{
               background: placeWhatsapp ? 'rgba(37,211,102,0.06)' : 'rgba(255,255,255,0.02)',
               border: `1px solid ${placeWhatsapp ? 'rgba(37,211,102,0.35)' : 'rgba(255,255,255,0.08)'}`
             }}>
-              <div className="flex items-center gap-2">
-                <span className="text-lg">💬</span>
-                <div>
-                  <h3 className="text-sm font-bold text-foreground">رقم WhatsApp المكان</h3>
-                  <p className="text-xs text-muted-foreground">يظهر كزر عائم للزبائن ليتواصلوا معك مباشرة. اتركه فارغاً لإخفاء الزر.</p>
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2">
+                  <span className="text-lg">💬</span>
+                  <div>
+                    <h3 className="text-sm font-bold text-foreground">رقم WhatsApp المكان</h3>
+                    <p className="text-xs text-muted-foreground">يظهر كزر عائم للزبائن ليتواصلوا معك مباشرة. اتركه فارغاً لإخفاء الزر.</p>
+                  </div>
                 </div>
+                <button
+                  onClick={() => fetchWaClickStats()}
+                  disabled={isFetchingWaStats}
+                  className="text-[10px] text-emerald-400 hover:text-emerald-300 transition-colors"
+                  title="تحديث الإحصائيات"
+                >
+                  {isFetchingWaStats ? '⏳' : '🔄'}
+                </button>
               </div>
-              <div className="space-y-2">
+
+              {/* Click stats cards */}
+              {waClickStats !== null && (
+                <div className="grid grid-cols-3 gap-2">
+                  <div className="rounded-xl p-2.5 text-center" style={{ background: 'rgba(37,211,102,0.08)', border: '1px solid rgba(37,211,102,0.2)' }}>
+                    <p className="text-lg font-black text-emerald-400">{waClickStats.total}</p>
+                    <p className="text-[10px] text-muted-foreground">الإجمالي</p>
+                  </div>
+                  <div className="rounded-xl p-2.5 text-center" style={{ background: 'rgba(37,211,102,0.08)', border: '1px solid rgba(37,211,102,0.2)' }}>
+                    <p className="text-lg font-black text-emerald-400">{waClickStats.week}</p>
+                    <p className="text-[10px] text-muted-foreground">هذا الأسبوع</p>
+                  </div>
+                  <div className="rounded-xl p-2.5 text-center" style={{ background: 'rgba(37,211,102,0.08)', border: '1px solid rgba(37,211,102,0.2)' }}>
+                    <p className="text-lg font-black text-emerald-400">{waClickStats.today}</p>
+                    <p className="text-[10px] text-muted-foreground">اليوم</p>
+                  </div>
+                </div>
+              )}
+              {waClickStats?.last_click && (
+                <p className="text-[10px] text-muted-foreground text-center">
+                  آخر ضغطة: {new Date(waClickStats.last_click).toLocaleString('ar-EG', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                </p>
+              )}
+              {waClickStats?.total === 0 && (
+                <p className="text-[11px] text-muted-foreground text-center py-1">لم يضغط أي زبون على الزر بعد</p>
+              )}
+
+              <div className="space-y-2" style={{ borderTop: waClickStats !== null ? '1px solid rgba(37,211,102,0.12)' : undefined, paddingTop: waClickStats !== null ? '12px' : undefined }}>
                 <Label className="text-xs text-muted-foreground">الرقم (مع رمز الدولة، بدون + أو مسافات)</Label>
                 <Input
                   value={placeWhatsapp}

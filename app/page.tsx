@@ -2356,6 +2356,7 @@ export default function HomePage() {
     : ''
   const customerWaPlaceName = currentPlace?.name ?? ''
   const adminWaDigits = (isAdmin && !isDevAdmin) ? devWhatsapp.replace(/\D+/g, '') : ''
+  const customerWaPlaceId: string = (!isAdmin && !isDevAdmin && currentPlace) ? String(currentPlace.id) : ''
 
   // Place Selection Screen
   if (!currentPlace && !isAdmin) {
@@ -2751,6 +2752,7 @@ export default function HomePage() {
               className="relative flex h-12 w-12 items-center justify-center rounded-full transition-all hover:scale-110 active:scale-95"
               style={{ background: 'linear-gradient(135deg, #25D366, #128C7E)', boxShadow: '0 10px 30px rgba(37,211,102,0.4), 0 0 24px rgba(37,211,102,0.25)' }}
               title={uiLang === 'ar' ? 'تواصل مع المكان عبر WhatsApp' : 'Contact place on WhatsApp'}
+              onClick={() => { if (customerWaPlaceId) fetch('/api/whatsapp-clicks', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ place_id: customerWaPlaceId }) }).catch(() => {}) }}
             >
               <MessageCircle className="h-5 w-5 text-white" />
               <span className="absolute -top-0.5 -right-0.5 flex h-2.5 w-2.5">
