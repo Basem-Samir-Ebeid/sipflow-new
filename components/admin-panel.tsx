@@ -1083,12 +1083,13 @@ export function AdminPanel({
     } catch {}
   }
 
-  // ── Fetch support WhatsApp number and greeting (dev admin) ──
+  // ── Fetch support WhatsApp number, greeting, and developer WhatsApp (dev admin) ──
   const fetchSupportWhatsapp = async () => {
     try {
-      const [numRes, msgRes] = await Promise.all([
+      const [numRes, msgRes, devRes] = await Promise.all([
         fetch('/api/settings?key=support_whatsapp'),
         fetch('/api/settings?key=support_whatsapp_msg'),
+        fetch('/api/settings?key=dev_whatsapp'),
       ])
       if (numRes.ok) {
         const d = await numRes.json()
@@ -1097,6 +1098,10 @@ export function AdminPanel({
       if (msgRes.ok) {
         const d = await msgRes.json()
         setSupportWhatsappMsg(d.value ? String(d.value) : '')
+      }
+      if (devRes.ok) {
+        const d = await devRes.json()
+        setDevWhatsappNum(d.value ? String(d.value) : '')
       }
     } catch {}
   }
@@ -1141,6 +1146,48 @@ export function AdminPanel({
       toast.error('خطأ في حفظ الرقم')
     } finally {
       setIsSavingSupportWhatsapp(false)
+    }
+  }
+
+  // ── Save place WhatsApp number (place admin) ──
+  const handleSavePlaceWhatsapp = async () => {
+    const digits = placeWhatsapp.trim().replace(/\D+/g, '')
+    if (placeWhatsapp.trim() && !digits) { toast.error('أدخل رقم WhatsApp صحيح'); return }
+    setIsSavingPlaceWhatsapp(true)
+    try {
+      const res = await fetch(`/api/places/${placeId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ place_whatsapp: digits || null }),
+      })
+      if (!res.ok) throw new Error('save failed')
+      setPlaceWhatsapp(digits)
+      toast.success(digits ? 'تم حفظ رقم WhatsApp المكان ✅' : 'تم إخفاء زر WhatsApp للزبائن')
+    } catch {
+      toast.error('خطأ في حفظ الرقم')
+    } finally {
+      setIsSavingPlaceWhatsapp(false)
+    }
+  }
+
+  // ── Save developer WhatsApp number (dev admin) ──
+  const handleSaveDevWhatsapp = async () => {
+    const digits = devWhatsappNum.trim().replace(/\D+/g, '')
+    if (devWhatsappNum.trim() && !digits) { toast.error('أدخل رقم صحيح'); return }
+    setIsSavingDevWhatsapp(true)
+    try {
+      const res = await fetch('/api/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ key: 'dev_whatsapp', value: digits }),
+      })
+      if (!res.ok) throw new Error('save failed')
+      setDevWhatsappNum(digits)
+      toast.success(digits ? 'تم حفظ رقم المطور ✅' : 'تم إخفاء زر WhatsApp للأدمن')
+    } catch {
+      toast.error('خطأ في حفظ الرقم')
+    } finally {
+      setIsSavingDevWhatsapp(false)
     }
   }
 
@@ -1239,7 +1286,7 @@ export function AdminPanel({
     } catch {}
   }
 
-  // Fetch table count for table map
+  // Fetch table count and place WhatsApp for table map
   const fetchPlaceTableCount = async () => {
     if (!placeId) return
     try {
@@ -1247,6 +1294,7 @@ export function AdminPanel({
       if (res.ok) {
         const data = await res.json()
         setPlaceTableCount(data.table_count || 0)
+        setPlaceWhatsapp(data.place_whatsapp || '')
       }
     } catch (err) {
       console.error('Error fetching place details:', err)
@@ -1735,6 +1783,12 @@ export function AdminPanel({
   const [isSavingSupportWhatsapp, setIsSavingSupportWhatsapp] = useState(false)
   const [supportWhatsappMsg, setSupportWhatsappMsg] = useState('')
   const [isSavingWhatsappMsg, setIsSavingWhatsappMsg] = useState(false)
+  // Place WhatsApp number (set by place admin, shown to customers)
+  const [placeWhatsapp, setPlaceWhatsapp] = useState('')
+  const [isSavingPlaceWhatsapp, setIsSavingPlaceWhatsapp] = useState(false)
+  // Developer WhatsApp number (set by dev admin, shown to place admins)
+  const [devWhatsappNum, setDevWhatsappNum] = useState('')
+  const [isSavingDevWhatsapp, setIsSavingDevWhatsapp] = useState(false)
 
   // Broadcast message
   const [broadcastTitle, setBroadcastTitle] = useState('')
@@ -5973,6 +6027,46 @@ const handleSaveSettings = async () => {
             </div>
           )}
 
+          {/* ── Place WhatsApp number (place admin sets for customers) ── */}
+          {!isDevAdmin && placeId && currentPlace && (
+            <div className="rounded-2xl p-4 space-y-3" style={{
+              background: placeWhatsapp ? 'rgba(37,211,102,0.06)' : 'rgba(255,255,255,0.02)',
+              border: `1px solid ${placeWhatsapp ? 'rgba(37,211,102,0.35)' : 'rgba(255,255,255,0.08)'}`
+            }}>
+              <div className="flex items-center gap-2">
+                <span className="text-lg">💬</span>
+                <div>
+                  <h3 className="text-sm font-bold text-foreground">رقم WhatsApp المكان</h3>
+                  <p className="text-xs text-muted-foreground">يظهر كزر عائم للزبائن ليتواصلوا معك مباشرة. اتركه فارغاً لإخفاء الزر.</p>
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label className="text-xs text-muted-foreground">الرقم (مع رمز الدولة، بدون + أو مسافات)</Label>
+                <Input
+                  value={placeWhatsapp}
+                  onChange={e => setPlaceWhatsapp(e.target.value)}
+                  placeholder="مثال: 201234567890"
+                  inputMode="tel"
+                  dir="ltr"
+                  className="border-border bg-muted text-foreground text-sm"
+                />
+                {placeWhatsapp.trim() && (
+                  <p className="text-[10px] text-muted-foreground" dir="ltr">
+                    https://wa.me/{placeWhatsapp.replace(/\D+/g, '')}
+                  </p>
+                )}
+              </div>
+              <Button
+                className="w-full"
+                style={{ background: 'rgba(37,211,102,0.15)', color: '#25D366', border: '1px solid rgba(37,211,102,0.35)' }}
+                onClick={handleSavePlaceWhatsapp}
+                disabled={isSavingPlaceWhatsapp}
+              >
+                {isSavingPlaceWhatsapp ? 'جاري الحفظ...' : '💾 حفظ رقم WhatsApp'}
+              </Button>
+            </div>
+          )}
+
           {/* ── Maintenance Mode (place admin only) ── */}
           {!isDevAdmin && placeId && (
             <div className="rounded-2xl p-4 space-y-3" style={{
@@ -6282,6 +6376,46 @@ const handleSaveSettings = async () => {
                   {isSavingWhatsappMsg ? 'جاري الحفظ...' : '💬 حفظ رسالة الترحيب'}
                 </Button>
               </div>
+            </div>
+          )}
+
+          {/* ── Developer WhatsApp number (shown to place admins) ── */}
+          {isDevAdmin && (
+            <div className="rounded-2xl p-4 space-y-3" style={{
+              background: devWhatsappNum ? 'rgba(37,211,102,0.06)' : 'rgba(255,255,255,0.02)',
+              border: `1px solid ${devWhatsappNum ? 'rgba(37,211,102,0.35)' : 'rgba(255,255,255,0.08)'}`
+            }}>
+              <div className="flex items-center gap-2">
+                <span className="text-lg">👨‍💻</span>
+                <div>
+                  <h3 className="text-sm font-bold text-foreground">رقم WhatsApp المطور</h3>
+                  <p className="text-xs text-muted-foreground">يظهر كزر عائم لأدمن المكان ليتواصل مع المطور. اتركه فارغاً لإخفاء الزر.</p>
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label className="text-xs text-muted-foreground">الرقم (مع رمز الدولة، بدون + أو مسافات)</Label>
+                <Input
+                  value={devWhatsappNum}
+                  onChange={e => setDevWhatsappNum(e.target.value)}
+                  placeholder="مثال: 201234567890"
+                  inputMode="tel"
+                  dir="ltr"
+                  className="border-border bg-muted text-foreground text-sm"
+                />
+                {devWhatsappNum.trim() && (
+                  <p className="text-[10px] text-muted-foreground" dir="ltr">
+                    https://wa.me/{devWhatsappNum.replace(/\D+/g, '')}
+                  </p>
+                )}
+              </div>
+              <Button
+                className="w-full"
+                style={{ background: 'rgba(37,211,102,0.15)', color: '#25D366', border: '1px solid rgba(37,211,102,0.35)' }}
+                onClick={handleSaveDevWhatsapp}
+                disabled={isSavingDevWhatsapp}
+              >
+                {isSavingDevWhatsapp ? 'جاري الحفظ...' : '💾 حفظ رقم المطور'}
+              </Button>
             </div>
           )}
 

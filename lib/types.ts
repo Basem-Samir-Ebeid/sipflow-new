@@ -19,6 +19,7 @@ export interface Place {
   subscription_plan: string | null
   subscription_expires_at: string | null
   discount_code: string | null
+  place_whatsapp: string | null
   created_at: string
   updated_at: string
 }

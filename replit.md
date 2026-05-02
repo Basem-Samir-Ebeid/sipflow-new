@@ -1,5 +1,13 @@
 # SîpFlõw (Kaada) - Drink Ordering & Management System
 
+## Recent Features (v1.8 — WhatsApp Buttons)
+- **زر WhatsApp للزبائن:** يظهر كزر عائم أسفل اليسار للزبائن غير الأدمن بعد اختيار المكان. يستخدم رقم WhatsApp الخاص بالمكان (`place_whatsapp` في جدول places). لو المكان ما عندهوش رقم خاص، يرجع للرقم العالمي `support_whatsapp`. يعرض الرقم كنص صغير تحت الزر.
+- **زر WhatsApp لأدمن المكان:** يظهر كزر عائم مختلف لأدمن المكان (isAdmin=true) فقط. يستخدم رقم WhatsApp المطور (`dev_whatsapp` setting). يتيح لأدمن المكان التواصل مع المطور مباشرة.
+- **إعدادات أدمن المكان:** قسم جديد "رقم WhatsApp المكان" في تبويب الإعدادات بلوحة أدمن المكان. يحفظ الرقم في حقل `place_whatsapp` في جدول places.
+- **إعدادات المطور الأدمن:** قسم جديد "رقم WhatsApp المطور" في لوحة المطور. يحفظ الرقم في `app_settings` بمفتاح `dev_whatsapp`.
+- **قاعدة البيانات:** أُضيفت column جديدة `place_whatsapp TEXT` لجدول places وإعداد `dev_whatsapp` في app_settings.
+
+
 ## Overview
 A Next.js multi-tenant café/social space drink ordering and management system. Each café location (Place) has isolated data. Customers browse a categorized menu (Hot/Cold/Shisha), place orders with notes, and get assigned a table. Staff manage orders via a dashboard. Admins manage drinks, users, inventory, send broadcast messages, and view revenue analytics. A developer admin manages all places (create/toggle/delete).
 

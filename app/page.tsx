@@ -134,6 +134,7 @@ export default function HomePage() {
   const [supportWhatsapp, setSupportWhatsapp] = useState('')
   const supportWhatsappDigits = supportWhatsapp.replace(/\D+/g, '')
   const [supportWhatsappMsg, setSupportWhatsappMsg] = useState('')
+  const [devWhatsapp, setDevWhatsapp] = useState('')
   const [welcomeName, setWelcomeName] = useState('')
   const [showMessages, setShowMessages] = useState(false)
   const [showReceipt, setShowReceipt] = useState(false)
@@ -406,7 +407,7 @@ export default function HomePage() {
       .catch(() => {})
   }, [])
 
-  // Fetch support WhatsApp number and greeting
+  // Fetch support WhatsApp number, greeting, and developer WhatsApp
   useEffect(() => {
     fetch('/api/settings?key=support_whatsapp')
       .then(r => r.json())
@@ -415,6 +416,10 @@ export default function HomePage() {
     fetch('/api/settings?key=support_whatsapp_msg')
       .then(r => r.json())
       .then(d => { if (d.value) setSupportWhatsappMsg(String(d.value)) })
+      .catch(() => {})
+    fetch('/api/settings?key=dev_whatsapp')
+      .then(r => r.json())
+      .then(d => { if (d.value) setDevWhatsapp(String(d.value)) })
       .catch(() => {})
   }, [])
 
@@ -2345,6 +2350,13 @@ export default function HomePage() {
     )
   }
 
+  // Pre-compute WhatsApp button data (must be before any early return that uses them)
+  const customerWaDigits = (!isAdmin && !isDevAdmin && currentPlace)
+    ? ((currentPlace.place_whatsapp || '').replace(/\D+/g, '') || supportWhatsappDigits)
+    : ''
+  const customerWaPlaceName = currentPlace?.name ?? ''
+  const adminWaDigits = (isAdmin && !isDevAdmin) ? devWhatsapp.replace(/\D+/g, '') : ''
+
   // Place Selection Screen
   if (!currentPlace && !isAdmin) {
     return (
@@ -2729,22 +2741,46 @@ export default function HomePage() {
           <span className="text-[10px] font-bold tracking-wide text-amber-100">{uiLang === 'ar' ? 'EN' : 'AR'}</span>
         </button>
 
-        {/* Floating WhatsApp support button — hidden when no support number is configured */}
-        {supportWhatsappDigits && (
-          <a
-            href={`https://wa.me/${supportWhatsappDigits}?text=${encodeURIComponent(supportWhatsappMsg || (uiLang === 'ar' ? 'أحتاج مساعدة في SipFlow' : 'I need help with SipFlow'))}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="fixed bottom-5 left-5 z-30 flex h-12 w-12 items-center justify-center rounded-full transition-all hover:scale-110 active:scale-95"
-            style={{ background: 'linear-gradient(135deg, #25D366, #128C7E)', boxShadow: '0 10px 30px rgba(37,211,102,0.4), 0 0 24px rgba(37,211,102,0.25)' }}
-            title={uiLang === 'ar' ? 'دعم WhatsApp' : 'WhatsApp support'}
-          >
-            <MessageCircle className="h-5 w-5 text-white" />
-            <span className="absolute -top-0.5 -right-0.5 flex h-2.5 w-2.5">
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
-              <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-emerald-300" />
-            </span>
-          </a>
+        {/* Floating WhatsApp — customers contact place owner */}
+        {customerWaDigits && (
+          <div className="fixed bottom-5 left-5 z-30 flex flex-col items-center gap-1">
+            <a
+              href={`https://wa.me/${customerWaDigits}?text=${encodeURIComponent(supportWhatsappMsg || (uiLang === 'ar' ? `مرحباً، أحتاج مساعدة من ${customerWaPlaceName}` : `Hello, I need help from ${customerWaPlaceName}`))}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="relative flex h-12 w-12 items-center justify-center rounded-full transition-all hover:scale-110 active:scale-95"
+              style={{ background: 'linear-gradient(135deg, #25D366, #128C7E)', boxShadow: '0 10px 30px rgba(37,211,102,0.4), 0 0 24px rgba(37,211,102,0.25)' }}
+              title={uiLang === 'ar' ? 'تواصل مع المكان عبر WhatsApp' : 'Contact place on WhatsApp'}
+            >
+              <MessageCircle className="h-5 w-5 text-white" />
+              <span className="absolute -top-0.5 -right-0.5 flex h-2.5 w-2.5">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
+                <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-emerald-300" />
+              </span>
+            </a>
+            <span className="text-[10px] font-bold text-emerald-300 rounded-full px-2 py-0.5 backdrop-blur-sm" style={{ background: 'rgba(0,0,0,0.65)' }} dir="ltr">+{customerWaDigits}</span>
+          </div>
+        )}
+
+        {/* Floating WhatsApp — place admins contact developer */}
+        {adminWaDigits && (
+          <div className="fixed bottom-5 left-5 z-30 flex flex-col items-center gap-1">
+            <a
+              href={`https://wa.me/${adminWaDigits}?text=${encodeURIComponent(uiLang === 'ar' ? 'مرحباً، أنا أدمن مكان وأحتاج مساعدة من المطور' : 'Hello, I am a place admin and need help from the developer')}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="relative flex h-12 w-12 items-center justify-center rounded-full transition-all hover:scale-110 active:scale-95"
+              style={{ background: 'linear-gradient(135deg, #25D366, #128C7E)', boxShadow: '0 10px 30px rgba(37,211,102,0.4), 0 0 24px rgba(37,211,102,0.25)' }}
+              title={uiLang === 'ar' ? 'تواصل مع المطور عبر WhatsApp' : 'Contact developer on WhatsApp'}
+            >
+              <MessageCircle className="h-5 w-5 text-white" />
+              <span className="absolute -top-0.5 -right-0.5 flex h-2.5 w-2.5">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
+                <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-emerald-300" />
+              </span>
+            </a>
+            <span className="text-[10px] font-bold text-emerald-300 rounded-full px-2 py-0.5 backdrop-blur-sm" style={{ background: 'rgba(0,0,0,0.65)' }} dir="ltr">+{adminWaDigits}</span>
+          </div>
         )}
 
         {/* PWA install banner */}
