@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { getSql } from '@/lib/db'
-import { getPlansFromDb } from '@/app/api/subscription-plans/route'
+import { getPlansFromDb } from '@/lib/subscription-plans'
 
 export async function GET() {
   try {
