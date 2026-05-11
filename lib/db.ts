@@ -92,15 +92,6 @@ export const db = {
   },
 
   async createPlace(data: { name: string; code: string; description?: string; place_type?: string; free_drinks_count?: number }) {
-    await sql`ALTER TABLE places ADD COLUMN IF NOT EXISTS place_type TEXT DEFAULT 'cafe'`.catch(() => {})
-    await sql`ALTER TABLE places ADD COLUMN IF NOT EXISTS free_drinks_count INTEGER DEFAULT 0`.catch(() => {})
-    await sql`ALTER TABLE places ADD COLUMN IF NOT EXISTS free_drink_id TEXT DEFAULT NULL`.catch(() => {})
-    await sql`ALTER TABLE places ADD COLUMN IF NOT EXISTS table_count INTEGER DEFAULT 10`.catch(() => {})
-    await sql`ALTER TABLE places ADD COLUMN IF NOT EXISTS logo_url TEXT`.catch(() => {})
-    await sql`ALTER TABLE places ADD COLUMN IF NOT EXISTS service_charge NUMERIC(5,2) DEFAULT 0`.catch(() => {})
-    await sql`ALTER TABLE places ADD COLUMN IF NOT EXISTS tax_rate NUMERIC(5,2) DEFAULT 0`.catch(() => {})
-    await sql`ALTER TABLE places ADD COLUMN IF NOT EXISTS reservations_enabled BOOLEAN DEFAULT false`.catch(() => {})
-    await sql`ALTER TABLE places ADD COLUMN IF NOT EXISTS order_tracking_enabled BOOLEAN DEFAULT true`.catch(() => {})
     const result = await sql`
       INSERT INTO places (name, code, description, is_active, place_type, free_drinks_count)
       VALUES (${data.name}, ${data.code}, ${data.description || null}, true, ${data.place_type || 'cafe'}, ${data.free_drinks_count ?? 0})
@@ -110,14 +101,6 @@ export const db = {
   },
 
   async updatePlace(id: string, data: { name?: string; description?: string; is_active?: boolean; logo_url?: string | null; table_count?: number | null; service_charge?: number | null; tax_rate?: number | null; reservations_enabled?: boolean | null; order_tracking_enabled?: boolean | null; free_drinks_count?: number | null; free_drink_id?: string | null; discount_code?: string | null; place_whatsapp?: string | null }) {
-    await sql`ALTER TABLE places ADD COLUMN IF NOT EXISTS service_charge NUMERIC(5,2) DEFAULT 0`.catch(() => {})
-    await sql`ALTER TABLE places ADD COLUMN IF NOT EXISTS tax_rate NUMERIC(5,2) DEFAULT 0`.catch(() => {})
-    await sql`ALTER TABLE places ADD COLUMN IF NOT EXISTS reservations_enabled BOOLEAN DEFAULT false`.catch(() => {})
-    await sql`ALTER TABLE places ADD COLUMN IF NOT EXISTS order_tracking_enabled BOOLEAN DEFAULT true`.catch(() => {})
-    await sql`ALTER TABLE places ADD COLUMN IF NOT EXISTS free_drinks_count INTEGER DEFAULT 0`.catch(() => {})
-    await sql`ALTER TABLE places ADD COLUMN IF NOT EXISTS free_drink_id TEXT DEFAULT NULL`.catch(() => {})
-    await sql`ALTER TABLE places ADD COLUMN IF NOT EXISTS discount_code TEXT DEFAULT NULL`.catch(() => {})
-    await sql`ALTER TABLE places ADD COLUMN IF NOT EXISTS place_whatsapp TEXT DEFAULT NULL`.catch(() => {})
     const result = await sql`
       UPDATE places
       SET name = COALESCE(${data.name ?? null}, name),
@@ -154,9 +137,6 @@ export const db = {
 
   // ─── Drinks ────────────────────────────────────────────
   async getDrinks(placeId?: string | null) {
-    await sql`ALTER TABLE drinks ADD COLUMN IF NOT EXISTS seasonal_start DATE`.catch(() => {})
-    await sql`ALTER TABLE drinks ADD COLUMN IF NOT EXISTS seasonal_end DATE`.catch(() => {})
-    await sql`ALTER TABLE drinks ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()`.catch(() => {})
     if (placeId) {
       return await sql`SELECT * FROM drinks WHERE place_id = ${placeId} ORDER BY sort_order`
     }
@@ -178,8 +158,6 @@ export const db = {
   },
 
   async updateDrink(id: string, data: { name?: string; price?: number; image_url?: string | null; sort_order?: number; seasonal_start?: string | null; seasonal_end?: string | null; available?: boolean }) {
-    await sql`ALTER TABLE drinks ADD COLUMN IF NOT EXISTS seasonal_start DATE`.catch(() => {})
-    await sql`ALTER TABLE drinks ADD COLUMN IF NOT EXISTS seasonal_end DATE`.catch(() => {})
     const result = await sql`
       UPDATE drinks 
       SET name = COALESCE(${data.name ?? null}, name),
@@ -374,12 +352,6 @@ export const db = {
 
   // ─── Orders ────────────────────────────────────────────
   async getOrdersBySession(sessionId: string) {
-    // Ensure customer_name and table_number columns exist
-    try {
-      await sql`ALTER TABLE orders ADD COLUMN IF NOT EXISTS customer_name TEXT`
-      await sql`ALTER TABLE orders ADD COLUMN IF NOT EXISTS table_number TEXT`
-    } catch {}
-    
     await this.setupCompanyEmployees().catch(() => {})
     return await sql`
       SELECT 
@@ -432,8 +404,6 @@ export const db = {
   },
 
   async updateOrderRating(id: string, rating: number, comment?: string) {
-    await sql`ALTER TABLE orders ADD COLUMN IF NOT EXISTS rating INTEGER`.catch(() => {})
-    await sql`ALTER TABLE orders ADD COLUMN IF NOT EXISTS rating_comment TEXT`.catch(() => {})
     const result = await sql`
       UPDATE orders SET rating = ${rating}, rating_comment = ${comment || null}, updated_at = NOW() WHERE id = ${id}
       RETURNING *
@@ -484,9 +454,6 @@ export const db = {
 
   // ─── Staff Users ────────────────────────────────────────
   async getStaffUsers() {
-    try {
-      await sql`ALTER TABLE staff_users ADD COLUMN IF NOT EXISTS role TEXT DEFAULT 'cashier'`
-    } catch {}
     return await sql`SELECT * FROM staff_users ORDER BY created_at DESC`
   },
 
@@ -496,9 +463,6 @@ export const db = {
   },
 
   async createStaffUser(data: { username: string; password: string; name: string; place_id?: string | null; role?: string }) {
-    try {
-      await sql`ALTER TABLE staff_users ADD COLUMN IF NOT EXISTS role TEXT DEFAULT 'cashier'`
-    } catch {}
     const result = await sql`
       INSERT INTO staff_users (username, password, name, is_active, place_id, role)
       VALUES (${data.username}, ${data.password}, ${data.name}, true, ${data.place_id || null}, ${data.role || 'cashier'})
@@ -626,7 +590,6 @@ export const db = {
 
   // ─── Reservations ──────────────────────────────────────
   async setupReservations() {
-    await sql`ALTER TABLE places ADD COLUMN IF NOT EXISTS reservations_enabled BOOLEAN DEFAULT false`.catch(() => {})
     await sql`
       CREATE TABLE IF NOT EXISTS reservations (
         id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
@@ -641,7 +604,6 @@ export const db = {
         created_at TIMESTAMPTZ DEFAULT NOW()
       )
     `
-    await sql`ALTER TABLE reservations ADD COLUMN IF NOT EXISTS table_number TEXT`.catch(() => {})
   },
 
   async getReservations(placeId: string, status?: string) {
@@ -679,24 +641,6 @@ export const db = {
 
   // ─── Company Employees ─────────────────────────────────
   async setupCompanyEmployees() {
-    await sql`ALTER TABLE places ADD COLUMN IF NOT EXISTS place_type TEXT DEFAULT 'cafe'`.catch(() => {})
-    await sql`
-      CREATE TABLE IF NOT EXISTS company_employees (
-        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-        place_id UUID NOT NULL REFERENCES places(id) ON DELETE CASCADE,
-        name TEXT NOT NULL,
-        email TEXT NOT NULL,
-        password TEXT NOT NULL,
-        is_active BOOLEAN DEFAULT true,
-        created_at TIMESTAMPTZ DEFAULT NOW(),
-        updated_at TIMESTAMPTZ DEFAULT NOW(),
-        UNIQUE(place_id, email)
-      )
-    `.catch(() => {})
-    await sql`ALTER TABLE company_employees ADD COLUMN IF NOT EXISTS avatar_url TEXT`.catch(() => {})
-    await sql`ALTER TABLE company_employees ADD COLUMN IF NOT EXISTS department TEXT`.catch(() => {})
-    await sql`ALTER TABLE company_employees ADD COLUMN IF NOT EXISTS title TEXT`.catch(() => {})
-    await sql`ALTER TABLE orders ADD COLUMN IF NOT EXISTS employee_id UUID REFERENCES company_employees(id) ON DELETE SET NULL`.catch(() => {})
   },
 
   async getCompanyEmployees(placeId: string) {

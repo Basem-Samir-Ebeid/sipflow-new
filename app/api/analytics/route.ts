@@ -3,9 +3,13 @@ import { getSql } from '@/lib/db'
 
 function sinceDate(period: string): Date {
   const now = new Date()
-  if (period === 'today')  now.setDate(now.getDate() - 1)
-  else if (period === 'month') now.setDate(now.getDate() - 30)
-  else                     now.setDate(now.getDate() - 7)   // default: week
+  if (period === 'today') {
+    now.setHours(0, 0, 0, 0)
+  } else if (period === 'month') {
+    now.setDate(now.getDate() - 30)
+  } else {
+    now.setDate(now.getDate() - 7)
+  }
   return now
 }
 

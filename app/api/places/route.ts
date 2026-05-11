@@ -11,13 +11,19 @@ export async function GET(request: Request) {
     }
     const { searchParams } = new URL(request.url)
     const code = searchParams.get('code')
+    const isAdmin = searchParams.get('admin') === 'true'
+    const sanitize = (p: any) => {
+      if (isAdmin) return p
+      const { discount_code: _dc, ...rest } = p
+      return rest
+    }
     if (code) {
       const place = await db.getPlaceByCode(code)
       if (!place) return NextResponse.json({ error: 'Place not found' }, { status: 404 })
-      return NextResponse.json(place)
+      return NextResponse.json(sanitize(place))
     }
     const places = await db.getPlaces()
-    return NextResponse.json(places)
+    return NextResponse.json(places.map(sanitize))
   } catch (error) {
     console.error('Error fetching places:', error)
     return NextResponse.json({ error: 'Failed to fetch places' }, { status: 500 })

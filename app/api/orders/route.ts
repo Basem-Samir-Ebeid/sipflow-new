@@ -2,8 +2,6 @@ import { NextResponse } from 'next/server'
 import { db, getSql } from '@/lib/db'
 import { deductForOrder } from '@/lib/inventory-engine'
 
-const sql = getSql()
-
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url)
@@ -27,6 +25,7 @@ export async function POST(request: Request) {
 
     // Auto-deduct ingredients via recipe (silent on failure to avoid breaking order flow)
     try {
+      const sql = getSql()
       const session = body.session_id ? await sql`SELECT place_id FROM sessions WHERE id = ${body.session_id}` : []
       const placeId = (session as any[])[0]?.place_id || null
       const result = await deductForOrder({

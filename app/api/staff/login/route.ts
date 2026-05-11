@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { passwordHash } from '@/lib/admin-auth'
 
 export async function POST(request: Request) {
   try {
@@ -7,7 +8,11 @@ export async function POST(request: Request) {
     
     const staff = await db.getStaffByUsername(username)
     
-    if (!staff || staff.password !== password || !staff.is_active) {
+    const passwordMatches = staff && (
+      staff.password === passwordHash(password) ||
+      staff.password === password
+    )
+    if (!staff || !passwordMatches || !staff.is_active) {
       return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 })
     }
     

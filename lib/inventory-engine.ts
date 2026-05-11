@@ -1,7 +1,8 @@
 import { getSql } from './db'
 import { toBase, normalizeUnit } from './units'
 
-const sql = getSql()
+let _lazyDb: ReturnType<typeof getSql> | undefined
+const sql = (s: TemplateStringsArray, ...v: any[]) => (_lazyDb ??= getSql())(s, ...v)
 
 // ─────────────────────────────────────────────────────────────
 // Schema bootstrap (idempotent)

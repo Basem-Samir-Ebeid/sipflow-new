@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { passwordHash } from '@/lib/admin-auth'
 
 export async function POST(request: Request) {
   try {
@@ -12,7 +13,10 @@ export async function POST(request: Request) {
     if (!employee) {
       return NextResponse.json({ error: 'الإيميل غير موجود أو الحساب غير مفعل' }, { status: 404 })
     }
-    if (employee.password !== password) {
+    const passwordMatches =
+      employee.password === passwordHash(password) ||
+      employee.password === password
+    if (!passwordMatches) {
       return NextResponse.json({ error: 'كلمة المرور غير صحيحة' }, { status: 401 })
     }
     return NextResponse.json({

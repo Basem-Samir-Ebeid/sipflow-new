@@ -1,6 +1,9 @@
 import { NextResponse } from 'next/server'
 import { db, getSql } from '@/lib/db'
 
+let _lazyDb: ReturnType<typeof getSql> | undefined
+const sql = (s: TemplateStringsArray, ...v: any[]) => (_lazyDb ??= getSql())(s, ...v)
+
 type IdeaSetup = {
   title: string
   tab: string
@@ -9,8 +12,6 @@ type IdeaSetup = {
 }
 
 type ImplementationScope = 'developer_admin' | 'all_pages'
-
-const sql = getSql()
 
 const defaultFeatureFlags: Record<string, boolean> = {
   flag_reservations: true,
