@@ -1,0 +1,60 @@
+Please fix the following bugs found in the SipFlow project:
+
+---
+
+🔴 CRITICAL
+
+1. Plaintext passwords in staff/employee login
+   - Files: app/api/staff/login/route.ts and app/api/employee-login/route.ts
+   - Passwords are compared as plain text: staff.password !== password
+   - Fix: use the passwordHash() function already in lib/admin-auth.ts before comparing
+
+2. Module-level getSql() calls (crashes on cold start)
+   - Files: app/api/orders/route.ts (line 5), app/api/ai-ideas/implement/route.ts (line 13), lib/inventory-engine.ts (line 4)
+   - const sql = getSql() is called at module level, which throws before DB env vars are ready in serverless environments
+   - Fix: move getSql() inside each handler function
+
+3. ignoreBuildErrors: true in next.config.mjs
+   - This silently ignores TypeScript errors and allows broken code to deploy
+   - Fix: remove this flag and fix any real TS errors that surface
+
+---
+
+🟠 PERFORMANCE
+
+4. ALTER TABLE runs on every request
+   - lib/db.ts runs 38 ALTER TABLE IF NOT EXISTS statements inside regular query functions like getDrinks(), createPlace(), updatePlace(), etc.
+   - This adds 2–3 extra DB round trips on every request
+   - Fix: move all migrations to a one-time migration script, not inside query functions
+
+5. N+1 queries in /api/smart-alerts
+   - For each place in a loop, 3 separate queries are fired (sessions, orders, waiter calls)
+   - With 10 places = 30+ queries per request
+   - Fix: rewrite using JOINs or IN clauses to batch the data in fewer queries
+
+---
+
+🟡 LOGIC BUGS
+
+6. Wrong date calculation for 'today' period in /api/analytics
+   - sinceDate('today') does now.setDate(now.getDate() - 1), which returns yesterday, not the start of today
+   - Fix:
+     if (period === 'today') { now.setHours(0, 0, 0, 0) }
+
+7. discount_code exposed in places API
+   - SELECT * in the places route returns discount_code to any user
+   - Fix: explicitly select only the columns needed, exclude sensitive fields like discount_code
+
+---
+
+🔵 BEST PRACTICES
+
+8. Images stored as Base64 in the database
+   - app/api/upload/route.ts converts images to Base64 and stores them in DB
+   - @vercel/blob is already a dependency — use it instead
+
+9. No rate limiting on login endpoints
+   - /api/users/login and /api/staff/login have no brute-force protection
+   - Fix: add rate limiting middleware
+
+Please prioritize the critical fixes first (1, 2, 3), then performance (4, 5), then logic bugs (6, 7).
