@@ -43,6 +43,7 @@ build = ["pnpm", "run", "build"]
 [userenv]
 
 [userenv.shared]
+DEV_RESET_CODE = "246850"
 
 [postMerge]
 path = "scripts/post-merge.sh"
