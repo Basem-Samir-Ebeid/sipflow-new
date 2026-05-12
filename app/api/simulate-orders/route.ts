@@ -1,5 +1,6 @@
-import { NextResponse } from 'next/server'
-import { db } from '@/lib/db'
+import { NextRequest, NextResponse } from 'next/server'
+import { db, getSql } from '@/lib/db'
+import { DEV_ADMIN_SESSION_COOKIE, isSuperDevAdminSession } from '@/lib/admin-auth'
 
 const FAKE_NAMES = ['أحمد', 'محمد', 'سارة', 'فاطمة', 'خالد', 'نور', 'علي', 'مريم', 'يوسف', 'هند']
 const SUGAR_LEVELS = ['none', 'low', 'medium', 'high']
@@ -9,8 +10,15 @@ function randomFrom<T>(arr: T[]): T {
   return arr[Math.floor(Math.random() * arr.length)]
 }
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   try {
+    const sessionToken = request.cookies.get(DEV_ADMIN_SESSION_COOKIE)?.value
+    const sql = getSql()
+    const isAdmin = await isSuperDevAdminSession(sql, sessionToken)
+    if (!isAdmin) {
+      return NextResponse.json({ error: 'غير مصرح — هذه الخاصية للمطور فقط' }, { status: 401 })
+    }
+
     const body = await request.json()
     const { place_id, count = 5, delay_ms = 300 } = body
 

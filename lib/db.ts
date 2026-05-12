@@ -243,12 +243,17 @@ export const db = {
   },
 
   async getUserByNameAndPassword(name: string, password: string, placeId?: string | null) {
+    const { verifyPassword } = await import('./password')
     if (placeId) {
-      const result = await sql`SELECT * FROM users WHERE name = ${name} AND password = ${password} AND place_id = ${placeId} LIMIT 1`
-      return result[0] || null
+      const result = await sql`SELECT * FROM users WHERE name = ${name} AND place_id = ${placeId} LIMIT 1`
+      const user = result[0] || null
+      if (!user || user.password == null) return null
+      return (await verifyPassword(password, user.password)) ? user : null
     }
-    const result = await sql`SELECT * FROM users WHERE name = ${name} AND password = ${password} LIMIT 1`
-    return result[0] || null
+    const result = await sql`SELECT * FROM users WHERE name = ${name} LIMIT 1`
+    const user = result[0] || null
+    if (!user || user.password == null) return null
+    return (await verifyPassword(password, user.password)) ? user : null
   },
 
   async getUserById(id: string) {
@@ -257,9 +262,11 @@ export const db = {
   },
 
   async createUser(data: { name: string; password?: string; table_number?: string; role?: string; place_id?: string | null }) {
+    const { hashPassword } = await import('./password')
+    const hashedPwd = data.password ? await hashPassword(data.password) : null
     const result = await sql`
       INSERT INTO users (name, password, table_number, role, place_id)
-      VALUES (${data.name}, ${data.password || null}, ${data.table_number || null}, ${data.role || 'customer'}, ${data.place_id || null})
+      VALUES (${data.name}, ${hashedPwd}, ${data.table_number || null}, ${data.role || 'customer'}, ${data.place_id || null})
       RETURNING *
     `
     return result[0]
@@ -463,9 +470,11 @@ export const db = {
   },
 
   async createStaffUser(data: { username: string; password: string; name: string; place_id?: string | null; role?: string }) {
+    const { hashPassword } = await import('./password')
+    const hashedPwd = await hashPassword(data.password)
     const result = await sql`
       INSERT INTO staff_users (username, password, name, is_active, place_id, role)
-      VALUES (${data.username}, ${data.password}, ${data.name}, true, ${data.place_id || null}, ${data.role || 'cashier'})
+      VALUES (${data.username}, ${hashedPwd}, ${data.name}, true, ${data.place_id || null}, ${data.role || 'cashier'})
       RETURNING *
     `
     return result[0]
@@ -656,9 +665,11 @@ export const db = {
 
   async createCompanyEmployee(data: { place_id: string; name: string; email: string; password: string; avatar_url?: string | null; department?: string | null; title?: string | null }) {
     await this.setupCompanyEmployees()
+    const { hashPassword } = await import('./password')
+    const hashedPwd = await hashPassword(data.password)
     const result = await sql`
       INSERT INTO company_employees (place_id, name, email, password, avatar_url, department, title)
-      VALUES (${data.place_id}, ${data.name}, ${data.email}, ${data.password}, ${data.avatar_url || null}, ${data.department || null}, ${data.title || null})
+      VALUES (${data.place_id}, ${data.name}, ${data.email}, ${hashedPwd}, ${data.avatar_url || null}, ${data.department || null}, ${data.title || null})
       RETURNING *
     `
     return result[0]
@@ -666,11 +677,15 @@ export const db = {
 
   async updateCompanyEmployee(id: string, data: { name?: string; email?: string; password?: string; is_active?: boolean; avatar_url?: string | null; department?: string | null; title?: string | null }) {
     await this.setupCompanyEmployees()
+    const { hashPassword } = await import('./password')
+    const newPwd = data.password !== undefined
+      ? (data.password ? await hashPassword(data.password) : null)
+      : undefined
     const result = await sql`
       UPDATE company_employees
       SET name = COALESCE(${data.name ?? null}, name),
           email = COALESCE(${data.email ?? null}, email),
-          password = COALESCE(${data.password ?? null}, password),
+          password = CASE WHEN ${newPwd !== undefined} THEN ${newPwd ?? null} ELSE password END,
           is_active = COALESCE(${data.is_active ?? null}, is_active),
           avatar_url = CASE WHEN ${data.avatar_url !== undefined} THEN ${data.avatar_url ?? null} ELSE avatar_url END,
           department = CASE WHEN ${data.department !== undefined} THEN ${data.department ?? null} ELSE department END,

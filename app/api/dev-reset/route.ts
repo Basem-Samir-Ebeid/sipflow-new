@@ -2,8 +2,6 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getSql } from '@/lib/db'
 import { logDevActivity } from '@/lib/dev-activity'
 
-const RESET_CODE = '246850'
-
 async function applyAdminCredentials(
   sql: ReturnType<typeof getSql>,
   newUsername: string | undefined,
@@ -46,6 +44,11 @@ async function applyAdminCredentials(
 
 export async function POST(request: NextRequest) {
   try {
+    const RESET_CODE = process.env.DEV_RESET_CODE
+    if (!RESET_CODE) {
+      return NextResponse.json({ success: false, error: 'خاصية الريسيت غير مفعلة في هذه البيئة' }, { status: 503 })
+    }
+
     const { resetCode, type, newPassword, newUsername } = await request.json()
 
     const sql = getSql()

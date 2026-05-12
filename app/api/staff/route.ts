@@ -1,8 +1,30 @@
-import { NextResponse } from 'next/server'
-import { db } from '@/lib/db'
+import { NextRequest, NextResponse } from 'next/server'
+import { db, getSql } from '@/lib/db'
+import { DEV_ADMIN_SESSION_COOKIE, isSuperDevAdminSession } from '@/lib/admin-auth'
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
+    const { searchParams } = new URL(request.url)
+    const placeId = searchParams.get('place_id')
+
+    if (placeId) {
+      const sql = getSql()
+      const staff = await sql`
+        SELECT id, username, name, is_active, role, place_id, created_at
+        FROM staff_users
+        WHERE place_id = ${placeId}
+        ORDER BY created_at DESC
+      `
+      return NextResponse.json(staff)
+    }
+
+    const sessionToken = request.cookies.get(DEV_ADMIN_SESSION_COOKIE)?.value
+    const sql = getSql()
+    const isAdmin = await isSuperDevAdminSession(sql, sessionToken)
+    if (!isAdmin) {
+      return NextResponse.json({ error: 'place_id is required' }, { status: 400 })
+    }
+
     const staff = await db.getStaffUsers()
     return NextResponse.json(staff)
   } catch (error) {

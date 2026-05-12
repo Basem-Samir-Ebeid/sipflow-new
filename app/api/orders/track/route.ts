@@ -1,6 +1,13 @@
 import { NextResponse } from 'next/server'
 import { getSql } from '@/lib/db'
 
+let _trackSchemaReady = false
+async function ensureTrackSchema(sql: ReturnType<typeof getSql>) {
+  if (_trackSchemaReady) return
+  await sql`ALTER TABLE places ADD COLUMN IF NOT EXISTS order_tracking_enabled BOOLEAN DEFAULT true`.catch(() => {})
+  _trackSchemaReady = true
+}
+
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url)
   const userId      = searchParams.get('user_id')
@@ -15,8 +22,7 @@ export async function GET(req: Request) {
   try {
     const sql = getSql()
 
-    // Ensure column exists
-    await sql`ALTER TABLE places ADD COLUMN IF NOT EXISTS order_tracking_enabled BOOLEAN DEFAULT true`.catch(() => {})
+    await ensureTrackSchema(sql)
 
     let rows: any[]
 

@@ -256,7 +256,7 @@ export async function deductForOrder(opts: {
   }
   if (!recipe) return { deducted: 0, missing: [], note: 'no_recipe' }
 
-  const items = await sql`SELECT ri.*, i.unit as base_unit, i.name_ar, i.cost_per_unit, i.current_stock
+  const items = await sql`SELECT ri.*, i.unit as base_unit, i.name_ar, i.cost_per_unit
     FROM recipe_items ri JOIN ingredients i ON ri.ingredient_id = i.id
     WHERE ri.recipe_id = ${recipe.id}`
 
@@ -265,24 +265,60 @@ export async function deductForOrder(opts: {
   for (const it of items) {
     const conv = toBase(Number(it.quantity) * opts.quantity, it.unit)
     const required = conv.qty
-    const available = Number(it.current_stock || 0)
-    if (available < required) {
-      missing.push({ ingredient_id: it.ingredient_id, name: it.name_ar, required, available, unit: it.base_unit })
-    }
     const cost = Number(it.cost_per_unit || 0) * required
-    await recordMovement({
-      ingredient_id: it.ingredient_id,
-      movement_type: 'sale',
-      quantity: -required,
-      unit: it.base_unit,
-      reason: `بيع: ${opts.quantity}× مشروب`,
-      reference_id: opts.order_id || null,
-      reference_type: 'order',
-      user_name: opts.user_name || null,
-      cost_total: -cost,
-      place_id: opts.place_id || null,
-    })
-    deducted++
+
+    // Atomic check-and-deduct: only deducts if current_stock >= required,
+    // preventing race conditions from concurrent orders using stale reads.
+    const updated = await sql`
+      UPDATE ingredients
+      SET current_stock = current_stock - ${required},
+          updated_at = NOW()
+      WHERE id = ${it.ingredient_id}
+        AND current_stock >= ${required}
+      RETURNING id, current_stock
+    `
+
+    if (updated.length === 0) {
+      // Insufficient stock — fetch current value for diagnostic info
+      const cur = await sql`SELECT current_stock FROM ingredients WHERE id = ${it.ingredient_id}`
+      missing.push({
+        ingredient_id: it.ingredient_id,
+        name: it.name_ar,
+        required,
+        available: Number(cur[0]?.current_stock || 0),
+        unit: it.base_unit,
+      })
+      // Log the failed deduction without re-touching stock
+      await recordMovement({
+        ingredient_id: it.ingredient_id,
+        movement_type: 'sale',
+        quantity: -required,
+        unit: it.base_unit,
+        reason: `بيع (مخزون ناقص): ${opts.quantity}× مشروب`,
+        reference_id: opts.order_id || null,
+        reference_type: 'order',
+        user_name: opts.user_name || null,
+        cost_total: -cost,
+        place_id: opts.place_id || null,
+        applyToStock: false,
+      })
+    } else {
+      // Stock already deducted atomically — only log the movement
+      await recordMovement({
+        ingredient_id: it.ingredient_id,
+        movement_type: 'sale',
+        quantity: -required,
+        unit: it.base_unit,
+        reason: `بيع: ${opts.quantity}× مشروب`,
+        reference_id: opts.order_id || null,
+        reference_type: 'order',
+        user_name: opts.user_name || null,
+        cost_total: -cost,
+        place_id: opts.place_id || null,
+        applyToStock: false,
+      })
+      deducted++
+    }
   }
   return { deducted, missing }
 }
