@@ -1,7 +1,5 @@
 import type { Metadata, Viewport } from 'next'
 import { Geist, Geist_Mono } from 'next/font/google'
-import { SpeedInsights } from '@vercel/speed-insights/next'
-import { Analytics } from '@vercel/analytics/next'
 import { ThemeApplier } from '@/components/theme-applier'
 import { ServiceWorkerRegister } from '@/components/sw-register'
 import { OfflineIndicator } from '@/components/offline-indicator'
@@ -71,8 +69,6 @@ export default function RootLayout({
         <ServiceWorkerRegister />
         <OfflineIndicator />
         {children}
-        <Analytics />
-        <SpeedInsights />
       </body>
     </html>
   )
