@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSql } from '@/lib/db'
-import { DEV_ADMIN_SESSION_COOKIE, adminSessionValue, getDevAdminSecret } from '@/lib/admin-auth'
+import { DEV_ADMIN_SESSION_COOKIE, adminSessionValue, getDevAdminSecret, passwordHash } from '@/lib/admin-auth'
 import { logDevActivity } from '@/lib/dev-activity'
 
 export async function POST(request: NextRequest) {
@@ -29,8 +29,8 @@ export async function POST(request: NextRequest) {
 
     await sql`
       INSERT INTO app_settings (key, value, updated_at)
-      VALUES ('dev_admin_password', ${nextPassword}, NOW())
-      ON CONFLICT (key) DO UPDATE SET value = ${nextPassword}, updated_at = NOW()
+      VALUES ('dev_admin_password', ${passwordHash(nextPassword)}, NOW())
+      ON CONFLICT (key) DO UPDATE SET value = ${passwordHash(nextPassword)}, updated_at = NOW()
     `
 
     await logDevActivity(sql, {

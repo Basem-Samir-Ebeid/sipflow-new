@@ -1,33 +1,37 @@
 import { NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { checkRateLimit } from '@/lib/rate-limit'
 
 export async function POST(request: Request) {
   try {
+    const ip = request.headers.get('x-forwarded-for') ?? 'unknown'
+    if (!checkRateLimit(`login:${ip}`, 10, 60_000)) {
+      return NextResponse.json({ error: 'Too many attempts, please wait a minute' }, { status: 429 })
+    }
+
     const { name, password, place_id } = await request.json()
 
     try {
-      // If password is provided, find by name+password directly (handles duplicate names)
       if (password) {
         const user = await db.getUserByNameAndPassword(name, password, place_id || null)
         if (!user) {
           return NextResponse.json({ exists: true, error: 'Invalid password' }, { status: 401 })
         }
-        return NextResponse.json({ exists: true, user })
+        const { password: _pw, ...safeUser } = user
+        return NextResponse.json({ exists: true, user: safeUser })
       }
 
-      // No password provided — check if any user with this name exists
       const user = await db.getUserByName(name, place_id || null)
       if (!user) {
         return NextResponse.json({ exists: false, user: null })
       }
 
-      // User exists and has a password — request it
       if (user.password) {
         return NextResponse.json({ exists: true, requiresPassword: true, user: null })
       }
 
-      // User exists with no password — log them in
-      return NextResponse.json({ exists: true, user })
+      const { password: _pw, ...safeUser } = user
+      return NextResponse.json({ exists: true, user: safeUser })
     } catch (dbError: any) {
       if (dbError.message.includes('DATABASE_URL')) {
         return NextResponse.json({

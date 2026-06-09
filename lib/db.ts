@@ -228,9 +228,9 @@ export const db = {
   // ─── Users ─────────────────────────────────────────────
   async getUsers(placeId?: string | null) {
     if (placeId) {
-      return await sql`SELECT * FROM users WHERE place_id = ${placeId} ORDER BY created_at`
+      return await sql`SELECT id, name, table_number, role, place_id, assigned_tables, created_at, updated_at FROM users WHERE place_id = ${placeId} ORDER BY created_at`
     }
-    return await sql`SELECT * FROM users ORDER BY created_at`
+    return await sql`SELECT id, name, table_number, role, place_id, assigned_tables, created_at, updated_at FROM users ORDER BY created_at`
   },
 
   async getUserByName(name: string, placeId?: string | null) {
@@ -257,7 +257,7 @@ export const db = {
   },
 
   async getUserById(id: string) {
-    const result = await sql`SELECT * FROM users WHERE id = ${id}`
+    const result = await sql`SELECT id, name, table_number, role, place_id, assigned_tables, created_at, updated_at FROM users WHERE id = ${id}`
     return result[0] || null
   },
 
@@ -277,7 +277,9 @@ export const db = {
       await sql`UPDATE users SET name = ${data.name}, updated_at = NOW() WHERE id = ${id}`
     }
     if (data.password !== undefined) {
-      await sql`UPDATE users SET password = ${data.password}, updated_at = NOW() WHERE id = ${id}`
+      const { hashPassword } = await import('./password')
+      const hashed = data.password ? await hashPassword(data.password) : null
+      await sql`UPDATE users SET password = ${hashed}, updated_at = NOW() WHERE id = ${id}`
     }
     if (data.role !== undefined) {
       await sql`UPDATE users SET role = ${data.role}, updated_at = NOW() WHERE id = ${id}`

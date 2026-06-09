@@ -7,9 +7,9 @@ const sql = (s: TemplateStringsArray, ...v: any[]) => (_lazyDb ??= getSql())(s, 
 // ─────────────────────────────────────────────────────────────
 // Schema bootstrap (idempotent)
 // ─────────────────────────────────────────────────────────────
-let _schemaReady = false
+declare global { var _inventorySchemaReady: boolean | undefined }
 export async function ensureInventorySchema() {
-  if (_schemaReady) return
+  if (global._inventorySchemaReady) return
   try {
     await sql`CREATE TABLE IF NOT EXISTS suppliers (
       id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -84,7 +84,7 @@ export async function ensureInventorySchema() {
       unit_cost NUMERIC(12,4) DEFAULT 0,
       created_at TIMESTAMPTZ DEFAULT NOW()
     )`
-    _schemaReady = true
+    global._inventorySchemaReady = true
   } catch (e) {
     console.error('ensureInventorySchema error', e)
   }
@@ -576,21 +576,39 @@ export async function profitability(placeId?: string | null) {
   const drinks = placeId
     ? await sql`SELECT * FROM drinks WHERE place_id = ${placeId} OR place_id IS NULL ORDER BY name`
     : await sql`SELECT * FROM drinks ORDER BY name`
-  const result: any[] = []
-  for (const d of drinks) {
-    const recipe = (await sql`SELECT * FROM recipes WHERE drink_id = ${d.id} AND is_addon = false LIMIT 1`)[0]
-    if (!recipe) { result.push({ ...d, cost: null, margin: null, margin_pct: null }); continue }
-    const items = await sql`SELECT ri.*, i.cost_per_unit, i.unit as base_unit FROM recipe_items ri
-      JOIN ingredients i ON ri.ingredient_id = i.id WHERE ri.recipe_id = ${recipe.id}`
-    const cost = items.reduce((s: number, it: any) => {
+
+  if (!drinks.length) return []
+
+  const drinkIds = drinks.map((d: any) => d.id)
+
+  const recipes = await sql`SELECT * FROM recipes WHERE drink_id = ANY(${drinkIds}) AND is_addon = false`
+  const recipeIds = recipes.map((r: any) => r.id)
+
+  const items = recipeIds.length > 0
+    ? await sql`SELECT ri.*, i.cost_per_unit, i.unit as base_unit FROM recipe_items ri JOIN ingredients i ON ri.ingredient_id = i.id WHERE ri.recipe_id = ANY(${recipeIds})`
+    : []
+
+  const recipeByDrink: Record<string, any> = {}
+  for (const r of recipes) recipeByDrink[r.drink_id] = r
+
+  const itemsByRecipe: Record<string, any[]> = {}
+  for (const it of items) {
+    if (!itemsByRecipe[it.recipe_id]) itemsByRecipe[it.recipe_id] = []
+    itemsByRecipe[it.recipe_id].push(it)
+  }
+
+  return drinks.map((d: any) => {
+    const recipe = recipeByDrink[d.id]
+    if (!recipe) return { ...d, cost: null, margin: null, margin_pct: null }
+    const recipeItems = itemsByRecipe[recipe.id] || []
+    const cost = recipeItems.reduce((s: number, it: any) => {
       const conv = toBase(Number(it.quantity), it.unit)
       return s + conv.qty * Number(it.cost_per_unit || 0)
     }, 0)
     const margin = Number(d.price) - cost
     const margin_pct = d.price > 0 ? (margin / Number(d.price)) * 100 : 0
-    result.push({ id: d.id, name: d.name, price: Number(d.price), cost, margin, margin_pct })
-  }
-  return result.sort((a, b) => (b.margin_pct || 0) - (a.margin_pct || 0))
+    return { id: d.id, name: d.name, price: Number(d.price), cost, margin, margin_pct }
+  }).sort((a: any, b: any) => (b.margin_pct || 0) - (a.margin_pct || 0))
 }
 
 /** Auto-suggest POs for ingredients at/below reorder point. */

@@ -2,10 +2,16 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getSql } from '@/lib/db'
 import { ADMIN_SESSION_MAX_AGE, DEV_ADMIN_ROLE_LABELS, DEV_ADMIN_SESSION_COOKIE, adminSessionValue, devAdminSessionValue, findDevAdminByCredentials, getDevAdminSecret } from '@/lib/admin-auth'
 import { logDevActivity } from '@/lib/dev-activity'
+import { checkRateLimit } from '@/lib/rate-limit'
 
 export async function POST(request: NextRequest) {
   let attemptedName = ''
   try {
+    const ip = request.headers.get('x-forwarded-for') ?? 'unknown'
+    if (!checkRateLimit(`login:${ip}`, 10, 60_000)) {
+      return NextResponse.json({ success: false, error: 'Too many attempts, please wait a minute' }, { status: 429 })
+    }
+
     const { name, password } = await request.json()
     attemptedName = (name || '').trim()
 

@@ -1,0 +1,317 @@
+Please fix the following bugs found in the SipFlow project. Apply all changes carefully without breaking existing functionality.
+
+Fix 1 — lib/db.ts: updateUser stores password as plaintext
+In updateUser, when data.password is provided it is saved directly to the DB without hashing. Fix it by hashing before saving:
+tsif (data.password !== undefined) {
+  const { hashPassword } = await import('./password')
+  const hashed = data.password ? await hashPassword(data.password) : null
+  await sql`UPDATE users SET password = ${hashed}, updated_at = NOW() WHERE id = ${id}`
+}
+
+Fix 2 — app/api/users/login/route.ts: response leaks password hash
+The login response returns the full user object which includes the password field (even if hashed). Strip it before sending:
+In every place that returns { exists: true, user } or { exists: true, user }, replace with:
+tsconst { password: _pw, ...safeUser } = user
+return NextResponse.json({ exists: true, user: safeUser })
+Apply this to all three return paths that include a user object in this file.
+
+Fix 3 — app/api/dev-admin-password/route.ts: stores admin password as plaintext
+The admin password is stored as plaintext in app_settings. Hash it with SHA-256 before storing (consistent with how adminSessionValue and passwordHash work in lib/admin-auth.ts):
+tsimport { passwordHash } from '@/lib/admin-auth'
+
+// Replace:
+VALUES ('dev_admin_password', ${nextPassword}, NOW())
+// With:
+VALUES ('dev_admin_password', ${passwordHash(nextPassword)}, NOW())
+
+// And the ON CONFLICT update:
+DO UPDATE SET value = ${passwordHash(nextPassword)}, updated_at = NOW()
+
+Fix 4 — lib/admin-auth.ts: plaintext password fallback in findDevAdminByCredentials
+The DevAdminAccount type has a password?: string field that allows plaintext comparison as a fallback:
+tsreturn account.password === password  // plaintext comparison — insecure
+Remove this fallback entirely. Only allow passwordHash comparison:
+tsexport async function findDevAdminByCredentials(...) {
+  ...
+  return accounts.find((account) => {
+    if (account.active === false) return false
+    if (account.name.trim().toLowerCase() !== normalizedName) return false
+    if (account.passwordHash) return account.passwordHash === passwordHash(password)
+    return false  // no passwordHash = no login allowed
+  }) || null
+}
+Also remove password?: string from the DevAdminAccount interface.
+
+Fix 5 — app/api/users/route.ts: GET returns password hashes, no auth
+GET /api/users returns SELECT * which includes password hashes for all users, with no authentication required.
+Fix both issues:
+
+Add a place_id requirement — if no place_id is provided, return 400:
+
+tsif (!placeId) {
+  return NextResponse.json({ error: 'place_id is required' }, { status: 400 })
+}
+
+Strip password from every user in the response:
+
+tsconst users = await db.getUsers(placeId)
+const safeUsers = users.map(({ password: _pw, ...u }: any) => u)
+return NextResponse.json(safeUsers)
+
+Fix 6 — lib/db.ts: getUsers and getUserByName return password field
+In lib/db.ts, update getUsers, getUserByName, and getUserById to exclude the password column from their SELECT queries:
+tsasync getUsers(placeId?: string | null) {
+  if (placeId) {
+    return await sql`SELECT id, name, table_number, role, place_id, assigned_tables, created_at, updated_at FROM users WHERE place_id = ${placeId} ORDER BY created_at`
+  }
+  return await sql`SELECT id, name, table_number, role, place_id, assigned_tables, created_at, updated_at FROM users ORDER BY created_at`
+},
+
+async getUserById(id: string) {
+  const result = await sql`SELECT id, name, table_number, role, place_id, assigned_tables, created_at, updated_at FROM users WHERE id = ${id}`
+  return result[0] || null
+},
+getUserByName and getUserByNameAndPassword must keep the password field internally (they need it for auth), but they are only used server-side so they are acceptable as-is.
+
+Fix 7 — Rate limiting on login endpoints
+Add a simple in-memory rate limiter to the three login routes to prevent brute-force attacks:
+Create a new file lib/rate-limit.ts:
+tsconst attempts = new Map<string, { count: number; resetAt: number }>()
+
+export function checkRateLimit(key: string, maxAttempts = 10, windowMs = 60_000): boolean {
+  const now = Date.now()
+  const entry = attempts.get(key)
+  if (!entry || now > entry.resetAt) {
+    attempts.set(key, { count: 1, resetAt: now + windowMs })
+    return true
+  }
+  if (entry.count >= maxAttempts) return false
+  entry.count++
+  return true
+}
+Then in app/api/users/login/route.ts, app/api/staff/login/route.ts, and app/api/dev-verify/route.ts, add at the top of the POST handler:
+tsimport { checkRateLimit } from '@/lib/rate-limit'
+
+// Inside POST, before any DB call:
+const ip = request.headers.get('x-forwarded-for') ?? 'unknown'
+if (!checkRateLimit(`login:${ip}`, 10, 60_000)) {
+  return NextResponse.json({ error: 'Too many attempts, please wait a minute' }, { status: 429 })
+}
+
+Fix 8 — lib/inventory-engine.ts: N+1 queries in profitability()
+In profitability(), there is a loop that fires a separate DB query per drink to fetch its recipe and items. Replace the inner loop with a single bulk fetch:
+tsexport async function profitability(placeId?: string | null) {
+  await ensureInventorySchema()
+  const drinks = placeId
+    ? await sql`SELECT * FROM drinks WHERE place_id = ${placeId} OR place_id IS NULL ORDER BY name`
+    : await sql`SELECT * FROM drinks ORDER BY name`
+
+  if (!drinks.length) return []
+
+  const drinkIds = drinks.map((d: any) => d.id)
+
+  // Bulk fetch all recipes for these drinks
+  const recipes = await sql`SELECT * FROM recipes WHERE drink_id = ANY(${drinkIds}) AND is_addon = false`
+  const recipeIds = recipes.map((r: any) => r.id)
+
+  // Bulk fetch all recipe items
+  const items = recipeIds.length > 0
+    ? await sql`SELECT ri.*, i.cost_per_unit, i.unit as base_unit FROM recipe_items ri JOIN ingredients i ON ri.ingredient_id = i.id WHERE ri.recipe_id = ANY(${recipeIds})`
+    : []
+
+  const recipeByDrink: Record<string, any> = {}
+  for (const r of recipes) recipeByDrink[r.drink_id] = r
+
+  const itemsByRecipe: Record<string, any[]> = {}
+  for (const it of items) {
+    if (!itemsByRecipe[it.recipe_id]) itemsByRecipe[it.recipe_id] = []
+    itemsByRecipe[it.recipe_id].push(it)
+  }
+
+  return drinks.map((d: any) => {
+    const recipe = recipeByDrink[d.id]
+    if (!recipe) return { ...d, cost: null, margin: null, margin_pct: null }
+    const recipeItems = itemsByRecipe[recipe.id] || []
+    const cost = recipeItems.reduce((s: number, it: any) => {
+      const conv = toBase(Number(it.quantity), it.unit)
+      return s + conv.qty * Number(it.cost_per_unit || 0)
+    }, 0)
+    const margin = Number(d.price) - cost
+    const margin_pct = d.price > 0 ? (margin / Number(d.price)) * 100 : 0
+    return { id: d.id, name: d.name, price: Number(d.price), cost, margin, margin_pct }
+  }).sort((a: any, b: any) => (b.margin_pct || 0) - (a.margin_pct || 0))
+}
+
+Fix 9 — lib/inventory-engine.ts: _schemaReady flag broken in serverless
+_schemaReady is a module-level boolean that resets on every cold start in serverless environments (Vercel). This means ensureInventorySchema() fires CREATE TABLE IF NOT EXISTS on nearly every request.
+Fix: store the flag in global so it survives warm restarts within the same Node.js instance:
+ts// Replace:
+let _schemaReady = false
+export async function ensureInventorySchema() {
+  if (_schemaReady) return
+  // ...
+  _schemaReady = true
+}
+
+// With:
+declare global { var _inventorySchemaReady: boolean | undefined }
+export async function ensureInventorySchema() {
+  if (global._inventorySchemaReady) return
+  try {
+    // ... all the CREATE TABLE IF NOT EXISTS statements ...
+    global._inventorySchemaReady = true
+  } catch (e) {
+    console.error('ensureInventorySchema error', e)
+  }
+}
+
+That covers all 9 fixes. Please apply them in order and make sure the project builds successfully with npm run build after all changes.You said: عاوز كل ال fix فى رساله واحدهعاوز كل ال fix فى رساله واحده11:47 AMClaude responded: Please fix the following bugs found in the SipFlow project.Please fix the following bugs found in the SipFlow project. Apply all changes carefully without breaking existing functionality.
+
+Fix 1 — lib/db.ts: updateUser stores password as plaintext
+In updateUser, when data.password is provided it is saved directly to the DB without hashing. Fix it:
+tsif (data.password !== undefined) {
+  const { hashPassword } = await import('./password')
+  const hashed = data.password ? await hashPassword(data.password) : null
+  await sql`UPDATE users SET password = ${hashed}, updated_at = NOW() WHERE id = ${id}`
+}
+
+Fix 2 — app/api/users/login/route.ts: response leaks password hash
+The login response returns the full user object which includes the password field. Strip it before sending in all three return paths that include a user object:
+tsconst { password: _pw, ...safeUser } = user
+return NextResponse.json({ exists: true, user: safeUser })
+
+Fix 3 — app/api/dev-admin-password/route.ts: stores admin password as plaintext
+Hash the password before storing using passwordHash from lib/admin-auth.ts:
+tsimport { passwordHash } from '@/lib/admin-auth'
+
+// Replace both occurrences of ${nextPassword} in the SQL with:
+${passwordHash(nextPassword)}
+
+Fix 4 — lib/admin-auth.ts: plaintext password fallback in findDevAdminByCredentials
+Remove the plaintext comparison fallback and remove password?: string from the DevAdminAccount interface:
+ts// Replace the find callback with:
+return accounts.find((account) => {
+  if (account.active === false) return false
+  if (account.name.trim().toLowerCase() !== normalizedName) return false
+  if (account.passwordHash) return account.passwordHash === passwordHash(password)
+  return false  // no passwordHash = no login allowed
+}) || null
+Also remove password?: string from the DevAdminAccount interface.
+
+Fix 5 — app/api/users/route.ts: GET returns password hashes with no auth
+Require place_id and strip password from every user in the response:
+tsexport async function GET(request: Request) {
+  try {
+    const { searchParams } = new URL(request.url)
+    const placeId = searchParams.get('place_id')
+    if (!placeId) {
+      return NextResponse.json({ error: 'place_id is required' }, { status: 400 })
+    }
+    const users = await db.getUsers(placeId)
+    const safeUsers = users.map(({ password: _pw, ...u }: any) => u)
+    return NextResponse.json(safeUsers)
+  } catch (error) {
+    console.error('Error fetching users:', error)
+    return NextResponse.json({ error: 'Failed to fetch users' }, { status: 500 })
+  }
+}
+
+Fix 6 — lib/db.ts: getUsers and getUserById expose password column
+Replace SELECT * with explicit columns in getUsers and getUserById:
+tsasync getUsers(placeId?: string | null) {
+  if (placeId) {
+    return await sql`SELECT id, name, table_number, role, place_id, assigned_tables, created_at, updated_at FROM users WHERE place_id = ${placeId} ORDER BY created_at`
+  }
+  return await sql`SELECT id, name, table_number, role, place_id, assigned_tables, created_at, updated_at FROM users ORDER BY created_at`
+},
+
+async getUserById(id: string) {
+  const result = await sql`SELECT id, name, table_number, role, place_id, assigned_tables, created_at, updated_at FROM users WHERE id = ${id}`
+  return result[0] || null
+},
+Keep getUserByName and getUserByNameAndPassword as-is — they need the password field internally for auth.
+
+Fix 7 — Rate limiting on login endpoints
+Create a new file lib/rate-limit.ts:
+tsconst attempts = new Map<string, { count: number; resetAt: number }>()
+
+export function checkRateLimit(key: string, maxAttempts = 10, windowMs = 60_000): boolean {
+  const now = Date.now()
+  const entry = attempts.get(key)
+  if (!entry || now > entry.resetAt) {
+    attempts.set(key, { count: 1, resetAt: now + windowMs })
+    return true
+  }
+  if (entry.count >= maxAttempts) return false
+  entry.count++
+  return true
+}
+Then add this at the top of the POST handler in all three files — app/api/users/login/route.ts, app/api/staff/login/route.ts, and app/api/dev-verify/route.ts:
+tsimport { checkRateLimit } from '@/lib/rate-limit'
+
+// First lines inside POST handler:
+const ip = request.headers.get('x-forwarded-for') ?? 'unknown'
+if (!checkRateLimit(`login:${ip}`, 10, 60_000)) {
+  return NextResponse.json({ error: 'Too many attempts, please wait a minute' }, { status: 429 })
+}
+
+Fix 8 — lib/inventory-engine.ts: N+1 queries in profitability()
+Replace the entire profitability() function with a bulk-query version:
+tsexport async function profitability(placeId?: string | null) {
+  await ensureInventorySchema()
+  const drinks = placeId
+    ? await sql`SELECT * FROM drinks WHERE place_id = ${placeId} OR place_id IS NULL ORDER BY name`
+    : await sql`SELECT * FROM drinks ORDER BY name`
+
+  if (!drinks.length) return []
+
+  const drinkIds = drinks.map((d: any) => d.id)
+  const recipes = await sql`SELECT * FROM recipes WHERE drink_id = ANY(${drinkIds}) AND is_addon = false`
+  const recipeIds = recipes.map((r: any) => r.id)
+  const items = recipeIds.length > 0
+    ? await sql`SELECT ri.*, i.cost_per_unit, i.unit as base_unit FROM recipe_items ri JOIN ingredients i ON ri.ingredient_id = i.id WHERE ri.recipe_id = ANY(${recipeIds})`
+    : []
+
+  const recipeByDrink: Record<string, any> = {}
+  for (const r of recipes) recipeByDrink[r.drink_id] = r
+
+  const itemsByRecipe: Record<string, any[]> = {}
+  for (const it of items) {
+    if (!itemsByRecipe[it.recipe_id]) itemsByRecipe[it.recipe_id] = []
+    itemsByRecipe[it.recipe_id].push(it)
+  }
+
+  return drinks.map((d: any) => {
+    const recipe = recipeByDrink[d.id]
+    if (!recipe) return { ...d, cost: null, margin: null, margin_pct: null }
+    const recipeItems = itemsByRecipe[recipe.id] || []
+    const cost = recipeItems.reduce((s: number, it: any) => {
+      const conv = toBase(Number(it.quantity), it.unit)
+      return s + conv.qty * Number(it.cost_per_unit || 0)
+    }, 0)
+    const margin = Number(d.price) - cost
+    const margin_pct = d.price > 0 ? (margin / Number(d.price)) * 100 : 0
+    return { id: d.id, name: d.name, price: Number(d.price), cost, margin, margin_pct }
+  }).sort((a: any, b: any) => (b.margin_pct || 0) - (a.margin_pct || 0))
+}
+
+Fix 9 — lib/inventory-engine.ts: _schemaReady flag broken in serverless
+Module-level variables reset on every cold start in Vercel. Move the flag to global:
+ts// Remove:
+let _schemaReady = false
+
+// Add at top of file:
+declare global { var _inventorySchemaReady: boolean | undefined }
+
+// Replace the check and set inside ensureInventorySchema():
+export async function ensureInventorySchema() {
+  if (global._inventorySchemaReady) return
+  try {
+    // ... all existing CREATE TABLE IF NOT EXISTS statements unchanged ...
+    global._inventorySchemaReady = true
+  } catch (e) {
+    console.error('ensureInventorySchema error', e)
+  }
+}
+
+After applying all fixes, run npm run build and make sure the project builds with no TypeScript errors.

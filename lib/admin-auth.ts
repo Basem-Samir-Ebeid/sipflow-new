@@ -11,7 +11,6 @@ export interface DevAdminAccount {
   name: string
   role: DevAdminRole
   passwordHash?: string
-  password?: string
   active?: boolean
   createdAt?: string
 }
@@ -86,7 +85,7 @@ export async function findDevAdminByCredentials(
     if (account.active === false) return false
     if (account.name.trim().toLowerCase() !== normalizedName) return false
     if (account.passwordHash) return account.passwordHash === passwordHash(password)
-    return account.password === password
+    return false
   }) || null
 }
 

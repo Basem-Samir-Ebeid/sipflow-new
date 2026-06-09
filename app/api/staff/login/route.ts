@@ -1,9 +1,15 @@
 import { NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { verifyPassword } from '@/lib/password'
+import { checkRateLimit } from '@/lib/rate-limit'
 
 export async function POST(request: Request) {
   try {
+    const ip = request.headers.get('x-forwarded-for') ?? 'unknown'
+    if (!checkRateLimit(`login:${ip}`, 10, 60_000)) {
+      return NextResponse.json({ error: 'Too many attempts, please wait a minute' }, { status: 429 })
+    }
+
     const { username, password } = await request.json()
 
     const staff = await db.getStaffByUsername(username)
