@@ -49,7 +49,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, error: 'خاصية الريسيت غير مفعلة في هذه البيئة' }, { status: 503 })
     }
 
-    const { resetCode, type, newPassword, newUsername } = await request.json()
+    let body: any = {}
+    try { body = await request.json() } catch { /* empty body */ }
+    const { resetCode, type, newPassword, newUsername } = body
 
     const sql = getSql()
 

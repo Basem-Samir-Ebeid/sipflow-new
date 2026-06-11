@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+
 export async function GET(request: Request) {
   try {
     await db.setupReservations()
@@ -8,6 +10,7 @@ export async function GET(request: Request) {
     const placeId = searchParams.get('place_id')
     const status = searchParams.get('status') || undefined
     if (!placeId) return NextResponse.json({ error: 'place_id required' }, { status: 400 })
+    if (!UUID_RE.test(placeId)) return NextResponse.json({ error: 'place_id must be a valid UUID' }, { status: 400 })
     const reservations = await db.getReservations(placeId, status)
     return NextResponse.json(reservations)
   } catch (error) {

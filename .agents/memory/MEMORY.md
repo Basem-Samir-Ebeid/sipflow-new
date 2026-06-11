@@ -1,0 +1,3 @@
+- [Sessions FK fix](sessions-fk.md) — sessions route must handle FK 23503 violation gracefully; places table must exist before creating sessions.
+- [Admin password setup](admin-password.md) — dev_admin_password must exist in app_settings; default is admin123; run INSERT … ON CONFLICT DO UPDATE on fresh installs.
+- [Users API graceful 400](users-api.md) — GET /api/users without place_id returns [] (200) not 400; keeps browser console clean.

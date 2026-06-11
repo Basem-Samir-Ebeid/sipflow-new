@@ -23,7 +23,15 @@ export async function GET(request: Request) {
         session = await db.getSessionByDate(date, placeId)
       } else {
         // Live mode: create a new session for today if none exists
-        session = await db.createSession(date, placeId)
+        try {
+          session = await db.createSession(date, placeId)
+        } catch (createErr: any) {
+          // FK violation: place_id doesn't exist in places table
+          if (createErr?.code === '23503') {
+            return NextResponse.json({ error: 'المكان المحدد غير موجود. يرجى التأكد من اختيار مكان صحيح.' }, { status: 400 })
+          }
+          throw createErr
+        }
       }
     }
 

@@ -652,6 +652,14 @@ export const db = {
 
   // ─── Company Employees ─────────────────────────────────
   async setupCompanyEmployees() {
+    try {
+      await sql`ALTER TABLE company_employees ADD COLUMN IF NOT EXISTS email TEXT`
+      await sql`ALTER TABLE company_employees ADD COLUMN IF NOT EXISTS password TEXT`
+      await sql`ALTER TABLE company_employees ADD COLUMN IF NOT EXISTS avatar_url TEXT`
+      await sql`ALTER TABLE company_employees ADD COLUMN IF NOT EXISTS department TEXT`
+      await sql`ALTER TABLE company_employees ADD COLUMN IF NOT EXISTS title TEXT`
+      await sql`ALTER TABLE company_employees ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT true`
+    } catch { /* columns may already exist */ }
   },
 
   async getCompanyEmployees(placeId: string) {

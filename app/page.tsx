@@ -237,6 +237,7 @@ export default function HomePage() {
   }
 
   const placeParam = currentPlace ? `?place_id=${currentPlace.id}` : ''
+  const placeId = currentPlace?.id ?? null
 
   const { data: drinks = [], mutate: mutateDrinks } = useSWR<Drink[]>(
     `/api/drinks${placeParam}`, apiFetcher, { refreshInterval: 5000 })
@@ -250,11 +251,11 @@ export default function HomePage() {
     return true
   })
   const { data: users = [], mutate: mutateUsers } = useSWR<User[]>(
-    `/api/users${placeParam}`, apiFetcher, { refreshInterval: 5000 })
+    placeId ? `/api/users?place_id=${placeId}` : null, apiFetcher, { refreshInterval: 5000 })
   const { data: session, mutate: mutateSession } = useSWR<Session>(
     `/api/sessions${placeParam}`, apiFetcher)
   const { data: messages = [], mutate: mutateMessages } = useSWR<AdminMessage[]>(
-    `/api/messages${placeParam}`, apiFetcher, { refreshInterval: 2000 })
+    placeId ? `/api/messages?place_id=${placeId}` : null, apiFetcher, { refreshInterval: 2000 })
   const { data: inventory = [] } = useSWR<{ drink_id: string; quantity: number }[]>(
     '/api/inventory', apiFetcher, { refreshInterval: 5000 })
   
