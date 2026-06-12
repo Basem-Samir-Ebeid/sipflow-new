@@ -46,16 +46,22 @@ async function applyAdminCredentials(
 
 export async function POST(request: NextRequest) {
   try {
-    const RESET_CODE = process.env.DEV_RESET_CODE
-    if (!RESET_CODE) {
-      return NextResponse.json({ success: false, error: 'خاصية الريسيت غير مفعلة في هذه البيئة' }, { status: 503 })
-    }
-
     let body: any = {}
     try { body = await request.json() } catch { /* empty body */ }
     const { resetCode, type, newPassword, newUsername } = body
 
     const sql = getSql()
+
+    // Resolve reset code from multiple sources (env → app_settings → ADMIN_SECRET)
+    let RESET_CODE: string | null = process.env.DEV_RESET_CODE || process.env.ADMIN_SECRET || null
+    try {
+      const rows = await sql`SELECT value FROM app_settings WHERE key = 'dev_reset_code'`
+      if (rows[0]?.value) RESET_CODE = rows[0].value
+    } catch {}
+
+    if (!RESET_CODE) {
+      return NextResponse.json({ success: false, error: 'خاصية الريسيت غير مفعلة في هذه البيئة' }, { status: 503 })
+    }
 
     if (resetCode !== RESET_CODE) {
       await logDevActivity(sql, {
