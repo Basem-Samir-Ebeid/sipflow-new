@@ -23,14 +23,16 @@ function buildPool(url: string): Pool {
 function getPool() {
   if (!global._pgPool) {
     // Priority order:
-    // 1. PROD_DATABASE_URL  — set this in Replit Secrets for your external production DB (Neon/Supabase)
-    // 2. POSTGRES_URL       — generic external PostgreSQL URL
-    // 3. DATABASE_URL       — Replit internal (helium) — works only in dev container
+    // 1. NEON_DATABASE_URL  — Neon PostgreSQL (primary production DB)
+    // 2. PROD_DATABASE_URL  — fallback external DB (Neon/Supabase)
+    // 3. POSTGRES_URL       — generic external PostgreSQL URL
+    // 4. DATABASE_URL       — Replit internal (helium) — works only in dev container
+    const neonUrl  = process.env.NEON_DATABASE_URL
     const prodUrl  = process.env.PROD_DATABASE_URL
     const pgUrl    = process.env.POSTGRES_URL
     const dbUrl    = process.env.DATABASE_URL
 
-    const chosenUrl = prodUrl || pgUrl || dbUrl
+    const chosenUrl = neonUrl || prodUrl || pgUrl || dbUrl
 
     if (!chosenUrl) {
       throw new Error(
