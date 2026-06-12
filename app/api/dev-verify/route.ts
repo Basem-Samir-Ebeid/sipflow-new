@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSql } from '@/lib/db'
-import { ADMIN_SESSION_MAX_AGE, DEV_ADMIN_ROLE_LABELS, DEV_ADMIN_SESSION_COOKIE, adminSessionValue, devAdminSessionValue, findDevAdminByCredentials, getDevAdminSecret } from '@/lib/admin-auth'
+import { ADMIN_SESSION_MAX_AGE, DEV_ADMIN_ROLE_LABELS, DEV_ADMIN_SESSION_COOKIE, adminSessionValue, devAdminSessionValue, findDevAdminByCredentials, getDevAdminSecret, passwordHash } from '@/lib/admin-auth'
 import { logDevActivity } from '@/lib/dev-activity'
 import { checkRateLimit } from '@/lib/rate-limit'
 
@@ -50,7 +50,7 @@ export async function POST(request: NextRequest) {
       return response
     }
 
-    if (password === adminSecret) {
+    if (password === adminSecret || passwordHash(password) === adminSecret) {
       let savedUsername: string | null = null
       try {
         const rows = await sql`SELECT value FROM app_settings WHERE key = 'dev_admin_username'`

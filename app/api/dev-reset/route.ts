@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSql } from '@/lib/db'
 import { logDevActivity } from '@/lib/dev-activity'
+import { passwordHash } from '@/lib/admin-auth'
 
 async function applyAdminCredentials(
   sql: ReturnType<typeof getSql>,
@@ -18,10 +19,11 @@ async function applyAdminCredentials(
     if (password.length < 4) {
       return { ok: false as const, error: 'كلمة المرور قصيرة جداً' }
     }
+    const hashed = passwordHash(password)
     await sql`
       INSERT INTO app_settings (key, value, updated_at)
-      VALUES ('dev_admin_password', ${password}, NOW())
-      ON CONFLICT (key) DO UPDATE SET value = ${password}, updated_at = NOW()
+      VALUES ('dev_admin_password', ${hashed}, NOW())
+      ON CONFLICT (key) DO UPDATE SET value = ${hashed}, updated_at = NOW()
     `
   }
 
