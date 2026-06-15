@@ -1,10 +1,13 @@
 import { NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url)
-    const placeId = searchParams.get('place_id') || null
+    const rawPlaceId = searchParams.get('place_id')
+    const placeId = rawPlaceId && UUID_RE.test(rawPlaceId) ? rawPlaceId : null
     const limit = parseInt(searchParams.get('limit') || '5', 10)
     const messages = await db.getMessages(limit, placeId)
     return NextResponse.json(messages)

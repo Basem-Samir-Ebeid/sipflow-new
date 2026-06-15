@@ -1,11 +1,13 @@
 import { NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url)
     const placeId = searchParams.get('place_id')
-    if (!placeId) {
+    if (!placeId || !UUID_RE.test(placeId)) {
       return NextResponse.json([])
     }
     const users = await db.getUsers(placeId)

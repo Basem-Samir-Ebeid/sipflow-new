@@ -16,7 +16,7 @@ function buildPool(url: string): Pool {
   if (isHeliumOrLocal) {
     return new Pool({ connectionString: url, ssl: false })
   }
-  const withSsl = url.includes('sslmode=') ? url : `${url}${url.includes('?') ? '&' : '?'}sslmode=require`
+  const withSsl = url.includes('sslmode=') ? url : `${url}${url.includes('?') ? '&' : '?'}sslmode=verify-full`
   return new Pool({ connectionString: withSsl })
 }
 
