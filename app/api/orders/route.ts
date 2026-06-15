@@ -64,6 +64,39 @@ export async function POST(request: Request) {
       console.error('Auto-deduct error:', invErr)
     }
 
+    // ── Auto-earn loyalty points ─────────────────────────────
+    try {
+      const sql = getSql()
+      const loyaltyEnabled = await sql`SELECT value FROM app_settings WHERE key='loyalty_enabled' LIMIT 1`
+      if (loyaltyEnabled[0]?.value === 'true' && parsed.data.user_id && parsed.data.total_price) {
+        const sessionRow = await sql`SELECT place_id FROM sessions WHERE id=${parsed.data.session_id} LIMIT 1`
+        const placeIdForLoyalty = (sessionRow as any[])[0]?.place_id
+        if (placeIdForLoyalty) {
+          const rateRow = await sql`SELECT value FROM app_settings WHERE key='loyalty_points_per_egp' LIMIT 1`
+          const pointsPerEgp = Number(rateRow[0]?.value ?? 1)
+          const pointsDelta = Math.floor(Number(parsed.data.total_price) * pointsPerEgp)
+          if (pointsDelta > 0) {
+            await sql`
+              INSERT INTO loyalty_points (user_id, place_id, points, total_earned, total_redeemed, updated_at)
+              VALUES (${parsed.data.user_id}, ${placeIdForLoyalty}, 0, 0, 0, NOW())
+              ON CONFLICT DO NOTHING
+            `.catch(() => {})
+            await sql`
+              UPDATE loyalty_points
+              SET points=points+${pointsDelta}, total_earned=total_earned+${pointsDelta}, updated_at=NOW()
+              WHERE user_id=${parsed.data.user_id} AND place_id=${placeIdForLoyalty}
+            `
+            await sql`
+              INSERT INTO loyalty_transactions (user_id, place_id, points, type, order_id, note)
+              VALUES (${parsed.data.user_id}, ${placeIdForLoyalty}, ${pointsDelta}, 'earn', ${(order as any).id}, 'طلب جديد')
+            `
+          }
+        }
+      }
+    } catch (loyErr) {
+      console.error('Loyalty earn error:', loyErr)
+    }
+
     return NextResponse.json(order)
   } catch (error) {
     console.error('Error creating order:', error)

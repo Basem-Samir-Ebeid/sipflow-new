@@ -36,6 +36,10 @@ import { DevActivityLog } from '@/components/dev-activity-log'
 import { OrderSimulator } from '@/components/order-simulator'
 import { PlaceTemplates } from '@/components/place-templates'
 import InventorySystem from '@/components/inventory-system'
+import { LoyaltySystem } from '@/components/loyalty-system'
+import { CustomerSegments } from '@/components/customer-segments'
+import { PnlReport } from '@/components/pnl-report'
+import { MenuOptimizer } from '@/components/menu-optimizer'
 
 type DevAdminRole = 'super_developer' | 'support_admin' | 'sales_admin' | 'finance_admin'
 
@@ -120,7 +124,7 @@ export function AdminPanel({
       label: 'Super Developer',
       description: 'صلاحية كاملة لكل أجزاء النظام',
       homeTab: 'analytics',
-      tabs: ['alerts', 'analytics', 'notes', 'drinks', 'inventory', 'ingredients', 'cashier', 'reservations', 'place-admins', 'staff', 'places', 'subscriptions', 'messages', 'settings', 'branding', 'danger', 'live', 'permissions', 'activity', 'simulator', 'templates', 'feature-flags', 'ai-ideas', 'implemented-ideas'],
+      tabs: ['alerts', 'analytics', 'notes', 'drinks', 'inventory', 'ingredients', 'cashier', 'reservations', 'place-admins', 'staff', 'places', 'subscriptions', 'messages', 'settings', 'branding', 'danger', 'live', 'permissions', 'activity', 'simulator', 'templates', 'feature-flags', 'ai-ideas', 'implemented-ideas', 'loyalty', 'customers', 'pnl', 'menu-optimizer'],
     },
     support_admin: {
       label: 'Support Admin',
@@ -461,10 +465,15 @@ export function AdminPanel({
     drinks: 'المشاريب', inventory: 'المخزون', analytics: 'التقارير',
     staff: 'الموظفين', messages: 'الرسائل', settings: 'الإعدادات', danger: 'الخطر',
     ingredients: 'المكونات الذكي',
+    loyalty: 'الولاء',
+    customers: 'الزبائن',
+    pnl: 'الأرباح',
+    'menu-optimizer': 'تحسين المنيو',
   }
   const DEFAULT_TAB_ORDER: Record<string, string[]> = {
     operations: ['stats', 'tables', 'cashier', 'reservations'],
     menu: ['drinks', 'inventory', 'ingredients', 'analytics'],
+    insights: ['loyalty', 'customers', 'pnl', 'menu-optimizer'],
     system: ['staff', 'messages', 'settings', 'danger'],
   }
   const TAB_GROUP_LABELS_AR: Record<string, string> = {
@@ -3359,6 +3368,33 @@ const handleSaveSettings = async () => {
                 </div>
               )}
 
+              {/* Insights group */}
+              {canAccessDevTab('loyalty') && (
+                <div>
+                  <p className="text-[9px] font-semibold uppercase tracking-widest px-1 mb-1" style={{ color: '#a78bfa' }}>✦ Insights</p>
+                  <div className="grid grid-cols-2 gap-1.5">
+                    {[
+                      { tab: 'loyalty',        icon: <Award className="h-3.5 w-3.5" />,    label: 'Loyalty',   ac: '#ffd700' },
+                      { tab: 'customers',      icon: <Users className="h-3.5 w-3.5" />,    label: 'Customers', ac: '#10b981' },
+                      { tab: 'pnl',            icon: <BarChart3 className="h-3.5 w-3.5" />,label: 'P&L',       ac: '#60a5fa' },
+                      { tab: 'menu-optimizer', icon: <Sparkles className="h-3.5 w-3.5" />, label: 'AI Menu',   ac: '#a78bfa' },
+                    ].filter(item => canAccessDevTab(item.tab)).map(item => (
+                      <button key={item.tab} onClick={() => handleTabChange(item.tab)}
+                        className="flex flex-col items-center gap-1 rounded-xl py-2.5 px-1 transition-all duration-150 hover:scale-105 active:scale-95"
+                        style={{
+                          background: activeAdminTab === item.tab ? 'rgba(167,139,250,0.25)' : 'rgba(255,255,255,0.03)',
+                          border: `1px solid ${activeAdminTab === item.tab ? 'rgba(167,139,250,0.55)' : 'rgba(255,255,255,0.06)'}`,
+                          boxShadow: activeAdminTab === item.tab ? '0 0 10px rgba(167,139,250,0.18)' : 'none',
+                          color: activeAdminTab === item.tab ? '#e9d5ff' : '#7a6332'
+                        }}>
+                        {item.icon}
+                        <span className="text-[10px] font-semibold">{item.label}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               {/* Dev Tools group */}
               {canAccessDevTab('simulator') && (
                 <div>
@@ -3512,6 +3548,10 @@ const handleSaveSettings = async () => {
               ['drinks', 'Drinks'],
               ['inventory', 'Inventory'],
               ['ingredients', 'Smart Inventory'],
+              ['loyalty', '🏆 Loyalty'],
+              ['customers', '👥 Customers'],
+              ['pnl', '📊 P&L'],
+              ['menu-optimizer', '🤖 AI Menu'],
               ['cashier', 'Cashier'],
               ['reservations', 'Reservations'],
               ['place-admins', 'Admins'],
@@ -3545,6 +3585,10 @@ const handleSaveSettings = async () => {
                 dot: (() => { const n = drinks.filter(d => (inventoryMap[d.id] ?? 0) < lowStockThreshold && (inventoryMap[d.id] ?? 0) >= 0).length; return n > 0 ? { color: '#f59e0b', label: n } : null })() },
               ingredients:  { icon: <Package className="h-4 w-4" />,          active: 'rgba(212,175,98,0.18)', activeBorder: 'rgba(212,175,98,0.45)', activeText: '#d4af62', dot: null },
               analytics:    { icon: <TrendingUp className="h-4 w-4" />,       active: 'rgba(251,146,60,0.18)', activeBorder: 'rgba(251,146,60,0.45)', activeText: '#fb923c', dot: null },
+              loyalty:      { icon: <Award className="h-4 w-4" />,            active: 'rgba(255,215,0,0.15)',  activeBorder: 'rgba(255,215,0,0.4)',   activeText: '#ffd700', dot: null },
+              customers:    { icon: <Users className="h-4 w-4" />,            active: 'rgba(52,211,153,0.15)', activeBorder: 'rgba(52,211,153,0.4)',  activeText: '#34d399', dot: null },
+              pnl:          { icon: <BarChart3 className="h-4 w-4" />,        active: 'rgba(96,165,250,0.15)', activeBorder: 'rgba(96,165,250,0.4)',  activeText: '#60a5fa', dot: null },
+              'menu-optimizer': { icon: <Sparkles className="h-4 w-4" />,     active: 'rgba(167,139,250,0.15)',activeBorder: 'rgba(167,139,250,0.4)', activeText: '#a78bfa', dot: null },
               staff:        { icon: <UserCog className="h-4 w-4" />,          active: 'rgba(52,211,153,0.15)', activeBorder: 'rgba(52,211,153,0.4)',  activeText: '#34d399', dot: null },
               messages:     { icon: <MessageSquare className="h-4 w-4" />,    active: 'rgba(96,165,250,0.15)', activeBorder: 'rgba(96,165,250,0.4)',  activeText: '#60a5fa', dot: null },
               settings:     { icon: <Settings2 className="h-4 w-4" />,        active: 'rgba(96,165,250,0.15)', activeBorder: 'rgba(96,165,250,0.4)',  activeText: '#60a5fa', dot: null },
@@ -3553,6 +3597,7 @@ const handleSaveSettings = async () => {
             const groupOrder: Array<{ id: string; label: string; cols: number }> = [
               { id: 'operations', label: 'Operations', cols: 4 },
               { id: 'menu',       label: 'Menu',       cols: 3 },
+              { id: 'insights',   label: '✦ Insights', cols: 4 },
               { id: 'system',     label: 'System',     cols: 4 },
             ]
             const renderTab = (value: string) => {
@@ -4691,6 +4736,42 @@ const handleSaveSettings = async () => {
             placeId={isDevAdmin ? (inventoryDevPlaceId || null) : (placeId || null)}
             isDevAdmin={isDevAdmin}
           />
+        </TabsContent>
+
+        {/* 🏆 Loyalty System Tab */}
+        <TabsContent value="loyalty" className="space-y-4">
+          {(isDevAdmin ? (inventoryDevPlaceId || placeId) : placeId) ? (
+            <LoyaltySystem placeId={(isDevAdmin ? (inventoryDevPlaceId || placeId) : placeId) as string} />
+          ) : (
+            <div className="text-center py-12 text-white/30 text-sm">اختر مكاناً أولاً لعرض نظام الولاء</div>
+          )}
+        </TabsContent>
+
+        {/* 👥 Customer Segments Tab */}
+        <TabsContent value="customers" className="space-y-4">
+          {(isDevAdmin ? (inventoryDevPlaceId || placeId) : placeId) ? (
+            <CustomerSegments placeId={(isDevAdmin ? (inventoryDevPlaceId || placeId) : placeId) as string} />
+          ) : (
+            <div className="text-center py-12 text-white/30 text-sm">اختر مكاناً أولاً لعرض الزبائن</div>
+          )}
+        </TabsContent>
+
+        {/* 📊 P&L Report Tab */}
+        <TabsContent value="pnl" className="space-y-4">
+          {(isDevAdmin ? (inventoryDevPlaceId || placeId) : placeId) ? (
+            <PnlReport placeId={(isDevAdmin ? (inventoryDevPlaceId || placeId) : placeId) as string} />
+          ) : (
+            <div className="text-center py-12 text-white/30 text-sm">اختر مكاناً أولاً لعرض تقرير الأرباح</div>
+          )}
+        </TabsContent>
+
+        {/* 🤖 AI Menu Optimizer Tab */}
+        <TabsContent value="menu-optimizer" className="space-y-4">
+          {(isDevAdmin ? (inventoryDevPlaceId || placeId) : placeId) ? (
+            <MenuOptimizer placeId={(isDevAdmin ? (inventoryDevPlaceId || placeId) : placeId) as string} />
+          ) : (
+            <div className="text-center py-12 text-white/30 text-sm">اختر مكاناً أولاً لعرض تحسين المنيو</div>
+          )}
         </TabsContent>
 
         {/* Inventory Tab */}
